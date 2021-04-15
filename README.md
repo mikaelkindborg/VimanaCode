@@ -14,6 +14,8 @@ Run on your local machine in a console window:
 
 I created VimanaLang as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
 
+[Watch introduction video](https://youtu.be/BE7UpUuumc4)
+
 ![Screenshot](screenshot.jpg)
 
 License: Creative Commons: Attribution-ShareAlike - CC BY-SA
