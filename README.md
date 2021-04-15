@@ -2,6 +2,14 @@
 
 DIY interpreter for a dynamic language influenced by Lisp and Forth.
 
-Example code will follow.
+Current implementation is written in PHP.
 
-I created this programnming language as an experiment, to have some fun. I love Lisp and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories.
+See comments in the file workbench.php for how to get started.
+
+Also see header comment in interpreter.php.
+
+Run on your local machine in a comsole window:
+
+php workbench.php
+
+I created VimanaLang as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
