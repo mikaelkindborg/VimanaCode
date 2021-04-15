@@ -50,7 +50,6 @@ function f_create_primitives()
     $name = $fundef[0];
     $params = $fundef[1];
     $body = $fundef[2];
-    print_r("DEF: ".$name."\n");
     $fun = ["FUN", $params, $body];
     $env[$name] = $fun;
   });
@@ -65,28 +64,7 @@ function f_create_primitives()
     array_push($stack, $value);
   });
   
-  $add("MAKEOBJ", function(&$env, &$stack, &$prims)
-  {
-    $obj = new stdClass();
-    array_push($stack, $obj);
-  });
-  
-  $add("SETPROP", function(&$env, &$stack, &$prims)
-  {
-    $obj = array_pop_eval($stack, $env);
-    $prop_name = array_pop($stack);
-    $prop_value = array_pop_eval($stack, $env);
-    $obj->$prop_name = $prop_value;
-  });
-  
-  $add("GETPROP", function(&$env, &$stack, &$prims)
-  {
-    $obj = array_pop_eval($stack, $env);
-    $prop_name = array_pop($stack);
-    array_push($stack, $obj->$prop_name);
-  });
-  
-  $add("POP", function(&$env, &$stack, &$prims)
+  $add("DOC", function(&$env, &$stack, &$prims)
   {
     array_pop($stack);
   });
@@ -134,11 +112,6 @@ function f_create_primitives()
     $a = array_pop_eval($stack, $env);
     $res = $a / $b;
     array_push($stack, $res);
-  });
-  
-  $add("SPACE", function(&$env, &$stack, &$prims)
-  {
-    array_push($stack, " ");
   });
   
   $add("T", function(&$env, &$stack, &$prims)
@@ -206,6 +179,18 @@ function f_create_primitives()
     array_push($stack, $text);
   });
   
+  $add("JOIN", function(&$env, &$stack, &$prims)
+  {
+    $list = array_pop_eval($stack, $env);
+    $string = implode (" ", $list);
+    array_push($stack, $string);
+  });
+  
+  $add("SPACE", function(&$env, &$stack, &$prims)
+  {
+    array_push($stack, " ");
+  });
+  
   $add("PRINT", function(&$env, &$stack, &$prims)
   {
     $obj = array_pop_eval($stack, $env);
@@ -217,6 +202,16 @@ function f_create_primitives()
     $obj = array_pop_eval($stack, $env);
     print_r($obj); 
     print("\n");
+  });
+  
+  $add("ENV", function(&$env, &$stack, &$prims)
+  {
+    array_push($stack, $env);
+  });
+  
+  $add("STACK", function(&$env, &$stack, &$prims)
+  {
+    array_push($stack, $stack);
   });
   
   $add("PRINTENV", function(&$env, &$stack, &$prims)
@@ -231,8 +226,25 @@ function f_create_primitives()
     print_r($stack);
   });
   
-  $add("SET", function(&$env, &$stack, &$prims)
+  $add("MAKEOBJ", function(&$env, &$stack, &$prims)
   {
+    $obj = new stdClass();
+    array_push($stack, $obj);
+  });
+  
+  $add("SETPROP", function(&$env, &$stack, &$prims)
+  {
+    $obj = array_pop_eval($stack, $env);
+    $prop_name = array_pop($stack);
+    $prop_value = array_pop_eval($stack, $env);
+    $obj->$prop_name = $prop_value;
+  });
+  
+  $add("GETPROP", function(&$env, &$stack, &$prims)
+  {
+    $obj = array_pop_eval($stack, $env);
+    $prop_name = array_pop($stack);
+    array_push($stack, $obj->$prop_name);
   });
   
   return $prims;
