@@ -10,7 +10,7 @@ Also see header comment in [vimana/v1_interpreter.php](vimana/v1_interpreter.php
 
 Run on your local machine in a console window:
 
-    php workbench.php
+    php v1_workbench.php
 
 I created VimanaLang as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
 
