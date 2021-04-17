@@ -4,9 +4,9 @@ DIY interpreter for a dynamic language influenced by Lisp and Forth.
 
 Current implementation is written in PHP.
 
-See comments and code examples in file [workbench.php](https://github.com/mikaelkindborg/VimanaLang/blob/master/workbench.php) for how to get started.
+See comments and code examples in file [vimana/v1_workbench.php](vimana/v1_workbench.php) for how to get started.
 
-Also see header comment in [interpreter.php](https://github.com/mikaelkindborg/VimanaLang/blob/master/interpreter.php).
+Also see header comment in [vimana/v1_interpreter.php](vimana/v1_interpreter.php).
 
 Run on your local machine in a console window:
 
