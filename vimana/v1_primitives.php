@@ -172,6 +172,21 @@ function f_create_primitives()
     endif;
   });
   
+  // DOTIMES is meant for benchmarking. It pushes the last 
+  // result onto othe stack.
+  $add("DOTIMES", function(&$env, &$stack, &$prims)
+  {
+    $body = array_pop($stack);
+    $n = array_pop_eval($stack, $env);
+    $n = $n - 1;
+    for  ($i = 0; $i < $n; $i++):
+      f_eval_list($body, $env, $stack, $prims);
+      array_pop($stack);
+    endfor;
+    // Pushes the result of the last interation.
+    f_eval_list($body, $env, $stack, $prims);
+  });
+
   $add("FETCH", function(&$env, &$stack, &$prims)
   {
     $url = array_pop_eval($stack, $env);
