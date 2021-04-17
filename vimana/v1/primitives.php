@@ -1,7 +1,7 @@
 <?php
 
 //
-// File: v1_primitives.php
+// File: primitives.php
 // Date: 2021-04-14
 // Author: Mikael Kinborg
 // Email: mikael@kindborg.com

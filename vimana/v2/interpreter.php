@@ -1,7 +1,7 @@
 <?php
 
 //
-// File: v2_interpreter.php
+// File: interpreter.php
 // Date: 2021-04-17
 // Author: Mikael Kinborg
 // Email: mikael@kindborg.com

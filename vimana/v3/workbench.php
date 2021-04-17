@@ -2,7 +2,7 @@
 
 //
 // File: workbench.php
-// Date: 2021-04-14
+// Date: 2021-04-17
 // Author: Mikael Kinborg
 // Email: mikael@kindborg.com
 // Website: kindborg.com
@@ -108,6 +108,20 @@ require('primitives.php');
 
 $code = <<< CODE
 
+(FACT (N) ((N 0 EQ) 1 (N 1 - FACT N *) IFELSE)) DEF
+100000 (20 FACT) DOTIMES
+
+CODE;
+
+f_eval_string($code);
+
+exit();
+
+$code = <<< CODE
+
+(FACT (N) ((N 0 EQ) 1 (N 1 - FACT) IFELSE)) DEF
+100000 (20 FACT) DOTIMES
+
 (Hello World) JOIN PRINTLN
 
 (This is a list used as comment. DOC does 
@@ -158,18 +172,18 @@ F condition_is_true condition_is_false IFELSE PRINTLN
    (N 1 - FACT N *) IFELSE)) DEF
 20 FACT PRINTLN
 
-(Examples of EVAL, CALL and SET.) DOC
+(Examples of EVAL and CALL.) DOC
 
 (1 2 3 + + PRINTLN) EVAL
 
 (FUN () (HELLO PRINTLN)) CALL
 
-2222 (FUN (X) (X 2 *)) CALL PRINTLN
+3333 (FUN (Z) (Z 2 *)) CALL PRINTLN
 
-(FUN (X) (X 2 *)) DOUBLE SET
-4444 DOUBLE PRINTLN
+(SET can be used like this. Variables are single assignment, 
+which means a variable can only be set once.) DOC
 
-123456789 X SET
+4444 X SET
 Value_of_X: PRINT X PRINTLN
 
 (Variables in the outer enviroment are accessible.) DOC
