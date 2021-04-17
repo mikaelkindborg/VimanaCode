@@ -1,7 +1,7 @@
 <?php
 
 //
-// File: workbench.php
+// File: v1_workbench.php
 // Date: 2021-04-14
 // Author: Mikael Kinborg
 // Email: mikael@kindborg.com
@@ -15,7 +15,7 @@
 // Run the code in this file from the command line on
 // your computer like this:
 //
-// php workbench.php
+// php v1_workbench.php
 //
 // The purpose of VimanaLang is to provide a small interpreter 
 // that can be experimented with and modified just for the fun of it.
@@ -98,13 +98,13 @@
 //
 // Open a terminal window and run:
 //
-// php workbench.php
+// php v1_workbench.php
 //
 // PHP needs to be installed on your computer.
 //
 
-require('interpreter.php');
-require('primitives.php');
+require('v1_interpreter.php');
+require('v1_primitives.php');
 
 $code = <<< CODE
 
