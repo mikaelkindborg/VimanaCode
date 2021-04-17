@@ -20,19 +20,19 @@ function f_create_primitives()
     $prims[$symbol] = $fun;
   };
   
-  $add("EVAL", function(&$process)
+  $add("EVAL", function($process)
   {
     $obj = f_stack_pop($process);
     f_eval_list($process, $obj);
   });
   
-  $add("CALL", function(&$process)
+  $add("CALL", function($process)
   {
     $fun = f_stack_pop($process);
     f_eval_fun($process, $fun);
   });
   
-  $add("SET", function(&$process)
+  $add("SET", function($process)
   {
     // SET is single assignment
     $name = f_stack_pop($process);
@@ -44,7 +44,7 @@ function f_create_primitives()
     f_set_binding($process, $name, $value);
   });
   
-  $add("DEF", function(&$process)
+  $add("DEF", function($process)
   {
     $fundef = f_stack_pop($process);
     $name = $fundef[0];
@@ -63,7 +63,7 @@ function f_create_primitives()
   // element of a list, it does not evaluate the list.
   // VALUE is like "UNQUOTE", where a list is used to quote
   // a name. Note that lists are not evaluated per default.
-  $add("VALUE", function(& $process)
+  $add("VALUE", function( $process)
   {
     $var = f_stack_pop($process);
     if (is_array($var)):
@@ -73,25 +73,25 @@ function f_create_primitives()
     f_stack_push($process, $value);
   });
   
-  $add("DOC", function(&$process)
+  $add("DOC", function($process)
   {
     f_stack_pop($process);
   });
   
-  $add("GET", function(&$process)
+  $add("GET", function($process)
   {
     $index = f_stack_pop_eval($process);
     $list = f_stack_pop_eval($process);
     f_stack_push($process, $list[$index - 1]);
   });
   
-  $add("COUNT", function(&$process)
+  $add("COUNT", function($process)
   {
     $list = f_stack_pop_eval($process);
     f_stack_push($process, count($list));
   });
   
-  $add("+", function(&$process)
+  $add("+", function($process)
   {
     $b = f_stack_pop_eval($process);
     $a = f_stack_pop_eval($process);
@@ -99,7 +99,7 @@ function f_create_primitives()
     f_stack_push($process, $res);
   });
   
-  $add("-", function(&$process)
+  $add("-", function($process)
   {
     $b = f_stack_pop_eval($process);
     $a = f_stack_pop_eval($process);
@@ -107,7 +107,7 @@ function f_create_primitives()
     f_stack_push($process, $res);
   });
   
-  $add("*", function(&$process)
+  $add("*", function($process)
   {
     $b = f_stack_pop_eval($process);
     $a = f_stack_pop_eval($process);
@@ -115,7 +115,7 @@ function f_create_primitives()
     f_stack_push($process, $res);
   });
   
-  $add("/", function(&$process)
+  $add("/", function($process)
   {
     $b = f_stack_pop_eval($process);
     $a = f_stack_pop_eval($process);
@@ -123,19 +123,19 @@ function f_create_primitives()
     f_stack_push($process, $res);
   });
   
-  $add("T", function(&$process)
+  $add("T", function($process)
   {
     $value = "T";
     f_stack_push($process, $value);
   });
   
-  $add("F", function(&$process)
+  $add("F", function($process)
   {
     $value = "F";
     f_stack_push($process, $value);
   });
   
-  $add("NOT", function(&$process)
+  $add("NOT", function($process)
   {
     $bool = f_stack_pop($process);
     if ($bool === "F"):
@@ -146,7 +146,7 @@ function f_create_primitives()
     f_stack_push($process, $res);
   });
   
-  $add("EQ", function(&$process)
+  $add("EQ", function($process)
   {
     $b = f_stack_pop_eval($process);
     $a = f_stack_pop_eval($process);
@@ -158,7 +158,7 @@ function f_create_primitives()
     f_stack_push($process, $res);
   });
   
-  $add("IFTRUE", function(&$process)
+  $add("IFTRUE", function($process)
   {
     $true_branch = f_stack_pop($process);
     $condition = f_stack_pop($process);
@@ -169,7 +169,7 @@ function f_create_primitives()
     endif;
   });
   
-  $add("IFELSE", function(&$process)
+  $add("IFELSE", function($process)
   {
     $else_branch = f_stack_pop($process);
     $true_branch = f_stack_pop($process);
@@ -183,7 +183,7 @@ function f_create_primitives()
     endif;
   });
   
-  $add("DOTIMES", function(&$process)
+  $add("DOTIMES", function($process)
   {
     $body = f_stack_pop($process);
     $times = f_stack_pop_eval($process);
@@ -196,82 +196,82 @@ function f_create_primitives()
     f_eval_list($process, $body);
   });
   
-  $add("FETCH", function(&$process)
+  $add("FETCH", function($process)
   {
     $url = f_stack_pop_eval($process);
     $text = file_get_contents($url);
     f_stack_push($process, $text);
   });
   
-  $add("JOIN", function(&$process)
+  $add("JOIN", function($process)
   {
     $list = f_stack_pop_eval($process);
     $string = implode (" ", $list);
     f_stack_push($process, $string);
   });
   
-  $add("SPACE", function(&$process)
+  $add("SPACE", function($process)
   {
     $value = " ";
     f_stack_push($process, $value);
   });
   
-  $add("ENV", function(&$process)
+  $add("ENV", function($process)
   {
     f_stack_push(
       $process, 
       $process->callstack[$process->current_frame]);
   });
   
-  $add("STACK", function(&$process)
+  $add("STACK", function($process)
   {
     f_stack_push($process, $process->stack);
   });
   
-  $add("CALLSTACK", function(&$process)
+  $add("CALLSTACK", function($process)
   {
     f_stack_push($process, $process->callstack);
   });
   
-  $add("PRINT", function(&$process)
+  $add("PRINT", function($process)
   {
     $obj = f_stack_pop_eval($process);
     print_r($obj);
   });
   
-  $add("PRINTLN", function(&$process)
+  $add("PRINTLN", function($process)
   {
     $obj = f_stack_pop_eval($process);
     print_r($obj); 
     print("\n");
   });
   
-  $add("PRINTENV", function(&$process)
+  $add("PRINTENV", function($process)
   {
     print("PRINTENV STACKFRAME ".$process->current_frame.":\n");
     print_r($process->callstack[$process->current_frame]);
   });
   
-  $add("PRINTSTACK", function(&$process)
+  $add("PRINTSTACK", function($process)
   {
     print_r("PRINTSTACK:\n");
     print_r($process->stack);
   });
   
-  $add("PRINTCALLSTACK", function(&$process)
+  $add("PRINTCALLSTACK", function($process)
   {
     print_r("PRINTCALLSTACK:\n");
     print("CURRENT FRAME: ".$process->current_frame."\n");
     print_r($process->callstack);
   });
   
-  $add("MAKEOBJ", function(&$process)
+  $add("MAKEOBJ", function($process)
   {
     $obj = new stdClass();
     f_stack_push($process, $obj);
   });
   
-  $add("SETPROP", function(&$process)
+  $add("SETPROP", function($process)
   {
     $obj = f_stack_pop_eval($process);
     $prop_name = f_stack_pop($process);
@@ -279,7 +279,7 @@ function f_create_primitives()
     $obj->$prop_name = $prop_value;
   });
   
-  $add("GETPROP", function(&$process)
+  $add("GETPROP", function($process)
   {
     $obj = f_stack_pop_eval($process);
     $prop_name = f_stack_pop($process);

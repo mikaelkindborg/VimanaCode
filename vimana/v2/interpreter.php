@@ -49,7 +49,7 @@ function f_eval_string($code)
   f_eval_list($process, $list);
 }
 
-function f_get_binding(&$process, &$symbol)
+function f_get_binding($process, $symbol)
 {
   // Search for binding.
   $n = $process->current_frame;
@@ -63,66 +63,66 @@ function f_get_binding(&$process, &$symbol)
   return $symbol;
 }
 
-function f_get_binding_in_frame(&$process, &$n, &$symbol)
+function f_get_binding_in_frame($process, $n, $symbol)
 {
   return $process->callstack[$n][$symbol];
 }
 
-function f_set_binding(&$process, &$symbol, &$value)
+function f_set_binding($process, $symbol, $value)
 {
   $process->callstack[$process->current_frame][$symbol] = $value;
 }
 
-function f_get_fun(&$process, &$symbol)
+function f_get_fun($process, $symbol)
 {
   return $process->funs[$symbol];
 }
 
-function f_set_fun(&$process, &$symbol, &$fun)
+function f_set_fun($process, $symbol, $fun)
 {
   $process->funs[$symbol] = $fun;
 }
 
-function f_enter_stackframe(&$process)
+function f_enter_stackframe($process)
 {
   $process->current_frame++;
   $callstack[$process->current_frame] = []; // environment table
 }
 
-function f_exit_stackframe(&$process)
+function f_exit_stackframe($process)
 {
   $process->current_frame--;
 }
 
-function f_stack_push(&$process, &$element)
+function f_stack_push($process, $element)
 {
   array_push($process->stack, $element);
 }
 
-function f_stack_pop(&$process)
+function f_stack_pop($process)
 {
   return array_pop($process->stack);
 }
 
 // Pops an element of the stack and evaluates it.
-function f_stack_pop_eval(&$process)
+function f_stack_pop_eval($process)
 {
   $value = f_stack_pop($process);
   return f_eval_element($process, $value);
 }
 
-function f_is_primitive(&$process, &$symbol)
+function f_is_primitive($process, $symbol)
 {
   return isset($process->prims[$symbol]);
 }
 
-function f_is_fun(&$fun)
+function f_is_fun($fun)
 {
   return (is_array($fun) && ($fun[0] === "FUN"));
 }
 
 // EvalList evaluates a list as program code.
-function f_eval_list(&$process, &$something)
+function f_eval_list($process, $something)
 {
   // Eval of a non-list just pushes the value onto the stack.
   if (!is_array($something)):
@@ -135,13 +135,13 @@ function f_eval_list(&$process, &$something)
   endif;
   
   // For lists evaluate each element in the list.
-  foreach ($something as & $element):
+  foreach ($something as $element):
     f_eval($process, $element);
   endforeach;
 }
 
 // Eval modifies the environment and the stack.
-function f_eval(&$process, &$element)
+function f_eval($process, $element)
 {
   if (is_numeric($element) || is_array($element) || is_object($element)):
     // Numbers and lists and objects evaluate to themselves.
@@ -173,7 +173,7 @@ function f_eval(&$process, &$element)
   endif;
 }
 
-function f_eval_primitive(&$process, &$symbol)
+function f_eval_primitive($process, $symbol)
 {
   $fun = $process->prims[$symbol];
   $fun($process);
@@ -181,7 +181,7 @@ function f_eval_primitive(&$process, &$symbol)
 
 // Copies the env table to not overwrite shadowed 
 // variables permanently.
-function f_eval_fun(&$process, &$fun)
+function f_eval_fun($process, $fun)
 {
   f_enter_stackframe($process);
 
@@ -204,7 +204,7 @@ function f_eval_fun(&$process, &$fun)
   f_exit_stackframe($process);
 }
 
-function f_eval_element(&$process, &$element)
+function f_eval_element($process, $element)
 {
   if (is_string($element)):
     // Lookup value.
@@ -220,7 +220,7 @@ function f_eval_element(&$process, &$element)
 }
 
 // Add a native primitive.
-function f_add_primitive(&$process, &$symbol, $fun)
+function f_add_primitive($process, $symbol, $fun)
 {
   $process->prims[$symbol] = $fun;
 }
