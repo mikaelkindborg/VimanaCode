@@ -1,8 +1,7 @@
 <?php
-
 //
 // File: interpreter.php
-// Date: 2021-04-17
+// Date: 2021-04-18
 // Author: Mikael Kinborg
 // Email: mikael@kindborg.com
 // Website: kindborg.com
@@ -35,63 +34,140 @@
 // Main entry point.
 function f_eval_string($code)
 {
-  $list = f_parse($code);
-  
   // Note that there are two stacks the callstack and
-  // the "parameter stack" (look up name for this).
+  // the "parameter stack" or "data stack".
   $process = new stdClass();
   $process->callstack = [];
-  $process->current_frame = 0;
+  $process->stackframe_index = -1;
   $process->stack = [];
   $process->funs = [];
   $process->prims = f_create_primitives();
+  $process->run = TRUE;
   
-  f_eval_list($process, $list);
-}
+  $code_list = f_parse($code);
+  f_create_stackframe($process, $code_list);
 
-function f_get_binding($process, $symbol)
-{
-  // Search for binding.
-  $n = $process->current_frame;
-  while ($n > -1):
-    $value = f_get_binding_in_frame($process, $n, $symbol);
-    if (isset($value)):
-      return $value;
-    endif;
-    $n--;
+  while ($process->run):
+    f_run($process);
   endwhile;
-  return $symbol;
 }
 
-function f_get_binding_in_frame($process, $n, $symbol)
+function f_run($process)
 {
-  return $process->callstack[$n][$symbol];
+  // Get current stackframe.
+  $stackframe_index = $process->stackframe_index;
+  $stackframe = $process->callstack[$stackframe_index];
+
+  f_println("STACKFRAME: ".$process->stackframe_index);
+
+  // Get current code list element.
+  $code_list = $stackframe["code_list"];
+  $list_index = $stackframe["list_index"];
+
+  //f_println("LISTINDEX: ".$list_index);
+  // Has the stackframe finished evaluating the code list?
+  if ($list_index >= count($code_list)):
+    $process->callstack[$stackframe_index] = NULL;
+    $process->stackframe_index--;
+  else:
+    // Evaluate the current list element. Note that
+    // new stackframes may be created during eval, and
+    // that this will increment $process->stackframe_index.
+    $element = $code_list[$list_index];
+    f_eval($process, $element);
+
+    // Increment code list index for the stackframe that was evaluated.
+    $process->callstack[$stackframe_index]["list_index"]++;
+  endif;
+
+  // Was this the last stackframe?
+  if ($process->stackframe_index < 0):
+    f_println("PROGRAM ENDED");
+    $process->run = false;
+  endif;
 }
 
-function f_set_binding($process, $symbol, $value)
+// This will evaluate the list.
+function f_create_stackframe($process, $code_list)
 {
-  $process->callstack[$process->current_frame][$symbol] = $value;
+  // Tail call optimization. Only increment stackframe if
+  // current code list has elements left.
+
+  if ($process->stackframe_index > 0):
+    f_println("probe1");
+    $code_list = $process->callstack[$process->stackframe_index]["code_list"];
+    $list_index = $process->callstack[$process->stackframe_index]["list_index"];
+
+    f_printobj("CODELIST", $code_list);
+    f_println("LISTINDEX: ".$list_index);
+    sleep(1);
+    if ($list_index < (count($code_list) - 1)):
+      f_println("probe2");
+      $process->stackframe_index++;
+    endif;
+  else:
+    $process->stackframe_index++;
+  endif;
+
+  $stackframe = [];
+  $stackframe["code_list"] = $code_list;
+  $stackframe["list_index"] = 0;
+
+  if ($process->stackframe_index === 0):
+    $stackframe["env"] = [];
+  else:
+    $stackframe["env"] = $process->callstack[$process->stackframe_index - 1]["env"];
+  endif;
+
+  $process->callstack[$process->stackframe_index] = $stackframe;
 }
 
-function f_get_fun($process, $symbol)
+function f_eval($process, $element)
 {
-  return $process->funs[$symbol];
-}
+  //f_println("EVALUATING: ".$element);
 
-function f_set_fun($process, $symbol, $fun)
-{
-  $process->funs[$symbol] = $fun;
-}
+/*
+  if (is_array($element)):
+    f_create_stackframe($process, $element);
+  endif;
+*/
 
-function f_enter_stackframe($process)
-{
-  $process->current_frame++;
-  $callstack[$process->current_frame] = []; // environment table
-}
+  // Numbers and lists and objects evaluate to themselves.
+  if (is_numeric($element) || is_array($element) || is_object($element)):
+	  f_stack_push($process, $element);
+    return;
+  endif;
 
-function f_exit_stackframe($process)
-{
-  $process->current_frame--;
+  // Symbols might be primyitoves, functions, variables.
+  // Unbound symbols evaluate to their literal value.
+  if (is_string($element)):
+
+    // Empty symbol is an error and aborts the program.
+    if (strlen($element) === 0):
+      f_println("ERROR: SYMBOL IS EMPTY STRING");
+      exit();
+    endif;
+
+    // Check if it is a primitive.
+    $fun = $process->prims[$element];
+    if (isset($fun)):
+      $fun($process);
+      return;
+    endif;
+
+    // Check if it is a function.
+    $fun = $process->callstack[$process->stackframe_index]["env"][$element];
+    if (isset($fun) && is_array($fun) && ($fun[0] === "FUN")):
+      f_eval_fun($process, $fun);
+      return;
+    endif;
+
+    // If not any of the above, push the literal value.
+    // Variables are not evaluated here. They are evaluated
+    // when calling a function or performing a primitive.
+    f_stack_push($process, $element);
+
+  endif;
 }
 
 function f_stack_push($process, $element)
@@ -111,34 +187,60 @@ function f_stack_pop_eval($process)
   return f_eval_element($process, $value);
 }
 
-function f_is_primitive($process, $symbol)
-{
-  return isset($process->prims[$symbol]);
-}
 
-function f_is_fun($fun)
+function f_eval_element($process, $element)
 {
-  return (is_array($fun) && ($fun[0] === "FUN"));
-}
-
-// EvalList evaluates a list as program code.
-function f_eval_list($process, $something)
-{
-  // Eval of a non-list just pushes the value onto the stack.
-  if (!is_array($something)):
-    if (is_numeric($something) || is_object($something)):
-      f_stack_push($process, $something);
-    else:
-      f_stack_push($process, f_eval_element($process, $something));
+  if (is_string($element)):
+    // Lookup value.
+    $obj = $process->callstack[$process->stackframe_index]["env"][$element];
+    if (isset($obj)):
+      // It is a variable, return its value.
+      return $obj;
     endif;
-    return;
   endif;
-  
-  // For lists evaluate each element in the list.
-  foreach ($something as $element):
-    f_eval($process, $element);
+
+  // Otherwise return the element.
+  return $element;
+}
+
+// TODO: TAIL OPTIMIZATION
+
+function f_eval_fun($process, $fun)
+{
+  // Create a stackframe for the function.
+  f_create_stackframe($process, $fun[2]);
+
+  // Now that we have a new stackframe, we can bind the parameters.
+  // Get number of parameters.
+  $local_vars = $fun[1];
+  // Stack order is reverse of param order.
+  $local_vars = array_reverse($local_vars);
+  foreach ($local_vars as $var):
+    $value = f_stack_pop_eval($process, $stack);
+    $process->callstack[$process->stackframe_index]["env"][$var] = $value;
   endforeach;
 }
+
+/*
+
+function f_set_binding($process, $symbol, $value)
+{
+  $process->callstack[$process->current_frame][$symbol] = $value;
+}
+
+function f_get_fun($process, $symbol)
+{
+  return $process->funs[$symbol];
+}
+
+function f_set_fun($process, $symbol, $fun)
+{
+  $process->funs[$symbol] = $fun;
+}
+
+
+
+
 
 // Eval modifies the environment and the stack.
 function f_eval($process, $element)
@@ -173,57 +275,13 @@ function f_eval($process, $element)
   endif;
 }
 
-function f_eval_primitive($process, $symbol)
-{
-  $fun = $process->prims[$symbol];
-  $fun($process);
-}
-
-// Copies the env table to not overwrite shadowed 
-// variables permanently.
-function f_eval_fun($process, $fun)
-{
-  f_enter_stackframe($process);
-
-  // Get number of parameters.
-  $local_vars = $fun[1];
-  
-  // Stack order is reverse of param order.
-  $local_vars = array_reverse($local_vars);
-  
-  // Bind parameters to values.
-  foreach ($local_vars as $var):
-    $value = f_stack_pop($process, $stack);
-    $value = f_eval_element($process, $value);
-    f_set_binding($process, $var, $value);
-  endforeach;
-  
-  // Evaluate the function body.
-  f_eval_list($process, $fun[2]);
-  
-  f_exit_stackframe($process);
-}
-
-function f_eval_element($process, $element)
-{
-  if (is_string($element)):
-    // Lookup value.
-    $obj = f_get_binding($process, $element);
-    if (isset($obj)):
-      // It is a variable, return its value.
-      return $obj;
-    endif;
-  endif;
-
-  // Otherwise return the element.
-  return $element;
-}
 
 // Add a native primitive.
 function f_add_primitive($process, $symbol, $fun)
 {
   $process->prims[$symbol] = $fun;
 }
+*/
 
 // Parse (tokenize) a string and return a list.
 function f_parse($string)

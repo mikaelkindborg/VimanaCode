@@ -1,7 +1,11 @@
 <?php
+
+print("THIS FILE DOES NOT RUN\n");
+exit();
+
 //
 // File: workbench.php
-// Date: 2021-04-18
+// Date: 2021-04-17
 // Author: Mikael Kinborg
 // Email: mikael@kindborg.com
 // Website: kindborg.com
@@ -107,60 +111,111 @@ require('primitives.php');
 
 $code = <<< CODE
 
-(N TAIL) (N PRINTLN 1 SLEEP N 1000 + TAIL) DEF
-1000 TAIL
+(FACT (N) ((N 0 EQ) 1 (N 1 - FACT N *) IFELSE)) DEF
+100000 (20 FACT) DOTIMES
 
 CODE;
 
 f_eval_string($code);
 
-/*
+exit();
 
+$code = <<< CODE
 
-(N FACT) ((N 0 EQ) EVAL (1) (N 1 - FACT N *) IFELSE) DEF
-30000 FACT PRINTLN
+(FACT (N) ((N 0 EQ) 1 (N 1 - FACT) IFELSE)) DEF
+100000 (20 FACT) DOTIMES
 
+(Hello World) JOIN PRINTLN
 
-HELLO PRINTLN 1 SLEEP WORLD PRINTLN 1 GOTO
+(This is a list used as comment. DOC does 
+not evaluate its argument, but simply pops 
+it off the stack.) DOC
 
-1 (X) SET
+(Reverse Polish Notation is used.) DOC
 
-(HELLO PRINTLN) (1 GOTO)
-
-
-(N L LOOP) ((N 0 EQ NOT) EVAL (L EVAL N 1 - LOOP) IFTRUE) DEF
-300 (HELLO PRINTLN) LOOP
-
-
-(L FOO) (L EVAL) DEF
-(HELLO PRINTLN) EVAL
-
-
-(N FACT) ((N 0 EQ) EVAL (1) (N 1 - FACT N *) IFELSE) DEF
-300 FACT PRINTLN
-
-(N FACT) ((N 1 EQ) EVAL (1) (N 1 - FACT) IFELSE) DEF
-2 FACT 
-
-3 INCR
-(A 1 +)
-
-(N FOO) ((N 1 EQ) EVAL PRINTSTACK (N VALUE) IFTRUE) DEF
-1 FOO PRINTSTACK
-
-T (HELLO PRINTLN) (WORLD PRINTLN) IFELSE
-
-
-(
 1 2 + PRINTLN
-((HELLO WORLD) JOIN PRINTLN) EVAL
 
-(X FOO) (X 1 +) DEF
-PRINTENV
-2 FOO PRINTLN
+(Code formatting is flexible) DOC
 
-(N FACT) ((N 0 EQ) EVAL (1) (N 1 - FACT) IFELSE) DEF
-3 FACT PRINTLN
-)
+1.1 
+2.2 
++ 
+PRINTLN
+
+(Unbound variables are treated as symbols.) DOC
+
+HELLO_WORLD PRINTLN
+
+(Lists are not evaluated per default,
+they are simply pushed onto the stack.)
+
+(But it is good practice to clean up comments.
+Here we print the stack depth and pop this and
+the previous list comment off the stack. You
+can also print the stack itself with STACK PRINT)
+
+Stack_depth: PRINT 
+STACK COUNT PRINTLN
+
+DOC 
 DOC
-*/
+
+Stack_depth: PRINT 
+STACK COUNT PRINTLN
+
+(T is the symbol for TRUE and F is for FALSE) DOC
+
+T condition_is_true IFTRUE PRINTLN
+F condition_is_true condition_is_false IFELSE PRINTLN
+
+(Here is the Factorial function. Function names are global.) DOC
+
+(FACT (N) 
+  ((N 0 EQ) 1
+   (N 1 - FACT N *) IFELSE)) DEF
+20 FACT PRINTLN
+
+(Examples of EVAL and CALL.) DOC
+
+(1 2 3 + + PRINTLN) EVAL
+
+(FUN () (HELLO PRINTLN)) CALL
+
+3333 (FUN (Z) (Z 2 *)) CALL PRINTLN
+
+(SET can be used like this. Variables are single assignment, 
+which means a variable can only be set once.) DOC
+
+4444 X SET
+Value_of_X: PRINT X PRINTLN
+
+(Variables in the outer enviroment are accessible.) DOC
+
+(FOO () X) DEF
+FOO PRINTLN
+
+(Parameters shadow outer variables.) DOC
+
+(FOO (X) X) DEF
+88 FOO PRINTLN
+
+(To prevent something from being evaluated, you can put
+it in a list. This is like QUOTE in Lisp.
+For example, a symbol bound to a function causes
+the function to evaluate. This means you cannot access
+the variable value (the list that defines the function).
+To do this, use a list with the function symbol and
+call VALUE.) DOC
+
+(FOO () HELLO) DEF
+FOO PRINTLN
+(FOO) VALUE PRINTLN
+
+(You can use FETCH to get data from a server.) DOC
+
+(Guru meditation of the day:) JOIN PRINTLN
+http://ancientmantras.com/mantra-of-the-day.php FETCH PRINTLN
+
+CODE;
+
+f_eval_string($code);

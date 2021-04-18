@@ -2,7 +2,7 @@
 
 //
 // File: primitives.php
-// Date: 2021-04-17
+// Date: 2021-04-18
 // Author: Mikael Kinborg
 // Email: mikael@kindborg.com
 // Website: kindborg.com
@@ -22,8 +22,15 @@ function f_create_primitives()
   
   $add("EVAL", function($process)
   {
-    $obj = f_stack_pop($process);
-    f_eval_list($process, $obj);
+    $obj = f_stack_pop_eval($process);
+    //f_printobj("OBJ IN EVAL", $obj);
+    if (is_array($obj)):
+      f_create_stackframe($process, $obj);
+      //f_printobj("PROCESS",$process);
+      //exit();
+    else:
+      f_eval_element($process, $obj);
+    endif;
   });
   
   $add("CALL", function($process)
@@ -32,6 +39,27 @@ function f_create_primitives()
     f_eval_fun($process, $fun);
   });
   
+  $add("GOTO", function($process)
+  {
+    $n = f_stack_pop_eval($process);
+    if (!is_numeric($n)):
+      print("ERROR: NON-NUMERIC VALUE IN GOTO:".$n."\n");
+      exit();
+    endif;
+    $process->callstack[$process->stackframe_index]["list_index"] = $n - 2;
+  });
+
+  $add("SLEEP", function($process)
+  {
+    $n = f_stack_pop_eval($process);
+    if (!is_numeric($n)):
+      print("ERROR: NON-NUMERIC VALUE IN SLEEP:".$n."\n");
+      exit();
+    endif;
+    sleep($n);
+  });
+
+  /*
   $add("SET", function($process)
   {
     // SET is single assignment
@@ -43,20 +71,19 @@ function f_create_primitives()
     $value = f_stack_pop_eval($process);
     f_set_binding($process, $name, $value);
   });
-  
+  */
+
   $add("DEF", function($process)
   {
+    $body = f_stack_pop($process);
     $fundef = f_stack_pop($process);
-    $name = $fundef[0];
-    $params = $fundef[1];
-    $body = $fundef[2];
+    $name = array_pop($fundef);
+    $params = $fundef;
+    //f_println("FUN NAME: ".$name);
+    //f_printobj("FUN PARAMS", $params);
     $fun = ["FUN", $params, $body];
-    // The function name is defined in the global function table.
-    // Use SET to define a local function, like this (however, if
-    // the name clashes with a defined function the system crashes):
-    //  (FUN () (HELLO PRINTLN)) FOOBAR SET
-    //  FOOBAR VALUE CALL
-    f_set_fun($process, $name, $fun);
+    //f_printobj("FUN", $fun);
+    $process->callstack[$process->stackframe_index]["env"][$name] = $fun;
   });
   
   // VALUE is special in that it gets the value of the first
@@ -69,7 +96,7 @@ function f_create_primitives()
     if (is_array($var)):
       $var = $var[0];
     endif;
-    $value = f_get_binding($process, $var);
+    $value =  $process->callstack[$process->stackframe_index]["env"][$var];
     f_stack_push($process, $value);
   });
   
@@ -161,11 +188,9 @@ function f_create_primitives()
   $add("IFTRUE", function($process)
   {
     $true_branch = f_stack_pop($process);
-    $condition = f_stack_pop($process);
-    f_eval_list($process, $condition);
-    $res = f_stack_pop($process);
-    if ($res === "T"):
-      f_eval_list($process, $true_branch);
+    $truth = f_stack_pop($process);
+    if ($truth === "T"):
+      f_create_stackframe($process, $true_branch);
     endif;
   });
   
@@ -173,13 +198,11 @@ function f_create_primitives()
   {
     $else_branch = f_stack_pop($process);
     $true_branch = f_stack_pop($process);
-    $condition = f_stack_pop($process);
-    f_eval_list($process, $condition);
-    $res = f_stack_pop($process);
-    if ($res === "T"):
-      f_eval_list($process, $true_branch);
+    $truth = f_stack_pop($process);
+    if ($truth === "T"):
+      f_create_stackframe($process, $true_branch);
     else:
-      f_eval_list($process, $else_branch);
+      f_create_stackframe($process, $else_branch);
     endif;
   });
   
@@ -248,8 +271,8 @@ function f_create_primitives()
   
   $add("PRINTENV", function($process)
   {
-    print("PRINTENV STACKFRAME ".$process->current_frame.":\n");
-    print_r($process->callstack[$process->current_frame]);
+    print("PRINTENV STACKFRAME ".$process->stackframe_index.":\n");
+    print_r($process->callstack[$process->stackframe_index]["env"]);
   });
   
   $add("PRINTSTACK", function($process)
@@ -261,7 +284,7 @@ function f_create_primitives()
   $add("PRINTCALLSTACK", function($process)
   {
     print_r("PRINTCALLSTACK:\n");
-    print("CURRENT FRAME: ".$process->current_frame."\n");
+    print("CURRENT FRAME: ".$process->stackframe_index."\n");
     print_r($process->callstack);
   });
   
