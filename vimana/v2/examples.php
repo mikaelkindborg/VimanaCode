@@ -108,11 +108,96 @@ require('primitives.php');
 
 $code = <<< CODE
 
-PRINTCALLSTACK
+(Hello World) JOIN PRINTLN
 
-42 X SET
+(This is a list used as comment. DOC does 
+not evaluate its argument, but simply pops 
+it off the stack.) DOC
 
-PRINTCALLSTACK
+(Reverse Polish Notation is used.) DOC
+
+1 2 + PRINTLN
+
+(Code formatting is flexible) DOC
+
+1.1 
+2.2 
++ 
+PRINTLN
+
+(Unbound variables are treated as symbols.) DOC
+
+HELLO_WORLD PRINTLN
+
+(Lists are not evaluated per default,
+they are simply pushed onto the stack.)
+
+(But it is good practice to clean up comments.
+Here we print the stack depth and pop this and
+the previous list comment off the stack. You
+can also print the stack itself with STACK PRINT)
+
+Stack_depth: PRINT 
+STACK COUNT PRINTLN
+
+DOC 
+DOC
+
+Stack_depth: PRINT 
+STACK COUNT PRINTLN
+
+(T is the symbol for TRUE and F is for FALSE) DOC
+
+T condition_is_true IFTRUE PRINTLN
+F condition_is_true condition_is_false IFELSE PRINTLN
+
+(Here is the Factorial function. Function names are global.) DOC
+
+(FACT (N) 
+  ((N 0 EQ) 1
+   (N 1 - FACT N *) IFELSE)) DEF
+20 FACT PRINTLN
+
+(Examples of EVAL and CALL.) DOC
+
+(1 2 3 + + PRINTLN) EVAL
+
+(FUN () (HELLO PRINTLN)) CALL
+
+3333 (FUN (Z) (Z 2 *)) CALL PRINTLN
+
+(SET can be used like this. Variables are single assignment, 
+which means a variable can only be set once.) DOC
+
+4444 X SET
+Value_of_X: PRINT X PRINTLN
+
+(Variables in the outer enviroment are accessible.) DOC
+
+(FOO () X) DEF
+FOO PRINTLN
+
+(Parameters shadow outer variables.) DOC
+
+(FOO (X) X) DEF
+88 FOO PRINTLN
+
+(To prevent something from being evaluated, you can put
+it in a list. This is like QUOTE in Lisp.
+For example, a symbol bound to a function causes
+the function to evaluate. This means you cannot access
+the variable value (the list that defines the function).
+To do this, use a list with the function symbol and
+call VALUE.) DOC
+
+(FOO () HELLO) DEF
+FOO PRINTLN
+(FOO) VALUE PRINTLN
+
+(You can use FETCH to get data from a server.) DOC
+
+(Guru meditation of the day:) JOIN PRINTLN
+http://ancientmantras.com/mantra-of-the-day.php FETCH PRINTLN
 
 CODE;
 
