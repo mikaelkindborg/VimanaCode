@@ -181,6 +181,7 @@ function f_create_primitives()
     $true_branch = f_stack_pop($process);
     $truth = f_stack_pop($process);
     if ($truth === "T"):
+      //f_println("WILL TAIL CALL FOLLOW?!");
       f_create_stackframe($process, $true_branch);
     endif;
   });

@@ -90,9 +90,11 @@ function f_run($process)
 }
 
 // This will evaluate the list.
-function f_create_stackframe($process, $code_list)
+function f_create_stackframe($process, $new_code_list)
 {
   // ENTER STACK FRAME
+
+  //f_printobj("ENV IN CREATE FRAME", $process->callstack[$process->stackframe_index]["env"]);
 
   // Below we check for tail call optimization.
 
@@ -106,36 +108,47 @@ function f_create_stackframe($process, $code_list)
     // If the instruction index has reached the end of the list,
     // this frame has finished executing, and we can reuse it
     // for the new code.
-    $current_code_list = $process->callstack[$stackframe_index]["code_list"];
-    $instr_index = $process->callstack[$stackframe_index]["instr_index"];
-    if ($instr_index + 1 >= count($current_code_list)):
-      //f_println("RESUSE STACKFRAME (TAIL CALL): ".$stackframe_index);
+  $index = $stackframe_index;
+    $code_list = $process->callstack[$index]["code_list"];
+    $instr_index = $process->callstack[$index]["instr_index"];
+    if ($instr_index + 1 >= count($code_list)):
+      //f_println("STACKFRAME RESUSE IS POSSIBLE: ".$index);
+      // Tail call is possible.
+      $tail_call_index = $index;
       $tail_call = TRUE;
     endif;
   endif;
 
+  // If tail call.
+  if ($tail_call):
+    //f_println("TAIL CALL: ".$tail_call_index);
+    $process->stackframe_index = $tail_call_index;
+    // TODO: 
+    //$process->callstack[$tail_call_index]["env"] = 
+    //  $process->callstack[$stackframe_index]["env"];
+  endif;
+  
   // If NOT tail call.
   if (! $tail_call):
     // ENTER NEW STACKFRAME
     $process->stackframe_index++;
-    $stackframe_index = $process->stackframe_index;
-
-    //f_println("ENTER NEW STACKFRAME: ".$process->stackframe_index);
+    $index = $process->stackframe_index;
+    //f_println("NEW STACKFRAME: ".$index);
 
     // Set empty environment for root stackframe.
-    if ($stackframe_index === 0):
+    if ($index === 0):
       // Set initial environment to empty for first stackframe.
       $stackframe["env"] = [];
     else:
       // Copy environment from previous stackframe.
-      $process->callstack[$stackframe_index]["env"] = 
-        $process->callstack[$stackframe_index - 1]["env"];
+      $process->callstack[$index]["env"] = 
+        $process->callstack[$index - 1]["env"];
     endif;
   endif;
-
+  
   // Set code list and init instr index.
-  $process->callstack[$stackframe_index]["code_list"] = $code_list;
-  $process->callstack[$stackframe_index]["instr_index"] = -1;
+  $process->callstack[$index]["code_list"] = $new_code_list;
+  $process->callstack[$index]["instr_index"] = -1;
 
   //f_printobj("CALLSTACK", $process->callstack);
   //f_printobj("STACK", $process->stack);
