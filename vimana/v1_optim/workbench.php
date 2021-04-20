@@ -35,7 +35,8 @@ f_eval_string($code);
 v1_plain with references:
 (FACT (N) ((N 0 EQ) (1) (N 1 - FACT N *) IFELSE)) DEF
 100000 (20 FACT) DOTIMES
-php v1_plain/workbench.php  8.12s user 0.02s system 99% cpu 8.148 total
+php v1_optim/workbench.php  5.78s user 0.02s system 99% cpu 5.804 total
+php v1_optim/workbench.php  5.83s user 0.02s system 99% cpu 5.857 total
 
 
 20 FACT PRINTLN

@@ -60,8 +60,6 @@ function f_printobj($str, $obj)
 function f_eval_list($list, &$env, &$stack, $prims)
 {
   // Eval of a non-list just pushes the value onto the stack.
-  // This is a hack to allow the use of symbols in place of lists
-  // in some cases like IFTRUE and IFELSE.
   if (!is_array($list)):
     array_push($stack, f_eval_element($list, $env));
     return;
@@ -77,6 +75,7 @@ function f_eval_list($list, &$env, &$stack, $prims)
 function f_eval($element, &$env, &$stack, $prims)
 {
   if (is_string($element)):
+    // Remove empty strings (unexpected).
     if (strlen($element) === 0):
       return;
     endif;
@@ -88,10 +87,11 @@ function f_eval($element, &$env, &$stack, $prims)
     endif;
 
     // Is it a function?
-    if (isset($env[$element]) && (is_array($env[$element]) && ($env[$element][0] === "FUN"))):
+    $obj = & $env[$element];
+    if (isset($obj) && (is_array($obj) && ($obj[0] === "FUN"))):
       // If it is a function, evaluate it.
       // Functions evaluate their arguments.
-      f_eval_fun($env[$element], $env, $stack, $prims);
+      f_eval_fun($obj, $env, $stack, $prims);
       return;
     endif;
   endif;
@@ -110,12 +110,11 @@ function f_eval_fun($fun, $env, &$stack, $prims)
   $local_vars = $fun[1];
   
   // Stack order is reverse of param order.
-  $local_vars = array_reverse($local_vars);
-  
+  //$local_vars = array_reverse($local_vars);
   // Bind parameters to values.
-  foreach ($local_vars as $var):
+  foreach (array_reverse($local_vars) as $var):
     $value = array_pop($stack);
-    $value = f_eval_element($value, $env);
+    $value = (is_string($value) && isset($env[$value])) ? $env[$value] : $value;
     $env[$var] = $value;
   endforeach;
   
@@ -142,7 +141,8 @@ function f_eval_element($element, $env)
 function array_pop_eval(&$stack, $env)
 {
   $value = array_pop($stack);
-  return f_eval_element($value, $env);
+  return (is_string($value) && isset($env[$value])) ? $env[$value] : $value;
+  //return f_eval_element($value, $env);
 }
 
 // Add a native primitive.

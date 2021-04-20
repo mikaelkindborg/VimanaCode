@@ -86,32 +86,28 @@ function f_create_primitives()
   {
     $b = array_pop_eval($stack, $env);
     $a = array_pop_eval($stack, $env);
-    $res = $a + $b;
-    array_push($stack, $res);
+    array_push($stack, $a + $b);
   });
   
   $add("-", function(&$env, &$stack, $prims)
   {
     $b = array_pop_eval($stack, $env);
     $a = array_pop_eval($stack, $env);
-    $res = $a - $b;
-    array_push($stack, $res);
+    array_push($stack, $a - $b);
   });
   
   $add("*", function(&$env, &$stack, $prims)
   {
     $b = array_pop_eval($stack, $env);
     $a = array_pop_eval($stack, $env);
-    $res = $a * $b;
-    array_push($stack, $res);
+    array_push($stack, $a * $b);
   });
   
   $add("/", function(&$env, &$stack, $prims)
   {
     $b = array_pop_eval($stack, $env);
     $a = array_pop_eval($stack, $env);
-    $res = $a / $b;
-    array_push($stack, $res);
+    array_push($stack, $a / $b);
   });
   
   $add("T", function(&$env, &$stack, $prims)
@@ -128,11 +124,10 @@ function f_create_primitives()
   {
     $bool = array_pop($stack);
     if ($bool === "F"):
-      $res = "T";
+      array_push($stack, "T");
     else:
-      $res = "F";
+      array_push($stack, "F");
     endif;
-    array_push($stack, $res);
   });
   
   $add("EQ", function(&$env, &$stack, $prims)
@@ -140,11 +135,11 @@ function f_create_primitives()
     $b = array_pop_eval($stack, $env);
     $a = array_pop_eval($stack, $env);
     if ($a === $b):
-      $res = "T";
+      array_push($stack, "T");
     else:
-      $res = "F";
+      array_push($stack, "F");
     endif;
-    array_push($stack, $res);
+    
   });
   
   $add("IFTRUE", function(&$env, &$stack, $prims)
@@ -178,8 +173,7 @@ function f_create_primitives()
   {
     $body = array_pop($stack);
     $n = array_pop_eval($stack, $env);
-    $n = $n - 1;
-    for  ($i = 0; $i < $n; $i++):
+    for  ($i = 0; $i < ($n - 1); $i++):
       f_eval_list($body, $env, $stack, $prims);
       array_pop($stack);
     endfor;
