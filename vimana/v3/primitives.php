@@ -20,10 +20,10 @@ function f_create_primitives()
     $prims[$symbol] = $fun;
   };
   
-  $add("EVAL", function($process)
+  $add("DO", function($process)
   {
     $obj = f_stack_pop_eval($process);
-    //f_printobj("OBJ IN EVAL", $obj);
+    //f_printobj("OBJ IN DO", $obj);
     if (is_array($obj)):
       f_create_stackframe($process, $obj);
       //f_printobj("PROCESS",$process);
@@ -41,12 +41,18 @@ function f_create_primitives()
   
   $add("GOTO", function($process)
   {
-    $n = f_stack_pop_eval($process);
-    if (!is_numeric($n)):
-      print("ERROR: NON-NUMERIC VALUE IN GOTO:".$n."\n");
+    $instr_index = f_stack_pop_eval($process);
+    $stackframe_offset = f_stack_pop_eval($process);
+    if (!is_numeric($stackframe_offset)):
+      print("ERROR: NON-NUMERIC STACKFRAME OFFSET IN GOTO: ".$stackframe_offset."\n");
       exit();
     endif;
-    $process->callstack[$process->stackframe_index]["list_index"] = $n - 2;
+    if (!is_numeric($instr_index)):
+      print("ERROR: NON-NUMERIC INSTR INDEX IN GOTO: ".$instr_index."\n");
+      exit();
+    endif;
+    $process->stackframe_index = $process->stackframe_index - $stackframe_offset;
+    $process->callstack[$process->stackframe_index]["instr_index"] = $instr_index - 1;
   });
 
   $add("SLEEP", function($process)
@@ -59,19 +65,17 @@ function f_create_primitives()
     sleep($n);
   });
 
-  /*
   $add("SET", function($process)
   {
-    // SET is single assignment
     $name = f_stack_pop($process);
-    if (isset($process->callstack[$process->current_frame][$name])):
-      print("ERROR: ATTEMPT TO SET ASSIGNED VARIABLE: ".$name."\n");
-      exit();
-    endif;
+    // OLD SINGLE ASSIGNMENT CHECK.
+    //if (isset($process->callstack[$process->current_frame][$name])):
+    //  print("ERROR: ATTEMPT TO SET ASSIGNED VARIABLE: ".$name."\n");
+    //  exit();
+    //endif;
     $value = f_stack_pop_eval($process);
-    f_set_binding($process, $name, $value);
+    $process->callstack[$process->stackframe_index]["env"][$name] = $value;
   });
-  */
 
   $add("DEF", function($process)
   {
@@ -103,19 +107,6 @@ function f_create_primitives()
   $add("DOC", function($process)
   {
     f_stack_pop($process);
-  });
-  
-  $add("GET", function($process)
-  {
-    $index = f_stack_pop_eval($process);
-    $list = f_stack_pop_eval($process);
-    f_stack_push($process, $list[$index - 1]);
-  });
-  
-  $add("COUNT", function($process)
-  {
-    $list = f_stack_pop_eval($process);
-    f_stack_push($process, count($list));
   });
   
   $add("+", function($process)
@@ -205,7 +196,7 @@ function f_create_primitives()
       f_create_stackframe($process, $else_branch);
     endif;
   });
-  
+  /*
   $add("DOTIMES", function($process)
   {
     $body = f_stack_pop($process);
@@ -217,6 +208,19 @@ function f_create_primitives()
     endfor;
     // Pushes the result of the last iteration.
     f_eval_list($process, $body);
+  });
+  */
+  $add("GET", function($process)
+  {
+    $index = f_stack_pop_eval($process);
+    $list = f_stack_pop_eval($process);
+    f_stack_push($process, $list[$index - 1]);
+  });
+  
+  $add("COUNT", function($process)
+  {
+    $list = f_stack_pop_eval($process);
+    f_stack_push($process, count($list));
   });
   
   $add("FETCH", function($process)

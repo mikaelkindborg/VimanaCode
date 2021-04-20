@@ -107,8 +107,10 @@ require('primitives.php');
 
 $code = <<< CODE
 
-(N TAIL) (N PRINTLN 1 SLEEP N 1000 + TAIL) DEF
-1000 TAIL
+(N FACT) ((N 0 EQ) DO (1) (N 1 - FACT N *) IFELSE) DEF
+(N L LOOP) ((N 0 EQ NOT) DO (L DO N 1 - L LOOP) IFTRUE) DEF
+100000 (20 FACT) LOOP
+(24.47s user 0.04s system 99% cpu 24.533 total) DOC
 
 CODE;
 
@@ -116,9 +118,50 @@ f_eval_string($code);
 
 /*
 
+Nicer formatting:
+
+(N FACT) 
+  ((N 0 EQ) DO 
+    (1) 
+    (N 1 - FACT N *) IFELSE) DEF
+
+(N L LOOP) 
+  ((N 0 EQ NOT) DO 
+    (L DO N 1 - L LOOP) IFTRUE) DEF
+
+100000 (20 FACT) LOOP
+
+(24.47s user 0.04s system 99% cpu 24.533 total) DOC
+
+42 X SET
+X PRINTLN
+(X PRINTLN) DO
+(43 X SET X PRINTLN) DO
+X PRINTLN
+(44 Z SET Z PRINTLN) DO
+Z PRINTLN
+
+(N TAIL) 
+  ((0 N EQ NOT) DO 
+    (N PRINTLN 
+     N 1 - TAIL) IFTRUE) DEF
+1000 TAIL
+
+(N FOO) (N PRINTLN N BAR) DEF
+(N BAR) (N PRINTLN) DEF
+42 FOO
+
+
+(N TAIL) (N PRINTLN 1 SLEEP N 1000 + TAIL) DEF
+1000 TAIL
 
 (N FACT) ((N 0 EQ) EVAL (1) (N 1 - FACT N *) IFELSE) DEF
 30000 FACT PRINTLN
+
+
+(N FOO) (N PRINTLN N BAR) DEF
+(N BAR) (N PRINTLN) DEF
+42 FOO
 
 
 HELLO PRINTLN 1 SLEEP WORLD PRINTLN 1 GOTO
