@@ -36,23 +36,10 @@ function f_eval_string($code)
 {
   $list = f_parse($code);
   $env = [];
-  $stack = [];
+  $stack = ["FOOBAR"];
   $prims = f_create_primitives();
 
   f_eval_list($list, $env, $stack, $prims);
-}
-
-// For debugging.
-function f_println($str)
-{
-  print($str."\n");
-}
-
-function f_printobj($str, $obj)
-{
-  print($str.": ");
-  print_r($obj);
-  print("\n");
 }
 
 // EvalList evaluates a list as program code.
@@ -65,6 +52,25 @@ function f_eval_list($list, &$env, &$stack, $prims)
     return;
   endif;
   
+  f_println("----------------------------");
+  //f_print_array("STACK", $stack);
+  //f_print_array("ENV", $env);
+  //f_print_array("LIST", $list);
+  
+  // Evaluate each element in the list.
+  foreach ($list as $element):
+    $funcall = f_eval($element, $env, $stack, $prims);
+    // Call function if set.
+    if (isset($funcall)):
+      $fun = $funcall["fun"];
+      $funenv = $funcall["env"];
+      f_print_array("CALLING", $fun);
+      f_print_array("FUNENV", $funenv);
+      f_eval_list($fun[2], $funenv, $stack, $prims);
+    endif;
+  endforeach;
+
+/*
   // Tail-call optimization loop.
   while (TRUE):
     $funcall = NULL;
@@ -80,6 +86,7 @@ function f_eval_list($list, &$env, &$stack, $prims)
       endif;
       //f_printobj("EVALUATING", $element);
       $funcall = f_eval($element, $env, $stack, $prims);
+      f_print_array("STACK", $stack);
       //f_printobj("FUNCALL", $funcall);
     endforeach;
     // Do tailcall if available.
@@ -93,6 +100,7 @@ function f_eval_list($list, &$env, &$stack, $prims)
       break;
     endif;
   endwhile;
+*/
 }
 
 // Eval modifies the environment and the stack.
@@ -145,6 +153,7 @@ function f_eval_fun($fun, $env, &$stack, $prims)
   
   // Evaluate the function body.
   // f_eval_list($fun[2], $fun, $stack, $prims);
+  
   return ["fun" => $fun, "env" => $env];
 }
 
@@ -217,4 +226,54 @@ function f_create_list(&$tokens)
     
     array_push($list, $next);
   endwhile;
+}
+
+// For debugging.
+function f_println($str)
+{
+  print($str."\n");
+}
+
+function f_printobj($str, $obj)
+{
+  print($str.":\n");
+  print_r($obj);
+  print("\n");
+}
+
+function f_print_array($str, $array)
+{
+  print($str.":\n");
+  print(f_array_as_string($array));
+  print("\n");
+}
+
+
+function f_array_as_string($array, $indent = "")
+{
+  if (!is_array($array)):
+    return "".$array;
+  endif;
+  
+  foreach ($array as $key => $value):
+    $value_string = $value."";
+    if (is_array($value)):
+      $value_string = "(".f_array_as_string($value, $indent."  ").")";
+    endif;
+    if (is_numeric($key)):
+      if ($key == array_key_last($array)):
+        $string .= $value_string;
+      else:
+        $string .= $value_string." ";
+      endif;
+    else:
+      if ($key == array_key_last($array)):
+        $string .= $indent.$key.": ".$value_string;
+      else:
+        $string .= $indent.$key.": ".$value_string."\n";
+      endif;
+    endif;
+    
+  endforeach;
+  return $string;
 }

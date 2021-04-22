@@ -98,9 +98,13 @@ function f_create_primitives()
   
   $add("*", function(&$env, &$stack, $prims)
   {
+    f_print_array("ENV IN MULT", $env);
     $b = array_pop_eval($stack, $env);
     $a = array_pop_eval($stack, $env);
+    $res = $a * $b;
+    f_println("MULT ".$a." ".$b." ".$res);
     array_push($stack, $a * $b);
+    //f_print_array("STACK", $stack);
   });
   
   $add("/", function(&$env, &$stack, $prims)
@@ -132,11 +136,16 @@ function f_create_primitives()
   
   $add("EQ", function(&$env, &$stack, $prims)
   {
+    f_println("EVAL EQ");
     $b = array_pop_eval($stack, $env);
     $a = array_pop_eval($stack, $env);
+    f_println("A = ".$a);
+    f_println("B = ".$b);
     if ($a === $b):
+      f_println("PUSH T");
       array_push($stack, "T");
     else:
+      f_println("PUSH F");
       array_push($stack, "F");
     endif;
     
@@ -162,8 +171,10 @@ function f_create_primitives()
     $res = array_pop($stack);
     if ($res === "T"):
       f_eval_list($a, $env, $stack, $prims);
+    f_print_array("IFELSE STACK A", $stack);
     else:
       f_eval_list($b, $env, $stack, $prims);
+    f_print_array("IFELSE STACK B", $stack);
     endif;
   });
   

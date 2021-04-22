@@ -18,10 +18,26 @@
 // PHP needs to be installed on your computer.
 //
 
-require('interpreter.php');
-require('primitives.php');
+require('interpreter2.php');
+require('primitives2.php');
 
 $code = <<< CODE
+
+(N FACT) ((N 0 EQ) (1) (N 1 - FACT N *) IFELSE) DEF
+(20 FACT) 100000 DOTIMES
+
+(php v1_tail/workbench.php  4.49s user 0.01s system 99% cpu 4.516 total) DOC
+
+CODE;
+
+interp_eval_string($code);
+
+/*
+
+
+
+(FACT (N) ((N 0 EQ) 1 (N 1 - FACT N *) IFELSE)) DEF
+3 FACT PRINTLN
 
 (HELLO (N) (N PRINTLN (N 100 EQ NOT) (TEST 1 N + HELLO) IFTRUE)) DEF
 
@@ -32,19 +48,7 @@ $code = <<< CODE
 
 1 HELLO
 
-
-(
-HELLOWORLD PRINTLN
-
-
-
-) DOC
-
-CODE;
-
-f_eval_string($code);
-
-/*
+100000 (20 FACT) DOTIMES
 
 (FACT (N) ((N 0 EQ) (1) (N 1 - FACT N *) IFELSE)) DEF
 
@@ -59,5 +63,15 @@ php v1_optim/workbench.php  5.83s user 0.02s system 99% cpu 5.857 total
 
 
 20 FACT PRINTLN
+
+
+Language Characteristics
+
+As simple as possible but usable, both the language and the implementation.
+
+Basically no syntax, only syntax is parens and whitespace.
+
+
+
 
 */
