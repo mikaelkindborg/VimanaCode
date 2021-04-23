@@ -65,7 +65,7 @@ A symbol that is not bound to a value evaluates to itself (it is a literal). You
 
     A B C PRINTSTACK
     
-When a primitive or a function is called, the stack is read and written. This function, for example, will pop three elements of the stack and push back the result:
+When a primitive or a function is called, the stack is read and written. This function, for example, will pop three elements off the stack and push back the result:
 
     (A B C ADD) (A B C + +) DEF
     
@@ -92,9 +92,9 @@ The postfix syntax is inspired by Forth. It is even more strictly followed than 
 
 Conditionals, for example, are not in the interpreter, but defined as primitives, which are completely customizable.
 
-Primitives does not evaluate their arguments, which means that one can do similar things as with Lisp macros. You can easily introducde new constructs with their own syntax.
+Primitives do not evaluate their arguments, which means that one can do similar things as with Lisp macros. You can easily introduce new constructs with their own syntax.
 
-But the postfix notation is deeply rooted in the interpreter, and even though you can create "syntactic sugar" to make it look more "prefix" I have avoided this. It is unusual outside the world of the Forth family to use Reverse Polish Notation, but it is interesting to take this to its fill extent, so to speak.
+The postfix notation is deeply rooted in the interpreter, and even though you can create "syntactic sugar" to make it look more "prefix", I have avoided this. It is unusual outside of the Forth language family to use Reverse Polish Notation, but it is an interesting experiment to take this to its full extent, so to speak.
 
 ## More to Come
 
