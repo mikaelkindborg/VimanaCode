@@ -183,7 +183,7 @@ function interp_println($str)
   print($str."\n");
 }
 
-function interp_printobj($str, $obj)
+function interp_print_obj($str, $obj)
 {
   print($str.":\n");
   print_r($obj);
