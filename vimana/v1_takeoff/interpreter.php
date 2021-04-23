@@ -14,9 +14,7 @@ function interp_eval_string($code, $prims = [])
   $list = interp_parse($code);
   $env = [];
   $stack = [];
-  
   interp_create_primitives($prims);
-
   interp_eval_list($list, $env, $stack, $prims);
 }
 
@@ -36,7 +34,6 @@ function interp_eval_list($list, &$env, &$stack, $prims)
     // We evaluate string symbols that represent a function 
     // or a primitive.
     if (is_string($element)):
-    
       // Empty string is an error and should not happen.
       if (strlen($element) === 0):
         interp_println("ERROR: EMPTY STRING IN EVAL");
@@ -52,7 +49,6 @@ function interp_eval_list($list, &$env, &$stack, $prims)
       // If it is a function, evaluate it.
       $fun = & $env[$element];
       if (isset($fun) && (is_array($fun) && ($fun[0] === "FUN"))):
-      
         // Copy the env table to not overwrite shadowed 
         // variables permanently.
         $new_env = $env;
@@ -75,9 +71,13 @@ function interp_eval_list($list, &$env, &$stack, $prims)
         interp_eval_list($fun[2], $new_env, $stack, $prims);
         
         continue;
-        
       endif;
-      
+    endif; // is_string
+    
+    // Comments are not pushed onto the stack. They could also be
+    // be filtered out by the parser. Or be displayed by a debugger.
+    if (is_array($element) && $element[0] === "***"):
+      continue;
     endif;
     
     // If it is not a primitive or a function, push the literal value.

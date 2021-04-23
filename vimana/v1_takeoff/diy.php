@@ -25,14 +25,14 @@ $code = <<< CODE
 
 HELLO
 
-a b c PRINTSTACK
-
 CODE;
 
 // Table that holds primitive functions.
 $prims = [];
 
-// Add a primitive.
+// Add a primitive. Note that the primitives in primitives.php
+// will be added to the same table, so if you use an existing
+// name it will be overwritten.
 interp_add_primitive("HELLO", function(&$stack, &$env, $prims)
 {
   interp_println("Hello World");
