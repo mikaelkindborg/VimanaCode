@@ -47,7 +47,7 @@ function interp_eval_list($list, &$env, &$stack, $prims)
       endif;
 
       // If it is a function, evaluate it.
-      $fun = & $env[$element];
+      $fun = $env[$element];
       if (isset($fun) && (is_array($fun) && ($fun[0] === "FUN"))):
         // Copy the env table to not overwrite shadowed 
         // variables permanently.
@@ -112,7 +112,13 @@ function interp_define_function(&$stack, &$env)
   $fun = ["FUN", $params, $body];
   $env[$name] = $fun;
 }
-  
+
+// Add a native primitive.
+function interp_add_primitive($symbol, $fun, &$prims)
+{
+  $prims[$symbol] = $fun;
+}
+
 // Parse (tokenize) a string and return a list.
 function interp_parse($code)
 {

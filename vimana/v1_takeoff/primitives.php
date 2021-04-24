@@ -9,12 +9,6 @@
 // License: Creative Commons: Attribution-ShareAlike - CC BY-SA
 //
 
-// Add a native primitive.
-function interp_add_primitive($symbol, $fun, &$prims)
-{
-  $prims[$symbol] = $fun;
-}
-
 // Create primitives.
 function interp_create_primitives(&$prims = [])
 {
@@ -29,14 +23,14 @@ function interp_create_primitives(&$prims = [])
   
   interp_add_primitive("DO", function(&$stack, &$env, $prims)
   {
-    $obj = array_pop($stack);
+    $obj = interp_pop_eval($stack);
     interp_eval_list($obj, $env, $stack, $prims);
   },
   $prims);
   
   interp_add_primitive("CALL", function(&$stack, &$env, $prims)
   {
-    $fun = array_pop($stack);
+    $fun = interp_pop_eval($stack);
     interp_eval_fun($fun, $env, $stack, $prims);
   },
   $prims);
@@ -189,8 +183,7 @@ function interp_create_primitives(&$prims = [])
   },
   $prims);
   
-  // TIMESDO was introduced for benchmarking. It pushes the last 
-  // result onto othe stack.
+  // TIMESDO was introduced for benchmarking.
   interp_add_primitive("TIMESDO", function(&$stack, &$env, $prims)
   {
     $n = interp_pop_eval($stack, $env);
@@ -199,8 +192,6 @@ function interp_create_primitives(&$prims = [])
       interp_eval_list($body, $env, $stack, $prims);
       array_pop($stack);
     endfor;
-    // Pushes the result of the last interation.
-    interp_eval_list($body, $env, $stack, $prims);
   },
   $prims);
 
