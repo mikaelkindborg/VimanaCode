@@ -82,6 +82,35 @@ The stack will be updated as follows:
     
 The plus function (+) pops two elements from the stack and pushes back the result. PRINTLN pops one item off the stack and don't push anything back.
 
+
+## Parsing
+
+The parser creates an abstract syntax tree that represents the program.
+This tree is the actual code that gets interpreted.
+
+## Interpreter
+
+The basic operation of the interpreter is to traverse a list in the syntax tree and push the elements of the list onto the data stack. Elements are not evaluated.
+
+When a function or primitive is found it is called. This typically results in elements being popped off and pushed onto the data stack.
+
+A primitive can freely pop and push items off and onto the stack. By convention each primitive pushes (returns) one or zero items. Functions return one or zero items.
+
+If you would write a program that does not call any functions or primitives, all elements of the program would be pused onto the stack. 
+
+Here is an example of this:
+
+    A B C (D E F) PRINTSTACK
+    
+When this program is run it will print a stack structure that looks like this:
+
+    A
+    B
+    C
+    (D E F)
+    
+The primitive PRINTSTACK will not be on the stack since it is evaluated instead of being pushed into the stack.
+
 ## Doing the Opposite
 
 Vimana is in a sense the reverse of Lisp. Function calls use postfix notation instead of prefix. Lists are not evaluated by default, but are quoted by default.
