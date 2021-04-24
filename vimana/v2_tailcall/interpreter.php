@@ -14,7 +14,7 @@
 IMPLEMENTATION NOTES
 ====================
 
-This version of the interpreter implements tail call optimization.
+This version of the interpreter implements tailcall optimization.
 
 The PHP callstack is still used. There is a limit on recursive
 (non-tail) calls set by PHP.
@@ -27,12 +27,12 @@ to reduce the number of PHP functions calls, for perfomance.
 
 function interp_eval_string($code, $prims = NULL)
 {
-  $list = interp_parse($code);
   $env = [];
   $stack = [];
   if (! isset($prims)):
     $prims = interp_create_primitives();
   endif;
+  $list = interp_parse($code);
   interp_eval_list($list, $env, $stack, $prims);
 }
 

@@ -108,7 +108,7 @@ function f_create_stackframe($process, $new_code_list)
     // If the instruction index has reached the end of the list,
     // this frame has finished executing, and we can reuse it
     // for the new code.
-  $index = $stackframe_index;
+    $index = $stackframe_index;
     $code_list = $process->callstack[$index]["code_list"];
     $instr_index = $process->callstack[$index]["instr_index"];
     if ($instr_index + 1 >= count($code_list)):
