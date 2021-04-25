@@ -65,7 +65,7 @@ HELLO_WORLD PRINTLN
 
 (*** Here is a recursive function that computes the factorial of a number ***)
 
-(N FACT) ((N 0 EQ) (1) (N 1 - FACT N *) IFELSE) DEF
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
 
 (The factorial of 20 is:) PRINTLIST
 20 FACT PRINTLN

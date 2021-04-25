@@ -9,12 +9,32 @@
 // License: Creative Commons: Attribution-ShareAlike - CC BY-SA
 //
 
-function interp_eval_string($code, $prims = [])
+/******************************************************************
+
+IMPLEMENTATION NOTES
+====================
+
+This is the basic version of the Vimana interpreter.
+
+The PHP callstack is used for all function invocations. 
+There is a limit on recursive calls set by PHP. There is
+no tail-recursion, which is meant to be the primary looping
+construct, so useage is a bit limited.
+
+The code is a bit messy with many conditional branches in 
+interp_eval_list. I decided to use a big function for
+performance reasons, to reduce the number of PHP functions calls.
+
+******************************************************************/
+
+function interp_eval_string($code, $prims = NULL)
 {
-  $list = interp_parse($code);
   $env = [];
   $stack = [];
-  interp_create_primitives($prims);
+  if (! isset($prims)):
+    $prims = interp_create_primitives();
+  endif;
+  $list = interp_parse($code);
   interp_eval_list($list, $env, $stack, $prims);
 }
 
@@ -65,8 +85,6 @@ function interp_eval_list($list, &$env, &$stack, $prims)
           $new_env[$var] = $value;
         endforeach;
     
-        // TODO: If this is the last element, do a tail call.
-        
         // Evaluate the function body.
         interp_eval_list($fun[2], $new_env, $stack, $prims);
         
@@ -88,6 +106,8 @@ function interp_eval_list($list, &$env, &$stack, $prims)
   endforeach;
 }
 
+// Evaluates a symbol to its value if it is a variable,
+// and returns the literal representation for everything else.
 function interp_eval_element($element, $env)
 {
   return (is_string($element) && isset($env[$element])) ? 
@@ -100,6 +120,7 @@ function interp_pop_eval(&$stack, $env)
   $element = array_pop($stack);
   return (is_string($element) && isset($env[$element])) ? 
     $env[$element] : $element;
+  // The above statement is inline of:
   //return interp_eval_element($element, $env);
 }
 
@@ -161,51 +182,9 @@ function interp_parse_tokens(&$tokens)
   endwhile;
 }
 
-// For debugging.
+// Print string followed by newline.
 function interp_println($str)
 {
   print($str."\n");
 }
 
-function interp_print_obj($str, $obj)
-{
-  print($str.":\n");
-  print_r($obj);
-  print("\n");
-}
-
-function interp_print_array($str, $array)
-{
-  print($str.":\n");
-  print(interp_array_as_string($array));
-  print("\n");
-}
-
-function interp_array_as_string($array, $indent = "")
-{
-  if (!is_array($array)):
-    return "".$array;
-  endif;
-  
-  foreach ($array as $key => $value):
-    $value_string = $value."";
-    if (is_array($value)):
-      $value_string = "(".interp_array_as_string($value, $indent."  ").")";
-    endif;
-    if (is_numeric($key)):
-      if ($key == array_key_last($array)):
-        $string .= $value_string;
-      else:
-        $string .= $value_string." ";
-      endif;
-    else:
-      if ($key == array_key_last($array)):
-        $string .= $indent.$key.": ".$value_string;
-      else:
-        $string .= $indent.$key.": ".$value_string."\n";
-      endif;
-    endif;
-  endforeach;
-  
-  return $string;
-}

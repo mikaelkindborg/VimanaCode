@@ -28,16 +28,16 @@ HELLO
 CODE;
 
 // Table that holds primitive functions.
-$prims = [];
+$prims = interp_create_primitives();
 
 // Add a primitive. Note that the primitives in primitives.php
-// will be added to the same table, so if you use an existing
-// name it will be overwritten.
+// are in the same table, so if you use an existing name it will 
+// be overwritten.
 interp_add_primitive("HELLO", function(&$stack, &$env, $prims)
 {
   interp_println("Hello World");
 },
 $prims);
 
-// Eval the above code using the custom table.
+// Eval the above CODE using the custom table.
 interp_eval_string($code, $prims);

@@ -10,7 +10,7 @@
 //
 
 // Create primitives.
-function interp_create_primitives(&$prims = [])
+function interp_create_primitives($prims = [])
 {
   // Initialize the radom number generator.
   mt_srand();
@@ -152,33 +152,28 @@ function interp_create_primitives(&$prims = [])
     else:
       array_push($stack, "F");
     endif;
-    
   },
   $prims);
   
   interp_add_primitive("IFTRUE", function(&$stack, &$env, $prims)
   {
-    $a = array_pop($stack);
-    $c = array_pop($stack);
-    interp_eval_list($c, $env, $stack, $prims);
-    $res = array_pop($stack);
-    if ($res === "T"):
-      interp_eval_list($a, $env, $stack, $prims);
+    $true_branch = array_pop($stack);
+    $truth = array_pop($stack);
+    if ($truth === "T"):
+      interp_eval_list($true_branch, $env, $stack, $prims);
     endif;
   },
   $prims);
   
   interp_add_primitive("IFELSE", function(&$stack, &$env, $prims)
   {
-    $b = array_pop($stack);
-    $a = array_pop($stack);
-    $c = array_pop($stack);
-    interp_eval_list($c, $env, $stack, $prims);
-    $res = array_pop($stack);
-    if ($res === "T"):
-      interp_eval_list($a, $env, $stack, $prims);
+    $else_branch = array_pop($stack);
+    $true_branch = array_pop($stack);
+    $truth = array_pop($stack);
+    if ($truth === "T"):
+      interp_eval_list($true_branch, $env, $stack, $prims);
     else:
-      interp_eval_list($b, $env, $stack, $prims);
+      interp_eval_list($else_branch, $env, $stack, $prims);
     endif;
   },
   $prims);
@@ -281,4 +276,6 @@ function interp_create_primitives(&$prims = [])
     array_push($stack, $obj->$prop_name);
   },
   $prims);
+  
+  return $prims;
 }
