@@ -126,9 +126,9 @@ function interp_create_primitives($prims = [])
   
   interp_add_primitive("RANDOM", function($interp)
   {
-    $b = interp_pop_eval($stack, $env);
-    $a = interp_pop_eval($stack, $env);
-    array_push($stack, mt_rand($a, $b));
+    $b = interp_pop_eval($interp);
+    $a = interp_pop_eval($interp);
+    interp_push($interp, mt_rand($a, $b));
   },
   $prims);
   
