@@ -24,6 +24,10 @@ TODO:
 
 * Optimise performance (inline frequent PHP function calls).
 
+* Fix examples.php for v3.
+
+* Improve MAKEOBJ and SET.
+
 * Make the interpreter a process that can be run in a kind of
   virtual machine, with massively parallel processes (thosands).
 
