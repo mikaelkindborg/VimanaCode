@@ -171,12 +171,10 @@ function interp_create_primitives($prims = [])
   
   interp_add_primitive("IFTRUE", function(&$stack, &$env, $prims)
   {
-    $a = array_pop($stack);
-    //$c = array_pop($stack);
-    //interp_eval_list($c, $env, $stack, $prims);
+    $true_branch = array_pop($stack);
     $truth = array_pop($stack);
     if ($truth === "T"):
-      return $a;
+      return $true_branch;
     else:
       return NULL;
     endif;
@@ -185,15 +183,13 @@ function interp_create_primitives($prims = [])
   
   interp_add_primitive("IFELSE", function(&$stack, &$env, $prims)
   {
-    $b = array_pop($stack);
-    $a = array_pop($stack);
-    //$c = array_pop($stack);
-    //interp_eval_list($c, $env, $stack, $prims);
+    $else_branch = array_pop($stack);
+    $true_branch = array_pop($stack);
     $truth = array_pop($stack);
     if ($truth === "T"):
-      return $a;
+      return $true_branch;
     else:
-      return $b;
+      return $else_branch;
     endif;
   },
   $prims);

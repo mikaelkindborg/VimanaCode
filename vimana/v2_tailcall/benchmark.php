@@ -23,6 +23,8 @@ PHP needs to be installed on your computer.
 BENCHMARK RESULTS
 =================
 
+Version 2:
+
 (N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
 (20 FACT) 100000 TIMESDO
 php v2_tailcall/benchmark.php  5.07s user 0.02s system 99% cpu 5.092 total
@@ -35,6 +37,7 @@ php v2_tailcall/benchmark.php  5.96s user 0.02s system 99% cpu 5.983 total
 (N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
 (20 FACT) 100000 LOOP
 php v2_tailcall/benchmark.php  5.37s user 0.02s system 99% cpu 5.397 total
+php v2_tailcall/benchmark.php  5.35s user 0.02s system 99% cpu 5.372 total
 
 ******************************************************************/
 

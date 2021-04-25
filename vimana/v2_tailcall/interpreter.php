@@ -20,8 +20,8 @@ The PHP callstack is still used. There is a limit on recursive
 (non-tail) calls set by PHP.
 
 The code is a bit messy with many conditional branches in 
-interp_eval_list. I decided to use a bit function for it
-to reduce the number of PHP functions calls, for perfomance.
+interp_eval_list. I decided to use a big function to reduce 
+the number of PHP functions calls, for perfomance.
 
 ******************************************************************/
 
@@ -235,52 +235,9 @@ function interp_parse_tokens(&$tokens)
   endwhile;
 }
 
-// Functions for debugging.
-
+// Print string followed by newline.
 function interp_println($str)
 {
   print($str."\n");
 }
 
-function interp_print_obj($str, $obj)
-{
-  print($str.":\n");
-  print_r($obj);
-  print("\n");
-}
-
-function interp_print_array($str, $array)
-{
-  print($str.":\n");
-  print(interp_array_as_string($array));
-  print("\n");
-}
-
-function interp_array_as_string($array, $indent = "")
-{
-  if (!is_array($array)):
-    return "".$array;
-  endif;
-  
-  foreach ($array as $key => $value):
-    $value_string = $value."";
-    if (is_array($value)):
-      $value_string = "(".interp_array_as_string($value, $indent."  ").")";
-    endif;
-    if (is_numeric($key)):
-      if ($key == array_key_last($array)):
-        $string .= $value_string;
-      else:
-        $string .= $value_string." ";
-      endif;
-    else:
-      if ($key == array_key_last($array)):
-        $string .= $indent.$key.": ".$value_string;
-      else:
-        $string .= $indent.$key.": ".$value_string."\n";
-      endif;
-    endif;
-  endforeach;
-  
-  return $string;
-}
