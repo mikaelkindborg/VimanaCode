@@ -19,8 +19,36 @@
 
 require('interpreter.php');
 require('primitives.php');
+require('debug.php');
 
 $code = <<< CODE
+
+(L N LOOP) (N 0 EQ NOT (L DO L N 1 - LOOP) IFTRUE) DEF
+
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+
+(20 FACT PRINTLN) 10 LOOP
+
+CODE;
+
+interp_eval_string($code);
+
+/*
+
+First version of v3_callstack 2021-04-25:
+(L N LOOP) (N 0 EQ NOT (L DO L N 1 - LOOP) IFTRUE) DEF
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+(20 FACT) 100000 LOOP
+php v3_callstack/workbench.php  14.97s user 0.02s system 99% cpu 15.000 total
+
+
+
+
+
+(L N LOOP) (N 0 EQ NOT (L DO L N 1 - LOOP) IFTRUE) DEF
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+(20 FACT) 100000 LOOP
+
 
 
 (X HELLO) (HELLO_WORLD PRINT SPACE PRINT X X + PRINTLN) DEF
@@ -34,19 +62,6 @@ F NOT (TRUE_BRANCH PRINTLN) (ELSE_BRANCH PRINTLN) IFELSE
 20 FACT PRINTLN
 PRINTCALLSTACK
 
-(L N LOOP) (N 0 EQ NOT (L DO L N 1 - LOOP) IFTRUE) DEF
-(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
-(20 FACT PRINTLN) 10 LOOP
-
-CODE;
-
-interp_eval_string($code);
-
-/*
-
-(L N LOOP) (N 0 EQ NOT (L DO L N 1 - LOOP) IFTRUE) DEF
-(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
-(20 FACT) 100000 LOOP
 
 
 A B C PRINTSTACK

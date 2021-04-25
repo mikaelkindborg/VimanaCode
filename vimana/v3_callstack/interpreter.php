@@ -12,8 +12,22 @@
 IMPLEMENTATION NOTES
 ====================
 
-This version of the interpreter implements uses its own callstack. 
+This version of the interpreter implements its own callstack. 
 It does not use the PHP stack.
+
+There is also an iterpreter object that holds the execution state.
+This makes the code cleaner and makes it possible to implement
+interpreters running in parallel. An intepreter then becomes
+a kind of process.
+
+TODO: 
+
+* Optimise performance (inline frequent PHP function calls).
+
+* Make the interpreter a process that can be run in a kind of
+  virtual machine, with massively parallel processes (thosands).
+
+* Message passing between processes.
 
 ******************************************************************/
 
@@ -89,18 +103,19 @@ function interp_create_stackframe($interp, $list, $copy_env = FALSE)
 {
   // ENTER STACK FRAME
 
-  //interp_printobj("ENV IN CREATE FRAME", $interp->callstack[$interp->stackframe_index]["env"]);
+  //interp_print_obj("ENV IN CREATE FRAME", $interp->callstack[$interp->stackframe_index]["env"]);
 
   // Below we check for tail call optimization.
 
-  // Copy environment;
-  if ($copy_env):
+  // Copy previous environment.
+  //if ($copy_env):
     $new_env = $interp->stackframe->env;
-  endif;
+  //endif;
   
   // Determine if tail call is possible.
-  // Tail call on root frame is not meaningful,
-  // stackframe_index must be at least 1.
+  // Tail call on root frame (stackframe 0) is not 
+  // done to prevent overwriting the global environment.
+  // (stackframe_index must be at least 1).
   $index = $interp->stackframe_index;
   $tail_call = FALSE;
   if ($index > 0):
@@ -139,12 +154,12 @@ function interp_create_stackframe($interp, $list, $copy_env = FALSE)
   $interp->stackframe->code_pointer = -1;
 
   // Set environment.
-  if ($copy_env):
+  //if ($copy_env):
     $interp->stackframe->env = $new_env;
-  endif;
+  //endif;
 
-  //interp_printobj("CALLSTACK", $interp->callstack);
-  //interp_printobj("STACK", $interp->stack);
+  //interp_print_obj("CALLSTACK", $interp->callstack);
+  //interp_print_obj("STACK", $interp->stack);
 }
 
 function interp_eval($interp, $element)
@@ -183,6 +198,7 @@ function interp_eval($interp, $element)
     // Check if it is a function.
     $fun = $interp->stackframe->env[$element];
     if (isset($fun) && is_array($fun) && ($fun[0] === "FUN")):
+      //interp_println("EVAL FUN: ".$element);
       interp_eval_fun($interp, $fun);
       return;
     endif;
@@ -299,15 +315,8 @@ function interp_create_list(&$tokens)
   endwhile;
 }
 
+// Print string followed by newline.
 function interp_println($str)
 {
   print($str."\n");
-}
-
-// For debugging.
-function interp_printobj($str, $obj)
-{
-  print($str.": ");
-  print_r($obj);
-  print("\n");
 }

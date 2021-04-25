@@ -193,43 +193,28 @@ function interp_create_primitives($prims = [])
   
   interp_add_primitive("SLEEP", function($interp)
   {
-    $time = interp_pop_eval($stack, $env);
+    $time = interp_pop_eval($interp);
     sleep($time);
   },
   $prims);
+  
+  /* EXAMPLE OF ERROR CHECKING
+  interp_add_primitive("SLEEP", function($interp)
+  {
+    $time = interp_pop_eval($interp);
+    if (!is_numeric($time)):
+      print("ERROR: NON-NUMERIC VALUE IN SLEEP:".$time."\n");
+      exit();
+    endif;
+    sleep($time);
+  });
+  */
   
   interp_add_primitive("EXIT", function($interp)
   {
     exit();
   },
   $prims);
-  
-  /*
-  interp_add_primitive("DOTIMES", function($interp)
-  {
-    $body = interp_pop($interp);
-    $times = interp_pop_eval($interp);
-    $times--;
-    for  ($i = 0; $i < $times; $i++):
-      interp_eval_list($interp, $body);
-      interp_pop($interp);
-    endfor;
-    // Pushes the result of the last iteration.
-    interp_eval_list($interp, $body);
-  });
-  */
-  
-  /* EXAMPLE OF ERROR CHECKING
-  interp_add_primitive("SLEEP", function($interp)
-  {
-    $n = interp_pop_eval($interp);
-    if (!is_numeric($n)):
-      print("ERROR: NON-NUMERIC VALUE IN SLEEP:".$n."\n");
-      exit();
-    endif;
-    sleep($n);
-  });
-  */
   
   interp_add_primitive("GET", function($interp)
   {
@@ -336,6 +321,19 @@ function interp_create_primitives($prims = [])
     print_r("PRINTCALLSTACK:\n");
     print("CURRENT FRAME: ".$interp->stackframe_index."\n");
     print_r($interp->callstack);
+  },
+  $prims);
+  
+  interp_add_primitive("PRINTSTACKFRAME", function($interp)
+  {
+    print("PRINTSTACKFRAME: ".$interp->stackframe_index."\n");
+    print_r($interp->stackframe);
+  },
+  $prims);
+  
+  interp_add_primitive("PRINTSTACKFRAMEINDEX", function($interp)
+  {
+    print("PRINTSTACKFRAMEINDEX: ".$interp->stackframe_index."\n");
   },
   $prims);
   
