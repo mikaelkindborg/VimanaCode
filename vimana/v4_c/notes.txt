@@ -1,5 +1,14 @@
 
             
+https://stackoverflow.com/questions/10950828/simulation-of-templates-in-c-for-a-queue-data-type
+https://stackoverflow.com/questions/16522341/pseudo-generics-in-c
+
+https://iafisher.com/blog/2020/06/type-safe-generics-in-c
+http://arnold.uthar.net/index.php?n=Work.TemplatesC
+
+https://tenbaht.github.io/sduino/api/migration/
+
+https://en.cppreference.com/w/c/language/generic
 
 https://overiq.com/c-programming-101/intro-to-c-programming/
  
@@ -17,6 +26,9 @@ https://linuxhint.com/exec_linux_system_call_c/
 
 https://suchprogramming.com/new-linux-process-c/
 
+cc -E file.c
+
+
 #include <unistd.h>      
 int x = execl("./hello", "./hello", NULL);
 
@@ -28,3 +40,64 @@ int x = execl("./hello", "./hello", NULL);
 //18446744073709551615
 //int x = execl("./hello", "./hello", NULL);
  
+
+//printf("%c", *p);
+
+//char* tokens = malloc(sizeof(Symbol) * 1000);
+char* p = code;
+//char* t = tokens;
+
+char token[32];
+char* ptoken;
+char* p1 = NULL;
+  
+int interp_create_list(&$tokens)
+{
+  $list = [];
+  
+  while (TRUE):
+    if (count($tokens) === 0):
+      return $list;
+    endif;
+    
+    $next = array_shift($tokens);
+    
+    if ($next === ")"):
+      return $list;
+    endif;
+    
+    if ($next === "("):
+      $next = interp_create_list($tokens);
+    endif;
+    
+    // Convert string to number.
+    if (is_numeric($next)):
+      $next = $next + 0;
+    endif;
+    
+    array_push($list, $next);
+  endwhile;
+}
+
+void play_with_list()
+{
+  List* list = Interp_ListCreate(10);
+  
+  Item item;
+  
+  strcpy(item.data.symbol, "Hello");
+  item.type = 1;
+  Interp_ListPush(list, item);
+  
+  item.data.number = 33.3;
+  item.type = 2;
+  Interp_ListPush(list, item);
+  
+  printf("Size of list: %i\n", list->length);
+  
+  item = Interp_ListGet(list, 0);
+  printf("%s\n", item.data.symbol);
+  
+  item = Interp_ListGet(list, 1);
+  printf("%f\n", item.data.number);
+}
