@@ -1,8 +1,6 @@
 
 /****************** LISTS ******************/
 
-char* InterpGetSymbol(Interp* interp, Index symbolIndex);
-
 typedef struct MyList
 {
   int   length;     // Current number of items
@@ -111,7 +109,7 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
     }
     else if (IsPrimFun(item.type))
     {
-      printf("PRIMFUN: %s TYPE: %u", item.string, item.type);
+      printf("[PRIMFUN: %s TYPE: %u]", item.string, item.type);
     }
     else if (IsFun(item.type))
     {
@@ -123,7 +121,7 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
     }
     else if (IsSymbol(item.type))
     {
-      printf("%s", InterpGetSymbol(interp, item.symbolIndex));
+      printf("%s", InterpGetSymbolString(interp, item.symbolIndex));
     }
     
     if (i < list->length - 1)

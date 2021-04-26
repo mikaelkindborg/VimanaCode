@@ -13,6 +13,10 @@ typedef struct MyItem Item;
 typedef struct MyInterp Interp;
 typedef void (*PrimFun)(Interp*);
 
+
+char* InterpGetSymbolString(Interp* interp, Index symbolIndex);
+
+
 #define FALSE 0
 #define TRUE  1
 

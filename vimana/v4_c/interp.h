@@ -3,22 +3,13 @@
 
 typedef struct MyInterp
 {
-  //List* prims;           // Pointers to functions
-  List* symbolTable;     // List of global names (prims, funs, vars)
+  List* symbolTable;     // List of global names (prims, funs, symbols)
   List* stack;           // The data stack
   List* callstack;       // Callstack with stack frames
   int   stackframeIndex; // Index of current stack frame
   Bool  run;             // Run flag
 }
 Interp;
-
-/*typedef struct MySymbolEntry
-{
-  //Type  type;
-  char  symbol[32];
-  //Index ref;
-}
-SymbolEntry;*/
 
 typedef struct MyStackFrame
 {
@@ -31,7 +22,6 @@ StackFrame;
 Interp* InterpCreate()
 {
   Interp* interp = malloc(sizeof(Interp));
-  //interp->prims = ListCreate();
   interp->symbolTable = ListCreate();
   interp->stack = ListCreate();
   interp->callstack = ListCreate();
@@ -42,21 +32,10 @@ Interp* InterpCreate()
 
 void InterpFree(Interp* interp)
 {
-  //ListFree(interp->prims, ListFreeDeep);
   ListFree(interp->symbolTable, ListFreeDeep);
   ListFree(interp->stack, ListFreeDeeper);
   ListFree(interp->callstack, ListFreeDeep);
 }
-
-/*SymbolEntry* SymbolEntryCreate()
-{
-  return malloc(sizeof(SymbolEntry));
-}
-
-void SymbolEntryFree(SymbolEntry* entry)
-{
-  return free(entry);
-}*/
 
 StackFrame* StackFrameCreate()
 {
@@ -100,7 +79,7 @@ Item InterpAddSymbol(Interp* interp, char* symbol)
   }
   else
   {
-    // SymbolEntry does not exist, create it.
+    // Symbol does not exist, create it.
     char* string = malloc(strlen(symbol) + 1);
     strcpy(string, symbol);
     Item newItem = ItemWithString(string);
@@ -112,18 +91,27 @@ Item InterpAddSymbol(Interp* interp, char* symbol)
   }
 }
 
-/*SymbolEntry* InterpGetSymbolEntry(Interp* interp, Index symbolIndex)
-{
-  List* symbolTable = interp->symbolTable;
-  Item item = ListGet(symbolTable, symbolIndex);
-  return (SymbolEntry*) item.data.obj;
-}*/
-
-char* InterpGetSymbol(Interp* interp, Index symbolIndex)
+char* InterpGetSymbolString(Interp* interp, Index symbolIndex)
 {
   List* symbolTable = interp->symbolTable;
   Item item = ListGet(symbolTable, symbolIndex);
   return item.string;
+}
+
+Item InterpPop(Interp* interp)
+{
+  return ListPop(interp->stack);
+}
+
+Item InterpPopEval(Interp* interp)
+{
+  // TODO: Eval
+  return ListPop(interp->stack);
+}
+
+void InterpPushIntNum(Interp* interp, long number)
+{
+  ListPush(interp->stack, ItemWithIntNum(number));
 }
 
 void InterpEval(Interp* interp, Item element)
@@ -189,4 +177,15 @@ void InterpRun(Interp* interp, List* list)
       interp->run = FALSE;
     }
   }
+}
+
+void InterpAddPrimFun(char* name, PrimFun fun, Interp* interp)
+{
+  // Add to symbol table.
+  List* symbolTable = interp->symbolTable;
+  Item item = ItemWithString(name);
+  item.type = TypePrimFun;
+  item.data.primFun = fun;
+  item.symbolIndex = -1;
+  Index index = ListPush(symbolTable, item);
 }
