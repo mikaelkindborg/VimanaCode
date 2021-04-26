@@ -3,7 +3,7 @@
 
 typedef struct MyInterp
 {
-  List* prims;           // Pointers to functions
+  //List* prims;           // Pointers to functions
   List* symbolTable;     // List of global names (prims, funs, vars)
   List* stack;           // The data stack
   List* callstack;       // Callstack with stack frames
@@ -12,13 +12,13 @@ typedef struct MyInterp
 }
 Interp;
 
-typedef struct MySymbolEntry
+/*typedef struct MySymbolEntry
 {
-  Type  type;
+  //Type  type;
   char  symbol[32];
-  Index ref;
+  //Index ref;
 }
-SymbolEntry;
+SymbolEntry;*/
 
 typedef struct MyStackFrame
 {
@@ -31,7 +31,7 @@ StackFrame;
 Interp* InterpCreate()
 {
   Interp* interp = malloc(sizeof(Interp));
-  interp->prims = ListCreate();
+  //interp->prims = ListCreate();
   interp->symbolTable = ListCreate();
   interp->stack = ListCreate();
   interp->callstack = ListCreate();
@@ -42,13 +42,13 @@ Interp* InterpCreate()
 
 void InterpFree(Interp* interp)
 {
-  ListFree(interp->prims, ListFreeDeep);
+  //ListFree(interp->prims, ListFreeDeep);
   ListFree(interp->symbolTable, ListFreeDeep);
   ListFree(interp->stack, ListFreeDeeper);
   ListFree(interp->callstack, ListFreeDeep);
 }
 
-SymbolEntry* SymbolEntryCreate()
+/*SymbolEntry* SymbolEntryCreate()
 {
   return malloc(sizeof(SymbolEntry));
 }
@@ -56,7 +56,7 @@ SymbolEntry* SymbolEntryCreate()
 void SymbolEntryFree(SymbolEntry* entry)
 {
   return free(entry);
-}
+}*/
 
 StackFrame* StackFrameCreate()
 {
@@ -75,8 +75,8 @@ Index InterpLookupSymbol(Interp* interp, char* symbol)
   for (int i = 0; i < symbolTable->length; i++)
   {
     Item item = ListGet(symbolTable, i);
-    SymbolEntry* entry = (SymbolEntry*) item.data.obj;
-    if (StringEquals(entry->symbol, symbol))
+    char* string = item.string;
+    if (StringEquals(string, symbol))
     {
       // Found it.
       return i;
@@ -85,48 +85,61 @@ Index InterpLookupSymbol(Interp* interp, char* symbol)
   return -1; // Not found.
 }
 
-// Returns index of new or current symbol entry.
-Index InterpAddSymbol(Interp* interp, char* symbol, Type type)
+// Returns and item with info about the symbol.
+Item InterpAddSymbol(Interp* interp, char* symbol)
 {
   // Lookup the symbol.
   Index index = InterpLookupSymbol(interp, symbol);
   if (index > -1)
   {
-    // Symbol is already added, return the symbol index;
-    return index;
+    // Symbol is already added, return the symbol table entry.
+    printf("SYMBOL EXISTS IN SYMTABLE: %s\n", symbol);
+    Item item = ListGet(interp->symbolTable, index);
+    item.symbolIndex = index;
+    return item;
   }
-  
-  // SymbolEntry does not exist, create it.
-  SymbolEntry* entry = SymbolEntryCreate();
-  strcpy(entry->symbol, symbol);
-  entry->type = type;
-  entry->ref = -1;
-  
-  // Add it.
-  Item newItem = ItemWithObj(entry);
-  Index newIndex = ListPush(interp->symbolTable, newItem);
-  
-  return newIndex;
+  else
+  {
+    // SymbolEntry does not exist, create it.
+    char* string = malloc(strlen(symbol) + 1);
+    strcpy(string, symbol);
+    Item newItem = ItemWithString(string);
+    Index newIndex = ListPush(interp->symbolTable, newItem);
+    Item item = ListGet(interp->symbolTable, newIndex);
+    item.type = TypeSymbol;
+    item.symbolIndex = newIndex;
+    return item;
+  }
 }
 
-SymbolEntry* InterpGetSymbolEntry(Interp* interp, Index symbolIndex)
+/*SymbolEntry* InterpGetSymbolEntry(Interp* interp, Index symbolIndex)
 {
   List* symbolTable = interp->symbolTable;
   Item item = ListGet(symbolTable, symbolIndex);
   return (SymbolEntry*) item.data.obj;
-}
+}*/
 
 char* InterpGetSymbol(Interp* interp, Index symbolIndex)
 {
-  SymbolEntry* entry = InterpGetSymbolEntry(interp, symbolIndex);
-  return entry->symbol;
+  List* symbolTable = interp->symbolTable;
+  Item item = ListGet(symbolTable, symbolIndex);
+  return item.string;
 }
 
 void InterpEval(Interp* interp, Item element)
 {
-  //Push element onto the data stack
-  ListPush(interp->stack, element);
-  printf("PUSH ELEMENT ONTO DATA STACK: %i\n", element.type);
+  Type type = element.type;
+  if (IsPrimFun(type))
+  {
+    printf("PRIM FUN FOUND\n");
+    element.data.primFun(interp);
+  }
+  else
+  {
+    //Push element onto the data stack
+    ListPush(interp->stack, element);
+    printf("PUSH ELEMENT ONTO DATA STACK: %i\n", element.type);
+  }
 }
 
 void InterpRun(Interp* interp, List* list)

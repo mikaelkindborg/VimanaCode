@@ -1,12 +1,24 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
-typedef unsigned char Byte;
-typedef int Index;
+/****************** PRIMS ******************/
 
-#define TypeSymbol 1
-#define TypePrim   2
-#define TypeFun    3
-#define TypeNumber 4
-#define TypeList   5
+void InterpAddPrimFun(char* name, PrimFun fun, Interp* interp)
+{
+  // Add to symbol table.
+  List* symbolTable = interp->symbolTable;
+  Item item = ItemWithString(name);
+  item.type = TypePrimFun;
+  item.data.primFun = fun;
+  item.symbolIndex = -1;
+  Index index = ListPush(symbolTable, item);
+}
+
+void Prim_PRINTLN(Interp* interp)
+{
+  printf("HELLO PRINTLN\n");
+}
+
+void InterpDefinePrimFuns(Interp* interp)
+{
+  InterpAddPrimFun("PRINTLN", &Prim_PRINTLN, interp);
+}
+

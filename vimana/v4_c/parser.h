@@ -10,11 +10,43 @@ List* InterpParseCode(Interp* interp, char* code)
   return list;
 }
 
-void InterpParserWorkerAddSymbol(Interp* interp, char* token, List* list)
+int InterpParserIsNumber(char* token)
 {
-  // TODO: Convert numbers.
-  Index symbolIndex = InterpAddSymbol(interp, token, TypeSymbol);
-  Item item = ItemWithSymbol(symbolIndex);
+  Bool decimalSignUsed = FALSE;
+  for (int i = 0; i < strlen(token); i++)
+  {
+    char c = token[i];
+    if ('.' == c)
+    {
+      if (decimalSignUsed) return 0;
+      decimalSignUsed = TRUE;
+    }
+    else if (!isdigit(c))
+    {
+      return 0;
+    }
+  }
+  return decimalSignUsed ? TypeDecNum : TypeIntNum;
+}
+
+void InterpParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
+{
+  Item item;
+  int type = InterpParserIsNumber(token);
+  if (IsIntNum(type))
+  {
+    long num = strtol(token, NULL, 10);
+    item = ItemWithIntNum(num);
+  }
+  else if (IsDecNum(type))
+  {
+    double num = strtod(token, NULL);
+    item = ItemWithDecNum(num);
+  }
+  else
+  {
+    item = InterpAddSymbol(interp, token);
+  }
   ListPush(list, item);
 }
 
@@ -45,9 +77,9 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
       if (copying)
       {
         copying = 0;
-       *ptoken = 0;
-        printf("%s\n", token);
-        InterpParserWorkerAddSymbol(interp, token, list);
+        *ptoken = 0;
+        //printf("%s\n", token);
+        InterpParserAddSymbolOrNumber(interp, token, list);
         
         // End list.
         if (code[i] == ')')
@@ -67,7 +99,7 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
       }
       
       // copy to token
-     *ptoken = code[i];
+      *ptoken = code[i];
       ptoken++;
     }
     
@@ -78,8 +110,8 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
   {
     // end token
     *ptoken = 0;
-    printf("%s\n", token);
-    InterpParserWorkerAddSymbol(interp, token, list);
+    //printf("%s\n", token);
+    InterpParserAddSymbolOrNumber(interp, token, list);
   }
 
   return i;

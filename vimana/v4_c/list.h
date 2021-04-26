@@ -1,6 +1,8 @@
 
 /****************** LISTS ******************/
 
+char* InterpGetSymbol(Interp* interp, Index symbolIndex);
+
 typedef struct MyList
 {
   int   length;     // Current number of items
@@ -11,13 +13,16 @@ List;
 
 typedef struct MyItem
 {
-  Type type;
+  Type  type;
+  Index symbolIndex;
+  char* string;
   union
   {
-    Index  symbolIndex;
-    double number;
-    List*  list;
-    void*  obj;
+    double  decNum;
+    long    intNum;
+    List*   list;
+    void*   obj;
+    PrimFun primFun;
   }
   data;
 }
@@ -73,52 +78,61 @@ Item ListGet(List* list, int index)
   return list->items[index];
 }
 
+void ListPrintWorker(List* list, Bool useNewLine, Interp* interp);
+
 void ListPrint(List* list, Interp* interp)
 {
   printf("(");
-  
+  ListPrintWorker(list, FALSE, interp);
+  printf(")");
+}
+
+void ListPrintItems(List* list, Interp* interp)
+{
+  ListPrintWorker(list, TRUE, interp);
+}
+
+void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
+{
   for (int i = 0; i < list->length; i++)
   {
     Item item = ListGet(list, i);
-    if (IsSymbol(item.type))
+    if (IsIntNum(item.type))
     {
-      printf("%s", InterpGetSymbol(interp, item.data.symbolIndex));
+      printf("%li", item.data.intNum);
     }
-    else if (IsNumber(item.type))
+    else if (IsDecNum(item.type))
     {
-      printf("%f", item.data.number);
+      printf("%f", item.data.decNum);
     }
     else if (IsList(item.type))
     {
       ListPrint(item.data.list, interp);
+    }
+    else if (IsPrimFun(item.type))
+    {
+      printf("PRIMFUN: %s TYPE: %u", item.string, item.type);
+    }
+    else if (IsFun(item.type))
+    {
+      ListPrint(item.data.list, interp);
+    }
+    else if (IsString(item.type))
+    {
+      printf("%s", item.string);
+    }
+    else if (IsSymbol(item.type))
+    {
+      printf("%s", InterpGetSymbol(interp, item.symbolIndex));
     }
     
     if (i < list->length - 1)
     {
       printf(" ");
     }
-  }
-  printf(")");
-}
-
-void ListPrintItems(List* list, Interp* interp)
-{
-  for (int i = 0; i < list->length; i++)
-  {
-    Item item = ListGet(list, i);
-    if (IsSymbol(item.type))
+    
+    if (useNewLine)
     {
-      printf("%s", InterpGetSymbol(interp, item.data.symbolIndex));
-      printf("\n");
-    }
-    else if (IsNumber(item.type))
-    {
-      printf("%f", item.data.number);
-      printf("\n");
-    }
-    else if (IsList(item.type))
-    {
-      ListPrint(item.data.list, interp);
       printf("\n");
     }
   }
@@ -128,15 +142,28 @@ Item ItemWithSymbol(Index symbolIndex)
 {
   Item item;
   item.type = TypeSymbol;
-  item.data.symbolIndex = symbolIndex;
+  item.symbolIndex = symbolIndex;
+  item.string = NULL;
   return item;
 }
 
-Item ItemWithNumber(double number)
+Item ItemWithIntNum(long number)
 {
   Item item;
-  item.type = TypeNumber;
-  item.data.number = number;
+  item.type = TypeIntNum;
+  item.data.intNum = number;
+  item.string = NULL;
+  item.symbolIndex = -1;
+  return item;
+}
+
+Item ItemWithDecNum(long number)
+{
+  Item item;
+  item.type = TypeDecNum;
+  item.data.decNum = number;
+  item.string = NULL;
+  item.symbolIndex = -1;
   return item;
 }
 
@@ -145,6 +172,28 @@ Item ItemWithList(List* list)
   Item item;
   item.type = TypeList;
   item.data.list = list;
+  item.string = NULL;
+  item.symbolIndex = -1;
+  return item;
+}
+
+Item ItemWithFun(List* fun)
+{
+  Item item;
+  item.type = TypeFun;
+  item.data.list = fun;
+  item.string = NULL;
+  item.symbolIndex = -1;
+  return item;
+}
+
+Item ItemWithPrimFun(PrimFun fun)
+{
+  Item item;
+  item.type = TypePrimFun;
+  item.data.primFun = fun;
+  item.string = NULL;
+  item.symbolIndex = -1;
   return item;
 }
 
@@ -153,5 +202,16 @@ Item ItemWithObj(void* obj)
   Item item;
   item.type = TypeObj;
   item.data.obj = obj;
+  item.string = NULL;
+  item.symbolIndex = -1;
+  return item;
+}
+
+Item ItemWithString(char* string)
+{
+  Item item;
+  item.type = TypeString;
+  item.string = string;
+  item.symbolIndex = -1;
   return item;
 }

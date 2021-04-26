@@ -1,4 +1,7 @@
 
+
+
+https://stackoverflow.com/questions/840501/how-do-function-pointers-in-c-work
             
 https://stackoverflow.com/questions/10950828/simulation-of-templates-in-c-for-a-queue-data-type
 https://stackoverflow.com/questions/16522341/pseudo-generics-in-c
