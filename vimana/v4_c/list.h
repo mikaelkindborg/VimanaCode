@@ -213,3 +213,21 @@ Item ItemWithString(char* string)
   item.symbolIndex = -1;
   return item;
 }
+
+Item ItemWithVirgin()
+{
+  Item item;
+  item.type = TypeVirgin;
+  return item;
+}
+
+Item ItemWithStackFrame(void* obj)
+{
+  Item item;
+  item.type = TypeStackFrame;
+  item.data.obj = obj;
+  item.string = NULL;
+  item.symbolIndex = -1;
+  return item;
+}
+

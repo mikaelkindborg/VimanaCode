@@ -13,7 +13,7 @@ Interp;
 
 typedef struct MyStackFrame
 {
-  List* env;
+  List* env; // symbolIndex -> value
   List* codeList;
   int   codePointer;
 }
@@ -37,14 +37,19 @@ void InterpFree(Interp* interp)
   ListFree(interp->callstack, ListFreeDeep);
 }
 
-StackFrame* StackFrameCreate()
+StackFrame* StackFrameCreate(List* codeList)
 {
-  return malloc(sizeof(StackFrame));
+  StackFrame* stackframe = malloc(sizeof(StackFrame));
+  stackframe->env = ListCreate();
+  stackframe->codeList = codeList;
+  stackframe->codePointer = -1;
+  return stackframe;
 }
 
 void StackFrameFree(StackFrame* stackframe)
 {
-  return free(stackframe);
+  ListFree(stackframe->env, ListFreeShallow);
+  free(stackframe);
 }
 
 Index InterpLookupSymbol(Interp* interp, char* symbol)
@@ -98,6 +103,29 @@ char* InterpGetSymbolString(Interp* interp, Index symbolIndex)
   return item.string;
 }
 
+// Lookup the value of a symbol (variable).
+// Return Virgin item if no value exists.
+Item InterpLookupSymbolValue(Interp* interp, Item item)
+{
+  // Lookup symbol in stackframe environment.
+  
+  // Lookup symbol in global symbol table.
+  
+  return ItemWithVirgin();
+}
+
+// Associative list
+Item ListLookup(List* list, Index symbolIndex)
+{
+  // TODO
+  return ItemWithVirgin();
+}
+
+void InterpPush(Interp* interp, Item item)
+{
+  ListPush(interp->stack, item);
+}
+
 Item InterpPop(Interp* interp)
 {
   return ListPop(interp->stack);
@@ -105,13 +133,27 @@ Item InterpPop(Interp* interp)
 
 Item InterpPopEval(Interp* interp)
 {
-  // TODO: Eval
-  return ListPop(interp->stack);
+  // If the item is a symbol, evaluate it.
+  // Evaluating a symbol means finding its value,
+  // if it is bound. An unbound symbol evaluates
+  // to itself (its literal value).
+  Item item = ListPop(interp->stack);
+  if (IsSymbol(item.type))
+  {
+    Item value = InterpLookupSymbolValue(interp, item);
+    if (TypeVirgin != value.type) return value;
+  }
+  
+  // If no value found, return the item itself.
+  return item;
 }
 
-void InterpPushIntNum(Interp* interp, long number)
+void InterpPushStackFrame(Interp* interp, List* list)
 {
-  ListPush(interp->stack, ItemWithIntNum(number));
+  StackFrame* stackframe = StackFrameCreate(list);
+  Item item = ItemWithStackFrame(stackframe);
+  interp->stackframeIndex = ListPush(interp->callstack, item);
+  printf("Pushed stackframe at index: %i\n", interp->stackframeIndex);
 }
 
 void InterpEval(Interp* interp, Item element)
@@ -132,22 +174,15 @@ void InterpEval(Interp* interp, Item element)
 
 void InterpRun(Interp* interp, List* list)
 {
-  // Create root stackframe.
-  StackFrame* stackframe = StackFrameCreate();
-  stackframe->env = ListCreate();
-  stackframe->codeList = list;
-  stackframe->codePointer = -1;
-  Item item = ItemWithObj(stackframe);
-  interp->stackframeIndex = ListPush(interp->callstack, item);
-  printf("Pushed root frame at index: %i\n", interp->stackframeIndex);
+  // Push root stackframe.
+  InterpPushStackFrame(interp, list);
+  printf("Created root frame at index: %i\n", interp->stackframeIndex);
   
   while (interp->run)
   {
     // Get current stackframe.
-    //$index = $interp->stackframe_index;
-    //$stackframe = $interp->callstack[$index];
     Item item = ListGet(interp->callstack, interp->stackframeIndex);
-    stackframe = item.data.obj;
+    StackFrame* stackframe = item.data.obj;
 
     // Increment code pointer.
     stackframe->codePointer++;
