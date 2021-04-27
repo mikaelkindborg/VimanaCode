@@ -90,6 +90,9 @@ void ListPrintItems(List* list, Interp* interp)
   ListPrintWorker(list, TRUE, interp);
 }
 
+// TODO: Make function to get Item as string
+// Possibly custom string type that can grow.
+  
 void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
 {
   for (int i = 0; i < list->length; i++)
@@ -109,7 +112,8 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
     }
     else if (IsPrimFun(item.type))
     {
-      printf("[PRIMFUN: %s TYPE: %u]", item.string, item.type);
+      //printf("[PRIMFUN: %s TYPE: %u]", item.string, item.type);
+      printf("[PRIMFUN: %s]", item.string);
     }
     else if (IsFun(item.type))
     {

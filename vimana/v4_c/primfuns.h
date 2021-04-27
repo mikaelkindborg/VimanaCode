@@ -4,7 +4,7 @@
 // DO evaluates a list. Other types generates an error.
 void Prim_DO(Interp* interp)
 {
-  printf("HELLO DO\n");
+  //printf("HELLO DO\n");
   Item item = InterpPopEval(interp);
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item.type))
@@ -20,7 +20,9 @@ void Prim_DO(Interp* interp)
 
 void Prim_PRINTLN(Interp* interp)
 {
-  printf("HELLO PRINTLN\n");
+  // TODO: Make function to get Item as string in list.h
+  
+  //printf("HELLO PRINTLN\n");
   Item item = InterpPopEval(interp);
   // TODO: Check type.
   if (IsIntNum(item.type))
@@ -41,7 +43,7 @@ void Prim_PRINTLN(Interp* interp)
 
 void Prim_PLUS(Interp* interp)
 {
-  printf("HELLO PLUS\n");
+  //printf("HELLO PLUS\n");
   Item a = InterpPopEval(interp);
   Item b = InterpPopEval(interp);
   // TODO: Check type.

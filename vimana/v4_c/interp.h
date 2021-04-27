@@ -153,7 +153,7 @@ void InterpPushStackFrame(Interp* interp, List* list)
   StackFrame* stackframe = StackFrameCreate(list);
   Item item = ItemWithStackFrame(stackframe);
   interp->stackframeIndex = ListPush(interp->callstack, item);
-  printf("Pushed stackframe at index: %i\n", interp->stackframeIndex);
+  printf("PUSHED STACKFRAME AT INDEX: %i\n", interp->stackframeIndex);
 }
 
 void InterpEval(Interp* interp, Item element)
@@ -161,14 +161,14 @@ void InterpEval(Interp* interp, Item element)
   Type type = element.type;
   if (IsPrimFun(type))
   {
-    printf("PRIM FUN FOUND\n");
+    //printf("PRIM FUN FOUND\n");
     element.data.primFun(interp);
   }
   else
   {
     //Push element onto the data stack
     ListPush(interp->stack, element);
-    printf("PUSH ELEMENT ONTO DATA STACK: %i\n", element.type);
+    //printf("PUSH ELEMENT ONTO DATA STACK: %i\n", element.type);
   }
 }
 
@@ -176,7 +176,7 @@ void InterpRun(Interp* interp, List* list)
 {
   // Push root stackframe.
   InterpPushStackFrame(interp, list);
-  printf("Created root frame at index: %i\n", interp->stackframeIndex);
+  printf("CREATED ROOT FRAME AT INDEX: %i\n", interp->stackframeIndex);
   
   while (interp->run)
   {
@@ -208,7 +208,7 @@ void InterpRun(Interp* interp, List* list)
     // Was this the last stackframe?
     if (interp->stackframeIndex < 0)
     {
-      printf("EXIT INTERP RUN\n");
+      printf("EXIT InterpRun\n");
       interp->run = FALSE;
     }
   }
