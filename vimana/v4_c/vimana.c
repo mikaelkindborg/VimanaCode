@@ -14,9 +14,14 @@ int main()
   
   Interp* interp = InterpCreate();
   InterpDefinePrimFuns(interp);
+  printf("PRIMFUNS:\n");
   ListPrintItems(interp->symbolTable, interp);
   
   List* list = InterpParseCode(interp, "HELLO_WORLD PRINTLN (1 2 3 + +) DO PRINTLN 1 2 +");
+
+  printf("SYMBOL TABLE:\n");
+  ListPrintItems(interp->symbolTable, interp);
+
   printf("PARSED LIST:\n");
   ListPrint(list, interp);
   printf("\n");

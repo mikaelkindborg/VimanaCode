@@ -4,8 +4,9 @@
 // DO evaluates a list. Other types generates an error.
 void Prim_DO(Interp* interp)
 {
-  //printf("HELLO DO\n");
-  Item item = InterpPopEval(interp);
+  printf("HELLO DO\n");
+  Item item = InterpPop(interp);
+  printf("ITEM TYPE: %u\n", item.type);
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item.type))
   {
@@ -22,19 +23,20 @@ void Prim_PRINTLN(Interp* interp)
 {
   // TODO: Make function to get Item as string in list.h
   
-  //printf("HELLO PRINTLN\n");
-  Item item = InterpPopEval(interp);
+  printf("HELLO PRINTLN\n");
+  Item item = InterpPop(interp);
   // TODO: Check type.
+  printf("ITEM TYPE: %u\n", item.type);
   if (IsIntNum(item.type))
   {
     printf("%li\n", item.data.intNum);
   }
   else if (IsSymbol(item.type))
   {
-    char* string = InterpGetSymbolString(interp, item.symbolIndex);
+    char* string = InterpGetSymbolString(interp, item.symbol.index);
     if (NULL == string)
     {
-      printf("ERROR: PRINTLN SYMNOL HAS NO STRING\n");
+      printf("ERROR: PRINTLN SYMBOL HAS NO STRING\n");
       exit(0);
     }
     printf("%s\n", string);

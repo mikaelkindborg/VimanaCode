@@ -12,8 +12,12 @@ List;
 typedef struct MyItem
 {
   Type  type;
-  Index symbolIndex;
-  char* string;
+  union
+  {
+    Index index;  // Index in the symbol table or the local environment
+    char* string; // String in symbol table entries
+  }
+  symbol;
   union
   {
     double  decNum;
@@ -53,11 +57,11 @@ Index ListPush(List* list, Item item)
     Item* newArray = realloc(list->items, newSize * sizeof(Item));
     if (NULL == newArray)
     {
-      printf("ERROR: OUT OF MEMORY IN ListPush\n");
+      printf("ERROR: Out of memory in ListPush\n");
       exit(0);
     }
     list->items = newArray;
-    printf("REALLOC SUCCESSFUL IN ListPush\n");
+    printf("REALLOC successful in ListPush\n");
   }
   
   list->items[list->length] = item;
@@ -67,12 +71,22 @@ Index ListPush(List* list, Item item)
 
 Item ListPop(List* list)
 {
+  if (list->length < 1)
+  {
+    printf("ERROR: ListPop cannot pop list of length: %i\n", list->length);
+    exit(0);
+  }
   list->length--;
   return list->items[list->length];
 }
 
 Item ListGet(List* list, int index)
 {
+  if (index >= list->length)
+  {
+    printf("ERROR: ListGet out of bounds at index: %i\n", list->length);
+    exit(0);
+  }
   return list->items[index];
 }
 
@@ -112,8 +126,8 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
     }
     else if (IsPrimFun(item.type))
     {
-      //printf("[PRIMFUN: %s TYPE: %u]", item.string, item.type);
-      printf("[PRIMFUN: %s]", item.string);
+      //printf("[PRIMFUN: %s TYPE: %u]", item.symbol.string, item.type);
+      printf("[PRIMFUN: %s]", item.symbol.string);
     }
     else if (IsFun(item.type))
     {
@@ -121,11 +135,11 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
     }
     else if (IsString(item.type))
     {
-      printf("%s", item.string);
+      printf("%s", item.symbol.string);
     }
     else if (IsSymbol(item.type))
     {
-      printf("%s", InterpGetSymbolString(interp, item.symbolIndex));
+      printf("%s", InterpGetSymbolString(interp, item.symbol.index));
     }
     
     if (i < list->length - 1)
@@ -144,8 +158,18 @@ Item ItemWithSymbol(Index symbolIndex)
 {
   Item item;
   item.type = TypeSymbol;
-  item.symbolIndex = symbolIndex;
-  item.string = NULL;
+  item.symbol.index = symbolIndex;
+  return item;
+}
+
+Item ItemWithString(char* string)
+{
+  Item item;
+  item.type = TypeString;
+  char* stringbuf = malloc(strlen(string) + 1);
+  strcpy(stringbuf, string);
+  item.symbol.string = stringbuf;
+  printf("[ItemWithString: %s]\n", item.symbol.string);
   return item;
 }
 
@@ -154,8 +178,6 @@ Item ItemWithIntNum(long number)
   Item item;
   item.type = TypeIntNum;
   item.data.intNum = number;
-  item.string = NULL;
-  item.symbolIndex = -1;
   return item;
 }
 
@@ -164,8 +186,6 @@ Item ItemWithDecNum(long number)
   Item item;
   item.type = TypeDecNum;
   item.data.decNum = number;
-  item.string = NULL;
-  item.symbolIndex = -1;
   return item;
 }
 
@@ -174,8 +194,6 @@ Item ItemWithList(List* list)
   Item item;
   item.type = TypeList;
   item.data.list = list;
-  item.string = NULL;
-  item.symbolIndex = -1;
   return item;
 }
 
@@ -184,8 +202,6 @@ Item ItemWithFun(List* fun)
   Item item;
   item.type = TypeFun;
   item.data.list = fun;
-  item.string = NULL;
-  item.symbolIndex = -1;
   return item;
 }
 
@@ -194,8 +210,6 @@ Item ItemWithPrimFun(PrimFun fun)
   Item item;
   item.type = TypePrimFun;
   item.data.primFun = fun;
-  item.string = NULL;
-  item.symbolIndex = -1;
   return item;
 }
 
@@ -204,17 +218,6 @@ Item ItemWithObj(void* obj)
   Item item;
   item.type = TypeObj;
   item.data.obj = obj;
-  item.string = NULL;
-  item.symbolIndex = -1;
-  return item;
-}
-
-Item ItemWithString(char* string)
-{
-  Item item;
-  item.type = TypeString;
-  item.string = string;
-  item.symbolIndex = -1;
   return item;
 }
 
@@ -230,8 +233,5 @@ Item ItemWithStackFrame(void* obj)
   Item item;
   item.type = TypeStackFrame;
   item.data.obj = obj;
-  item.string = NULL;
-  item.symbolIndex = -1;
   return item;
 }
-
