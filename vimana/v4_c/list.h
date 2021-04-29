@@ -256,6 +256,16 @@ Item ListGet(List* list, int index)
   return list->items[index];
 }
 
+void ListSet(List* list, int index, Item item)
+{
+  if (index >= list->length)
+  {
+    printf("ERROR: ListSet out of bounds at index: %i\n", list->length);
+    exit(0);
+  }
+  list->items[index] = item;
+}
+
 void ListPrintWorker(List* list, Bool useNewLine, Interp* interp);
 
 void ListPrint(List* list, Interp* interp)

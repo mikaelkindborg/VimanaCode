@@ -19,12 +19,26 @@ void Prim_DO(Interp* interp)
   }
 }
 
+// SET a global symbol to a value.
+// Example:
+// 42 FOO SET FOO PRINTLN
+void Prim_SET(Interp* interp)
+{
+  printf("HELLO SET\n");
+  Item name = InterpPop(interp);
+  Item value = InterpPop(interp);
+  printf("NAME TYPE:  %u\n", name.type);
+  printf("VALUE TYPE: %u\n", value.type);
+  Index i = name.value.symbol;
+  ListSet(interp->symbolValueTable, i, value);
+}
+
 void Prim_PRINTLN(Interp* interp)
 {
   // TODO: Make function to get Item as string in list.h
   
   printf("HELLO PRINTLN\n");
-  Item item = InterpPop(interp);
+  Item item = InterpPopEval(interp);
   // TODO: Check type.
   printf("ITEM TYPE: %u\n", item.type);
   if (IsIntNum(item.type))
@@ -56,6 +70,7 @@ void Prim_PLUS(Interp* interp)
 void InterpDefinePrimFuns(Interp* interp)
 {
   InterpAddPrimFun("DO", &Prim_DO, interp);
+  InterpAddPrimFun("SET", &Prim_SET, interp);
   InterpAddPrimFun("PRINTLN", &Prim_PRINTLN, interp);
   InterpAddPrimFun("+", &Prim_PLUS, interp);
 }

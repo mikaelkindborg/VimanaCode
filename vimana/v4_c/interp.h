@@ -107,13 +107,19 @@ char* InterpGetSymbolString(Interp* interp, Index symbolIndex)
 
 // Lookup the value of a symbol (variable value).
 // Return Virgin item if no value exists.
-Item InterpLookupSymbolValue(Interp* interp, Item item)
+Item InterpEvalSymbol(Interp* interp, Item item)
 {
-  // Lookup symbol in stackframe environment.
-  
   // Lookup symbol in global symbol table.
+  if (IsSymbol(item.type))
+  {
+    Item value =  ListGet(interp->symbolValueTable, item.value.symbol);
+    if (TypeVirgin != value.type) return value;
+  }
   
-  return ItemWithVirgin();
+  // TODO: Lookup symbol in stackframe local environment.
+  
+  // Otherwise return the item itself (it evaluates to itself).
+  return item;
 }
 
 // Associative list
@@ -141,14 +147,7 @@ Item InterpPopEval(Interp* interp)
   // if it is bound. An unbound symbol evaluates
   // to itself (its literal value).
   Item item = ListPop(interp->stack);
-  if (IsSymbol(item.type))
-  {
-    Item value = InterpLookupSymbolValue(interp, item);
-    if (TypeVirgin != value.type) return value;
-  }
-  
-  // If no value found, return the item itself.
-  return item;
+  return InterpEvalSymbol(interp, item);
 }
 
 void InterpPushStackFrame(Interp* interp, List* list)
