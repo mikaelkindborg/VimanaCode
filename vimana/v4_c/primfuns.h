@@ -10,7 +10,7 @@ void Prim_DO(Interp* interp)
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item.type))
   {
-    InterpPushStackFrame(interp, item.data.list);
+    InterpPushStackFrame(interp, item.value.list);
   }
   else
   {
@@ -29,11 +29,11 @@ void Prim_PRINTLN(Interp* interp)
   printf("ITEM TYPE: %u\n", item.type);
   if (IsIntNum(item.type))
   {
-    printf("%li\n", item.data.intNum);
+    printf("%li\n", item.value.intNum);
   }
   else if (IsSymbol(item.type))
   {
-    char* string = InterpGetSymbolString(interp, item.symbol.index);
+    char* string = InterpGetSymbolString(interp, item.value.symbol);
     if (NULL == string)
     {
       printf("ERROR: PRINTLN SYMBOL HAS NO STRING\n");
@@ -49,7 +49,7 @@ void Prim_PLUS(Interp* interp)
   Item a = InterpPopEval(interp);
   Item b = InterpPopEval(interp);
   // TODO: Check type.
-  long res = a.data.intNum + b.data.intNum;
+  long res = a.value.intNum + b.value.intNum;
   InterpPush(interp, ItemWithIntNum(res));
 }
 

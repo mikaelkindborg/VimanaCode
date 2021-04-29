@@ -16,6 +16,7 @@ int main()
   InterpDefinePrimFuns(interp);
   printf("PRIMFUNS:\n");
   ListPrintItems(interp->symbolTable, interp);
+  ListPrintItems(interp->symbolValueTable, interp);
   
   List* list = InterpParseCode(interp, "HELLO_WORLD PRINTLN (1 2 3 + +) DO PRINTLN 1 2 +");
 

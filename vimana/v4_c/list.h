@@ -1,5 +1,44 @@
 
+/****************** C TYPES ******************/
+
+typedef unsigned char Type;
+typedef int Index;
+typedef struct MyList List;
+typedef struct MyItem Item;
+typedef struct MyInterp Interp;
+typedef void (*PrimFun)(Interp*);
+
+char* InterpGetSymbolString(Interp* interp, Index index);
+
+/****************** VIMANA TYPES ******************/
+
+#define TypeSymbol      1
+#define TypeIntNum      4
+#define TypeDecNum      8
+#define TypePrimFun     2
+#define TypeFun         3
+#define TypeList        5
+#define TypeObj         6
+#define TypeString      7
+#define TypeVirgin      9  // Represents unbound symbol
+#define TypeStackFrame 10
+#define TypeLocalVar   11
+
+#define IsSymbol(type)     ((type) == (TypeSymbol))
+#define IsPrimFun(type)    ((type) == (TypePrimFun))
+#define IsFun(type)        ((type) == (TypeFun))
+#define IsIntNum(type)     ((type) == (TypeIntNum))
+#define IsDecNum(type)     ((type) == (TypeDecNum))
+#define IsList(type)       ((type) == (TypeList))
+#define IsObj(type)        ((type) == (TypeObj))
+#define IsString(type)     ((type) == (TypeString))
+#define IsVirgin(type)     ((type) == (TypeVirgin))
+#define IsStackFrame(type) ((type) == (TypeStackFrame))
+#define IsLocalVar(type)   ((type) == (TypeLocalVar))
+
 /****************** LISTS ******************/
+
+// Flag to say that list has been freed? GC flag?
 
 typedef struct MyList
 {
@@ -14,21 +53,148 @@ typedef struct MyItem
   Type  type;
   union
   {
-    Index index;  // Index in the symbol table or the local environment
-    char* string; // String in symbol table entries
-  }
-  symbol;
-  union
-  {
+    // Fields used by data lists and code.
+    Index   symbol;   // Index in symbol table.
+    Index   localVar; // Index in the local environment table
+    
+    // Fields used by both the symbol table and list elements.
     double  decNum;
     long    intNum;
     List*   list;
     void*   obj;
+    char*   string;
+    
+    // Fields only used by the symbol table.
     PrimFun primFun;
   }
-  data;
+  value;
 }
 Item;
+
+
+
+/***
+
+Massa svammel här:
+
+The global symbol table is a list with string items 
+of TypeString.
+
+The global symbol table works in tandem with the global
+value table. Entries that are bound appear in this list
+as value items.
+
+Items on the stack are like items in the program code.
+Items in the local environment table are the same.
+
+Possible type values for lists are:
+
+TypeSymbol - value.symbol refers to index in the symbol table
+TypeIntNum - value.intNum holds the integer value
+TypeDecNum - value.decNum holds the decimal number value
+TypeList   - value.list points to the list
+
+In a function body, local vars refer to entries in the 
+local environment table of the stack frame. This type of
+item uses the following field:
+
+TypeLocalVar - value.localVar is an index to the stackframe 
+environment table
+
+The actual item that holds the type and value is in the 
+environment table
+
+In the symbol table the symbol field is always used and the value field is used if the symbol is bound (a global variable).
+
+Note that array indexes are used in place of string symbols to
+speed up execution. Environment lookups are always indexes.
+
+***/
+
+
+Item ItemWithSymbol(Index symbolIndex)
+{
+  Item item;
+  item.type = TypeSymbol;
+  item.value.symbol = symbolIndex;
+  return item;
+}
+
+Item ItemWithString(char* string)
+{
+  Item item;
+  item.type = TypeString;
+  char* stringbuf = malloc(strlen(string) + 1);
+  strcpy(stringbuf, string);
+  item.value.string = stringbuf;
+  printf("[ItemWithString: %s]\n", item.value.string);
+  return item;
+}
+
+Item ItemWithIntNum(long number)
+{
+  Item item;
+  item.type = TypeIntNum;
+  item.value.intNum = number;
+  return item;
+}
+
+Item ItemWithDecNum(long number)
+{
+  Item item;
+  item.type = TypeDecNum;
+  item.value.decNum = number;
+  return item;
+}
+
+Item ItemWithList(List* list)
+{
+  Item item;
+  item.type = TypeList;
+  item.value.list = list;
+  return item;
+}
+
+Item ItemWithFun(List* fun)
+{
+  Item item;
+  item.type = TypeFun;
+  item.value.list = fun;
+  return item;
+}
+
+Item ItemWithPrimFun(PrimFun fun)
+{
+  Item item;
+  item.type = TypePrimFun;
+  item.value.primFun = fun;
+  return item;
+}
+
+Item ItemWithObj(void* obj)
+{
+  Item item;
+  item.type = TypeObj;
+  item.value.obj = obj;
+  return item;
+}
+
+// Unbound value type.
+Item ItemWithVirgin()
+{
+  Item item;
+  item.type = TypeVirgin;
+  return item;
+}
+
+Item ItemWithStackFrame(void* obj)
+{
+  Item item;
+  item.type = TypeStackFrame;
+  item.value.obj = obj;
+  return item;
+}
+
 
 List* ListCreate()
 {
@@ -114,32 +280,36 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
     Item item = ListGet(list, i);
     if (IsIntNum(item.type))
     {
-      printf("%li", item.data.intNum);
+      printf("%li", item.value.intNum);
     }
     else if (IsDecNum(item.type))
     {
-      printf("%f", item.data.decNum);
+      printf("%f", item.value.decNum);
     }
     else if (IsList(item.type))
     {
-      ListPrint(item.data.list, interp);
+      ListPrint(item.value.list, interp);
     }
     else if (IsPrimFun(item.type))
     {
-      //printf("[PRIMFUN: %s TYPE: %u]", item.symbol.string, item.type);
-      printf("[PRIMFUN: %s]", item.symbol.string);
+      //printf("[PRIMFUN TYPE: %u]", item.type);
+      printf("[PRIMFUN: %s]", InterpGetSymbolString(interp, i));
     }
     else if (IsFun(item.type))
     {
-      ListPrint(item.data.list, interp);
+      ListPrint(item.value.list, interp);
     }
     else if (IsString(item.type))
     {
-      printf("%s", item.symbol.string);
+      printf("%s", item.value.string);
     }
     else if (IsSymbol(item.type))
     {
-      printf("%s", InterpGetSymbolString(interp, item.symbol.index));
+      printf("%s", InterpGetSymbolString(interp, item.value.symbol));
+    }
+    else
+    {
+      printf("UNKNOWN");
     }
     
     if (i < list->length - 1)
@@ -152,86 +322,4 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
       printf("\n");
     }
   }
-}
-
-Item ItemWithSymbol(Index symbolIndex)
-{
-  Item item;
-  item.type = TypeSymbol;
-  item.symbol.index = symbolIndex;
-  return item;
-}
-
-Item ItemWithString(char* string)
-{
-  Item item;
-  item.type = TypeString;
-  char* stringbuf = malloc(strlen(string) + 1);
-  strcpy(stringbuf, string);
-  item.symbol.string = stringbuf;
-  printf("[ItemWithString: %s]\n", item.symbol.string);
-  return item;
-}
-
-Item ItemWithIntNum(long number)
-{
-  Item item;
-  item.type = TypeIntNum;
-  item.data.intNum = number;
-  return item;
-}
-
-Item ItemWithDecNum(long number)
-{
-  Item item;
-  item.type = TypeDecNum;
-  item.data.decNum = number;
-  return item;
-}
-
-Item ItemWithList(List* list)
-{
-  Item item;
-  item.type = TypeList;
-  item.data.list = list;
-  return item;
-}
-
-Item ItemWithFun(List* fun)
-{
-  Item item;
-  item.type = TypeFun;
-  item.data.list = fun;
-  return item;
-}
-
-Item ItemWithPrimFun(PrimFun fun)
-{
-  Item item;
-  item.type = TypePrimFun;
-  item.data.primFun = fun;
-  return item;
-}
-
-Item ItemWithObj(void* obj)
-{
-  Item item;
-  item.type = TypeObj;
-  item.data.obj = obj;
-  return item;
-}
-
-Item ItemWithVirgin()
-{
-  Item item;
-  item.type = TypeVirgin;
-  return item;
-}
-
-Item ItemWithStackFrame(void* obj)
-{
-  Item item;
-  item.type = TypeStackFrame;
-  item.data.obj = obj;
-  return item;
 }
