@@ -15,3 +15,9 @@ typedef int Bool;
 
 #define StringEquals(s1, s2) (0 == strcmp((s1), (s2)))
 
+// cc -E file.c
+
+#define Print(str, args...)      printf(str, ## args)
+#define PrintLine(str, args...)  printf(str "\n", ## args)
+#define PrintDebug(str, args...) printf("[DEBUG] " str "\n", ## args)
+#define ErrorExit(str, args...)  printf("[ERROR] " str "\n", ## args); exit(0)

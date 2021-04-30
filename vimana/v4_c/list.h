@@ -9,6 +9,7 @@ typedef struct MyInterp Interp;
 typedef void (*PrimFun)(Interp*);
 
 char* InterpGetSymbolString(Interp* interp, Index index);
+void ItemToString(Item item, char* stringbuf, Interp* interp);
 
 /****************** VIMANA TYPES ******************/
 
@@ -111,91 +112,6 @@ speed up execution. Environment lookups are always indexes.
 
 ***/
 
-
-Item ItemWithSymbol(Index symbolIndex)
-{
-  Item item;
-  item.type = TypeSymbol;
-  item.value.symbol = symbolIndex;
-  return item;
-}
-
-Item ItemWithString(char* string)
-{
-  Item item;
-  item.type = TypeString;
-  char* stringbuf = malloc(strlen(string) + 1);
-  strcpy(stringbuf, string);
-  item.value.string = stringbuf;
-  printf("[ItemWithString: %s]\n", item.value.string);
-  return item;
-}
-
-Item ItemWithIntNum(long number)
-{
-  Item item;
-  item.type = TypeIntNum;
-  item.value.intNum = number;
-  return item;
-}
-
-Item ItemWithDecNum(long number)
-{
-  Item item;
-  item.type = TypeDecNum;
-  item.value.decNum = number;
-  return item;
-}
-
-Item ItemWithList(List* list)
-{
-  Item item;
-  item.type = TypeList;
-  item.value.list = list;
-  return item;
-}
-
-Item ItemWithFun(List* fun)
-{
-  Item item;
-  item.type = TypeFun;
-  item.value.list = fun;
-  return item;
-}
-
-Item ItemWithPrimFun(PrimFun fun)
-{
-  Item item;
-  item.type = TypePrimFun;
-  item.value.primFun = fun;
-  return item;
-}
-
-Item ItemWithObj(void* obj)
-{
-  Item item;
-  item.type = TypeObj;
-  item.value.obj = obj;
-  return item;
-}
-
-// Unbound value type.
-Item ItemWithVirgin()
-{
-  Item item;
-  item.type = TypeVirgin;
-  return item;
-}
-
-Item ItemWithStackFrame(void* obj)
-{
-  Item item;
-  item.type = TypeStackFrame;
-  item.value.obj = obj;
-  return item;
-}
-
-
 List* ListCreate()
 {
   int size = 10;
@@ -256,6 +172,7 @@ Item ListGet(List* list, int index)
   return list->items[index];
 }
 
+// TODO: Grow on set
 void ListSet(List* list, int index, Item item)
 {
   if (index >= list->length)
@@ -266,13 +183,15 @@ void ListSet(List* list, int index, Item item)
   list->items[index] = item;
 }
 
+/****************** PRINT LISTS ******************/
+
 void ListPrintWorker(List* list, Bool useNewLine, Interp* interp);
 
 void ListPrint(List* list, Interp* interp)
 {
-  printf("(");
+  Print("(");
   ListPrintWorker(list, FALSE, interp);
-  printf(")");
+  Print(") ");
 }
 
 void ListPrintItems(List* list, Interp* interp)
@@ -280,56 +199,182 @@ void ListPrintItems(List* list, Interp* interp)
   ListPrintWorker(list, TRUE, interp);
 }
 
-// TODO: Make function to get Item as string
-// Possibly custom string type that can grow.
-  
 void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
 {
+  // TODO: Make string type that can grow.
+  char buf[128];
+  
   for (int i = 0; i < list->length; i++)
   {
     Item item = ListGet(list, i);
-    if (IsIntNum(item.type))
-    {
-      printf("%li", item.value.intNum);
-    }
-    else if (IsDecNum(item.type))
-    {
-      printf("%f", item.value.decNum);
-    }
-    else if (IsList(item.type))
-    {
-      ListPrint(item.value.list, interp);
-    }
-    else if (IsPrimFun(item.type))
-    {
-      //printf("[PRIMFUN TYPE: %u]", item.type);
-      printf("[PRIMFUN: %s]", InterpGetSymbolString(interp, i));
-    }
-    else if (IsFun(item.type))
-    {
-      ListPrint(item.value.list, interp);
-    }
-    else if (IsString(item.type))
-    {
-      printf("%s", item.value.string);
-    }
-    else if (IsSymbol(item.type))
-    {
-      printf("%s", InterpGetSymbolString(interp, item.value.symbol));
-    }
-    else
-    {
-      printf("UNKNOWN");
-    }
+    ItemToString(item, buf, interp);
+    Print("%s", buf);
     
     if (i < list->length - 1)
     {
-      printf(" ");
+      Print(" ");
     }
     
     if (useNewLine)
     {
-      printf("\n");
+      PrintLine("");
     }
+  }
+}
+
+/****************** CREATE ITEMS ******************/
+
+Item ItemWithSymbol(Index symbolIndex)
+{
+  Item item;
+  item.type = TypeSymbol;
+  item.value.symbol = symbolIndex;
+  return item;
+}
+
+Item ItemWithString(char* string)
+{
+  Item item;
+  item.type = TypeString;
+  char* stringbuf = malloc(strlen(string) + 1);
+  strcpy(stringbuf, string);
+  item.value.string = stringbuf;
+  printf("[ItemWithString: %s]\n", item.value.string);
+  return item;
+}
+
+Item ItemWithIntNum(long number)
+{
+  Item item;
+  item.type = TypeIntNum;
+  item.value.intNum = number;
+  return item;
+}
+
+Item ItemWithDecNum(double number)
+{
+  Item item;
+  item.type = TypeDecNum;
+  item.value.decNum = number;
+  return item;
+}
+
+Item ItemWithList(List* list)
+{
+  Item item;
+  item.type = TypeList;
+  item.value.list = list;
+  return item;
+}
+
+Item ItemWithFun(List* fun)
+{
+  Item item;
+  item.type = TypeFun;
+  item.value.list = fun;
+  return item;
+}
+
+Item ItemWithPrimFun(PrimFun fun)
+{
+  Item item;
+  item.type = TypePrimFun;
+  item.value.primFun = fun;
+  return item;
+}
+
+Item ItemWithObj(void* obj)
+{
+  Item item;
+  item.type = TypeObj;
+  item.value.obj = obj;
+  return item;
+}
+
+// Unbound value type.
+Item ItemWithVirgin()
+{
+  Item item;
+  item.type = TypeVirgin;
+  return item;
+}
+
+Item ItemWithStackFrame(void* obj)
+{
+  Item item;
+  item.type = TypeStackFrame;
+  item.value.obj = obj;
+  return item;
+}
+
+
+/****************** ITEM MATH ******************/
+
+Item ItemAdd(Item a, Item b)
+{
+  if (IsIntNum(a.type) && IsIntNum(b.type))
+  {
+    return ItemWithIntNum(a.value.intNum + b.value.intNum);
+  }
+  
+  if (IsIntNum(a.type) && IsDecNum(b.type))
+  {
+    return ItemWithDecNum(a.value.intNum + b.value.decNum);
+  }
+  
+  if (IsDecNum(a.type) && IsIntNum(b.type))
+  {
+    return ItemWithDecNum(a.value.decNum + b.value.intNum);
+  }
+  
+  if (IsDecNum(a.type) && IsDecNum(b.type))
+  {
+    return ItemWithDecNum(a.value.decNum + b.value.decNum);
+  }
+  
+  ErrorExit("Cannot add items in ItemAdd");
+  exit(0);
+}
+
+/****************** PRINT ITEMS ******************/
+
+void ItemToString(Item item, char* stringbuf, Interp* interp)
+{
+  if (IsIntNum(item.type))
+  {
+    sprintf(stringbuf, "%li", item.value.intNum);
+  }
+  else if (IsDecNum(item.type))
+  {
+    sprintf(stringbuf, "%f", item.value.decNum);
+  }
+  else if (IsList(item.type))
+  {
+    ListPrint(item.value.list, interp);
+  }
+  else if (IsPrimFun(item.type))
+  {
+    sprintf(stringbuf, "[PRIMFUN]");
+  }
+  else if (IsFun(item.type))
+  {
+    ListPrint(item.value.list, interp);
+  }
+  else if (IsString(item.type))
+  {
+    sprintf(stringbuf, "%s", item.value.string);
+  }
+  else if (IsSymbol(item.type))
+  {
+    char* str = InterpGetSymbolString(interp, item.value.symbol);
+    if (NULL == str)
+    {
+      ErrorExit("ItemToString symbol has no string\n");
+    }
+    sprintf(stringbuf, "%s", str);
+  }
+  else
+  {
+    sprintf(stringbuf, "[UNKNOWN]");
   }
 }

@@ -18,8 +18,8 @@ int main()
   ListPrintItems(interp->symbolTable, interp);
   ListPrintItems(interp->symbolValueTable, interp);
   
-  //List* list = InterpParseCode(interp, "HELLO_WORLD PRINTLN (1 2 3 + +) DO PRINTLN 1 2 +");
-  List* list = InterpParseCode(interp, "42 FOO SET FOO PRINTLN 888888888 FOO SET FOO PRINTLN HELLO_FOO FOO SET FOO PRINTLN");
+  List* list = InterpParseCode(interp, "HELLO_WORLD PRINTLN (1.7 2.2 3 + +) DO PRINTLN 1 2 +");
+  //List* list = InterpParseCode(interp, "42 FOO SET FOO PRINTLN 888888888 FOO SET FOO PRINTLN HELLO_FOO FOO SET FOO PRINTLN");
   
   //printf("SYMBOL TABLE:\n");
   //ListPrintItems(interp->symbolTable, interp);

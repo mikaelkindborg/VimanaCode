@@ -36,11 +36,13 @@ void InterpParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
   if (IsIntNum(type))
   {
     long num = strtol(token, NULL, 10);
+    printf("TOKEN INTNUM: %s %li\n", token, num);
     item = ItemWithIntNum(num);
   }
   else if (IsDecNum(type))
   {
     double num = strtod(token, NULL);
+    printf("TOKEN DECNUM: %s %f\n", token, num);
     item = ItemWithDecNum(num);
   }
   else

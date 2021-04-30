@@ -39,6 +39,11 @@ void Prim_PRINTLN(Interp* interp)
   
   printf("HELLO PRINTLN\n");
   Item item = InterpPopEval(interp);
+  char buf[128];
+  ItemToString(item, buf, interp);
+  PrintLine("%s", buf);
+  
+  /*
   // TODO: Check type.
   printf("ITEM TYPE: %u\n", item.type);
   if (IsIntNum(item.type))
@@ -55,16 +60,20 @@ void Prim_PRINTLN(Interp* interp)
     }
     printf("%s\n", string);
   }
+  */
 }
 
 void Prim_PLUS(Interp* interp)
 {
+  char buf[128];
   //printf("HELLO PLUS\n");
   Item a = InterpPopEval(interp);
   Item b = InterpPopEval(interp);
-  // TODO: Check type.
-  long res = a.value.intNum + b.value.intNum;
-  InterpPush(interp, ItemWithIntNum(res));
+  Item res = ItemAdd(a, b);
+  InterpPush(interp, res);
+  
+  //long res = a.value.intNum + b.value.intNum;
+  //InterpPush(interp, ItemWithIntNum(res));
 }
 
 void InterpDefinePrimFuns(Interp* interp)

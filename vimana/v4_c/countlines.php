@@ -16,3 +16,10 @@ $numlines =
   countlines("primfuns.h");
   
 echo "NUMBER OF LINES: ".$numlines."\n";
+
+/***
+
+210429: 775 lines
+210430: 837 lines
+
+***/
