@@ -63,7 +63,7 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
     // Begin list.
     if (code[i] == '(')
     {
-      //printf("BEGIN LIST\n");
+      PrintDebug("BEGIN LIST");
       List* childList = ListCreate();
       Item item = ItemWithList(childList);
       ListPush(list, item);
@@ -80,13 +80,13 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
       {
         copying = 0;
         *ptoken = 0;
-        //printf("%s\n", token);
+        PrintDebug("ADD TOKEN: %s", token);
         InterpParserAddSymbolOrNumber(interp, token, list);
         
         // End list.
         if (code[i] == ')')
         {
-          //printf("END LIST\n");  
+          PrintDebug("END LIST");  
           return i;
         }
       }
@@ -112,7 +112,7 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
   {
     // end token
     *ptoken = 0;
-    //printf("%s\n", token);
+    PrintDebug("ADD TOKEN: %s", token);
     InterpParserAddSymbolOrNumber(interp, token, list);
   }
 

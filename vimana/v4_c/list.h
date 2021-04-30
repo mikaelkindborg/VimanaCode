@@ -13,29 +13,29 @@ void ItemToString(Item item, char* stringbuf, Interp* interp);
 
 /****************** VIMANA TYPES ******************/
 
-#define TypeSymbol      1
-#define TypeIntNum      4
-#define TypeDecNum      8
-#define TypePrimFun     2
-#define TypeFun         3
-#define TypeList        5
-#define TypeObj         6
-#define TypeString      7
-#define TypeVirgin      9  // Represents unbound symbol
-#define TypeStackFrame 10
-#define TypeLocalVar   11
+#define TypeSymbol       1  // Symbol/global variable
+#define TypeIntNum       4
+#define TypeDecNum       8
+#define TypePrimFun      2
+#define TypeFun          3
+#define TypeList         5
+#define TypeObj          6
+#define TypeString       7
+#define TypeVirgin       9  // Represents unbound symbol
+#define TypeStackFrame  10
+#define TypeLocalSymbol 11  // Local variable
 
-#define IsSymbol(type)     ((type) == (TypeSymbol))
-#define IsPrimFun(type)    ((type) == (TypePrimFun))
-#define IsFun(type)        ((type) == (TypeFun))
-#define IsIntNum(type)     ((type) == (TypeIntNum))
-#define IsDecNum(type)     ((type) == (TypeDecNum))
-#define IsList(type)       ((type) == (TypeList))
-#define IsObj(type)        ((type) == (TypeObj))
-#define IsString(type)     ((type) == (TypeString))
-#define IsVirgin(type)     ((type) == (TypeVirgin))
-#define IsStackFrame(type) ((type) == (TypeStackFrame))
-#define IsLocalVar(type)   ((type) == (TypeLocalVar))
+#define IsSymbol(type)      ((type) == (TypeSymbol))
+#define IsPrimFun(type)     ((type) == (TypePrimFun))
+#define IsFun(type)         ((type) == (TypeFun))
+#define IsIntNum(type)      ((type) == (TypeIntNum))
+#define IsDecNum(type)      ((type) == (TypeDecNum))
+#define IsList(type)        ((type) == (TypeList))
+#define IsObj(type)         ((type) == (TypeObj))
+#define IsString(type)      ((type) == (TypeString))
+#define IsVirgin(type)      ((type) == (TypeVirgin))
+#define IsStackFrame(type)  ((type) == (TypeStackFrame))
+#define IsLocalSymbol(type) ((type) == (TypeLocalSymbol))
 
 /****************** LISTS ******************/
 
@@ -55,18 +55,20 @@ typedef struct MyItem
   union
   {
     // Fields used by data lists and code.
-    Index   symbol;   // Index in symbol table.
-    Index   localVar; // Index in the local environment table
-    
-    // Fields used by both the symbol table and list elements.
+    Index   symbol; // Index in symbol table or 
+                    // in the local environment table
     double  decNum;
     long    intNum;
     List*   list;
     void*   obj;
     char*   string;
     
-    // Fields only used by the symbol table.
+    // Fields only used by items in the symbol table.
     PrimFun primFun;
+    
+    // Interpreter objects.
+    // TODO: StackFrame* stackframe;
+    // TODO: Fun*
   }
   value;
 }
@@ -99,7 +101,7 @@ In a function body, local vars refer to entries in the
 local environment table of the stack frame. This type of
 item uses the following field:
 
-TypeLocalVar - value.localVar is an index to the stackframe 
+TypeLocalSymbol - value.symbol is an index to the stackframe 
 environment table
 
 The actual item that holds the type and value is in the 
@@ -139,11 +141,10 @@ Index ListPush(List* list, Item item)
     Item* newArray = realloc(list->items, newSize * sizeof(Item));
     if (NULL == newArray)
     {
-      printf("ERROR: Out of memory in ListPush\n");
-      exit(0);
+      ErrorExit("Out of memory in ListPush");
     }
     list->items = newArray;
-    printf("REALLOC successful in ListPush\n");
+    //PrintDebug("REALLOC successful in ListPush");
   }
   
   list->items[list->length] = item;
@@ -155,8 +156,7 @@ Item ListPop(List* list)
 {
   if (list->length < 1)
   {
-    printf("ERROR: ListPop cannot pop list of length: %i\n", list->length);
-    exit(0);
+    ErrorExit("ERROR: ListPop cannot pop list of length: %i", list->length);
   }
   list->length--;
   return list->items[list->length];
@@ -191,7 +191,7 @@ void ListPrint(List* list, Interp* interp)
 {
   Print("(");
   ListPrintWorker(list, FALSE, interp);
-  Print(") ");
+  Print(")");
 }
 
 void ListPrintItems(List* list, Interp* interp)
@@ -206,13 +206,20 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
   
   for (int i = 0; i < list->length; i++)
   {
-    Item item = ListGet(list, i);
-    ItemToString(item, buf, interp);
-    Print("%s", buf);
-    
-    if (i < list->length - 1)
+    if (i > 0)
     {
       Print(" ");
+    }
+    
+    Item item = ListGet(list, i);
+    if (IsList(item.type))
+    {
+      ListPrint(item.value.list, interp);
+    }
+    else
+    {
+      ItemToString(item, buf, interp);
+      Print("%s", buf);
     }
     
     if (useNewLine)
@@ -239,7 +246,7 @@ Item ItemWithString(char* string)
   char* stringbuf = malloc(strlen(string) + 1);
   strcpy(stringbuf, string);
   item.value.string = stringbuf;
-  printf("[ItemWithString: %s]\n", item.value.string);
+  //PrintDebug("[TypeString: %s]", item.value.string);
   return item;
 }
 
@@ -350,7 +357,8 @@ void ItemToString(Item item, char* stringbuf, Interp* interp)
   }
   else if (IsList(item.type))
   {
-    ListPrint(item.value.list, interp);
+    //ListPrint(item.value.list, interp);
+    sprintf(stringbuf, "[LIST]");
   }
   else if (IsPrimFun(item.type))
   {
