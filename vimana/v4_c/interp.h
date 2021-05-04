@@ -323,7 +323,21 @@ Example:
 
 ***/
 
-
+int InterpCompileFunLookupLocalIndex(Interp* interp, List* localVars, Item symbol)
+{
+  for (int i = 0; i < ListLength(localVars); i++)
+  {
+    Item localSymbol = ListGet(localVars, i);
+    if (ItemEquals(symbol, localSymbol)) 
+    {
+      return i;
+    }
+  }
+  
+  // Not a local symbol.
+  return -1;
+}
+  
 Item InterpCompileFunReplaceSymbols(Interp* interp, List* localVars, List* bodyList)
 {
   List* newList = ListCreate();
@@ -336,9 +350,17 @@ Item InterpCompileFunReplaceSymbols(Interp* interp, List* localVars, List* bodyL
       item = InterpCompileFunReplaceSymbols(interp, localVars, item.value.list);
       ListPush(newList, item);
     }
+    else if (IsSymbol(item))
+    {
+      // Replace symbol if in localvars.
+      int index = InterpCompileFunLookupLocalIndex(interp, localVars, symbol);
+      if (index > -1)
+        ListPush(newList, ItemWithLocalSymbol(index));
+      else
+        ListPush(newList, item);
+    }
     else
     {
-      // TODO: Replace symbol if in localvars!
       ListPush(newList, item);
     }
   }

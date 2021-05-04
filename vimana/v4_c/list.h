@@ -319,6 +319,51 @@ Item ItemWithStackFrame(void* obj)
   return item;
 }
 
+Item ItemWithLocalSymbol(Index symbolIndex)
+{
+  Item item;
+  item.type = TypeLocalSymbol;
+  item.value.symbol = symbolIndex;
+  return item;
+}
+
+/****************** EQUALS ******************/
+
+Bool ItemEquals(Item a, Item b)
+{
+  if (IsSymbol(a.type) && IsSymbol(b.type))
+  {
+    return a.value.symbol == b.value.symbol;
+  }
+  
+  if (IsString(a.type) && IsString(b.type))
+  {
+    return StringEquals(a.value.string + b.value.string);
+  }
+  
+  if (IsIntNum(a.type) && IsIntNum(b.type))
+  {
+    return a.value.intNum == b.value.intNum;
+  }
+
+  if (IsIntNum(a.type) && IsDecNum(b.type))
+  {
+    return a.value.intNum == b.value.decNum;
+  }
+  
+  if (IsDecNum(a.type) && IsIntNum(b.type))
+  {
+    return a.value.decNum == b.value.intNum;
+  }
+  
+  if (IsDecNum(a.type) && IsDecNum(b.type))
+  {
+    return a.value.decNum == b.value.decNum;
+  }
+  
+  ErrorExit("ItemEquals: Cannot compare items");
+  exit(0);
+}
 
 /****************** ITEM MATH ******************/
 
@@ -344,7 +389,7 @@ Item ItemAdd(Item a, Item b)
     return ItemWithDecNum(a.value.decNum + b.value.decNum);
   }
   
-  ErrorExit("Cannot add items in ItemAdd");
+  ErrorExit("ItemAdd: Cannot add items of this type");
   exit(0);
 }
 
@@ -382,7 +427,7 @@ void ItemToString(Item item, char* stringbuf, Interp* interp)
     char* str = InterpGetSymbolString(interp, item.value.symbol);
     if (NULL == str)
     {
-      ErrorExit("ItemToString symbol has no string\n");
+      ErrorExit("ItemToString: symbol has no string\n");
     }
     sprintf(stringbuf, "%s", str);
   }
