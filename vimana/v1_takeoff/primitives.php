@@ -65,6 +65,7 @@ function interp_create_primitives($prims = [])
   },
   $prims);
   
+  // Note that indexes start at one.
   interp_add_primitive("GET", function(&$stack, &$env, $prims)
   {
     $index = interp_pop_eval($stack, $env);
