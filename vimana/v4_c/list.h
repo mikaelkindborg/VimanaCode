@@ -131,6 +131,11 @@ void ListFree(List* list, int whatToFree)
   free(list);
 }
 
+int ListLength(List* list)
+{
+  return list->length;
+}
+
 // Returns the index of the new item.
 Index ListPush(List* list, Item item)
 {
@@ -204,7 +209,7 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
   // TODO: Make string type that can grow.
   char buf[128];
   
-  for (int i = 0; i < list->length; i++)
+  for (int i = 0; i < ListLength(list); i++)
   {
     if (i > 0)
     {

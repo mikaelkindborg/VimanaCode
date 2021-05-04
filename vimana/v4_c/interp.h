@@ -12,13 +12,17 @@ typedef struct MyInterp
 }
 Interp;
 
+// Invocation object/activation frame
 typedef struct MyStackFrame
 {
   List* env; // index -> value
-  List* codeList;
-  int   codePointer;
+  List* fun; // compiled form: (numargs varlist body)
+  List* codeList; // funbody or list
+  int   codePointer; // position in codelist
 }
 StackFrame;
+// TODO: Why not make StackFrame a list?
+// Performance impact? Overhead?
 
 Item InterpCompileFun(Interp* interp, List* fun);
 
@@ -62,7 +66,7 @@ void StackFrameFree(StackFrame* stackframe)
 Index InterpLookupSymbolIndex(Interp* interp, char* symbol)
 {
   List* symbolTable = interp->symbolTable;
-  for (int i = 0; i < symbolTable->length; i++)
+  for (int i = 0; i < ListLength(symbolTable); i++)
   {
     Item item = ListGet(symbolTable, i);
     char* string = item.value.string;
@@ -107,7 +111,6 @@ char* InterpGetSymbolString(Interp* interp, Index symbolIndex)
   return item.value.string;
 }
 
-
 // Lookup the value of a symbol (variable value).
 // Return Virgin item if no value exists.
 Item InterpEvalSymbol(Interp* interp, Item item)
@@ -145,10 +148,10 @@ void InterpEval(Interp* interp, Item element)
 {
   if (IsSymbol(element.type) || IsLocalSymbol(element.type))
   {
-    // If primitive function, evaluate it.
-    
+    // Evaluate symbol to see if it is bound to a function.
     Item value = InterpEvalSymbol(interp, element);
     
+    // If primitive function, evaluate it.
     if (IsPrimFun(value.type))
     {
       PrintLine("PRIM FUN FOUND: %i", element.value.symbol);
@@ -157,7 +160,7 @@ void InterpEval(Interp* interp, Item element)
       return;
     }
     
-    if (IsFun(element.type))
+    if (IsFun(value.type))
     {
       PrintLine("FUN FOUND: %i", element.value.symbol);
       // Call the function.
@@ -166,6 +169,7 @@ void InterpEval(Interp* interp, Item element)
     }
   }
   
+  // TODO: Move to separate post-parsing step.
   // If list and first element is "FUN" or "fun", then
   // "compile" the function and push it onto the stack.
   if (IsList(element.type))
@@ -173,9 +177,9 @@ void InterpEval(Interp* interp, Item element)
     Item first = ListGet(element.value.list, 0);
     if (IsSymbol(first.type))
     {
-      Item item = ListGet(interp->symbolValueTable, first.value.symbol);
-      if ((0 == strcmp("FUN", item.value.string)) || 
-          (0 == strcmp("fun", item.value.string)))
+      char* string = InterpGetSymbolString(interp, first.value.symbol);
+      if (StringEquals("FUN", string) || 
+          StringEquals("fun", string))
       {
         // TODO: Compile and push onto the stack.
         Item fun = InterpCompileFun(interp, element.value.list);
@@ -239,7 +243,7 @@ void InterpRun(Interp* interp, List* list)
     
     // If the code in the stackframe has finished executing
     // we exit the frame.
-    if (stackframe->codePointer >= stackframe->codeList->length)
+    if (stackframe->codePointer >= ListLength(stackframe->codeList)
     {
       // EXIT STACK FRAME
       printf("EXIT STACKFRAME: %i\n", interp->stackframeIndex);
@@ -277,58 +281,214 @@ void InterpAddPrimFun(char* name, PrimFun fun, Interp* interp)
 
 Before compile:
 
-(FUN (N) 
-  (VAR A B) 
+((X) (A B) 
   (1 A SET 
    N A + B SET 
    B))
 
-(fun (n) 
-  (var a b) 
-  ((1 a set) do
-   (n a + b set) do
-   b))
-   
-(fun (n) 
-  (var a b) 
+Lower case:
+
+((x) (a b) 
   (1 a set
-   n a + b set
+   x a + b set
    b))
    
-StackFrame env becomes 0:N-value 1:A-value 2:B-value
+Variation in style:
+
+((x) (a b) 
+  ((1 a set) do
+   (x a + b set) do
+   b))
+   
+   
+StackFrame env becomes 0:X-value 1:A-value 2:B-value
 
 After compile:
 
-(FUN (N) 
-  (VAR A B)
+(1 (X A B)
   (1 (VAR 1) SET 
    (VAR 0) (VAR 1) + (VAR 2) SET 
    (VAR 2))) 
 
+FUNINST
+  FUN: NUMARGS VARLIST BODY
+  ENV: ARRAY
+  
 The parser compiles functions.
 
 Example:
 
-(FUN (N) (N N +)) DOUBLE SET
+((X) () (X X +)) FUN DOUBLE SET
 21 DOUBLE PRINTLN
 
 ***/
 
 
-// TODO: Compile function list
-void InterpCompileCode(Interp* interp, char* code)
+Item InterpCompileFunReplaceSymbols(Interp* interp, List* localVars, List* bodyList)
 {
-  //TODO 
+  List* newList = ListCreate();
+  
+  for (int i = 0; i < ListLength(bodyList); i++)
+  {
+    Item item = ListGet(bodyList, i);
+    if (IsList(item))
+    {
+      item = InterpCompileFunReplaceSymbols(interp, localVars, item.value.list);
+      ListPush(newList, item);
+    }
+    else
+    {
+      // TODO: Replace symbol if in localvars!
+      ListPush(newList, item);
+    }
+  }
+  
+  return ItemWithList(newList);
 }
 
-// "Compile" the function by replacing local var symbols 
+// "Compile" the function list by replacing local var symbols 
 // with indexes. This should be faster than hashtable lookups.
-Item InterpCompileFun(Interp* interp, List* fun)
+// Return a list with the compile function, an item of type: TypeFun
+Item InterpCompileFun(Interp* interp, Item funList)
 {
+  int bodyIndex    = 0;
+  int argListIndex = 0;
+  int varListIndex = 0;
+  int numArgs      = 0;
+  
+  PrintDebug("Compile Fun");
+  
+  if (!IsList(funList.type))
+  {
+    ErrorExit("InterpCompileFun: funList is not a list");
+  }
+  
+  int length = ListLength(funList.value.list);
+
+  if (3 != length)
+  {
+    ErrorExit("InterpCompileFun: Wrong number of elements in funList");
+  }
+  
+  Item argList  = ListGet(funList.value.list, 0);
+  Item varList  = ListGet(funList.value.list, 1);
+  Item bodyList = ListGet(funList.value.list, 2);
+  
+  // Do some basic checks.
+  if (!IsList(argList.type))
+  {
+    ErrorExit("InterpCompileFun: argList is not a list");
+  }
+    
+  if (!IsList(varList.type))
+  {
+    ErrorExit("InterpCompileFun: varList is not a list");
+  }
+  
+  if (!IsList(bodyList.type))
+  {
+    ErrorExit("InterpCompileFun: bodyList is not a list");
+  }
+  
+  // The resulting list that holds the compiled
+  // function has the format: (NUMARGS LOCALVARS BODY)
+  
+  // Create list for LOCALVARS
+  List* localVars = ListCreate();
+  
+  numArgs = ListLength(argList.value.list);
+  numVars = ListLength(varList.value.list);
+  
+  for (int i = 0; i < numArgs; +i++)
+  {
+    ListPush(localVars, ListGet(argList.value.list, i);
+  }
+  
+  for (int i = 0; i < numVars; +i++)
+  {
+    ListPush(localVars, ListGet(varList.value.list, i);
+  }
+  
+  // Recursively traverse bodyList and replace local symbols with indexes.
+  Item funBody = InterpCompileFunReplaceSymbols(interp, localVars, bodyList.value.list);
+  
+  // Create list for the compile function.
+  List* compiledFun = ListCreate();
+  
+  ListPush(compiledFun, ItemWithIntNum(numArgs));
+  ListPush(compiledFun, ItemWithList(localVars));
+  ListPush(compiledFun, funBody);
+  
+  // Return item with the compiled list.
+  return ItemWithFun(compiledFun);
+}
+
+/* OLD VERSION
+Item InterpCompileFun(Interp* interp, List* funList)
+{
+  int bodyIndex    = 0;
+  int argListIndex = 0;
+  int varListIndex = 0;
+  int numArgs      = 0;
+  
+  int length = ListLength(funList);
+  
+  if (2 == length)
+  {
+    bodyIndex = 1;
+  }
+  else if (3 == length)
+  {
+    bodyIndex = 2;
+    Item list = ListGet(funList, 1);
+    if (!IsList(list.type))
+    {
+      ErrorExit("Second element not a list in InterpCompileFun");
+    }
+    Item first = ListGet(list, 0);
+    if (!IsSymbol(first.type))
+    {
+      ErrorExit("First element not a symbol in InterpCompileFun");
+    }
+    char* string = InterpGetSymbolString(interp, first.value.symbol);
+    if (StringEquals("VAR", string) || StringEquals("var", string))
+    {
+      varListIndex = 1;
+    }
+    else
+    {
+      argListIndex = 1;
+    }
+  }
+  else if (4 == length)
+  {
+    // TODO: We should check that varlist begins with VAR.
+    argListIndex = 1;
+    varListIndex = 2;
+  }
+  else
+  {
+    ErrorExit("List has wrong length in InterpCompileFun");
+  }
+  
+  if (argListIndex)
+  {
+    numArgs = ListLength(ListGet(funList, argListIndex));
+  }
+  
+  List* localVars = ListCreate();
+  if (argListIndex)
+  {
+    numArgs = ListLength(ListGet(funList, argListIndex));
+  }
+    
+    HÄR ÄR JAG
+    
   // TODO
   PrintDebug("Compile Fun");
   return ItemWithVirgin();
 }
+*/
 
 // Bind stack parameters and push a stackframe with
 // the function body.

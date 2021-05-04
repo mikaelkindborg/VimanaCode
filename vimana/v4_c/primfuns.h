@@ -5,6 +5,7 @@
 void Prim_DO(Interp* interp)
 {
   printf("HELLO DO\n");
+  
   Item item = InterpPop(interp);
   printf("ITEM TYPE: %u\n", item.type);
   // If item is a list, create a stackframe and push it onto the stack.
@@ -19,19 +20,33 @@ void Prim_DO(Interp* interp)
   }
 }
 
+// FUN turns a list into a function.
+// Example:
+// ((X) () (X X +) FUN DOUBLE SET
+void Prim_FUN(Interp* interp)
+{
+  printf("HELLO FUN\n");
+  
+  Item list = InterpPopEval(interp);
+  Item compiledFun InterpCompileFun(interp, list)
+  InterpPush(interp, compiledFun);
+}
+
 // SET a global symbol to a value.
 // Example:
 // 42 FOO SET FOO PRINTLN
 void Prim_SET(Interp* interp)
 {
   printf("HELLO SET\n");
+  
   Item name = InterpPop(interp);
   Item value = InterpPopEval(interp);
   printf("NAME TYPE:  %u\n", name.type);
   printf("VALUE TYPE: %u\n", value.type);
   Index i = name.value.symbol;
   ListSet(interp->symbolValueTable, i, value);
-  // TODO: Set local var
+  
+  // TODO: Set local variable
 }
 
 void Prim_PRINTLN(Interp* interp)
@@ -62,6 +77,8 @@ void InterpDefinePrimFuns(Interp* interp)
 {
   InterpAddPrimFun("DO", &Prim_DO, interp);
   InterpAddPrimFun("do", &Prim_DO, interp);
+  InterpAddPrimFun("FUN", &Prim_FUN, interp);
+  InterpAddPrimFun("fun", &Prim_FUN, interp);
   InterpAddPrimFun("SET", &Prim_SET, interp);
   InterpAddPrimFun("set", &Prim_SET, interp);
   InterpAddPrimFun("PRINTLN", &Prim_PRINTLN, interp);
