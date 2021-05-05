@@ -19,23 +19,23 @@ void ItemToString(Item item, char* stringbuf, Interp* interp);
 #define TypePrimFun      2
 #define TypeFun          3
 #define TypeList         5
-#define TypeObj          6
+//#define TypeObj          6
 #define TypeString       7
 #define TypeVirgin       9  // Represents unbound symbol
 #define TypeStackFrame  10
 #define TypeLocalSymbol 11  // Local variable
 
-#define IsSymbol(type)      ((type) == (TypeSymbol))
-#define IsPrimFun(type)     ((type) == (TypePrimFun))
-#define IsFun(type)         ((type) == (TypeFun))
-#define IsIntNum(type)      ((type) == (TypeIntNum))
-#define IsDecNum(type)      ((type) == (TypeDecNum))
-#define IsList(type)        ((type) == (TypeList))
-#define IsObj(type)         ((type) == (TypeObj))
-#define IsString(type)      ((type) == (TypeString))
-#define IsVirgin(type)      ((type) == (TypeVirgin))
-#define IsStackFrame(type)  ((type) == (TypeStackFrame))
-#define IsLocalSymbol(type) ((type) == (TypeLocalSymbol))
+#define IsSymbol(item)      ((item.type) == (TypeSymbol))
+#define IsPrimFun(item)     ((item.type) == (TypePrimFun))
+#define IsFun(item)         ((item.type) == (TypeFun))
+#define IsIntNum(item)      ((item.type) == (TypeIntNum))
+#define IsDecNum(item)      ((item.type) == (TypeDecNum))
+#define IsList(item)        ((item.type) == (TypeList))
+//#define IsObj(item)         ((item.type) == (TypeObj))
+#define IsString(item)      ((item.type) == (TypeString))
+#define IsVirgin(item)      ((item.type) == (TypeVirgin))
+#define IsStackFrame(item)  ((item.type) == (TypeStackFrame))
+#define IsLocalSymbol(item) ((item.type) == (TypeLocalSymbol))
 
 /****************** LISTS ******************/
 
@@ -217,7 +217,7 @@ void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
     }
     
     Item item = ListGet(list, i);
-    if (IsList(item.type))
+    if (IsList(item))
     {
       ListPrint(item.value.list, interp);
     }
@@ -295,13 +295,13 @@ Item ItemWithPrimFun(PrimFun fun)
   return item;
 }
 
-Item ItemWithObj(void* obj)
+/*Item ItemWithObj(void* obj)
 {
   Item item;
   item.type = TypeObj;
   item.value.obj = obj;
   return item;
-}
+}*/
 
 // Unbound value type.
 Item ItemWithVirgin()
@@ -332,32 +332,32 @@ Item ItemWithLocalSymbol(Index symbolIndex)
 Bool ItemEquals(Item a, Item b)
 {
   // TODO: What if symbol is bound?, then compare bound values.
-  if (IsSymbol(a.type) && IsSymbol(b.type))
+  if (IsSymbol(a) && IsSymbol(b))
   {
     return a.value.symbol == b.value.symbol;
   }
   
-  if (IsString(a.type) && IsString(b.type))
+  if (IsString(a) && IsString(b))
   {
     return StringEquals(a.value.string, b.value.string);
   }
   
-  if (IsIntNum(a.type) && IsIntNum(b.type))
+  if (IsIntNum(a) && IsIntNum(b))
   {
     return a.value.intNum == b.value.intNum;
   }
 
-  if (IsIntNum(a.type) && IsDecNum(b.type))
+  if (IsIntNum(a) && IsDecNum(b))
   {
     return a.value.intNum == b.value.decNum;
   }
   
-  if (IsDecNum(a.type) && IsIntNum(b.type))
+  if (IsDecNum(a) && IsIntNum(b))
   {
     return a.value.decNum == b.value.intNum;
   }
   
-  if (IsDecNum(a.type) && IsDecNum(b.type))
+  if (IsDecNum(a) && IsDecNum(b))
   {
     return a.value.decNum == b.value.decNum;
   }
@@ -370,22 +370,22 @@ Bool ItemEquals(Item a, Item b)
 
 Item ItemAdd(Item a, Item b)
 {
-  if (IsIntNum(a.type) && IsIntNum(b.type))
+  if (IsIntNum(a) && IsIntNum(b))
   {
     return ItemWithIntNum(a.value.intNum + b.value.intNum);
   }
   
-  if (IsIntNum(a.type) && IsDecNum(b.type))
+  if (IsIntNum(a) && IsDecNum(b))
   {
     return ItemWithDecNum(a.value.intNum + b.value.decNum);
   }
   
-  if (IsDecNum(a.type) && IsIntNum(b.type))
+  if (IsDecNum(a) && IsIntNum(b))
   {
     return ItemWithDecNum(a.value.decNum + b.value.intNum);
   }
   
-  if (IsDecNum(a.type) && IsDecNum(b.type))
+  if (IsDecNum(a) && IsDecNum(b))
   {
     return ItemWithDecNum(a.value.decNum + b.value.decNum);
   }
@@ -398,32 +398,32 @@ Item ItemAdd(Item a, Item b)
 
 void ItemToString(Item item, char* stringbuf, Interp* interp)
 {
-  if (IsIntNum(item.type))
+  if (IsIntNum(item))
   {
     sprintf(stringbuf, "%li", item.value.intNum);
   }
-  else if (IsDecNum(item.type))
+  else if (IsDecNum(item))
   {
     sprintf(stringbuf, "%f", item.value.decNum);
   }
-  else if (IsList(item.type))
+  else if (IsList(item))
   {
     //ListPrint(item.value.list, interp);
     sprintf(stringbuf, "[LIST]");
   }
-  else if (IsPrimFun(item.type))
+  else if (IsPrimFun(item))
   {
     sprintf(stringbuf, "[PRIMFUN]");
   }
-  else if (IsFun(item.type))
+  else if (IsFun(item))
   {
     ListPrint(item.value.list, interp);
   }
-  else if (IsString(item.type))
+  else if (IsString(item))
   {
     sprintf(stringbuf, "%s", item.value.string);
   }
-  else if (IsSymbol(item.type))
+  else if (IsSymbol(item))
   {
     char* str = InterpGetSymbolString(interp, item.value.symbol);
     if (NULL == str)

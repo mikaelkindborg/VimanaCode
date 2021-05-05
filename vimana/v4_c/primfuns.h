@@ -9,7 +9,7 @@ void Prim_DO(Interp* interp)
   Item item = InterpPop(interp);
   printf("ITEM TYPE: %u\n", item.type);
   // If item is a list, create a stackframe and push it onto the stack.
-  if (IsList(item.type))
+  if (IsList(item))
   {
     InterpPushStackFrame(interp, item.value.list);
   }

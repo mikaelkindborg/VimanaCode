@@ -122,7 +122,7 @@ Item InterpEvalSymbol(Interp* interp, Item item)
   // to itself (its literal value).
   
   // Lookup symbol in global symbol table.
-  if (IsSymbol(item.type))
+  if (IsSymbol(item))
   {
     Item value = ListGet(interp->symbolValueTable, item.value.symbol);
     if (TypeVirgin != value.type) 
@@ -132,7 +132,7 @@ Item InterpEvalSymbol(Interp* interp, Item item)
   }
   
   // Lookup symbol in stackframe local environment.
-  if (IsLocalSymbol(item.type))
+  if (IsLocalSymbol(item))
   {
     // Get current stackframe.
     Item stackframeItem = ListGet(interp->callstack, interp->stackframeIndex);
@@ -147,13 +147,13 @@ Item InterpEvalSymbol(Interp* interp, Item item)
 
 void InterpEval(Interp* interp, Item element)
 {
-  if (IsSymbol(element.type) || IsLocalSymbol(element.type))
+  if (IsSymbol(element) || IsLocalSymbol(element))
   {
     // Evaluate symbol to see if it is bound to a function.
     Item value = InterpEvalSymbol(interp, element);
     
     // If primitive function, evaluate it.
-    if (IsPrimFun(value.type))
+    if (IsPrimFun(value))
     {
       PrintLine("PRIM FUN FOUND: %i", element.value.symbol);
       // Call the primitive.
@@ -161,7 +161,7 @@ void InterpEval(Interp* interp, Item element)
       return;
     }
     
-    if (IsFun(value.type))
+    if (IsFun(value))
     {
       PrintLine("FUN FOUND: %i", element.value.symbol);
       // Call the function.
@@ -175,10 +175,10 @@ void InterpEval(Interp* interp, Item element)
   // If list and first element is "FUN" or "fun", then
   // "compile" the function and push it onto the stack.
   /*
-  if (IsList(element.type))
+  if (IsList(element))
   {
     Item first = ListGet(element.value.list, 0);
-    if (IsSymbol(first.type))
+    if (IsSymbol(first))
     {
       char* string = InterpGetSymbolString(interp, first.value.symbol);
       if (StringEquals("FUN", string) || 
@@ -349,12 +349,12 @@ Item InterpCompileFunReplaceSymbols(Interp* interp, List* localVars, List* bodyL
   for (int i = 0; i < ListLength(bodyList); i++)
   {
     Item item = ListGet(bodyList, i);
-    if (IsList(item.type))
+    if (IsList(item))
     {
       item = InterpCompileFunReplaceSymbols(interp, localVars, item.value.list);
       ListPush(newList, item);
     }
-    else if (IsSymbol(item.type))
+    else if (IsSymbol(item))
     {
       // Replace symbol if in localvars.
       int index = InterpCompileFunLookupLocalIndex(interp, localVars, item);
@@ -379,7 +379,7 @@ Item InterpCompileFun(Interp* interp, Item funList)
 {
   PrintDebug("Compile Fun");
   
-  if (!IsList(funList.type))
+  if (!IsList(funList))
     ErrorExit("InterpCompileFun: funList is not a list");
   
   int length = ListLength(funList.value.list);
@@ -392,11 +392,11 @@ Item InterpCompileFun(Interp* interp, Item funList)
   Item bodyList = ListGet(funList.value.list, 2);
   
   // Do some basic checks.
-  if (!IsList(argList.type))
+  if (!IsList(argList))
     ErrorExit("InterpCompileFun: argList is not a list");
-  if (!IsList(varList.type))
+  if (!IsList(varList))
     ErrorExit("InterpCompileFun: varList is not a list");
-  if (!IsList(bodyList.type))
+  if (!IsList(bodyList))
     ErrorExit("InterpCompileFun: bodyList is not a list");
   
   // The resulting list that holds the compiled
@@ -444,12 +444,12 @@ Item InterpCompileFun(Interp* interp, List* funList)
   {
     bodyIndex = 2;
     Item list = ListGet(funList, 1);
-    if (!IsList(list.type))
+    if (!IsList(list))
     {
       ErrorExit("Second element not a list in InterpCompileFun");
     }
     Item first = ListGet(list, 0);
-    if (!IsSymbol(first.type))
+    if (!IsSymbol(first))
     {
       ErrorExit("First element not a symbol in InterpCompileFun");
     }
