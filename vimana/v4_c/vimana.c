@@ -11,7 +11,7 @@
 
 int main()
 {
-  printf("WELCOME TO THE WONDERFUL WORLD OF VIMANA\n");
+  PrintLine("WELCOME TO THE WONDERFUL WORLD OF VIMANA\n");
   
   Interp* interp = InterpCreate();
   InterpDefinePrimFuns(interp);
@@ -24,7 +24,7 @@ int main()
   
   //List* list = InterpParseCode(interp, "42 FOO SET FOO PRINTLN 888888888 FOO SET FOO PRINTLN HELLO_FOO FOO SET FOO PRINTLN");
   
-  List* list = InterpParseCode(interp, "(FUN (HELLO_WORLD PRINTLN))");
+  List* list = InterpParseCode(interp, "(() () (HELLO_WORLD PRINTLN))");
   
   //printf("SYMBOL TABLE:\n");
   //ListPrintItems(interp->symbolTable, interp);

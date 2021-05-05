@@ -1,8 +1,11 @@
+/****************** DECLARATIONS ******************/
+
+void ItemToString(Item item, char* stringbuf, Interp* interp);
+void ListPrintWorker(List* list, Bool useNewLine, Interp* interp);
 
 /****************** PRINT LISTS ******************/
 
-void ListPrintWorker(List* list, Bool useNewLine, Interp* interp);
-
+// Print list using parens with no line breaks.
 void ListPrint(List* list, Interp* interp)
 {
   Print("(");
@@ -10,15 +13,24 @@ void ListPrint(List* list, Interp* interp)
   Print(")");
 }
 
+// Print list with each element on a new line.
 void ListPrintItems(List* list, Interp* interp)
 {
   ListPrintWorker(list, TRUE, interp);
 }
 
+// Recursively print list.
 void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
 {
   // TODO: Make string type that can grow.
   char buf[128];
+
+  // Print empty list.
+  if (-1 == ListLength(list))
+  {
+    Print("()");
+    return;
+  }
   
   for (int i = 0; i < ListLength(list); i++)
   {

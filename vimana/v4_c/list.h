@@ -9,7 +9,6 @@ typedef struct MyInterp Interp;
 typedef void (*PrimFun)(Interp*);
 
 char* InterpGetSymbolString(Interp* interp, Index index);
-void ItemToString(Item item, char* stringbuf, Interp* interp);
 
 /****************** VIMANA TYPES ******************/
 

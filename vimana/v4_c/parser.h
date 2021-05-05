@@ -10,7 +10,7 @@ List* InterpParseCode(Interp* interp, char* code)
   return list;
 }
 
-int InterpParserIsNumber(char* token)
+int ParserIsNumber(char* token)
 {
   Bool decimalSignUsed = FALSE;
   for (int i = 0; i < strlen(token); i++)
@@ -32,7 +32,7 @@ int InterpParserIsNumber(char* token)
 void InterpParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
 {
   Item item;
-  int type = InterpParserIsNumber(token);
+  int type = ParserIsNumber(token);
   if (TypeIntNum == type)
   {
     long num = strtol(token, NULL, 10);
@@ -55,7 +55,7 @@ void InterpParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
 int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list)
 {
   int copying = 0;
-  char token[32];
+  char token[128];
   char* ptoken;
 
   while (i < length)
@@ -70,10 +70,17 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
       i = InterpParserWorker(interp, code, i + 1, length, childList);
       continue;
     }
+
+    // End list.
+    if (code[i] == ')')
+    {
+      PrintDebug("END LIST");  
+      return i + 1;
+    }
     
     // Skip whitespace or end list.
-    if (code[i] == ' '  || code[i] == '\t' ||  code[i] == '\n' || 
-        code[i] == '\r' || code[i] == ')')
+    if (code[i] == ' '  || code[i] == '\t' ||  
+        code[i] == '\n' || code[i] == '\r')
     {
       // Copy end.
       if (copying)
@@ -82,13 +89,6 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
         *ptoken = 0;
         PrintDebug("ADD TOKEN: %s", token);
         InterpParserAddSymbolOrNumber(interp, token, list);
-        
-        // End list.
-        if (code[i] == ')')
-        {
-          PrintDebug("END LIST");  
-          return i;
-        }
       }
     }
     else
