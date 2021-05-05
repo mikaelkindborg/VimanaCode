@@ -1,5 +1,6 @@
 #include "base.h"
 #include "list.h"
+#include "print.h"
 #include "interp.h"
 #include "parser.h"
 #include "primfuns.h"
