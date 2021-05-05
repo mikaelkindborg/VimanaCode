@@ -141,6 +141,9 @@ Index ListPush(List* list, Item item)
   {
     size_t newSize = list->length + 10;
     Item* newArray = realloc(list->items, newSize * sizeof(Item));
+    // TODO: Does not compile:
+    //Item* newArray = reallocarray(list->items, sizeof(Item), newSize);
+    
     if (NULL == newArray)
     {
       ErrorExit("Out of memory in ListPush");

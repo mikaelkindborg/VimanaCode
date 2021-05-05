@@ -155,7 +155,7 @@ void InterpEval(Interp* interp, Item element)
     // If primitive function, evaluate it.
     if (IsPrimFun(value))
     {
-      PrintLine("PRIM FUN FOUND: %i", element.value.symbol);
+      PrintLine("PRIM FOUND: %i", element.value.symbol);
       // Call the primitive.
       value.value.primFun(interp);
       return;
@@ -169,30 +169,7 @@ void InterpEval(Interp* interp, Item element)
       return;
     }
   }
-  
-  // TODO: Remove.
-  // TODO: Move to separate post-parsing step.
-  // If list and first element is "FUN" or "fun", then
-  // "compile" the function and push it onto the stack.
-  /*
-  if (IsList(element))
-  {
-    Item first = ListGet(element.value.list, 0);
-    if (IsSymbol(first))
-    {
-      char* string = InterpGetSymbolString(interp, first.value.symbol);
-      if (StringEquals("FUN", string) || 
-          StringEquals("fun", string))
-      {
-        // TODO: Compile and push onto the stack.
-        Item fun = InterpCompileFun(interp, element.value.list);
-        //ListPush(interp->stack, fun);
-        //return;
-      }
-    }
-  }
-  */
-  
+
   // Otherwise push element onto the data stack (not evaluated).
   ListPush(interp->stack, element);
   PrintDebug("PUSH ELEMENT ONTO DATA STACK TYPE: %u", element.type);
@@ -381,12 +358,12 @@ Item InterpCompileFun(Interp* interp, Item funList)
   
   if (!IsList(funList))
     ErrorExit("InterpCompileFun: funList is not a list");
-  
+
   int length = ListLength(funList.value.list);
 
   if (3 != length)
     ErrorExit("InterpCompileFun: Wrong number of elements in funList");
-  
+
   Item argList  = ListGet(funList.value.list, 0);
   Item varList  = ListGet(funList.value.list, 1);
   Item bodyList = ListGet(funList.value.list, 2);
@@ -407,6 +384,7 @@ Item InterpCompileFun(Interp* interp, Item funList)
   List* localVars = ListCreate();
   int numArgs = ListLength(argList.value.list);
   int numVars = ListLength(varList.value.list);
+
   for (int i = 0; i < numArgs; i++)
     ListPush(localVars, ListGet(argList.value.list, i));
   for (int i = 0; i < numVars; i++)

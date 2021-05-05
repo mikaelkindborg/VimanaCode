@@ -5,6 +5,7 @@
 #include <ctype.h>
 
 typedef int Bool;
+typedef FILE Stream;
 
 #define FALSE 0
 #define TRUE  1
@@ -19,5 +20,6 @@ typedef int Bool;
 
 #define Print(str, args...)      printf(str, ## args)
 #define PrintLine(str, args...)  printf(str "\n", ## args)
+#define PrintToStream(stream, str, args...)  fprintf(stream, str, ## args)
 #define PrintDebug(str, args...) printf("[DEBUG] " str "\n", ## args)
-#define ErrorExit(str, args...)  printf("[ERROR] " str "\n", ## args); exit(0)
+#define ErrorExit(str, args...)  if (1) { printf("[ERROR] " str "\n", ## args); exit(0); }

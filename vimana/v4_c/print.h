@@ -1,90 +1,38 @@
-/****************** DECLARATIONS ******************/
 
-void ItemToString(Item item, char* stringbuf, Interp* interp);
-void ListPrintWorker(List* list, Bool useNewLine, Interp* interp);
-
-/****************** PRINT LISTS ******************/
-
-// Print list using parens with no line breaks.
-void ListPrint(List* list, Interp* interp)
-{
-  Print("(");
-  ListPrintWorker(list, FALSE, interp);
-  Print(")");
-}
-
-// Print list with each element on a new line.
-void ListPrintItems(List* list, Interp* interp)
-{
-  ListPrintWorker(list, TRUE, interp);
-}
-
-// Recursively print list.
-void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
-{
-  // TODO: Make string type that can grow.
-  char buf[128];
-
-  // Print empty list.
-  if (-1 == ListLength(list))
-  {
-    Print("()");
-    return;
-  }
-  
-  for (int i = 0; i < ListLength(list); i++)
-  {
-    if (i > 0)
-    {
-      Print(" ");
-    }
-    
-    Item item = ListGet(list, i);
-    if (IsList(item))
-    {
-      ListPrint(item.value.list, interp);
-    }
-    else
-    {
-      ItemToString(item, buf, interp);
-      Print("%s", buf);
-    }
-    
-    if (useNewLine)
-    {
-      PrintLine("");
-    }
-  }
-}
+void ListPrintToStream(Stream* stream, List* list, Bool useNewLine, Interp* interp);
 
 /****************** PRINT ITEMS ******************/
 
-void ItemToString(Item item, char* stringbuf, Interp* interp)
+void ItemPrintToStream(Stream* stream, Item item, Interp* interp)
 {
   if (IsIntNum(item))
   {
-    sprintf(stringbuf, "%li", item.value.intNum);
+    PrintToStream(stream, "%li", item.value.intNum);
   }
   else if (IsDecNum(item))
   {
-    sprintf(stringbuf, "%f", item.value.decNum);
+    PrintToStream(stream, "%f", item.value.decNum);
   }
   else if (IsList(item))
   {
     //ListPrint(item.value.list, interp);
-    sprintf(stringbuf, "[LIST]");
+    //PrintToStream(stream, "[LIST]");
+    ListPrintToStream(stream, item.value.list, FALSE, interp);
   }
   else if (IsPrimFun(item))
   {
-    sprintf(stringbuf, "[PRIMFUN]");
+    PrintToStream(stream, "[PRIMFUN]");
   }
   else if (IsFun(item))
   {
-    ListPrint(item.value.list, interp);
+    // TODO: Print original source list.
+    //PrintToStream(stream, item.value.list, interp);
+    PrintToStream(stream, "[FUN]");
+    ListPrintToStream(stream, item.value.list, FALSE, interp);
   }
   else if (IsString(item))
   {
-    sprintf(stringbuf, "%s", item.value.string);
+    PrintToStream(stream, "%s", item.value.string);
   }
   else if (IsSymbol(item))
   {
@@ -93,10 +41,84 @@ void ItemToString(Item item, char* stringbuf, Interp* interp)
     {
       ErrorExit("ItemToString: symbol has no string\n");
     }
-    sprintf(stringbuf, "%s", str);
+    PrintToStream(stream, "%s", str);
+  }
+  else if (IsLocalSymbol(item))
+  {
+    PrintToStream(stream, "[VAR %i]", item.value.symbol);
   }
   else
   {
-    sprintf(stringbuf, "[UNKNOWN]");
+    PrintToStream(stream, "[UNKNOWN]");
   }
+}
+
+// Use free() to deallocate the returned buffer.
+char* ItemToString(Item item, Interp* interp)
+{
+  char* buffer;
+  size_t size;
+  Stream* stream = open_memstream(&buffer, &size);
+  ItemPrintToStream(stream, item, interp);
+  fclose(stream);
+  return buffer;
+}
+
+/****************** PRINT LISTS ******************/
+
+// Recursively print list.
+void ListPrintWorker(Stream* stream, List* list, Bool useNewLine, Interp* interp)
+{
+  for (int i = 0; i < ListLength(list); i++)
+  {
+    if (i > 0)
+    {
+      PrintToStream(stream, " ");
+    }
+    
+    Item item = ListGet(list, i);
+    if (IsList(item))
+    {
+      ListPrintToStream(stream, item.value.list, useNewLine, interp);
+    }
+    else
+    {
+      ItemPrintToStream(stream, item, interp);
+    }
+    
+    if (useNewLine)
+    {
+      PrintToStream(stream, "\n");
+    }
+  }
+}
+
+void ListPrintToStream(Stream* stream, List* list, Bool useNewLine, Interp* interp)
+{
+  PrintToStream(stream, "(");
+  ListPrintWorker(stream, list, useNewLine, interp);
+  PrintToStream(stream, ")");
+}
+
+void ListPrintHelper(List* list, Bool useNewLine, Interp* interp)
+{
+  char* buffer;
+  size_t size;
+  Stream* stream = open_memstream(&buffer, &size);
+  ListPrintToStream(stream, list, useNewLine, interp);
+  fclose(stream);
+  puts(buffer);
+  free(buffer);
+}
+
+// Print list using parens with no line breaks.
+void ListPrint(List* list, Interp* interp)
+{
+  ListPrintHelper(list, FALSE, interp);
+}
+
+// Print list with each element on a new line.
+void ListPrintItems(List* list, Interp* interp)
+{
+  ListPrintHelper(list, TRUE, interp);
 }

@@ -54,9 +54,9 @@ void InterpParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
 
 int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list)
 {
-  int copying = 0;
+  int foo = 0;
   char token[128];
-  char* ptoken;
+  char* ptoken = NULL;
 
   while (i < length)
   {
@@ -75,43 +75,52 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
     if (code[i] == ')')
     {
       PrintDebug("END LIST");  
-      return i + 1;
-    }
-    
-    // Skip whitespace or end list.
-    if (code[i] == ' '  || code[i] == '\t' ||  
-        code[i] == '\n' || code[i] == '\r')
-    {
-      // Copy end.
-      if (copying)
+      // End token
+      if (ptoken)
       {
-        copying = 0;
-        *ptoken = 0;
+        *ptoken = 0; // Zero terminate token
         PrintDebug("ADD TOKEN: %s", token);
         InterpParserAddSymbolOrNumber(interp, token, list);
       }
-    }
-    else
-    {
-      // If we are not copying begin.
-      if (!copying)
-      {
-        copying = 1;
-        ptoken = token;
-      }
-      
-      // copy to token
-      *ptoken = code[i];
-      ptoken++;
+      return i + 1;
     }
     
+    // Copy tokens separated by whitespace.
+    // Whitespace separates tokens.
+    if (code[i] == ' '  || code[i] == '\t' ||  
+        code[i] == '\n' || code[i] == '\r')
+    {
+      // End token
+      if (ptoken)
+      {
+        
+        *ptoken = 0; // Zero terminate token
+        ptoken = NULL; // Indicates no token 
+        PrintDebug("ADD TOKEN: %s", token);
+        InterpParserAddSymbolOrNumber(interp, token, list);
+      }
+      i++;
+      continue;
+    }
+
+    // When we are here, we have a token character.
+
+    // Begin token.
+    if (!ptoken)
+    {
+      ptoken = token;
+    }
+    
+    // Copy char to token
+    *ptoken = code[i];
+    ptoken++;
     i++;
   }
   
-  if (copying)
+  // End token
+  if (ptoken)
   {
-    // end token
-    *ptoken = 0;
+    *ptoken = 0; // Zero terminate token
     PrintDebug("ADD TOKEN: %s", token);
     InterpParserAddSymbolOrNumber(interp, token, list);
   }

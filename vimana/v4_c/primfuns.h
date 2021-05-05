@@ -55,9 +55,9 @@ void Prim_PRINTLN(Interp* interp)
   
   printf("HELLO PRINTLN\n");
   Item item = InterpPopEval(interp);
-  char buf[128];
-  ItemToString(item, buf, interp);
-  PrintLine("%s", buf);
+  char* buf = ItemToString(item, interp);
+  puts(buf);
+  free(buf);
 }
 
 void Prim_PLUS(Interp* interp)

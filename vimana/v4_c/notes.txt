@@ -1,5 +1,9 @@
 
+xcrun --show-sdk-path
 
+// cc -E file.c
+
+https://andreasfertig.blog/2021/02/clang-and-gcc-on-macos-catalina-finding-the-include-paths/
 
 https://stackoverflow.com/questions/840501/how-do-function-pointers-in-c-work
             
