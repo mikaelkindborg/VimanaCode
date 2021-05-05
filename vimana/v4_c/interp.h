@@ -23,8 +23,9 @@ typedef struct MyStackFrame
 StackFrame;
 // TODO: Why not make StackFrame a list?
 // Performance impact? Overhead?
+// Or make Fun a struct?
 
-Item InterpCompileFun(Interp* interp, List* fun);
+Item InterpCompileFun(Interp* interp, Item funList);
 
 Interp* InterpCreate()
 {
@@ -169,9 +170,11 @@ void InterpEval(Interp* interp, Item element)
     }
   }
   
+  // TODO: Remove.
   // TODO: Move to separate post-parsing step.
   // If list and first element is "FUN" or "fun", then
   // "compile" the function and push it onto the stack.
+  /*
   if (IsList(element.type))
   {
     Item first = ListGet(element.value.list, 0);
@@ -188,6 +191,7 @@ void InterpEval(Interp* interp, Item element)
       }
     }
   }
+  */
   
   // Otherwise push element onto the data stack (not evaluated).
   ListPush(interp->stack, element);
@@ -243,7 +247,7 @@ void InterpRun(Interp* interp, List* list)
     
     // If the code in the stackframe has finished executing
     // we exit the frame.
-    if (stackframe->codePointer >= ListLength(stackframe->codeList)
+    if (stackframe->codePointer >= ListLength(stackframe->codeList))
     {
       // EXIT STACK FRAME
       printf("EXIT STACKFRAME: %i\n", interp->stackframeIndex);
@@ -345,15 +349,15 @@ Item InterpCompileFunReplaceSymbols(Interp* interp, List* localVars, List* bodyL
   for (int i = 0; i < ListLength(bodyList); i++)
   {
     Item item = ListGet(bodyList, i);
-    if (IsList(item))
+    if (IsList(item.type))
     {
       item = InterpCompileFunReplaceSymbols(interp, localVars, item.value.list);
       ListPush(newList, item);
     }
-    else if (IsSymbol(item))
+    else if (IsSymbol(item.type))
     {
       // Replace symbol if in localvars.
-      int index = InterpCompileFunLookupLocalIndex(interp, localVars, symbol);
+      int index = InterpCompileFunLookupLocalIndex(interp, localVars, item);
       if (index > -1)
         ListPush(newList, ItemWithLocalSymbol(index));
       else
@@ -370,27 +374,18 @@ Item InterpCompileFunReplaceSymbols(Interp* interp, List* localVars, List* bodyL
 
 // "Compile" the function list by replacing local var symbols 
 // with indexes. This should be faster than hashtable lookups.
-// Return a list with the compile function, an item of type: TypeFun
+// Return a list with the compiled function, an item of type: TypeFun
 Item InterpCompileFun(Interp* interp, Item funList)
 {
-  int bodyIndex    = 0;
-  int argListIndex = 0;
-  int varListIndex = 0;
-  int numArgs      = 0;
-  
   PrintDebug("Compile Fun");
   
   if (!IsList(funList.type))
-  {
     ErrorExit("InterpCompileFun: funList is not a list");
-  }
   
   int length = ListLength(funList.value.list);
 
   if (3 != length)
-  {
     ErrorExit("InterpCompileFun: Wrong number of elements in funList");
-  }
   
   Item argList  = ListGet(funList.value.list, 0);
   Item varList  = ListGet(funList.value.list, 1);
@@ -398,43 +393,29 @@ Item InterpCompileFun(Interp* interp, Item funList)
   
   // Do some basic checks.
   if (!IsList(argList.type))
-  {
     ErrorExit("InterpCompileFun: argList is not a list");
-  }
-    
   if (!IsList(varList.type))
-  {
     ErrorExit("InterpCompileFun: varList is not a list");
-  }
-  
   if (!IsList(bodyList.type))
-  {
     ErrorExit("InterpCompileFun: bodyList is not a list");
-  }
   
   // The resulting list that holds the compiled
   // function has the format: (NUMARGS LOCALVARS BODY)
+  // TODO Make this a structs instead?
   
   // Create list for LOCALVARS
   List* localVars = ListCreate();
-  
-  numArgs = ListLength(argList.value.list);
-  numVars = ListLength(varList.value.list);
-  
-  for (int i = 0; i < numArgs; +i++)
-  {
-    ListPush(localVars, ListGet(argList.value.list, i);
-  }
-  
-  for (int i = 0; i < numVars; +i++)
-  {
-    ListPush(localVars, ListGet(varList.value.list, i);
-  }
+  int numArgs = ListLength(argList.value.list);
+  int numVars = ListLength(varList.value.list);
+  for (int i = 0; i < numArgs; i++)
+    ListPush(localVars, ListGet(argList.value.list, i));
+  for (int i = 0; i < numVars; i++)
+    ListPush(localVars, ListGet(varList.value.list, i));
   
   // Recursively traverse bodyList and replace local symbols with indexes.
   Item funBody = InterpCompileFunReplaceSymbols(interp, localVars, bodyList.value.list);
   
-  // Create list for the compile function.
+  // Create list for the compile function. TODO Struct?
   List* compiledFun = ListCreate();
   
   ListPush(compiledFun, ItemWithIntNum(numArgs));

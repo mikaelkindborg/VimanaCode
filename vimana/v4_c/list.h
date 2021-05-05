@@ -331,6 +331,7 @@ Item ItemWithLocalSymbol(Index symbolIndex)
 
 Bool ItemEquals(Item a, Item b)
 {
+  // TODO: What if symbol is bound?, then compare bound values.
   if (IsSymbol(a.type) && IsSymbol(b.type))
   {
     return a.value.symbol == b.value.symbol;
@@ -338,7 +339,7 @@ Bool ItemEquals(Item a, Item b)
   
   if (IsString(a.type) && IsString(b.type))
   {
-    return StringEquals(a.value.string + b.value.string);
+    return StringEquals(a.value.string, b.value.string);
   }
   
   if (IsIntNum(a.type) && IsIntNum(b.type))

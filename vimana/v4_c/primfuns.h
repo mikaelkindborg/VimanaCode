@@ -28,7 +28,7 @@ void Prim_FUN(Interp* interp)
   printf("HELLO FUN\n");
   
   Item list = InterpPopEval(interp);
-  Item compiledFun InterpCompileFun(interp, list)
+  Item compiledFun = InterpCompileFun(interp, list);
   InterpPush(interp, compiledFun);
 }
 
