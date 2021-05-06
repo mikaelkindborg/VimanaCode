@@ -3,6 +3,8 @@
 
 typedef unsigned char Type;
 typedef int Index;
+typedef long IntNum;
+typedef double DecNum;
 typedef struct MyList List;
 typedef struct MyItem Item;
 typedef struct MyInterp Interp;
@@ -18,10 +20,10 @@ char* InterpGetSymbolString(Interp* interp, Index index);
 #define TypePrimFun      2
 #define TypeFun          3
 #define TypeList         5
-#define TypeObj          6
+//#define TypeObj          6
 #define TypeString       7
 #define TypeVirgin       9  // Represents unbound symbol
-#define TypeStackFrame  10
+//#define TypeStackFrame  10
 #define TypeLocalSymbol 11  // Local variable
 
 #define IsSymbol(item)      ((item.type) == (TypeSymbol))
@@ -33,10 +35,10 @@ char* InterpGetSymbolString(Interp* interp, Index index);
 //#define IsObj(item)         ((item.type) == (TypeObj))
 #define IsString(item)      ((item.type) == (TypeString))
 #define IsVirgin(item)      ((item.type) == (TypeVirgin))
-#define IsStackFrame(item)  ((item.type) == (TypeStackFrame))
+//#define IsStackFrame(item)  ((item.type) == (TypeStackFrame))
 #define IsLocalSymbol(item) ((item.type) == (TypeLocalSymbol))
 
-/****************** LISTS ******************/
+/****************** STRUCTS ******************/
 
 // Flag to say that list has been freed? GC flag?
 
@@ -56,10 +58,10 @@ typedef struct MyItem
     // Fields used by data lists and code.
     Index   symbol; // Index in symbol table or 
                     // in the local environment table
-    double  decNum;
-    long    intNum;
+    DecNum  decNum;
+    IntNum  intNum;
     List*   list;
-    void*   obj;
+    //void*   obj;
     char*   string;
     
     // Fields only used by items in the symbol table.
@@ -111,9 +113,11 @@ speed up execution. Environment lookups are always indexes.
 
 ***/
 
+/****************** LISTS ******************/
+
 List* ListCreate()
 {
-  int size = 10;
+  size_t size = 10;
   List* list = malloc(sizeof(List));
   list->length = 0;
   list->maxLength = size;
@@ -133,25 +137,24 @@ int ListLength(List* list)
   return list->length;
 }
 
+void ListGrow(List* list, size_t newSize)
+{
+  Item* newArray = realloc(list->items, newSize * sizeof(Item));
+  // TODO: Does not compile, reallocarray not found.
+  //Item* newArray = reallocarray(list->items, sizeof(Item), newSize);
+  if (NULL == newArray)
+    ErrorExit("ListGrow: Out of memory");
+  list->items = newArray;
+  list->maxLength = newSize;
+  //PrintDebug("REALLOC successful in ListGrow");
+}
+
 // Returns the index of the new item.
 Index ListPush(List* list, Item item)
 {
   // Grow list array if needed.
   if (list->length + 1 > list->maxLength)
-  {
-    size_t newSize = list->length + 10;
-    Item* newArray = realloc(list->items, newSize * sizeof(Item));
-    // TODO: Does not compile:
-    //Item* newArray = reallocarray(list->items, sizeof(Item), newSize);
-    
-    if (NULL == newArray)
-    {
-      ErrorExit("Out of memory in ListPush");
-    }
-    list->items = newArray;
-    //PrintDebug("REALLOC successful in ListPush");
-  }
-  
+    ListGrow(list, list->length + 10);
   list->items[list->length] = item;
   list->length++;
   return list->length - 1; // Index of new item.
@@ -160,9 +163,7 @@ Index ListPush(List* list, Item item)
 Item ListPop(List* list)
 {
   if (list->length < 1)
-  {
-    ErrorExit("ERROR: ListPop cannot pop list of length: %i", list->length);
-  }
+    ErrorExit("ListPop: Cannot pop list of length: %i", list->length);
   list->length--;
   return list->items[list->length];
 }
@@ -170,23 +171,96 @@ Item ListPop(List* list)
 Item ListGet(List* list, int index)
 {
   if (index >= list->length)
-  {
-    printf("ERROR: ListGet out of bounds at index: %i\n", list->length);
-    exit(0);
-  }
+    ErrorExit("ListGet: Index out of bounds: %i\n", index);
   return list->items[index];
 }
 
-// TODO: Grow on set
 void ListSet(List* list, int index, Item item)
 {
+  // Grow list if needed.
+  if (index >= list->maxLength)
+    ListGrow(list, index + 10);
   if (index >= list->length)
-  {
-    printf("ERROR: ListSet out of bounds at index: %i\n", list->length);
-    exit(0);
-  }
+    list->length = index + 1;
   list->items[index] = item;
 }
+
+/****************** ITEM LIST ACESS ******************/
+
+/*
+Item ItemListCreate()
+{
+  return ItemWithList(ListCreate());
+}
+
+void ItemListFree(Item itemWithList, int whatToFree)
+{
+  if (!IsList(itemWithList))
+    ErrorExit("ItemListFree: Item is not of TypeList");
+  ListFree(itemWithList.value.list, whatToFree);
+}
+
+void ItemGetList(Item itemWithList)
+{
+  if (!IsList(itemWithList))
+    ErrorExit("ItemGetList: Item is not of TypeList");
+  return itemWithList.value.list;
+}
+
+int ItemListLength(Item itemWithList)
+{
+  if (!IsList(itemWithList))
+    ErrorExit("ItemListLength: Item is not of TypeList");
+  return ListLength(itemWithList.value.list);
+}
+
+Index ItemListPush(Item itemWithList, Item item)
+{
+  if (!IsList(itemWithList))
+    ErrorExit("ItemListPush: Item is not of TypeList");
+  return ListPush(itemWithList.value.list, item);
+}
+
+Item ItemListPop(Item itemWithList)
+{
+  if (!IsList(itemWithList))
+    ErrorExit("ItemListPop: Item is not of TypeList");
+  return ListPop(itemWithList.value.list);
+}
+
+Item ItemListGet(Item itemWithList, int index)
+{
+  if (!IsList(itemWithList))
+    ErrorExit("ItemListGet: Item is not of TypeList");
+  return ListGet(itemWithList.value.list, index);
+}
+
+void ItemListSet(Item itemWithList, int index, Item item)
+{
+  if (!IsList(itemWithList))
+    ErrorExit("ItemListSet: Item is not of TypeList");
+  ListSet(itemWithList.value.list, index, item);
+}
+
+// Experimental
+Item* ListGetItemPtr(List* list, int index)
+{
+  if (index >= list->length)
+    ErrorExit("ListGetItemPtr: Index out of bounds: %i\n", index);
+  return &(list->items[index]);
+}
+
+// Experimental
+List* ListGetItemList(List* list, int index)
+{
+  if (index >= list->length)
+    ErrorExit("ListGetItemList: Index out of bounds: %i\n", index);
+  Item item = list->items[index];
+  if (!IsList(item))
+    ErrorExit("ListGetItemList: Item is not of TypeList");
+  return item.value.list;
+}
+*/
 
 /****************** CREATE ITEMS ******************/
 
@@ -209,7 +283,7 @@ Item ItemWithString(char* string)
   return item;
 }
 
-Item ItemWithIntNum(long number)
+Item ItemWithIntNum(IntNum number)
 {
   Item item;
   item.type = TypeIntNum;
@@ -217,7 +291,7 @@ Item ItemWithIntNum(long number)
   return item;
 }
 
-Item ItemWithDecNum(double number)
+Item ItemWithDecNum(DecNum number)
 {
   Item item;
   item.type = TypeDecNum;
@@ -264,15 +338,15 @@ Item ItemWithVirgin()
   item.type = TypeVirgin;
   return item;
 }
-
-Item ItemWithStackFrame(void* obj)
+/*
+Item ItemWithStackFrame(List* stackframe)
 {
   Item item;
   item.type = TypeStackFrame;
-  item.value.obj = obj;
+  item.value.list = stackframe;
   return item;
 }
-
+*/
 Item ItemWithLocalSymbol(Index symbolIndex)
 {
   Item item;
@@ -280,6 +354,23 @@ Item ItemWithLocalSymbol(Index symbolIndex)
   item.value.symbol = symbolIndex;
   return item;
 }
+
+/****************** ITEM ACCESS ******************/
+
+List* ItemList(Item itemWithList)
+{
+  if (!IsList(itemWithList))
+    ErrorExit("ItemList: Item is not of TypeList");
+  return itemWithList.value.list;
+}
+
+// Unused
+/*IntNum ItemIntNum(Item item)
+{
+  if (!IsIntNum(item))
+    ErrorExit("ItemIntNum: Item is not of TypeIntNum");
+  return item.value.intNum;
+}*/
 
 /****************** EQUALS ******************/
 

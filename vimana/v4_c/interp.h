@@ -13,6 +13,7 @@ typedef struct MyInterp
 Interp;
 
 // Invocation object/activation frame
+/*
 typedef struct MyStackFrame
 {
   List* env; // index -> value
@@ -21,6 +22,7 @@ typedef struct MyStackFrame
   int   codePointer; // position in codelist
 }
 StackFrame;
+*/
 // TODO: Why not make StackFrame a list?
 // Performance impact? Overhead?
 // Or make Fun a struct?
@@ -48,6 +50,31 @@ void InterpFree(Interp* interp)
   ListFree(interp->callstack, ListFreeDeep);
 }
 
+// StackFrame fields.
+#define StackFrameEnv          0
+#define StackFrameCodeList     1
+#define StackFrameCodePointer  2
+
+// Experiment using a list to represent a stackframe, 
+// rather than a struct.
+List* StackFrameCreate(List* codeList)
+{
+  List* stackframe = ListCreate();
+  ListSet(stackframe, StackFrameEnv, ItemWithList(ListCreate()));
+  ListSet(stackframe, StackFrameCodeList, ItemWithList(codeList));
+  ListSet(stackframe, StackFrameCodePointer, ItemWithIntNum(-1));
+  return stackframe;
+}
+
+void StackFrameFree(List* stackframe)
+{
+  List* env = ItemList(ListGet(stackframe, StackFrameEnv));
+  ListFree(env, ListFreeShallow);
+  ListFree(stackframe, ListFreeShallow);
+  // TODO: GC
+}
+
+/*
 StackFrame* StackFrameCreate(List* codeList)
 {
   StackFrame* stackframe = malloc(sizeof(StackFrame));
@@ -62,6 +89,7 @@ void StackFrameFree(StackFrame* stackframe)
   ListFree(stackframe->env, ListFreeShallow);
   free(stackframe);
 }
+*/
 
 // Lookup the symbol string in the symbol table.
 Index InterpLookupSymbolIndex(Interp* interp, char* symbol)
@@ -126,19 +154,18 @@ Item InterpEvalSymbol(Interp* interp, Item item)
   {
     Item value = ListGet(interp->symbolValueTable, item.value.symbol);
     if (TypeVirgin != value.type) 
-    { 
-      return value; 
-    }
+      return value;
   }
   
   // Lookup symbol in stackframe local environment.
   if (IsLocalSymbol(item))
   {
     // Get current stackframe.
-    Item stackframeItem = ListGet(interp->callstack, interp->stackframeIndex);
-    StackFrame* stackframe = item.value.obj;
-    Item value = ListGet(stackframe->env, item.value.symbol);
-    if (TypeVirgin != value.type) return value;
+    List* stackframe = ItemList(ListGet(interp->callstack, interp->stackframeIndex));
+    List* env = ItemList(ListGet(stackframe, StackFrameEnv));
+    Item value = ListGet(env, item.value.symbol);
+    if (TypeVirgin != value.type) 
+      return value;
   }
 
   // Otherwise return the item itself (evaluate to itself).
@@ -199,36 +226,44 @@ Item InterpPopEval(Interp* interp)
   return InterpEvalSymbol(interp, item);
 }
 
-void InterpPushStackFrame(Interp* interp, List* list)
+void InterpPushStackFrame(Interp* interp, List* codeList)
 {
-  StackFrame* stackframe = StackFrameCreate(list);
-  Item item = ItemWithStackFrame(stackframe);
+  List* stackframe = StackFrameCreate(codeList);
+  Item item = ItemWithList(stackframe);
   interp->stackframeIndex = ListPush(interp->callstack, item);
-  printf("PUSHED STACKFRAME AT INDEX: %i\n", interp->stackframeIndex);
+  PrintLine("PUSHED STACKFRAME AT INDEX: %i", interp->stackframeIndex);
+  ListPrint(stackframe, interp);
 }
 
 void InterpRun(Interp* interp, List* list)
 {
   // Push root stackframe.
   InterpPushStackFrame(interp, list);
-  printf("CREATED ROOT FRAME AT INDEX: %i\n", interp->stackframeIndex);
+  PrintDebug("CREATED ROOT FRAME AT INDEX: %i", interp->stackframeIndex);
   
   while (interp->run)
   {
     // Get current stackframe.
-    Item item = ListGet(interp->callstack, interp->stackframeIndex);
-    StackFrame* stackframe = item.value.obj;
+    //Item stackframe = ListGet(interp->callstack, interp->stackframeIndex);
+    List* stackframe = ItemList(ListGet(interp->callstack, interp->stackframeIndex));
+
+    //octo: that was new
 
     // Increment code pointer.
-    stackframe->codePointer++;
-    
+    Item codePointer = ListGet(stackframe, StackFrameCodePointer);
+    codePointer.value.intNum ++;
+    ListSet(stackframe, StackFrameCodePointer, codePointer);
+
     // If the code in the stackframe has finished executing
     // we exit the frame.
-    if (stackframe->codePointer >= ListLength(stackframe->codeList))
+    List* codeList = ItemList(ListGet(stackframe, StackFrameCodeList));
+
+    if (codePointer.value.intNum >= ListLength(codeList))
     {
       // EXIT STACK FRAME
       printf("EXIT STACKFRAME: %i\n", interp->stackframeIndex);
       interp->stackframeIndex--;
+      StackFrameFree(stackframe);
       ListPop(interp->callstack);
     }
     else
@@ -236,7 +271,7 @@ void InterpRun(Interp* interp, List* list)
       // Evaluate the current element. Note that new stackframes
       // may be created during evaluation, and that this will 
       // increment the stackframe index.
-      Item element = ListGet(stackframe->codeList, stackframe->codePointer);
+      Item element = ListGet(codeList, codePointer.value.intNum);
       InterpEval(interp, element);
     }
 
@@ -476,4 +511,6 @@ Item InterpCompileFun(Interp* interp, List* funList)
 void InterpEvalFun(List* fun, Interp* interp)
 {
   // TODO
+
+ // When binding params, set all localvars to TypeVirgin
 }

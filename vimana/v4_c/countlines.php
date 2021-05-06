@@ -11,6 +11,7 @@ function countlines($file)
 $numlines = 
   countlines("base.h") +
   countlines("list.h") +
+  countlines("print.h") +
   countlines("interp.h") +
   countlines("parser.h") +
   countlines("primfuns.h");
@@ -21,7 +22,7 @@ echo "NUMBER OF LINES: ".$numlines."\n";
 
 210429: 775 lines
 210430: 837 lines
-210505: 1069 lines
+210505: 1193 lines
 
 
 
