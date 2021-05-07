@@ -1,4 +1,6 @@
 
+// Declarations.
+char* InterpGetSymbolString(Interp* interp, Index index);
 void ListPrintToStream(Stream* stream, List* list, Bool useNewLine, Interp* interp);
 
 /****************** PRINT ITEMS ******************/
@@ -46,6 +48,10 @@ void ItemPrintToStream(Stream* stream, Item item, Interp* interp)
   else if (IsLocalSymbol(item))
   {
     PrintToStream(stream, "[VAR %i]", item.value.symbol);
+  }
+  else if (IsVirgin(item))
+  {
+    PrintToStream(stream, "[VIRGIN]");
   }
   else
   {

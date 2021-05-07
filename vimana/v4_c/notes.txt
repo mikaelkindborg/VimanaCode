@@ -1,7 +1,20 @@
 
 xcrun --show-sdk-path
 
-// cc -E file.c
+cc -E file.c
+
+xhttp://useless-factor.blogspot.com/2008/02/quick-intro-to-garbage-collection.html
+https://www.erlang-solutions.com/blog/erlang-garbage-collector/
+Factor talk: https://www.youtube.com/watch?v=f_0QlhYlS8g
+https://concatenative.org/wiki/view/Factor/FAQ/Why?
+https://stackoverflow.com/questions/9882326/memory-management-in-forth/9898471
+https://stackoverflow.com/questions/7874342/what-is-the-difference-between-objective-c-automatic-reference-counting-and-garb
+https://nim-lang.org/docs/gc.html
+https://www.cs.utexas.edu/users/hunt/research/hash-cons/hash-cons-papers/BakerLinearLisp.pdf
+https://cdiggins.github.io/blog/linear-logic-and-linear-lisp.html
+http://tunes.org/~iepos/joy.html
+https://palmstroem.blogspot.com/2012/05/lambda-calculus-for-absolute-dummies.html
+
 
 https://andreasfertig.blog/2021/02/clang-and-gcc-on-macos-catalina-finding-the-include-paths/
 

@@ -4,19 +4,18 @@
 // DO evaluates a list. Other types generates an error.
 void Prim_DO(Interp* interp)
 {
-  printf("HELLO DO\n");
+  PrintDebug("HELLO DO");
   
   Item item = InterpPop(interp);
-  printf("ITEM TYPE: %u\n", item.type);
+  PrintDebug("ITEM TYPE: %u", item.type);
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item))
   {
-    InterpPushStackFrame(interp, item.value.list);
+    InterpPushStackFrame(interp, ItemList(item), NULL);
   }
   else
   {
-    printf("ERROR: DO GOT A NON-LIST\n");
-    exit(0);
+    ErrorExit("DO got a non-list of type: %u", item.type);
   }
 }
 
@@ -25,7 +24,7 @@ void Prim_DO(Interp* interp)
 // ((X) () (X X +) FUN DOUBLE SET
 void Prim_FUN(Interp* interp)
 {
-  printf("HELLO FUN\n");
+  PrintDebug("HELLO FUN");
   
   Item list = InterpPopEval(interp);
   Item compiledFun = InterpCompileFun(interp, list);
@@ -37,23 +36,37 @@ void Prim_FUN(Interp* interp)
 // 42 FOO SET FOO PRINTLN
 void Prim_SET(Interp* interp)
 {
-  printf("HELLO SET\n");
+  PrintDebug("HELLO SET");
   
+  // Get name and value.
   Item name = InterpPop(interp);
   Item value = InterpPopEval(interp);
-  printf("NAME TYPE:  %u\n", name.type);
-  printf("VALUE TYPE: %u\n", value.type);
-  Index i = name.value.symbol;
-  ListSet(interp->symbolValueTable, i, value);
-  
-  // TODO: Set local variable
+
+  PrintDebug("NAME TYPE:  %u", name.type);
+  PrintDebug("VALUE TYPE: %u", value.type);
+
+  // Check type.
+  if (IsLocalSymbol(name))
+  {
+    PrintDebug("LOCAL SET");
+    InterpSetLocalSymbolValue(interp, name.value.symbol, value);
+  }
+  else if (IsSymbol(name))
+  {
+    PrintDebug("GLOBAL SET");
+    InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
+  }
+  else
+  {
+    ErrorExit("SET  got a non-symbol of type: %u", name.type);
+  }
 }
 
 void Prim_PRINTLN(Interp* interp)
 {
   // TODO: Make function to get Item as string in list.h
   
-  printf("HELLO PRINTLN\n");
+  PrintDebug("HELLO PRINTLN");
   Item item = InterpPopEval(interp);
   char* buf = ItemToString(item, interp);
   puts(buf);
@@ -63,7 +76,7 @@ void Prim_PRINTLN(Interp* interp)
 void Prim_PLUS(Interp* interp)
 {
   char buf[128];
-  //printf("HELLO PLUS\n");
+  //PrintDebug("HELLO PLUS\n");
   Item a = InterpPopEval(interp);
   Item b = InterpPopEval(interp);
   Item res = ItemAdd(a, b);
@@ -71,6 +84,21 @@ void Prim_PLUS(Interp* interp)
   
   //long res = a.value.intNum + b.value.intNum;
   //InterpPush(interp, ItemWithIntNum(res));
+}
+
+void Prim_TRUE(Interp* interp)
+{
+  InterpPush(interp, ItemWithBool(TRUE));
+}
+
+void Prim_FALSE(Interp* interp)
+{
+  InterpPush(interp, ItemWithBool(FALSE));
+}
+
+void Prim_EQ(Interp* interp)
+{
+  // TODO
 }
 
 void InterpDefinePrimFuns(Interp* interp)
@@ -84,4 +112,6 @@ void InterpDefinePrimFuns(Interp* interp)
   InterpAddPrimFun("PRINTLN", &Prim_PRINTLN, interp);
   InterpAddPrimFun("println", &Prim_PRINTLN, interp);
   InterpAddPrimFun("+", &Prim_PLUS, interp);
+  InterpAddPrimFun("TRUE", &Prim_TRUE, interp);
+  InterpAddPrimFun("FALSE", &Prim_FALSE, interp);
 }

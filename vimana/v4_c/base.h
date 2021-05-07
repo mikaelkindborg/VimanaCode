@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-typedef int Bool;
-typedef FILE Stream;
+typedef unsigned char Byte;
+typedef int           Bool;
+typedef FILE          Stream;
 
 #define FALSE 0
 #define TRUE  1
@@ -15,8 +16,6 @@ typedef FILE Stream;
 #define ListFreeDeeper  3
 
 #define StringEquals(s1, s2) (0 == strcmp((s1), (s2)))
-
-// cc -E file.c
 
 #define Print(str, args...)      printf(str, ## args)
 #define PrintLine(str, args...)  printf(str "\n", ## args)
