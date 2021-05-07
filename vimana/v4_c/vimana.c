@@ -64,8 +64,12 @@ int main()
 */
 
   //
-  // Benchmark 210507:
+  // Benchmark 210507 (20 FACT 100000 iterations):
   // ./vimana  2.54s user 0.01s system 85% cpu 2.964 total
+  // After reuse of stackframes:
+  // ./vimana  1.57s user 0.00s system 99% cpu 1.578 total
+  // After inline macros:
+  // ./vimana  1.01s user 0.00s system 72% cpu 1.388 total
   //
   List* list = InterpParseCode(interp, 
     "((N) () ("
@@ -74,19 +78,19 @@ int main()
     "((L N) () ("
     " N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE))"
     "FUN TIMESDO SET "
-    "(20 FACT DOC) 100000 TIMESDO");
-               //10000000
+    "(20 FACT DOC) 1000000 TIMESDO");
+                //10000000
 
   //printf("SYMBOL TABLE:\n");
   //ListPrintItems(interp->symbolTable, interp);
 
-  PrintLine("PARSED LIST:");
-  ListPrint(list, interp);
+  //PrintLine("PARSED LIST:");
+  //ListPrint(list, interp);
   
   InterpRun(interp, list);
   
-  PrintLine("PRINTING STACK:");
-  ListPrintItems(interp->stack, interp);
+  //PrintLine("PRINTING STACK:");
+  //ListPrintItems(interp->stack, interp);
   
   InterpFree(interp);
   PrintLine("PROGRAM ENDED");

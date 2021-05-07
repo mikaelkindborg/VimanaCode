@@ -14,7 +14,7 @@ void Prim_DO(Interp* interp)
   //PrintDebug("ITEM TYPE: %u", item.type);
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item))
-    InterpPushStackFrame(interp, ItemList(item), NULL);
+    InterpEvalList(interp, ItemList(item));
   else
     ErrorExit("DO got a non-list of type: %u", item.type);
 }
@@ -26,7 +26,7 @@ void Prim_IFTRUE(Interp* interp)
   if (!IsList(item))
     ErrorExit("IFTRUE got a non-list of type: %u", item.type);
   if (truth)
-    InterpPushStackFrame(interp, ItemList(item), NULL);
+    InterpEvalList(interp, ItemList(item));
 }
 
 void Prim_IFELSE(Interp* interp)
@@ -37,9 +37,9 @@ void Prim_IFELSE(Interp* interp)
   if (!(IsList(branch1) && IsList(branch2)))
     ErrorExit("IFELSE got a non-list items");
   if (truth)
-    InterpPushStackFrame(interp, ItemList(branch1), NULL);
+    InterpEvalList(interp, ItemList(branch1));
   else
-    InterpPushStackFrame(interp, ItemList(branch2), NULL);
+    InterpEvalList(interp, ItemList(branch2));
 }
 
 // FUN turns a list into a function.

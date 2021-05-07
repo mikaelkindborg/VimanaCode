@@ -92,18 +92,21 @@ void ListFree(List* list, int whatToFree)
   free(list);
 }
 
+/*
 int ListLength(List* list)
 {
   return list->length;
 }
+*/
+#define ListLength(list) (list)->length
 
 void ListGrow(List* list, size_t newSize)
 {
   // TODO: Does not compile, reallocarray not found.
   //Item* newArray = reallocarray(list->items, sizeof(Item), newSize);
 
-  GReallocCounter ++;
-  printf("REALLOC CONUTER: %i\n", GReallocCounter);
+  //GReallocCounter ++;
+  //printf("REALLOC CONUTER: %i\n", GReallocCounter);
   
   // Make space for more items.
   size_t newArraySize = newSize * sizeof(Item);
@@ -142,12 +145,15 @@ Item ListPop(List* list)
   return list->items[list->length];
 }
 
+/*
 Item ListGet(List* list, int index)
 {
   if (index >= list->length)
     ErrorExit("ListGet: Index out of bounds: %i\n", index);
   return list->items[index];
 }
+*/
+#define ListGet(list, index) (list)->items[index]
 
 void ListSet(List* list, int index, Item item)
 {

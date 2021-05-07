@@ -147,28 +147,37 @@ Item ItemWithBool(Bool truth)
 /****************** ITEM ACCESS ******************/
 
 // Get the list of an item.
+/*
 List* ItemList(Item itemWithList)
 {
   if (!IsList(itemWithList))
     ErrorExit("ItemList: Item is not of TypeList");
   return itemWithList.value.list;
 }
+*/
+#define ItemList(itemWithList) (itemWithList).value.list
 
 // Get the IntNum of an item.
+/*
 IntNum ItemIntNum(Item item)
 {
   if (!IsIntNum(item))
     ErrorExit("ItemIntNum: Item is not of TypeIntNum");
   return item.value.intNum;
 }
+*/
+#define ItemIntNum(item) (item).value.intNum
 
 // Get the Bool of an item.
+/*
 Bool ItemBool(Item item)
 {
   if (!IsBool(item))
     ErrorExit("ItemBool: Item is not of TypeBool");
   return item.value.truth;
 }
+*/
+#define ItemBool(item) (item).value.truth
 
 /****************** EQUALS ******************/
 
@@ -232,7 +241,10 @@ Item ItemPlus(Item a, Item b)
 Item ItemMinus(Item a, Item b)
 {
   if (IsIntNum(a) && IsIntNum(b))
-    return ItemWithIntNum(a.value.intNum - b.value.intNum);
+  {
+    a.value.intNum = (a.value.intNum - b.value.intNum);
+    return a;
+  }
   
   if (IsIntNum(a) && IsDecNum(b))
     return ItemWithDecNum(a.value.intNum - b.value.decNum);
@@ -249,8 +261,11 @@ Item ItemMinus(Item a, Item b)
 Item ItemTimes(Item a, Item b)
 {
   if (IsIntNum(a) && IsIntNum(b))
-    return ItemWithIntNum(a.value.intNum * b.value.intNum);
-  
+  {
+    a.value.intNum = (a.value.intNum * b.value.intNum);
+    return a;
+  }
+
   if (IsIntNum(a) && IsDecNum(b))
     return ItemWithDecNum(a.value.intNum * b.value.decNum);
   
