@@ -53,6 +53,13 @@ void ItemPrintToStream(Stream* stream, Item item, Interp* interp)
   {
     PrintToStream(stream, "[VIRGIN]");
   }
+  else if (IsBool(item))
+  {
+    if (item.value.truth)
+      PrintToStream(stream, "TRUE");
+    else
+      PrintToStream(stream, "FALSE");
+  }
   else
   {
     PrintToStream(stream, "[UNKNOWN]");

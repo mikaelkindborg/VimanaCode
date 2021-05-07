@@ -10,6 +10,7 @@ function countlines($file)
 
 $numlines = 
   countlines("base.h") +
+  countlines("item.h") +
   countlines("list.h") +
   countlines("print.h") +
   countlines("interp.h") +
