@@ -2,6 +2,9 @@
 
 /***********************************************************
 
+Python 10.000.000 iterations:
+python benchmarks/fact.py  21.38s user 0.22s system 99% cpu 21.713 total
+
 10.000.000 iterations:
 php fact.php  6.14s user 0.03s system 99% cpu 6.218 total
 

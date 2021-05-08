@@ -1,5 +1,53 @@
+/***************************************************************
+
+Massa svammel här:
+
+The global symbol table is a list with string items 
+of TypeString. This table is found in interp.h.
+
+The global symbol table works in tandem with the global
+value table. Entries that are bound appear in this list
+as value items.
+
+Items on the stack are like items in the program code.
+Items in the local environment table are the same.
+
+Some type values for lists are:
+
+TypeSymbol - value.symbol refers to index in the symbol table
+TypeIntNum - value.intNum holds the integer value
+TypeDecNum - value.decNum holds the decimal number value
+TypeList   - value.list points to the list
+
+In a function body, local vars refer to entries in the 
+local environment table of the stack frame. This type of
+item uses the following field:
+
+TypeLocalSymbol - value.symbol is an index to the stackframe 
+environment table. The actual item that holds the type and value 
+is in the environment table.
+
+Note that array indexes are used in place of string symbols 
+(hash maps) to speed up execution. Symbol lookups (in the
+local environment and in the global symbol table) always 
+use indexed array access.
+
+***************************************************************/
+
+int GMallocCounter = 0;
+int GReallocCounter = 0;
 
 /****************** LISTS ******************/
+
+// List (growable array) that holds items.
+// Lists are used frequently throughout the implementation,
+// for the code and the data stack, but also in place of
+// C records for stackframes and function objects. This is
+// a bit experimental, I want the C-implementation to share
+// as much as possible with the high-level language. These
+// structures could then be accessed from the high-level 
+// language. The interpreter object could also be a list.
+// TODO: Flag to say that list has been freed? GC flag?
 
 typedef struct MyList
 {
@@ -9,229 +57,155 @@ typedef struct MyList
 }
 List;
 
-typedef struct MyItem
-{
-  Type  type;
-  union
-  {
-    Index index;  // Index in the symbol table or the local environment
-    char* string; // String in symbol table entries
-  }
-  symbol;
-  union
-  {
-    double  decNum;
-    long    intNum;
-    List*   list;
-    void*   obj;
-    PrimFun primFun;
-  }
-  data;
-}
-Item;
+// Initial list array size and how much to grow on each reallocation.
+#define ListGrowIncrement 10
 
 List* ListCreate()
 {
-  int size = 10;
+  // Alloc list object.
+  size_t size = ListGrowIncrement;
+
+  //GMallocCounter ++;
+  //printf("MALLOC CONUTER: %i\n", GMallocCounter);
+
   List* list = malloc(sizeof(List));
   list->length = 0;
   list->maxLength = size;
-  Item* itemArray = malloc(size * sizeof(Item));
+
+  // Alloc list array.
+  size_t arraySize = size * sizeof(Item);
+  Item* itemArray = malloc(arraySize);
   list->items = itemArray;
+
+  // Init list array.
+  memset(itemArray, 0, arraySize);
+
+  // Return list object.
   return list;
 }
 
+// TODO: whatToFree is how deep to free.
+// But proper GC should be used instead.
 void ListFree(List* list, int whatToFree)
 {
   free(list->items);
   free(list);
 }
 
-// Returns the index of the new item.
-Index ListPush(List* list, Item item)
+#ifdef OPTIMIZE
+#define ListLength(list) ((list)->length)
+#else
+int ListLength(List* list)
+{
+  return list->length;
+}
+#endif
+
+void ListGrow(List* list, size_t newSize)
+{
+  // TODO: Does not compile, reallocarray not found.
+  //Item* newArray = reallocarray(list->items, sizeof(Item), newSize);
+
+  //GReallocCounter ++;
+  //printf("REALLOC CONUTER: %i\n", GReallocCounter);
+  
+  // Make space for more items.
+  size_t newArraySize = newSize * sizeof(Item);
+  Item* newArray = realloc(list->items, newArraySize);
+  if (NULL == newArray)
+    ErrorExit("ListGrow: Out of memory");
+  list->items = newArray;
+  list->maxLength = newSize;
+
+  // Set new entries in the array to zero.
+  size_t prevArraySize = list->length * sizeof(Item);
+  size_t numNewBytes = newArraySize - prevArraySize;
+  Byte* p = (Byte*) newArray;
+  p = p + prevArraySize;
+  memset(p, 0, numNewBytes);
+
+  //PrintDebug("REALLOC successful in ListGrow");
+}
+
+#ifdef OPTIMIZE
+#define ListPush(list, item) \
+do { \
+  if ((list)->length + 1 > (list)->maxLength) \
+    ListGrow(list, (list)->length + ListGrowIncrement); \
+  (list)->items[list->length] = (item); \
+  (list)->length++; \
+} while (0)
+#else
+void ListPush(List* list, Item item)
 {
   // Grow list array if needed.
   if (list->length + 1 > list->maxLength)
-  {
-    size_t newSize = list->length + 10;
-    Item* newArray = realloc(list->items, newSize * sizeof(Item));
-    if (NULL == newArray)
-    {
-      printf("ERROR: Out of memory in ListPush\n");
-      exit(0);
-    }
-    list->items = newArray;
-    printf("REALLOC successful in ListPush\n");
-  }
-  
+    ListGrow(list, list->length + ListGrowIncrement);
   list->items[list->length] = item;
   list->length++;
-  return list->length - 1; // Index of new item.
+  //return list->length - 1; // Index of new item.
 }
+#endif
 
 Item ListPop(List* list)
 {
   if (list->length < 1)
-  {
-    printf("ERROR: ListPop cannot pop list of length: %i\n", list->length);
-    exit(0);
-  }
+    ErrorExit("ListPop: Cannot pop list of length: %i", list->length);
   list->length--;
   return list->items[list->length];
 }
 
+#ifdef OPTIMIZE
+#define ListGet(list, index) ((list)->items[index])
+#else
 Item ListGet(List* list, int index)
 {
   if (index >= list->length)
-  {
-    printf("ERROR: ListGet out of bounds at index: %i\n", list->length);
-    exit(0);
-  }
+    ErrorExit("ListGet: Index out of bounds: %i\n", index);
   return list->items[index];
 }
+#endif
 
-void ListPrintWorker(List* list, Bool useNewLine, Interp* interp);
-
-void ListPrint(List* list, Interp* interp)
+#ifdef OPTIMIZE
+#define ListSet(list, index, item) \
+do { \
+  if ((index) >= (list)->maxLength) \
+    ListGrow((list), (index) + ListGrowIncrement); \
+  if ((index) >= (list)->length) \
+    (list)->length = (index) + 1; \
+  (list)->items[index] = (item); \
+} while (0)
+#else
+void ListSet(List* list, int index, Item item)
 {
-  printf("(");
-  ListPrintWorker(list, FALSE, interp);
-  printf(")");
+  // Grow list if needed.
+  if (index >= list->maxLength)
+    ListGrow(list, index + ListGrowIncrement);
+  if (index >= list->length)
+    list->length = index + 1;
+  list->items[index] = item;
 }
+#endif
 
-void ListPrintItems(List* list, Interp* interp)
+// Experimental. Useful for updating item values "in place" 
+// without having to copy and write back the item.
+#ifdef OPTIMIZE
+#define ListGetItemPtr(list, index) (&((list)->items[index]))
+#else
+Item* ListGetItemPtr(List* list, int index)
 {
-  ListPrintWorker(list, TRUE, interp);
+  if (index >= list->length)
+    ErrorExit("ListGetItemPtr: Index out of bounds: %i\n", index);
+  return &(list->items[index]);
 }
+#endif
 
-// TODO: Make function to get Item as string
-// Possibly custom string type that can grow.
-  
-void ListPrintWorker(List* list, Bool useNewLine, Interp* interp)
+// TODO: Delete?
+// Associative list
+/*
+Item ListLookup(List* list, Index symbolIndex)
 {
-  for (int i = 0; i < list->length; i++)
-  {
-    Item item = ListGet(list, i);
-    if (IsIntNum(item.type))
-    {
-      printf("%li", item.data.intNum);
-    }
-    else if (IsDecNum(item.type))
-    {
-      printf("%f", item.data.decNum);
-    }
-    else if (IsList(item.type))
-    {
-      ListPrint(item.data.list, interp);
-    }
-    else if (IsPrimFun(item.type))
-    {
-      //printf("[PRIMFUN: %s TYPE: %u]", item.symbol.string, item.type);
-      printf("[PRIMFUN: %s]", item.symbol.string);
-    }
-    else if (IsFun(item.type))
-    {
-      ListPrint(item.data.list, interp);
-    }
-    else if (IsString(item.type))
-    {
-      printf("%s", item.symbol.string);
-    }
-    else if (IsSymbol(item.type))
-    {
-      printf("%s", InterpGetSymbolString(interp, item.symbol.index));
-    }
-    
-    if (i < list->length - 1)
-    {
-      printf(" ");
-    }
-    
-    if (useNewLine)
-    {
-      printf("\n");
-    }
-  }
+  // TODO
+  return ItemWithVirgin();
 }
-
-Item ItemWithSymbol(Index symbolIndex)
-{
-  Item item;
-  item.type = TypeSymbol;
-  item.symbol.index = symbolIndex;
-  return item;
-}
-
-Item ItemWithString(char* string)
-{
-  Item item;
-  item.type = TypeString;
-  char* stringbuf = malloc(strlen(string) + 1);
-  strcpy(stringbuf, string);
-  item.symbol.string = stringbuf;
-  printf("[ItemWithString: %s]\n", item.symbol.string);
-  return item;
-}
-
-Item ItemWithIntNum(long number)
-{
-  Item item;
-  item.type = TypeIntNum;
-  item.data.intNum = number;
-  return item;
-}
-
-Item ItemWithDecNum(long number)
-{
-  Item item;
-  item.type = TypeDecNum;
-  item.data.decNum = number;
-  return item;
-}
-
-Item ItemWithList(List* list)
-{
-  Item item;
-  item.type = TypeList;
-  item.data.list = list;
-  return item;
-}
-
-Item ItemWithFun(List* fun)
-{
-  Item item;
-  item.type = TypeFun;
-  item.data.list = fun;
-  return item;
-}
-
-Item ItemWithPrimFun(PrimFun fun)
-{
-  Item item;
-  item.type = TypePrimFun;
-  item.data.primFun = fun;
-  return item;
-}
-
-Item ItemWithObj(void* obj)
-{
-  Item item;
-  item.type = TypeObj;
-  item.data.obj = obj;
-  return item;
-}
-
-Item ItemWithVirgin()
-{
-  Item item;
-  item.type = TypeVirgin;
-  return item;
-}
-
-Item ItemWithStackFrame(void* obj)
-{
-  Item item;
-  item.type = TypeStackFrame;
-  item.data.obj = obj;
-  return item;
-}
+*/
