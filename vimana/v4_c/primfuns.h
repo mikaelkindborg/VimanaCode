@@ -1,7 +1,7 @@
 
 /****************** PRIMFUNS ******************/
 
-void Prim_DOC(Interp* interp)
+void Prim_DROP(Interp* interp)
 {
   InterpPop(interp);
 }
@@ -160,8 +160,10 @@ void Prim_EQ(Interp* interp)
 
 void InterpDefinePrimFuns(Interp* interp)
 {
-  InterpAddPrimFun("DOC", &Prim_DOC, interp);
-  InterpAddPrimFun("doc", &Prim_DOC, interp);
+  InterpAddPrimFun("DROP", &Prim_DROP, interp);
+  InterpAddPrimFun("drop", &Prim_DROP, interp);
+  InterpAddPrimFun("DOC", &Prim_DROP, interp);
+  InterpAddPrimFun("doc", &Prim_DROP, interp);
   InterpAddPrimFun("DO", &Prim_DO, interp);
   InterpAddPrimFun("do", &Prim_DO, interp);
   InterpAddPrimFun("IFTRUE", &Prim_IFTRUE, interp);

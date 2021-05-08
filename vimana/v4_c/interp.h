@@ -51,24 +51,36 @@ void InterpFree(Interp* interp)
 }
 
 // Push item on the data stack.
+#ifdef OPTIMIZE
+#define InterpPush(interp, item) ListPush((interp)->stack, item)
+#else
 void InterpPush(Interp* interp, Item item)
 {
   ListPush(interp->stack, item);
 }
+#endif
 
 // Pop item off the data stack.
+#ifdef OPTIMIZE
+#define InterpPop(interp) ListPop((interp)->stack)
+#else
 Item InterpPop(Interp* interp)
 {
   return ListPop(interp->stack);
 }
+#endif
 
 // Pop item off the data stack and evaluate it
 // if it is a symbol.
+#ifdef OPTIMIZE
+#define InterpPopEval(interp) InterpEvalSymbol(interp, ListPop((interp)->stack))
+#else
 Item InterpPopEval(Interp* interp)
 {
   Item item = ListPop(interp->stack);
   return InterpEvalSymbol(interp, item);
 }
+#endif
 
 void InterpAddPrimFun(char* name, PrimFun fun, Interp* interp)
 {
@@ -229,8 +241,9 @@ Item InterpAddSymbol(Interp* interp, char* symbol)
   {
     // Symbol does not exist, create it.
     Item newItem = ItemWithString(symbol);
-    Index newIndex = ListPush(interp->symbolTable, newItem);
+    ListPush(interp->symbolTable, newItem);
     ListPush(interp->symbolValueTable, ItemWithVirgin());
+    Index newIndex = ListLength(interp->symbolTable) - 1;
     // Make a symbol item and return it.
     Item item = ItemWithSymbol(newIndex);
     return item;
@@ -393,28 +406,61 @@ void InterpRun(Interp* interp, List* list)
     List* stackframe = ItemList(ListGet(interp->callstack, interp->stackframeIndex));
 
     // Increment code pointer.
+    /*
     Item codePointer = ListGet(stackframe, StackFrameCodePointer);
     codePointer.value.intNum ++;
     ListSet(stackframe, StackFrameCodePointer, codePointer);
+    */
+    Item* codePtr = ListGetItemPtr(stackframe, StackFrameCodePointer);
+    codePtr->value.intNum ++;
 
     // If the code in the stackframe has finished executing
     // we exit the frame.
     List* codeList = ItemList(ListGet(stackframe, StackFrameCodeList));
 
-    if (codePointer.value.intNum >= ListLength(codeList))
+    if (codePtr->value.intNum >= ListLength(codeList))
     {
       // EXIT STACK FRAME
-      InterpExitStackFrame(interp);
+      //InterpExitStackFrame(interp);
+      interp->stackframeIndex--;
     }
     else
     {
       // Evaluate the current element. Note that new stackframes
       // may be created during evaluation, and that this will 
       // increment the stackframe index.
-      Item element = ListGet(codeList, codePointer.value.intNum);
-      InterpEval(interp, element);
-    }
+      Item element = ListGet(codeList, codePtr->value.intNum);
 
+      // Innlined below: InterpEval(interp, element);
+
+      // Inlining code from InterpEval
+      if (IsSymbol(element))
+      {
+        Item value = ListGet(interp->symbolValueTable, element.value.symbol);
+        if (IsPrimFun(value))
+        {
+          value.value.primFun(interp);
+          goto exit;
+        }
+        if (IsFun(value))
+        {
+          InterpEvalFun(interp, value.value.list);
+          goto exit;
+        }
+      }
+      if (IsLocalSymbol(element))
+      {
+        Item value = InterpEvalSymbol(interp, element);
+        if (IsFun(value))
+        {
+          InterpEvalFun(interp, ItemList(value));
+          goto exit;
+        }
+      }
+      // Otherwise
+      ListPush(interp->stack, element);
+    }
+exit:
     // Was this the last stackframe?
     if (interp->stackframeIndex < 0)
     {

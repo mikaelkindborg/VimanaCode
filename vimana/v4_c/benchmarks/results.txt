@@ -1,0 +1,55 @@
+
+Performance Test Factorial Function
+-----------------------------------
+
+Date: 2021-04-25 and 2021-05-08
+
+Test: 10.000.000 iterations of factorial(20)
+
+Python:
+python fact.py  21.38s user 0.22s system 99% cpu 21.713 total
+
+PHP:
+php fact.php  6.14s user 0.03s system 99% cpu 6.218 total
+
+C:
+./fact  0.84s user 0.00s system 99% cpu 0.849 total
+
+PHP interpreter fastest version (PHP callstack) 100.000 iterations:
+php v1_takeoff/benchmark.php  4.33s user 0.02s system 99% cpu 4.353 total
+10.000.000 iterations = 433s = 7 minutes (4.33s x 100)
+
+C interpeter (explicit callstack) many optimazitions 10.000.000 iterations:
+cc vimana.c -o vimana -Ofast
+./vimana  26.61s user 0.02s system 95% cpu 27.992 total
+
+C interpreter unoptimized 100.000 iterations:
+./vimana  2.54s user 0.01s system 85% cpu 2.964 total
+10.000.000 iterations = 254s (4.54s x 100)
+
+Summary:
+
+C:            0.84s
+PHP:          6.14s
+Python:      21.38s
+Vimana PHP: 433.00s (optimized version)
+Vimana C:   254.00s (first version)
+Vimana C:    26.61s (optimized version)
+
+-----------------------------------------------------------------
+
+Message to a friend:
+
+Hallå i stugan! Hur har du det? Har kodat vidare, två veckor senare är C-versionen av interpretatorn "färdig". Den ha en explicit callstack som stöder svansrekursion. Jag använder inga bibliotek (förutom standard clib). Har implementerat en list-typ som bygger på en dynamisk array som utgör grunden. Alla uppslagningar sker med index (inga hashmappar). Koden är ca 1500 rader allt som allt.
+Som prestandatest har jag använt fakultet 20. Första versionen
+I första versionen tog 100.000 iterationer 2.5 sek. Det var något av en besvikelse, för den snabbaste PHP-versionen jag hade tog 4.3 sek. Så jag satte igång att optimera, med macron, återanvändning av stackframes osv. Kom ner till 1 sek. Sen kom jag på att man kunde slå på kompilatoroptimering och då blev det ungefär 0.4 sek.  Ytterligare optimering och det blev ännu lite snabbare ca 0.27 sek.
+Mitt mål var att om möjligt klå Python, men nådde inte riktigt dit. Så här ser testresultaten ut, totalt sett:
+
+C:            0.84s
+PHP:          6.14s
+Python:      21.38s
+Vimana PHP: 433.00s (optimized version)
+Vimana C:   254.00s (first version)
+Vimana C:    26.61s (optimized version)
+Men lite till optimering kanske interpretatorn blir ungefär lika snabb som Python. Intressant att är PHP är mycket snabbare än jag väntade mig. Och Python långsammare än jag väntade mig.
+Jag interpreterar syntaxträdet direkt (som i Lisp), så för ytterligare uppsnabbningar får man väl använda bytekod eller liknande. Men jag tror jag nöjer mig så här.

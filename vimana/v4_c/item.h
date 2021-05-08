@@ -1,7 +1,7 @@
 
 /****************** C TYPES ******************/
 
-typedef unsigned char    Type;
+typedef unsigned int     Type;
 typedef int              Index;
 typedef long             IntNum;
 typedef double           DecNum;
@@ -147,37 +147,40 @@ Item ItemWithBool(Bool truth)
 /****************** ITEM ACCESS ******************/
 
 // Get the list of an item.
-/*
+#ifdef OPTIMIZE
+#define ItemList(itemWithList) (itemWithList).value.list
+#else
 List* ItemList(Item itemWithList)
 {
   if (!IsList(itemWithList))
     ErrorExit("ItemList: Item is not of TypeList");
   return itemWithList.value.list;
 }
-*/
-#define ItemList(itemWithList) (itemWithList).value.list
+#endif
 
 // Get the IntNum of an item.
-/*
+#ifdef OPTIMIZE 
+#define ItemIntNum(item) (item).value.intNum
+#else
 IntNum ItemIntNum(Item item)
 {
   if (!IsIntNum(item))
     ErrorExit("ItemIntNum: Item is not of TypeIntNum");
   return item.value.intNum;
 }
-*/
-#define ItemIntNum(item) (item).value.intNum
+#endif
 
 // Get the Bool of an item.
-/*
+#ifdef OPTIMIZE
+#define ItemBool(item) (item).value.truth 
+#else
 Bool ItemBool(Item item)
 {
   if (!IsBool(item))
     ErrorExit("ItemBool: Item is not of TypeBool");
   return item.value.truth;
 }
-*/
-#define ItemBool(item) (item).value.truth
+#endif
 
 /****************** EQUALS ******************/
 

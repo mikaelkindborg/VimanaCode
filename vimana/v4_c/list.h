@@ -92,13 +92,14 @@ void ListFree(List* list, int whatToFree)
   free(list);
 }
 
-/*
+#ifdef OPTIMIZE
+#define ListLength(list) ((list)->length)
+#else
 int ListLength(List* list)
 {
   return list->length;
 }
-*/
-#define ListLength(list) (list)->length
+#endif
 
 void ListGrow(List* list, size_t newSize)
 {
@@ -126,16 +127,25 @@ void ListGrow(List* list, size_t newSize)
   //PrintDebug("REALLOC successful in ListGrow");
 }
 
-// Returns the index of the new item.
-Index ListPush(List* list, Item item)
+#ifdef OPTIMIZE
+#define ListPush(list, item) \
+do { \
+  if ((list)->length + 1 > (list)->maxLength) \
+    ListGrow(list, (list)->length + ListGrowIncrement); \
+  (list)->items[list->length] = (item); \
+  (list)->length++; \
+} while (0)
+#else
+void ListPush(List* list, Item item)
 {
   // Grow list array if needed.
   if (list->length + 1 > list->maxLength)
     ListGrow(list, list->length + ListGrowIncrement);
   list->items[list->length] = item;
   list->length++;
-  return list->length - 1; // Index of new item.
+  //return list->length - 1; // Index of new item.
 }
+#endif
 
 Item ListPop(List* list)
 {
@@ -145,16 +155,27 @@ Item ListPop(List* list)
   return list->items[list->length];
 }
 
-/*
+#ifdef OPTIMIZE
+#define ListGet(list, index) ((list)->items[index])
+#else
 Item ListGet(List* list, int index)
 {
   if (index >= list->length)
     ErrorExit("ListGet: Index out of bounds: %i\n", index);
   return list->items[index];
 }
-*/
-#define ListGet(list, index) (list)->items[index]
+#endif
 
+#ifdef OPTIMIZE
+#define ListSet(list, index, item) \
+do { \
+  if ((index) >= (list)->maxLength) \
+    ListGrow((list), (index) + ListGrowIncrement); \
+  if ((index) >= (list)->length) \
+    (list)->length = (index) + 1; \
+  (list)->items[index] = (item); \
+} while (0)
+#else
 void ListSet(List* list, int index, Item item)
 {
   // Grow list if needed.
@@ -164,15 +185,20 @@ void ListSet(List* list, int index, Item item)
     list->length = index + 1;
   list->items[index] = item;
 }
+#endif
 
 // Experimental. Useful for updating item values "in place" 
 // without having to copy and write back the item.
+#ifdef OPTIMIZE
+#define ListGetItemPtr(list, index) (&((list)->items[index]))
+#else
 Item* ListGetItemPtr(List* list, int index)
 {
   if (index >= list->length)
     ErrorExit("ListGetItemPtr: Index out of bounds: %i\n", index);
   return &(list->items[index]);
 }
+#endif
 
 // TODO: Delete?
 // Associative list
