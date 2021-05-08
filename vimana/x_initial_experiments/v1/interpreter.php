@@ -9,7 +9,7 @@
 // License: Creative Commons: Attribution-ShareAlike - CC BY-SA
 //
 // This file contains an interpeter for an experimental language
-// named VimanaLang. I have created this project for my own
+// named Vimana. I have created this project for my own
 // purposes, simply because for the fun of it. The inspiration
 // comes from Lisp and Forth. 
 // I am an old Lisp programmer who did computer science research 
@@ -17,11 +17,11 @@
 // in the 1980s. 
 //
 // I love Lisp, and I miss the simplicity of MuLisp, MacLisp 
-// and systems like Apple Logo. VimanaLang is in the spirit
+// and systems like Apple Logo. Vimana is in the spirit
 // of Lisp in the 1970s and 80s. Uppercase names!
 //
 // The idea is that you can change everything you want yourself.
-// VimanaLang is not for writing applications, it is for 
+// Vimana is not for writing applications, it is for 
 // experimenting with programming language design.
 //
 // I use PHP as the implementation language for this version, 

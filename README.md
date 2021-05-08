@@ -1,4 +1,4 @@
-# VimanaLang
+# Vimana
 
 DIY interpreter for a dynamic language influenced by Lisp and Forth.
 
@@ -17,7 +17,7 @@ Or go to the directory with the files and run from there:
     cd vimana/v1_takeoff/
     php examples.php
 
-I created VimanaLang as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
+I created Vimana as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
 
 [Watch introduction video](https://youtu.be/BE7UpUuumc4)
 

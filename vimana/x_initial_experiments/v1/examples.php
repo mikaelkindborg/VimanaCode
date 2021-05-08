@@ -8,7 +8,7 @@
 // Website: kindborg.com
 // License: Creative Commons: Attribution-ShareAlike - CC BY-SA
 //
-// This file contains some code examples for VimanaLang,
+// This file contains some code examples for Vimana,
 // a highly experimental dynamic programming language.
 // inspired by Lisp and also by Forth.
 //
@@ -17,7 +17,7 @@
 //
 // php examples.php
 //
-// The purpose of VimanaLang is to provide a small interpreter 
+// The purpose of Vimana is to provide a small interpreter 
 // that can be experimented with and modified just for the fun of it.
 // One could say that the language is as esoteric as the flying
 // Vimanas of the ancient past.

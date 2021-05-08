@@ -29,7 +29,7 @@ $code = <<< CODE
 
 HELLO_WORLD PRINTLN
 
-(Welcome to the wonderful world of VimanaLang) JOIN PRINTLN
+(Welcome to the wonderful world of Vimana) JOIN PRINTLN
 
 (This is the result of: 1 2 +) JOIN PRINTLN
 1 2 + PRINTLN
