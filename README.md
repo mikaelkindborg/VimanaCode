@@ -3,7 +3,7 @@
 DIY interpreter for a dynamic language influenced by Lisp and Forth.
 
 Current implementation exists in two versions, written in PHP and in C.
-(There are three versions of the PHO implementation.)
+(There are three versions of the PHP implementation.)
 
 The PHP version is by far the most friendly to get started with.
 
@@ -34,11 +34,15 @@ To run the C version, do as follows (compile with cc or gcc):
 
 The actual Vimana code is in vimana.c´, just as a C string. There are various snippets I have used for testing in the file. I have not yet added running Vimana code from a file.
 
+## Playground
+
 I created Vimana as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
 
 [Watch introduction video](https://youtu.be/BE7UpUuumc4)
 
 ![Screenshot](screenshot.jpg)
+
+## License
 
 License: Creative Commons: Attribution-ShareAlike - CC BY-SA
 
