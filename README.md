@@ -7,7 +7,7 @@ Current implementation exists in two versions, written in PHP and in C.
 
 The PHP version is by far the most friendly to get started with.
 
-As the next step I may do a JavaScript implementation.
+As the next step I might do a JavaScript implementation.
 
 ## Hello World
 
@@ -44,7 +44,7 @@ To run the C version, do as follows (compile with cc or gcc):
 
 The actual Vimana code is in vimana.c, as a C string. There are various snippets I have used for testing in the file. I have not yet added running Vimana code from a file.
 
-Optimizations are enabled by defining the OPTIMIZE preprocessor symbol in base.h. Compiling with the -O3 (or -Ofast in cc) gives an additional performance boost. 
+Optimizations are enabled by defining the OPTIMIZE preprocessor symbol in base.h. Compiling with the -O3 flag gives an additional performance boost. 
 
 Example of how to enable compiler optimizations:
 
@@ -63,7 +63,7 @@ I have used factorial(20) with 10.000.000 iterations for the benchmark test.
     Vimana C:   254.00s (first version)
     Vimana C:    26.61s (optimized version)
 
-My goal as to be as fast as Python, and it is pretty close. Futher optimizations are possible.
+My goal is to be as fast as Python, and it is pretty close. Futher optimizations are possible.
 
 This is the test program for the C-version:
 
@@ -90,6 +90,11 @@ Lower-case is also possible (but note that the code is case-sensitive):
     (20 fact drop) 10000000 timesdo
 
 Vimana is my personal experimental project. There are yet additional functionality to be implemented. Like garbage collection in the C-version.
+
+Current code size (2021-05-08):
+
+    PHP: around 500 lines
+    C: around 1500 lines
 
 ## Playground
 
