@@ -1,6 +1,6 @@
 # Vimana Design Overview
 
-This repository contains an interpeter for an experimental language named VimanaLang. I have created this project for my own purposes, simply for the fun of it. 
+This repository contains an interpeter for an experimental language named Vimana. I have created this project for my own purposes, simply for the fun of it. 
 
 This is the beginning of a design document. The text is not polished, and is best considered as notes at this point.
 
@@ -8,9 +8,9 @@ This is the beginning of a design document. The text is not polished, and is bes
 
 The inspiration comes from Lisp and Forth. I am an old-time Lisp programmer who did computer science research using MacLisp, MuLisp, Interlisp-D, Smalltalk, and HyperCard in the 1980s. 
 
-I love Lisp, and I miss the simplicity of MuLisp, MacLisp and systems like Apple Logo. VimanaLang is in the spirit of Lisp in the 1970s and 80s. Uppercase names!
+I love Lisp, and I miss the simplicity of MuLisp, MacLisp and systems like Apple Logo. Vimana is in the spirit of Lisp in the 1970s and 80s. Uppercase names!
 
-The idea is that you can change everything you want yourself. VimanaLang is not for writing applications, it is for experimenting with programming language design.
+The idea is that you can change everything you want yourself. Vimana is not for writing applications, it is for experimenting with programming language design.
 
 I use PHP as the implementation language for this version, just because I can :) Possibly, I will do a C-implementation that can also run on embedded devides.
 

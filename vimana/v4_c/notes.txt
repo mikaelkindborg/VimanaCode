@@ -5,6 +5,8 @@ cc -E file.c
 
 man cc | col -bx > ccman.txt
 
+git remote set-url origin git@github.com:mikaelkindborg/VimanaCode.git
+
 https://www.cprogramming.com/reference/preprocessor/ifdef.html
 https://hownot2code.com/2016/12/05/do-while-0-in-macros/
 
