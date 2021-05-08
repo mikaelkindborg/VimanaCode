@@ -94,7 +94,7 @@ Vimana is my personal experimental project. There are yet additional functionali
 Current code size (2021-05-08):
 
     PHP: around 500 lines
-    C: around 1500 lines
+    C:  around 1500 lines
 
 ## Playground
 
