@@ -7,7 +7,9 @@ Current implementation exists in two versions, written in PHP and in C.
 
 The PHP version is by far the most friendly to get started with.
 
-As the next step I might do a JavaScript implementation.
+As the next step I might do a JavaScript implementation. 
+
+UPDATE: First version of JavaScript implementation runs the factorial function. Also began doing a simple coding workbench with Amiga-inspired colors.
 
 ## Hello World
 
@@ -50,6 +52,16 @@ Example of how to enable compiler optimizations:
 
     cc vimana.c -o vimana -O3
 
+## JS-version
+
+A version of JavaScript is now implemented, download and open this file in a web browser:
+
+    [vimana/v5_js/vimana.html](vimana/v5_js/vimana.html)
+
+## Mantra Meditation
+
+Working on a web app for mantra meditation where the server code is implemented in Vimana. See folder [vimana/v6_mantras](vimana/v6_mantras).
+
 ## Benchmarks
 
 The following are the performance test results for the interpreter and native code in C, PHP and Python.
@@ -62,6 +74,7 @@ I have used factorial(20) with 10.000.000 iterations for the benchmark test.
     Vimana PHP: 433.00s (optimized version)
     Vimana C:   254.00s (first version)
     Vimana C:    26.61s (optimized version)
+    Vimana JS:  425.00s (first version)
 
 My goal is to be as fast as Python, and it is pretty close. Futher optimizations are possible.
 
@@ -95,6 +108,7 @@ Current code size (2021-05-08):
 
     PHP: around 500 lines
     C:  around 1500 lines
+    JS:  around 350 lines (fewer primitives than PHP)
 
 ## Playground
 
