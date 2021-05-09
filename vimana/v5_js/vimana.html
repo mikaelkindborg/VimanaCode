@@ -77,7 +77,7 @@ function InterpCreate()
   function evalFun(fun, interp)
   {
     // Bind params
-    var env = {}
+    let env = {}
     let params = fun[1]
     for (let i = params.length - 1; i > -1; i--)
     {
@@ -96,6 +96,20 @@ function InterpCreate()
 
   // Eval with timer that drives the loop.
   function eval(code)
+  {
+    // Push root context
+    pushContext(code)
+
+    // Eval loop
+    while (interp.contextIndex > -1)
+    {
+      doOneStep()
+    }
+    //printStack()
+  }
+
+  // Eval with timer that drives the loop.
+  function evalUsingTimer(code)
   {
     // Push root context
     pushContext(code)
@@ -162,7 +176,7 @@ function InterpCreate()
     let context = createContext(code, env)
     interp.callstack.push(context)
     interp.contextIndex ++
-    printContext(context)
+    //printContext(context)
   }
   
   function popContext()
@@ -372,6 +386,37 @@ interp.addPrimFun("/", function(interp)
 let code = document.getElementsByTagName("code")[0].innerHTML
 let list = interp.parse(code)
 interp.eval(list)
+
+/*
+let code = "((N) (N 0 EQ (1) (N 1 - FACT N *) IFELSE)) FUN FACT SET 20 FACT"
+let list = interp.parse(code)
+let t0 = performance.now()
+for (let i = 0; i < 100000; i++)
+{
+  interp.eval(list)
+}
+let t1 = performance.now()
+console.log("TIME: " + ((t1 - t0) / 1000) + "s")
+//TIME: 4.252065000000584s
+*/
+/*
+function fact(n)
+{
+  if (n === 0)
+    return 1
+  else 
+    return n * fact(n - 1)
+}
+let t0 = performance.now()
+for (let i = 0; i < 10000000; i++)
+{
+  fact(20)
+}
+let t1 = performance.now()
+console.log("TIME: " + ((t1 - t0) / 1000) + "s")
+//TIME: 0.04589500000292901s 100000 iterations
+//TIME: 2.1241850000005797s  10000000 iterations
+*/
 
 /*
 Eval without timer.
