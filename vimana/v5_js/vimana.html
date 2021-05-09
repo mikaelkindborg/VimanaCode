@@ -1,0 +1,318 @@
+<html>
+<body>
+
+<h1>WELCOME TO THE WONDERFUL WORLD OF VIMANA</h1>
+
+<h2>PROGRAM</h2>
+<code>(HELLO PRINT) DO  
+21 X SET  
+X PRINT  
+X 4 + 5 6 + + PRINT
+</code>
+
+<h2>OUTPUT</h2>
+<output></output>
+
+<h2>STACK</h2>
+<stack></stack>
+
+<script>
+/*
+interpreter
+
+symbols
+
+evallist
+
+parser
+*/
+function InterpCreate()
+{
+  let interp = {}
+  
+  interp.globalEnv = {}
+  interp.stack = []
+  interp.primFuns = {}
+  
+  interp.print = PrintOutput
+  interp.addPrimFun = AddPrimFun
+  interp.evalList = EvalListWithTimer
+  interp.pop = Pop
+  interp.push = Push
+  interp.popEval = PopEval
+  interp.parse = Parse
+
+  function PrintOutput(s)
+  {
+    let output = document.getElementsByTagName("output")[0]
+    output.insertAdjacentHTML("beforeend", s + "<br>")
+  }
+
+  function PrintTrace(s)
+  {
+    let output = document.getElementsByTagName("stack")[0]
+    output.insertAdjacentHTML("beforeend", s + "<br>")
+  }
+
+  function PrintStack()
+  {
+    let s = JSON.stringify(interp.stack)
+    PrintTrace(s)
+  }
+
+  function PrintFun(name)
+  {
+    let s = "CALLING: " + name
+    PrintTrace(s)
+  }
+
+  function AddPrimFun(name, fun)
+  {
+    interp.primFuns[name] = fun
+  }
+  
+  function xEvalList(list)
+  {
+    let codePointer = -1
+    
+    while (true)
+    {
+      PrintStack()
+
+      codePointer ++
+      
+      if (codePointer >= list.length)
+        return
+      
+      let x = list[codePointer]
+      
+      let primFun = interp.primFuns[x]
+      if (primFun)
+      {
+        primFun(interp)
+        continue
+      }
+      
+      let value = EvalSymbol(x)
+      if (IsFun(value))
+      {
+        EvalFun(interp, value)
+        continue
+      }
+      
+      Push(x)
+    }
+
+    PrintStack()
+  }
+  
+  function EvalListWithTimer(list)
+  {
+    let codePointer = -1
+
+    function RunTimer()
+    {
+      Run()
+      if (codePointer < list.length)
+        setTimeout(RunTimer, 1000)
+    }
+
+    function Run()
+    {
+      codePointer ++
+      
+      if (codePointer >= list.length)
+        return
+      
+      let x = list[codePointer]
+      
+      let primFun = interp.primFuns[x]
+      if (primFun)
+      {
+        PrintFun(x)
+        primFun(interp)
+        PrintTrace("PRIMFUN")
+        PrintStack()
+        return
+      }
+      
+      let value = EvalSymbol(x)
+      if (IsFun(value))
+      {
+        PrintFun(x)
+        EvalFun(interp, value)
+        PrintTrace("FUN")
+        PrintStack()
+        return
+      }
+      
+      Push(x)
+      PrintTrace("PUSH")
+      PrintStack()
+    }
+
+    RunTimer()
+  }
+
+  function Pop()
+  {
+    return interp.stack.pop()
+  }
+  
+  function Push(x)
+  {
+    return interp.stack.push(x)
+  }
+  
+  function PopEval()
+  {
+    let x = interp.stack.pop()
+    return EvalSymbol(x)
+  }
+
+  function EvalSymbol(x)
+  {
+    if (interp.globalEnv[x])
+      return interp.globalEnv[x]
+    else
+      return x
+  }
+  
+  function EvalFun(value)
+  {
+  }
+  
+  function IsFun(x)
+  {
+    return (typeof x === "array") && (x[0] === "FUN")
+  }
+  
+  // Parse (tokenize) a string and return a list.
+  function Parse(code)
+  {
+    code = code.replaceAll("(", " ( ")
+    code = code.replaceAll(")", " ) ")
+    code = code.replaceAll("\n", " ")
+    code = code.replaceAll("\r", " ")
+    code = code.replaceAll("\t", " ")
+    let tokens = code.split(" ")
+    //$tokens = array_filter($tokens,
+    //  function($token) { return strlen($token) > 0; })
+    let list = ParseTokens(tokens)
+    return list
+  }
+  
+  // Recursively create the list tree structure.
+  function ParseTokens(tokens)
+  {
+    let list = []
+    
+    while (true)
+    {
+      if (tokens.length === 0)
+        return list
+      
+      next = tokens.shift()
+      next = next.trim()
+      
+      if (next === "")
+        continue
+
+      if (next === ")")
+        return list
+        
+      if (next === "(")
+        next = ParseTokens(tokens)
+      else if (isFinite(next))
+        next = next * 1 // Convert string to number
+      
+      list.push(next)
+    }
+  }
+  
+  return interp
+}
+
+let interp = InterpCreate()
+
+interp.addPrimFun("PRINT", function(interp)
+{
+  let x = interp.popEval()
+  interp.print(JSON.stringify(x))
+})
+
+interp.addPrimFun("DO", function(interp)
+{
+  let x = interp.popEval()
+  interp.evalList(x)
+})
+
+interp.addPrimFun("SET", function(interp)
+{
+  let name = interp.pop()
+  let value = interp.popEval()
+  interp.globalEnv[name] = value
+})
+
+interp.addPrimFun("SET", function(interp)
+{
+  let name = interp.pop()
+  let value = interp.popEval()
+  interp.globalEnv[name] = value
+})
+
+interp.addPrimFun("+", function(interp)
+{
+  let b = interp.popEval()
+  let a = interp.popEval()
+  interp.push(a + b)
+})
+
+//let code = "(HELLO PRINT) DO  21 X SET  X PRINT  X 4 + 5 6 + + PRINT"
+
+let code = document.getElementsByTagName("code")[0].innerHTML
+
+list = interp.parse(code)
+console.log(JSON.stringify(list))
+interp.evalList(list)
+console.log(JSON.stringify(interp.stack))
+
+</script>
+
+<style>
+html, body
+{
+  margin: 0;
+  padding: 5px;
+  background-color: rgb(55,102,201);
+  color: rgb(255,255,255);
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: normal;
+}
+
+h1
+{
+  font-weight: normal;
+  font-size: 175%;
+}
+
+h2
+{
+  font-weight: normal;
+  font-size: 150%;
+}
+
+output, code, stack
+{
+    display: block;
+    unicode-bidi: embed;
+    font-family: monospace;
+    white-space: pre;
+    font-size: 125%;
+}
+</style>
+
+</body>
+</html>
+
