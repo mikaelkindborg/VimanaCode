@@ -4,91 +4,403 @@
 <h1>WELCOME TO THE WONDERFUL WORLD OF VIMANA</h1>
 
 <h2>PROGRAM</h2>
-<code>(HELLO PRINT) DO  
+<div class="frame">
+<code>(() (HELLO PRINT)) FUN FOO SET
+FOO
+((N) (N N +)) FUN DOUBLE SET
+21 DOUBLE PRINT
+((N) (N 0 EQ (1) (N 1 - FACT N *) IFELSE)) FUN FACT SET
+6 FACT PRINT
+</code>
+</div>
+
+<!--(HELLO PRINT) DO  
 21 X SET  
 X PRINT  
-X 4 + 5 6 + + PRINT
-</code>
+X 4 + 5 6 + + PRINT-->
 
 <h2>OUTPUT</h2>
+<div class="frame">
 <output></output>
+</div>
+
+<h2>CALLSTACK</h2>
+<div class="frame">
+<callstack></callstack>
+</div>
 
 <h2>STACK</h2>
+<div class="frame">
 <stack></stack>
+</div>
 
 <script>
-/*
-interpreter
-
-symbols
-
-evallist
-
-parser
-*/
 function InterpCreate()
 {
   let interp = {}
   
   interp.globalEnv = {}
   interp.stack = []
+  interp.callstack = []
+  interp.contextIndex = -1
   interp.primFuns = {}
   
-  interp.print = PrintOutput
-  interp.addPrimFun = AddPrimFun
-  interp.evalList = EvalListWithTimer
-  interp.pop = Pop
-  interp.push = Push
-  interp.popEval = PopEval
-  interp.parse = Parse
+  interp.print = printOutput
+  interp.addPrimFun = addPrimFun
+  interp.eval = eval
+  interp.pop = pop
+  interp.push = push
+  interp.popEval = popEval
+  interp.parse = parse
+  interp.pushContext = pushContext
+  interp.createContext = createContext
 
-  function PrintOutput(s)
+  function evalSymbol(x)
+  {
+    if (typeof x !== "string")
+      return x
+    
+    let index = interp.contextIndex
+    while (index > -1)
+    {
+      let context = getContext(index)
+      if (x in context.env)
+        return context.env[x]
+      index --
+    }
+    if (interp.globalEnv[x])
+      return interp.globalEnv[x]
+    else
+      return x
+  }
+  
+  function evalFun(fun, interp)
+  {
+    // Bind params
+    var env = {}
+    let params = fun[1]
+    for (let i = params.length - 1; i > -1; i--)
+    {
+      let param = params[i]
+      let value = popEval()
+      env[param] = value
+    }
+    //printTrace("evalFun: " + JSON.stringify(fun))
+    interp.pushContext(fun[2], env)
+  }
+  
+  function isFun(fun)
+  {
+    return (typeof fun === "object") && (fun[0] === "FUN")
+  }
+
+  // Eval with timer that drives the loop.
+  function eval(code)
+  {
+    // Push root context
+    pushContext(code)
+
+    // Enter eval loop
+    runTimer();
+    
+    function runTimer()
+    {
+      doOneStep()
+
+      if (interp.contextIndex > -1)
+        setTimeout(runTimer, 50)
+      else
+        printStack()
+    }
+  }
+
+  function doOneStep()
+  {
+    let context = getContext(interp.contextIndex)
+
+    context.codePointer ++
+    
+    if (context.codePointer >= context.code.length)
+    {
+      popContext()
+      return
+    }
+
+    //printStack()
+
+    let x = context.code[context.codePointer]
+    
+    if (typeof x === "string")
+    {
+      let primFun = interp.primFuns[x]
+      if (primFun)
+      {
+        //printFunCall(x)
+        primFun(interp)
+        return
+      }
+      
+      let value = evalSymbol(x)
+      if (isFun(value))
+      {
+        //printFunCall(x)
+        evalFun(value, interp)
+        return
+      }
+    }
+
+    push(x)
+  }
+
+  function addPrimFun(name, fun)
+  {
+    interp.primFuns[name] = fun
+  }
+
+  function pushContext(code, env = {})
+  {
+    let context = createContext(code, env)
+    interp.callstack.push(context)
+    interp.contextIndex ++
+    printContext(context)
+  }
+  
+  function popContext()
+  {
+    interp.callstack.pop()
+    interp.contextIndex --
+  }
+
+  function getContext(index)
+  {
+    return interp.callstack[index]
+  }
+
+  function createContext(code, env)
+  {
+    let context = {}
+    context.code = code
+    context.codePointer = -1
+    context.env = env
+    return context
+  }
+
+  function pop()
+  {
+    return interp.stack.pop()
+  }
+  
+  function push(x)
+  {
+    return interp.stack.push(x)
+  }
+  
+  function popEval()
+  {
+    let x = interp.stack.pop()
+    return evalSymbol(x)
+  }
+
+  // Parse (tokenize) a string and return a list.
+  function parse(code)
+  {
+    code = code.replaceAll("(", " ( ")
+    code = code.replaceAll(")", " ) ")
+    code = code.replaceAll("\n", " ")
+    code = code.replaceAll("\r", " ")
+    code = code.replaceAll("\t", " ")
+    let tokens = code.split(" ")
+    //$tokens = array_filter($tokens,
+    //  function($token) { return strlen($token) > 0; })
+    let list = parseTokens(tokens)
+    return list
+  }
+  
+  // Recursively create the list tree structure.
+  function parseTokens(tokens)
+  {
+    let list = []
+    
+    while (true)
+    {
+      if (tokens.length === 0)
+        return list
+      
+      next = tokens.shift()
+      next = next.trim()
+      
+      if (next === "")
+        continue
+
+      if (next === ")")
+        return list
+        
+      if (next === "(")
+        next = parseTokens(tokens)
+      else if (isFinite(next))
+        next = next * 1 // Convert string to number
+      
+      list.push(next)
+    }
+  }
+  
+  function printOutput(s)
   {
     let output = document.getElementsByTagName("output")[0]
     output.insertAdjacentHTML("beforeend", s + "<br>")
   }
 
-  function PrintTrace(s)
+  function printTrace(s)
   {
-    let output = document.getElementsByTagName("stack")[0]
-    output.insertAdjacentHTML("beforeend", s + "<br>")
+    let stack = document.getElementsByTagName("stack")[0]
+    stack.insertAdjacentHTML("beforeend", s + "<br>")
   }
 
-  function PrintStack()
+  function printStack()
   {
     let s = JSON.stringify(interp.stack)
-    PrintTrace(s)
+    printTrace(s)
   }
 
-  function PrintFun(name)
+  function printFunCall(name)
   {
     let s = "CALLING: " + name
-    PrintTrace(s)
+    printTrace(s)
   }
 
-  function AddPrimFun(name, fun)
+  function printContext(context)
   {
-    interp.primFuns[name] = fun
+    let callstack = document.getElementsByTagName("callstack")[0]
+    let s = JSON.stringify(context)
+    //callstack.innerHTML = s
+    callstack.insertAdjacentHTML("beforeend", s + "<br>")
   }
-  
-  function xEvalList(list)
+
+  return interp
+}
+
+let interp = InterpCreate()
+
+interp.addPrimFun("PRINT", function(interp)
+{
+  let x = interp.popEval()
+  interp.print(JSON.stringify(x))
+})
+
+interp.addPrimFun("DO", function(interp)
+{
+  let code = interp.popEval()
+  // TODO: Check list
+  interp.pushContext(code)
+})
+
+interp.addPrimFun("SET", function(interp)
+{
+  let name = interp.pop()
+  let value = interp.popEval()
+  interp.globalEnv[name] = value
+})
+
+interp.addPrimFun("FUN", function(interp)
+{
+  let list = interp.popEval()
+  // TODO CHECK LIST: Array.isArray()
+  list.unshift("FUN")
+  interp.push(list)
+})
+
+interp.addPrimFun("TRUE", function(interp)
+{
+  interp.push("TRUE")
+})
+
+interp.addPrimFun("FALSE", function(interp)
+{
+  interp.push("FALSE")
+})
+
+interp.addPrimFun("EQ", function(interp)
+{
+  let b = interp.popEval()
+  let a = interp.popEval()
+  if (a === b)
+    interp.push("TRUE")
+  else
+    interp.push("FALSE")
+})
+
+interp.addPrimFun("IFELSE", function(interp)
+{
+  let branch2 = interp.popEval()
+  let branch1 = interp.popEval()
+  let truth = interp.popEval()
+  if (truth === "TRUE")
+    interp.pushContext(branch1)
+  else
+    interp.pushContext(branch2)
+})
+
+interp.addPrimFun("+", function(interp)
+{
+  let b = interp.popEval()
+  let a = interp.popEval()
+  interp.push(a + b)
+})
+
+interp.addPrimFun("-", function(interp)
+{
+  let b = interp.popEval()
+  let a = interp.popEval()
+  interp.push(a - b)
+})
+
+interp.addPrimFun("*", function(interp)
+{
+  let b = interp.popEval()
+  let a = interp.popEval()
+  interp.push(a * b)
+})
+
+interp.addPrimFun("/", function(interp)
+{
+  let b = interp.popEval()
+  let a = interp.popEval()
+  interp.push(a / b)
+})
+
+//let code = "(HELLO PRINT) DO  21 X SET  X PRINT  X 4 + 5 6 + + PRINT"
+let code = document.getElementsByTagName("code")[0].innerHTML
+let list = interp.parse(code)
+interp.eval(list)
+
+/*
+Eval without timer.
+  function Eval(code)
   {
-    let codePointer = -1
-    
-    while (true)
+    // Push root context
+    PushContext(CreateContext(code))
+
+    while (interp.contextIndex > -1)
     {
-      PrintStack()
 
-      codePointer ++
+      let context = GetContext(interp.contextIndex)
+
+      context.codePointer ++
       
-      if (codePointer >= list.length)
-        return
+      if (context.codePointer >= context.code.length)
+      {
+        PopContext()
+        continue
+      }
       
-      let x = list[codePointer]
+      PrintStack()
+      
+      let x = context.code[context.codePointer]
       
       let primFun = interp.primFuns[x]
       if (primFun)
       {
+        PrintFunCall(x)
         primFun(interp)
         continue
       }
@@ -96,16 +408,19 @@ function InterpCreate()
       let value = EvalSymbol(x)
       if (IsFun(value))
       {
+        PrintFunCall(x)
         EvalFun(interp, value)
         continue
       }
       
       Push(x)
     }
-
-    PrintStack()
   }
-  
+*/
+
+
+/*
+OLD VERSION
   function EvalListWithTimer(list)
   {
     let codePointer = -1
@@ -129,7 +444,7 @@ function InterpCreate()
       let primFun = interp.primFuns[x]
       if (primFun)
       {
-        PrintFun(x)
+        PrintFunCall(x)
         primFun(interp)
         PrintTrace("PRIMFUN")
         PrintStack()
@@ -139,7 +454,7 @@ function InterpCreate()
       let value = EvalSymbol(x)
       if (IsFun(value))
       {
-        PrintFun(x)
+        PrintFunCall(x)
         EvalFun(interp, value)
         PrintTrace("FUN")
         PrintStack()
@@ -153,130 +468,8 @@ function InterpCreate()
 
     RunTimer()
   }
-
-  function Pop()
-  {
-    return interp.stack.pop()
-  }
+*/
   
-  function Push(x)
-  {
-    return interp.stack.push(x)
-  }
-  
-  function PopEval()
-  {
-    let x = interp.stack.pop()
-    return EvalSymbol(x)
-  }
-
-  function EvalSymbol(x)
-  {
-    if (interp.globalEnv[x])
-      return interp.globalEnv[x]
-    else
-      return x
-  }
-  
-  function EvalFun(value)
-  {
-  }
-  
-  function IsFun(x)
-  {
-    return (typeof x === "array") && (x[0] === "FUN")
-  }
-  
-  // Parse (tokenize) a string and return a list.
-  function Parse(code)
-  {
-    code = code.replaceAll("(", " ( ")
-    code = code.replaceAll(")", " ) ")
-    code = code.replaceAll("\n", " ")
-    code = code.replaceAll("\r", " ")
-    code = code.replaceAll("\t", " ")
-    let tokens = code.split(" ")
-    //$tokens = array_filter($tokens,
-    //  function($token) { return strlen($token) > 0; })
-    let list = ParseTokens(tokens)
-    return list
-  }
-  
-  // Recursively create the list tree structure.
-  function ParseTokens(tokens)
-  {
-    let list = []
-    
-    while (true)
-    {
-      if (tokens.length === 0)
-        return list
-      
-      next = tokens.shift()
-      next = next.trim()
-      
-      if (next === "")
-        continue
-
-      if (next === ")")
-        return list
-        
-      if (next === "(")
-        next = ParseTokens(tokens)
-      else if (isFinite(next))
-        next = next * 1 // Convert string to number
-      
-      list.push(next)
-    }
-  }
-  
-  return interp
-}
-
-let interp = InterpCreate()
-
-interp.addPrimFun("PRINT", function(interp)
-{
-  let x = interp.popEval()
-  interp.print(JSON.stringify(x))
-})
-
-interp.addPrimFun("DO", function(interp)
-{
-  let x = interp.popEval()
-  interp.evalList(x)
-})
-
-interp.addPrimFun("SET", function(interp)
-{
-  let name = interp.pop()
-  let value = interp.popEval()
-  interp.globalEnv[name] = value
-})
-
-interp.addPrimFun("SET", function(interp)
-{
-  let name = interp.pop()
-  let value = interp.popEval()
-  interp.globalEnv[name] = value
-})
-
-interp.addPrimFun("+", function(interp)
-{
-  let b = interp.popEval()
-  let a = interp.popEval()
-  interp.push(a + b)
-})
-
-//let code = "(HELLO PRINT) DO  21 X SET  X PRINT  X 4 + 5 6 + + PRINT"
-
-let code = document.getElementsByTagName("code")[0].innerHTML
-
-list = interp.parse(code)
-console.log(JSON.stringify(list))
-interp.evalList(list)
-console.log(JSON.stringify(interp.stack))
-
 </script>
 
 <style>
@@ -284,7 +477,8 @@ html, body
 {
   margin: 0;
   padding: 5px;
-  background-color: rgb(55,102,201);
+  /*background-color: rgb(55,102,201);*/
+  background-color: rgb(0,85,173);
   color: rgb(255,255,255);
   font-family: monospace;
   font-size: 16px;
@@ -303,13 +497,20 @@ h2
   font-size: 150%;
 }
 
-output, code, stack
+div.frame
+{
+  padding: 6px;
+  border: 4px solid rgb(255,138,0);
+}
+
+output, code, stack, callstack
 {
     display: block;
     unicode-bidi: embed;
     font-family: monospace;
     white-space: pre;
     font-size: 125%;
+    overflow: scroll;
 }
 </style>
 
