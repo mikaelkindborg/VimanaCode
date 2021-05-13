@@ -10,9 +10,9 @@
 #define FunBody                2
 
 // Declarations.
-Item InterpEvalSymbol(Interp* interp, Item item);
-void InterpEvalList(Interp* interp, List* list);
-Item InterpCompileFun(Interp* interp, Item funList);
+Item  InterpEvalSymbol(Interp* interp, Item item);
+void  InterpEvalList(Interp* interp, List* list);
+Item  InterpCompileFun(Interp* interp, Item funList);
 List* InterpGetLocalEnv(Interp* interp);
 
 //octo: that was new
@@ -66,6 +66,10 @@ void InterpPush(Interp* interp, Item item)
 #else
 Item InterpPop(Interp* interp)
 {
+  //PrintDebug("INTERP POP");
+  //PrintDebug("PRINTING STACK:");
+  //ListPrintItems(interp->stack, interp);
+
   return ListPop(interp->stack);
 }
 #endif
@@ -77,7 +81,14 @@ Item InterpPop(Interp* interp)
 #else
 Item InterpPopEval(Interp* interp)
 {
+  //PrintDebug("INTERP POPEVAL");
+  //PrintDebug("PRINTING STACK:");
+  //ListPrintItems(interp->stack, interp);
+
   Item item = ListPop(interp->stack);
+
+  //PrintDebug("ITEM TYPE: %lu", item.type);
+
   return InterpEvalSymbol(interp, item);
 }
 #endif
@@ -263,8 +274,9 @@ Item InterpEvalSymbol(Interp* interp, Item item)
   // to itself (its literal value).
   
   // Lookup symbol in stackframe local environment.
-  if (IsLocalSymbol(item))
+  if (IsLocalVar(item))
   {
+    //PrintDebug("EVAL LOCALVAR: %i TYPE: %lu", item.value.symbol, item.type);
     // Get current local environment.
     List* env = InterpGetLocalEnv(interp);
     if (env)
@@ -350,6 +362,7 @@ void InterpEvalList(Interp* interp, List* list)
 /****************** EVAL ELEMENT ******************/
 
 // NOTE: This function is inlined below in InterpRun!
+/*
 void InterpEval(Interp* interp, Item element)
 {
   // Optimize for primfun lookup.
@@ -375,7 +388,7 @@ void InterpEval(Interp* interp, Item element)
     }
   }
 
-  if (IsLocalSymbol(element))
+  if (IsLocalVar(element))
   {
     // Evaluate symbol to see if it is bound to a function.
     Item value = InterpEvalSymbol(interp, element);
@@ -393,6 +406,7 @@ void InterpEval(Interp* interp, Item element)
   ListPush(interp->stack, element);
   //PrintDebug("PUSH ELEMENT ONTO DATA STACK TYPE: %u", element.type);
 }
+*/
 
 /****************** MAIN INTERPRETER LOOP ******************/
 
@@ -452,7 +466,7 @@ void InterpRun(Interp* interp, List* list)
           goto exit;
         }
       }
-      if (IsLocalSymbol(element))
+      if (IsLocalVar(element))
       {
         Item value = InterpEvalSymbol(interp, element);
         if (IsFun(value))
@@ -462,7 +476,12 @@ void InterpRun(Interp* interp, List* list)
         }
       }
       // Otherwise
+      //PrintDebug("PUSHING ON STACK: %lu", element.type);
+
       ListPush(interp->stack, element);
+
+      //PrintDebug("PRINTING STACK:");
+      //ListPrintItems(interp->stack, interp);
     }
 exit:
     // Was this the last stackframe?

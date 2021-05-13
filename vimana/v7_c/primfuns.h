@@ -16,7 +16,7 @@ void Prim_DO(Interp* interp)
   if (IsList(item))
     InterpEvalList(interp, ItemList(item));
   else
-    ErrorExit("DO got a non-list of type: %u", item.type);
+    ErrorExit("DO got a non-list of type: %lu", item.type);
 }
 
 void Prim_IFTRUE(Interp* interp)
@@ -24,7 +24,7 @@ void Prim_IFTRUE(Interp* interp)
   Item item = InterpPopEval(interp);
   Bool truth = ItemBool(InterpPopEval(interp));
   if (!IsList(item))
-    ErrorExit("IFTRUE got a non-list of type: %u", item.type);
+    ErrorExit("IFTRUE got a non-list of type: %lu", item.type);
   if (truth)
     InterpEvalList(interp, ItemList(item));
 }
@@ -64,11 +64,11 @@ void Prim_SET(Interp* interp)
   Item name = InterpPop(interp);
   Item value = InterpPopEval(interp);
 
-  //PrintDebug("NAME TYPE:  %u", name.type);
-  //PrintDebug("VALUE TYPE: %u", value.type);
+  //PrintDebug("  NAME TYPE:  %lu", name.type);
+  //PrintDebug("  VALUE TYPE: %lu", value.type);
 
   // Check type.
-  if (IsLocalSymbol(name))
+  if (IsLocalVar(name))
   {
     //PrintDebug("LOCAL SET");
     InterpSetLocalSymbolValue(interp, name.value.symbol, value);
@@ -80,7 +80,7 @@ void Prim_SET(Interp* interp)
   }
   else
   {
-    ErrorExit("SET  got a non-symbol of type: %u", name.type);
+    ErrorExit("SET  got a non-symbol of type: %lu", name.type);
   }
 }
 
@@ -136,9 +136,10 @@ void Prim_MODULO(Interp* interp)
 void Prim_TRUE(Interp* interp)
 { 
   // TODO: New style.
-  Item item;
-  ItemInitBool(item, TRUE); // TODO: Macro
-  InterpPush(interp, item);
+  //Item item;
+  //ItemInitBool(item, TRUE); // TODO: Macro
+  //InterpPush(interp, item);
+  InterpPush(interp, ItemWithBool(TRUE));
 }
 
 void Prim_FALSE(Interp* interp)

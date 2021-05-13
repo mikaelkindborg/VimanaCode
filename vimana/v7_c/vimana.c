@@ -118,18 +118,18 @@ compiler optimization and macro inlining.
     "((L N) () ("
     " N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE))"
     "FUN TIMESDO SET "
-    "(20 FACT DOC) 100000 TIMESDO");
+    "(20 FACT DROP) 100000 TIMESDO");
                  //10000000
 
-  //printf("SYMBOL TABLE:\n");
+  //PrintDebug("SYMBOL TABLE:\n");
   //ListPrintItems(interp->symbolTable, interp);
 
-  //PrintLine("PARSED LIST:");
+  //PrintDebug("PARSED LIST:");
   //ListPrint(list, interp);
   
   InterpRun(interp, list);
   
-  //PrintLine("PRINTING STACK:");
+  //PrintDebug("PRINTING STACK:");
   //ListPrintItems(interp->stack, interp);
   
   InterpFree(interp);

@@ -135,7 +135,7 @@ Item ListPop(List* list)
 #ifdef OPTIMIZE
 #define ListArray(list) ((list)->items)
 #else
-void ListArray(List* list)
+Item* ListArray(List* list)
 {
   return list->items;
 }

@@ -1,7 +1,7 @@
 
 /****************** C TYPES ******************/
 
-typedef unsigned int     Type;
+typedef unsigned long    Type;
 typedef int              Index;
 typedef long             IntNum;
 typedef double           DecNum;
@@ -24,7 +24,7 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeString       512
 #define TypeVirgin       0  // Represents unbound symbol/uninitialized item
 
-#define IsVirgin(item)      ((item).type & TypeVirgin)
+#define IsVirgin(item)      ((item).type == TypeVirgin)
 #define IsSymbol(item)      ((item).type & TypeSymbol)
 #define IsIntNum(item)      ((item).type & TypeIntNum)
 #define IsDecNum(item)      ((item).type & TypeDecNum)
@@ -32,8 +32,8 @@ typedef void   (*PrimFun)(Interp*);
 #define IsList(item)        ((item).type & TypeList)
 #define IsPrimFun(item)     ((item).type & TypePrimFun)
 #define IsFun(item)         ((item).type & TypeFun)
-#define IsLocalSymbol(item) ((item).type & TypeGlobalVar)
-#define IsLocalSymbol(item) ((item).type & TypeLocalVar)
+#define IsGlobalVar(item)   ((item).type & TypeGlobalVar)
+#define IsLocalVar(item)    ((item).type & TypeLocalVar)
 #define IsString(item)      ((item).type & TypeString)
 
 /****************** STRUCTS ******************/
@@ -62,7 +62,7 @@ Item;
 
 /****************** CREATE ITEMS ******************/
 
-
+/*
 #define ItemWithSymbol(item, symbolIndex) \
 do { \
   (item).type = TypeSymbol; \
@@ -74,7 +74,7 @@ void ItemWithSymbol(Item* item, Index symbolIndex)
   item->type = TypeSymbol;
   item->value.symbol = symbolIndex;
 }
-
+*/
 
 Item ItemWithSymbol(Index symbolIndex)
 {
@@ -122,7 +122,7 @@ Item ItemWithList(List* list)
 Item ItemWithFun(List* fun)
 {
   Item item;
-  item.type = item.type | TypeFun;
+  item.type = TypeList | TypeFun;
   item.value.list = fun;
   return item;
 }
@@ -130,7 +130,7 @@ Item ItemWithFun(List* fun)
 Item ItemWithPrimFun(PrimFun fun)
 {
   Item item;
-  item.type = item.type | TypePrimFun;
+  item.type = TypeList | TypePrimFun;
   item.value.primFun = fun;
   return item;
 }

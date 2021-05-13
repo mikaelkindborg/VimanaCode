@@ -45,7 +45,7 @@ void ItemPrintToStream(Stream* stream, Item item, Interp* interp)
     }
     PrintToStream(stream, "%s", str);
   }
-  else if (IsLocalSymbol(item))
+  else if (IsLocalVar(item))
   {
     PrintToStream(stream, "[VAR %i]", item.value.symbol);
   }
@@ -92,7 +92,8 @@ void ListPrintWorker(Stream* stream, List* list, Bool useNewLine, Interp* interp
     Item item = ListGet(list, i);
     if (IsList(item))
     {
-      ListPrintToStream(stream, item.value.list, useNewLine, interp);
+      //ListPrintToStream(stream, item.value.list, useNewLine, interp);
+      ListPrintToStream(stream, item.value.list, FALSE, interp);
     }
     else
     {
