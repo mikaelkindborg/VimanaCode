@@ -23,7 +23,7 @@ In a function body, local vars refer to entries in the
 local environment table of the stack frame. This type of
 item uses the following field:
 
-TypeLocalSymbol - value.symbol is an index to the stackframe 
+TypeLocalVar - value.symbol is an index to the stackframe 
 environment table. The actual item that holds the type and value 
 is in the environment table.
 

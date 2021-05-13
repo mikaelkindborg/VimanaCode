@@ -47,7 +47,7 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeString       7
 #define TypeVirgin       0  // Represents unbound symbol/uninitialized item
 //#define TypeStackFrame  10
-#define TypeLocalSymbol 11  // Local variable
+#define TypeLocalVar 11  // Local variable
 #define TypeBool        12
 
 #define IsSymbol(item)      ((item).type == TypeSymbol)
@@ -58,7 +58,7 @@ typedef void   (*PrimFun)(Interp*);
 #define IsList(item)        (((item).type == TypeList) || ((item).type == TypeFun))
 #define IsString(item)      ((item).type == TypeString)
 #define IsVirgin(item)      ((item).type == TypeVirgin)
-#define IsLocalSymbol(item) ((item).type == TypeLocalSymbol)
+#define IsLocalSymbol(item) ((item).type == TypeLocalVar)
 #define IsBool(item)        ((item).type == TypeBool)
 
 /****************** STRUCTS ******************/
@@ -157,7 +157,7 @@ Item ItemWithVirgin()
 Item ItemWithLocalSymbol(Index symbolIndex)
 {
   Item item;
-  item.type = TypeLocalSymbol;
+  item.type = TypeLocalVar;
   item.value.symbol = symbolIndex;
   return item;
 }
@@ -357,7 +357,7 @@ In a function body, local vars refer to entries in the
 local environment table of the stack frame. This type of
 item uses the following field:
 
-TypeLocalSymbol - value.symbol is an index to the stackframe 
+TypeLocalVar - value.symbol is an index to the stackframe 
 environment table. The actual item that holds the type and value 
 is in the environment table.
 

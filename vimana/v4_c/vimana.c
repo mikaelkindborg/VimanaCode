@@ -93,6 +93,9 @@ cc vimana.c -Ofast -o vimana
 ./vimana  0.41s user 0.00s system 49% cpu 0.830 total
 ./vimana  0.35s user 0.00s system 99% cpu 0.360 total
 
+cc vimana.c -O3 -o vimana
+./vimana  0.28s user 0.00s system 98% cpu 0.284 total
+
 10000000 interations 20 FACT:
 cc vimana.c -o vimana -O3
 ./vimana  38.98s user 0.07s system 98% cpu 39.635 total
@@ -111,6 +114,7 @@ compiler optimization and macro inlining.
 210508: Source code 1572 lines
 
 */
+
   List* list = InterpParseCode(interp, 
     "((N) () ("
     "  N 0 EQ (1) (N 1 - FACT N *) IFELSE))"
