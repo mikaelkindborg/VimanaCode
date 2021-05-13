@@ -57,9 +57,11 @@ function InterpCreate()
 
   function evalSymbol(x)
   {
+    // If not string don't eval it.
     if (typeof x !== "string")
       return x
     
+    // Search local environment chain.
     let index = interp.contextIndex
     while (index > -1)
     {
@@ -68,6 +70,8 @@ function InterpCreate()
         return context.env[x]
       index --
     }
+
+    // Look in global environment.
     if (interp.globalEnv[x])
       return interp.globalEnv[x]
     else
@@ -76,7 +80,7 @@ function InterpCreate()
   
   function evalFun(fun, interp)
   {
-    // Bind params
+    // Bind params.
     let env = {}
     let params = fun[1]
     for (let i = params.length - 1; i > -1; i--)
@@ -85,7 +89,10 @@ function InterpCreate()
       let value = popEval()
       env[param] = value
     }
+
     //printTrace("evalFun: " + JSON.stringify(fun))
+
+    // Push execution context.
     interp.pushContext(fun[2], env)
   }
   
@@ -399,6 +406,7 @@ let t1 = performance.now()
 console.log("TIME: " + ((t1 - t0) / 1000) + "s")
 //TIME: 4.252065000000584s
 */
+
 /*
 function fact(n)
 {
@@ -418,6 +426,7 @@ console.log("TIME: " + ((t1 - t0) / 1000) + "s")
 //TIME: 2.1241850000005797s  10000000 iterations
 */
 
+/*****************************************************/
 /*
 Eval without timer.
   function Eval(code)
