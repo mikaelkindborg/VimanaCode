@@ -264,6 +264,35 @@ Item InterpAddSymbol(Interp* interp, char* symbol)
 
 /****************** EVAL SYMBOL ******************/
 
+/*
+// EXPERIMENT
+Item* InterpEvalSymbolP(Interp* interp, Item* item)
+{
+  if (IsLocalVar(*item))
+  {
+    List* env = InterpGetLocalEnv(interp);
+    if (env)
+    {
+      Item* value = &(env->items[item->value.symbol]);
+      if (TypeVirgin != value->type) 
+        return value;
+    }
+    else
+      ErrorExit("InterpEvalSymbol: Local environment not found");
+  }
+
+  // Lookup symbol in global symbol table.
+  if (IsSymbol(*item))
+  {
+    Item* value = &(interp->symbolValueTable->items[item->value.symbol]);
+    if (TypeVirgin != value->type) 
+      return value;
+  }
+
+  return item;
+}
+*/
+
 // Lookup the value of a symbol (variable value).
 // Return Virgin item if no value exists.
 Item InterpEvalSymbol(Interp* interp, Item item)
@@ -276,7 +305,7 @@ Item InterpEvalSymbol(Interp* interp, Item item)
   // Lookup symbol in stackframe local environment.
   if (IsLocalVar(item))
   {
-    //PrintDebug("EVAL LOCALVAR: %i TYPE: %lu", item.value.symbol, item.type);
+    //PrintDebug("EVALSYMBOL LOCALVAR: %i TYPE: %lu", item.value.symbol, item.type);
     // Get current local environment.
     List* env = InterpGetLocalEnv(interp);
     if (env)
@@ -546,7 +575,7 @@ int InterpCompileFunLookupLocalIndex(Interp* interp, List* localVars, Item symbo
   for (int i = 0; i < ListLength(localVars); i++)
   {
     Item localSymbol = ListGet(localVars, i);
-    if (ItemEquals(symbol, localSymbol)) 
+    if (symbol.value.symbol == localSymbol.value.symbol)
       return i;
   }
   

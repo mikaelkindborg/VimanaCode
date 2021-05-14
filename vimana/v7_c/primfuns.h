@@ -79,20 +79,257 @@ void Prim_SET(Interp* interp)
     InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
   }
   else
-  {
-    ErrorExit("SET  got a non-symbol of type: %lu", name.type);
-  }
+    ErrorExit("SET got a non-symbol of type: %lu", name.type);
 }
 
-void Prim_PRINTLN(Interp* interp)
+void Prim_PRINT(Interp* interp)
 {
-  //PrintDebug("HELLO PRINTLN");
+  //PrintDebug("HELLO PRINT");
   Item item = InterpPopEval(interp);
   char* buf = ItemToString(item, interp);
   puts(buf);
   free(buf);
 }
 
+void Prim_PLUS(Interp* interp)
+{
+  Item b = InterpPopEval(interp);
+  Item a = InterpPopEval(interp);
+  Item res;
+
+  if (IsIntNum(a) && IsIntNum(b))
+  {
+    res.type = TypeIntNum;
+    res.value.intNum = a.value.intNum + b.value.intNum;
+  }
+  else
+  if (IsIntNum(a) && IsDecNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.intNum + b.value.decNum;
+  }
+  else
+  if (IsDecNum(a) && IsIntNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum + b.value.intNum;
+  }
+  else
+  if (IsDecNum(a) && IsDecNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum + b.value.decNum;
+  }
+  else
+    ErrorExit("Prim_PLUS: Unsupported item types");
+
+  InterpPush(interp, res);
+}
+
+void Prim_MINUS(Interp* interp)
+{
+  Item b = InterpPopEval(interp);
+  Item a = InterpPopEval(interp);
+  Item res;
+
+  if (IsIntNum(a) && IsIntNum(b))
+  {
+    res.type = TypeIntNum;
+    res.value.intNum = a.value.intNum - b.value.intNum;
+  }
+  else
+  if (IsIntNum(a) && IsDecNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.intNum - b.value.decNum;
+  }
+  else
+  if (IsDecNum(a) && IsIntNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum - b.value.intNum;
+  }
+  else
+  if (IsDecNum(a) && IsDecNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum - b.value.decNum;
+  }
+  else
+    ErrorExit("Prim_MINUS: Unsupported item types");
+
+  InterpPush(interp, res);
+}
+
+void Prim_TIMES(Interp* interp)
+{
+  Item b = InterpPopEval(interp);
+  Item a = InterpPopEval(interp);
+  Item res;
+
+  if (IsIntNum(a) && IsIntNum(b))
+  {
+    res.type = TypeIntNum;
+    res.value.intNum = a.value.intNum * b.value.intNum;
+  }
+  else
+  if (IsIntNum(a) && IsDecNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.intNum * b.value.decNum;
+  }
+  else
+  if (IsDecNum(a) && IsIntNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum * b.value.intNum;
+  }
+  else
+  if (IsDecNum(a) && IsDecNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum * b.value.decNum;
+  }
+  else
+    ErrorExit("Prim_TIMES: Unsupported item types");
+
+  InterpPush(interp, res);
+}
+
+void Prim_DIV(Interp* interp)
+{
+  Item b = InterpPopEval(interp);
+  Item a = InterpPopEval(interp);
+  Item res;
+
+  if (IsIntNum(a) && IsIntNum(b))
+  {
+    res.type = TypeIntNum;
+    res.value.intNum = a.value.intNum / b.value.intNum;
+  }
+  else
+  if (IsIntNum(a) && IsDecNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.intNum / b.value.decNum;
+  }
+  else
+  if (IsDecNum(a) && IsIntNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum / b.value.intNum;
+  }
+  else
+  if (IsDecNum(a) && IsDecNum(b))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum / b.value.decNum;
+  }
+  else
+    ErrorExit("Prim_DIV: Unsupported item types");
+
+  InterpPush(interp, res);
+}
+
+void Prim_MODULO(Interp* interp)
+{
+  Item a = InterpPopEval(interp);
+  Item b = InterpPopEval(interp);
+  Item res;
+  res.type = TypeIntNum;
+
+  if (IsIntNum(a) && IsIntNum(b))
+    res.value.intNum = a.value.intNum % b.value.intNum;
+  else
+    ErrorExit("Prim_MODULO: Unsupported item types");
+
+  InterpPush(interp, res);
+}
+
+void Prim_TRUE(Interp* interp)
+{ 
+  // TODO: Test this style.
+  //Item item;
+  //ItemInitBool(item, TRUE); // TODO: Macro
+  //InterpPush(interp, item);
+  InterpPush(interp, ItemWithBool(TRUE));
+}
+
+void Prim_FALSE(Interp* interp)
+{
+  InterpPush(interp, ItemWithBool(FALSE));
+}
+
+void Prim_NOT(Interp* interp)
+{
+  Item item = InterpPopEval(interp);
+  Bool x = item.value.truth;
+  item.value.truth = !x;
+  InterpPush(interp, item);
+}
+
+void Prim_EQ(Interp* interp)
+{
+  Item a = InterpPopEval(interp);
+  Item b = InterpPopEval(interp);
+
+  Item res;
+  res.type = TypeBool;
+
+  if (IsIntNum(a) && IsIntNum(b))
+    res.value.truth = a.value.intNum == b.value.intNum;
+  else
+  if (IsSymbol(a) && IsSymbol(b))
+    res.value.truth = a.value.symbol == b.value.symbol;
+  else
+  if (IsIntNum(a) && IsDecNum(b))
+    res.value.truth = a.value.intNum == b.value.decNum;
+  else
+  if (IsDecNum(a) && IsIntNum(b))
+    res.value.truth = a.value.decNum == b.value.intNum;
+  else
+  if (IsDecNum(a) && IsDecNum(b))
+    res.value.truth = a.value.decNum == b.value.decNum;
+  else
+  if (IsBool(a) && IsBool(b))
+    res.value.truth = a.value.truth == b.value.truth;
+  else
+  if (IsString(a) && IsString(b))
+    res.value.truth = StringEquals(a.value.string, b.value.string);
+  else
+    ErrorExit("Prim_EQ: Cannot compare items");
+
+  InterpPush(interp, res);
+}
+
+void InterpDefinePrimFuns(Interp* interp)
+{
+  InterpAddPrimFun("DROP", &Prim_DROP, interp);
+  InterpAddPrimFun("DOC", &Prim_DROP, interp);
+  InterpAddPrimFun("DO", &Prim_DO, interp);
+  InterpAddPrimFun("IFTRUE", &Prim_IFTRUE, interp);
+  InterpAddPrimFun("IFELSE", &Prim_IFELSE, interp);
+  InterpAddPrimFun("FUN", &Prim_FUN, interp);
+  InterpAddPrimFun("SET", &Prim_SET, interp);
+  InterpAddPrimFun("PRINT", &Prim_PRINT, interp);
+  //InterpAddPrimFun("PRN", &Prim_PRN, interp);
+  //InterpAddPrimFun("NEWLINE", &Prim_NEWLINE, interp);
+  //InterpAddPrimFun("SPACE", &Prim_SPACE, interp);
+  //InterpAddPrimFun("JOIN", &Prim_JOIN, interp);
+  InterpAddPrimFun("+", &Prim_PLUS, interp);
+  InterpAddPrimFun("-", &Prim_MINUS, interp);
+  InterpAddPrimFun("*", &Prim_TIMES, interp);
+  InterpAddPrimFun("/", &Prim_DIV, interp);
+  InterpAddPrimFun("MODULO", &Prim_MODULO, interp);
+  InterpAddPrimFun("TRUE", &Prim_TRUE, interp);
+  InterpAddPrimFun("FALSE", &Prim_FALSE, interp);
+  InterpAddPrimFun("NOT", &Prim_NOT, interp);
+  InterpAddPrimFun("EQ", &Prim_EQ, interp);
+}
+
+/*** OLD CODE AHEAD **************************************/
+
+/*
 void Prim_PLUS(Interp* interp)
 {
   Item a = InterpPopEval(interp);
@@ -133,53 +370,50 @@ void Prim_MODULO(Interp* interp)
   InterpPush(interp, res);
 }
 
-void Prim_TRUE(Interp* interp)
-{ 
-  // TODO: New style.
-  //Item item;
-  //ItemInitBool(item, TRUE); // TODO: Macro
-  //InterpPush(interp, item);
-  InterpPush(interp, ItemWithBool(TRUE));
-}
-
-void Prim_FALSE(Interp* interp)
-{
-  InterpPush(interp, ItemWithBool(FALSE));
-}
-
-void Prim_NOT(Interp* interp)
-{
-  Item item = InterpPopEval(interp);
-  Bool x = ItemBool(item);
-  InterpPush(interp, ItemWithBool(!x));
-}
-
-void Prim_EQ(Interp* interp)
+// EXPERIMENT
+void Prim_MINUS(Interp* interp)
 {
   Item a = InterpPopEval(interp);
   Item b = InterpPopEval(interp);
-  Bool res = ItemEquals(a, b);
-  InterpPush(interp, ItemWithBool(res));
+  Item res;
+  ItemMinusP(&b, &a, &res);
+  InterpPush(interp, res);
 }
 
-void InterpDefinePrimFuns(Interp* interp)
+// EXPERIMENT
+void Prim_MINUS(Interp* interp)
 {
-  InterpAddPrimFun("DROP", &Prim_DROP, interp);
-  InterpAddPrimFun("DOC", &Prim_DROP, interp);
-  InterpAddPrimFun("DO", &Prim_DO, interp);
-  InterpAddPrimFun("IFTRUE", &Prim_IFTRUE, interp);
-  InterpAddPrimFun("IFELSE", &Prim_IFELSE, interp);
-  InterpAddPrimFun("FUN", &Prim_FUN, interp);
-  InterpAddPrimFun("SET", &Prim_SET, interp);
-  InterpAddPrimFun("PRINTLN", &Prim_PRINTLN, interp);
-  InterpAddPrimFun("PRINT", &Prim_PRINTLN, interp);
-  InterpAddPrimFun("+", &Prim_PLUS, interp);
-  InterpAddPrimFun("-", &Prim_MINUS, interp);
-  InterpAddPrimFun("*", &Prim_TIMES, interp);
-  InterpAddPrimFun("/", &Prim_DIV, interp);
-  InterpAddPrimFun("MODULO", &Prim_MODULO, interp);
-  InterpAddPrimFun("TRUE", &Prim_TRUE, interp);
-  InterpAddPrimFun("FALSE", &Prim_FALSE, interp);
-  InterpAddPrimFun("NOT", &Prim_NOT, interp);
-  InterpAddPrimFun("EQ", &Prim_EQ, interp);
+  //Item b = InterpPopEval(interp);
+  //Item a = InterpPopEval(interp);
+  //Item res;
+
+  //PrintDebug("Prim_MINUS item a type: %lu", a.type);
+  //PrintDebug("Prim_MINUS item b type: %lu", a.type);
+
+  List* stack = interp->stack;
+  Item* items = stack->items;
+  Index last = stack->length - 1;
+  Index nextlast = last - 1;
+  Item* a = InterpEvalSymbolP(interp, &(items[nextlast]));
+  Item* b = InterpEvalSymbolP(interp, &(items[last]));
+
+  if (IsIntNum(*a) && IsIntNum(*a))
+  {
+    IntNum res = a->value.intNum - b->value.intNum;
+    items[nextlast].value.intNum = res;
+    items[nextlast].type = TypeIntNum;
+    stack->length = last;
+
+    //res.value.intNum = (a.value.intNum - b.value.intNum);
+    //res.type = TypeIntNum;
+    //InterpPush(interp, res);
+
+    //PrintDebug("ITEM TYPE: %lu", item.type);
+
+    //InterpPush(interp, ItemWithIntNum(a.value.intNum - b.value.intNum));
+    return;
+  }
+
+  ErrorExit("ItemMinus: Unsupported item types");
 }
+*/

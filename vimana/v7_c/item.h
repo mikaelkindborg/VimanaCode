@@ -199,11 +199,11 @@ Bool ItemBool(Item item)
 
 /****************** EQUALS ******************/
 
+// MOVED THIS CODE TO primfuns.h
+
+/*
 Bool ItemEquals(Item a, Item b)
 {
-  // TODO: What if symbol is bound?, then compare bound values.
-  // Or perhaps this is for the caller to do? Probably so.
-  // Like compare unevaluated and evaluated values.
   if (IsSymbol(a) && IsSymbol(b))
   {
     return a.value.symbol == b.value.symbol;
@@ -236,9 +236,13 @@ Bool ItemEquals(Item a, Item b)
   
   ErrorExit("ItemEquals: Cannot compare items");
 }
+*/
 
 /****************** ITEM MATH ******************/
 
+// MOVED THIS CODE TO primfuns.h
+
+/*
 Item ItemPlus(Item a, Item b)
 {
   if (IsIntNum(a) && IsIntNum(b))
@@ -256,14 +260,34 @@ Item ItemPlus(Item a, Item b)
   ErrorExit("ItemPlus: Unsupported item types");
 }
 
-// TODO: Pass pointer to Item?
+// EXPERIMENT
+#define ItemMinusP(a, b, res) \
+do { \
+  if (IsIntNum(*(a)) && IsIntNum(*(b))) \
+  { \
+    (res)->type = TypeIntNum; \
+    (res)->value.intNum = (a)->value.intNum - (b)->value.intNum; \
+  } \
+  else \
+    ErrorExit("ItemMinusP: Unsupported item types"); \
+} while(0)
+
+void X_ItemMinusP(Item* a, Item* b, Item* res)
+{
+  if (IsIntNum(*a) && IsIntNum(*b))
+  {
+    res->type = TypeIntNum;
+    res->value.intNum = a->value.intNum - b->value.intNum;
+    return;
+  }
+
+  ErrorExit("ItemMinusP: Unsupported item types");
+}
+
 Item ItemMinus(Item a, Item b)
 {
   if (IsIntNum(a) && IsIntNum(b))
-  {
-    a.value.intNum = (a.value.intNum - b.value.intNum);
-    return a; // Copies a
-  }
+    return ItemWithIntNum(a.value.intNum - b.value.intNum);
   
   if (IsIntNum(a) && IsDecNum(b))
     return ItemWithDecNum(a.value.intNum - b.value.decNum);
@@ -280,10 +304,7 @@ Item ItemMinus(Item a, Item b)
 Item ItemTimes(Item a, Item b)
 {
   if (IsIntNum(a) && IsIntNum(b))
-  {
-    a.value.intNum = (a.value.intNum * b.value.intNum);
-    return a;
-  }
+    return ItemWithIntNum(a.value.intNum * b.value.intNum);
 
   if (IsIntNum(a) && IsDecNum(b))
     return ItemWithDecNum(a.value.intNum * b.value.decNum);
@@ -319,5 +340,6 @@ Item ItemModulo(Item a, Item b)
   if (IsIntNum(a) && IsIntNum(b))
     return ItemWithIntNum(a.value.intNum % b.value.intNum);
   
-  ErrorExit("ItemDiv: Unsupported item types");
+  ErrorExit("ItemModulo: Unsupported item types");
 }
+*/
