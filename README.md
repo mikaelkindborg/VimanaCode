@@ -109,11 +109,11 @@ Lower-case is also possible (but note that the code is case-sensitive):
 
 Vimana is my personal experimental project. There are yet additional functionality to be implemented. Like garbage collection in the C-version.
 
-Current code size (2021-05-08):
+Current code size (2021-05-14):
 
-    PHP: around 500 lines
-    C:  around 1500 lines
-    JS:  around 350 lines (fewer primitives than PHP)
+    PHP: 500 lines
+    C:  1750 lines (fewer primitives than PHP)
+    JS:  350 lines (fewer primitives than PHP)
 
 ## Playground
 
