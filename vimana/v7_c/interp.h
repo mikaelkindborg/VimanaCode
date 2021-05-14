@@ -280,8 +280,8 @@ Item InterpEvalSymbol(Interp* interp, Item item)
       context = ItemContext(ListGet(callstack, callstackIndex));
       env = context->env;
 
-      PrintLine("CONTEXT in InterpEvalSymbol:");
-      ListPrint(env, interp);
+      //PrintLine("CONTEXT in InterpEvalSymbol:");
+      //ListPrint(env, interp);
 
       // Search environment.
       if (ListLength(env) > 0)
