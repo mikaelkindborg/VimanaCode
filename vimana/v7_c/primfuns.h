@@ -3,7 +3,11 @@
 
 void Prim_DROP(Interp* interp)
 {
-  InterpPop(interp);
+  Index length = interp->stack->length;
+  length = length - 1;
+  if (length < 0) 
+    ErrorExit("DROP list length < 0");
+  interp->stack->length = length;
 }
 
 // DO evaluates a list. Other types generates an error.
@@ -70,7 +74,9 @@ void Prim_IFELSE(Interp* interp)
 void Prim_FUN(Interp* interp)
 {
   //PrintDebug("HELLO FUN");
-  Item list = InterpPopEval(interp);
+  //Item list = InterpPopEval(interp);
+  Item list;
+  InterpPopEvalSet(interp, list);
   Item compiledFun = InterpCompileFun(interp, list);
   InterpPush(interp, compiledFun);
 }
@@ -83,9 +89,13 @@ void Prim_SET(Interp* interp)
   //PrintDebug("HELLO SET");
   
   // Get name and value.
-  Item name = InterpPop(interp);
+  //Item name = InterpPop(interp);
   //Item value = InterpPopEval(interp);
+
+  Item name;
   Item value;
+
+  InterpPopSet(interp, name);
   InterpPopEvalSet(interp, value);
 
   //PrintDebug("  NAME TYPE:  %lu", name.type);
@@ -161,11 +171,9 @@ void Prim_PLUS(Interp* interp)
 
 void Prim_MINUS(Interp* interp)
 {
-  /*
-  Item b = InterpPopEval(interp);
-  Item a = InterpPopEval(interp);
-  Item res;
-  */
+  //Item b = InterpPopEval(interp);
+  //Item a = InterpPopEval(interp);
+  //Item res;
 
   Item a;
   Item b;
@@ -291,7 +299,7 @@ void Prim_MODULO(Interp* interp)
 {
   //Item a = InterpPopEval(interp);
   //Item b = InterpPopEval(interp);
-  
+
   Item a;
   Item b;
   Item res;

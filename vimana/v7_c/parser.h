@@ -1,12 +1,12 @@
 
 /****************** PARSER ******************/
 
-int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list);
+int ParserWorker(Interp* interp, char* code, int i, int length, List* list);
 
-List* InterpParseCode(Interp* interp, char* code)
+List* ParseCode(Interp* interp, char* code)
 {
   List* list = ListCreate();
-  InterpParserWorker(interp, code, 0, strlen(code), list);
+  ParserWorker(interp, code, 0, strlen(code), list);
   return list;
 }
 
@@ -29,7 +29,7 @@ int ParserIsNumber(char* token)
   return decimalSignUsed ? TypeDecNum : TypeIntNum;
 }
 
-void InterpParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
+void ParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
 {
   Item item;
   int type = ParserIsNumber(token);
@@ -52,10 +52,10 @@ void InterpParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
   ListPush(list, item);
 }
 
-int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list)
+int ParserWorker(Interp* interp, char* code, int i, int length, List* list)
 {
   int foo = 0;
-  char token[512]; // Check buffer overrun
+  char token[512]; // TODO: Check buffer overrun
   char* ptoken = NULL;
 
   while (i < length)
@@ -67,7 +67,8 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
       List* childList = ListCreate();
       Item item = ItemWithList(childList);
       ListPush(list, item);
-      i = InterpParserWorker(interp, code, i + 1, length, childList);
+      // ParserWorker will add iten to the child list.
+      i = ParserWorker(interp, code, i + 1, length, childList);
       continue;
     }
 
@@ -80,8 +81,9 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
       {
         *ptoken = 0; // Zero terminate token
         //PrintDebug("ADD TOKEN: %s", token);
-        InterpParserAddSymbolOrNumber(interp, token, list);
+        ParserAddSymbolOrNumber(interp, token, list);
       }
+      // Returning ends the list
       return i + 1;
     }
     
@@ -97,7 +99,7 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
         *ptoken = 0; // Zero terminate token
         ptoken = NULL; // Indicates no token 
         //PrintDebug("ADD TOKEN: %s", token);
-        InterpParserAddSymbolOrNumber(interp, token, list);
+        ParserAddSymbolOrNumber(interp, token, list);
       }
       i++;
       continue;
@@ -117,12 +119,12 @@ int InterpParserWorker(Interp* interp, char* code, int i, int length, List* list
     i++;
   }
   
-  // End token
+  // End last token
   if (ptoken)
   {
     *ptoken = 0; // Zero terminate token
     //PrintDebug("ADD TOKEN: %s", token);
-    InterpParserAddSymbolOrNumber(interp, token, list);
+    ParserAddSymbolOrNumber(interp, token, list);
   }
 
   return i;

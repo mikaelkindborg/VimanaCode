@@ -63,11 +63,16 @@ Item;
 /****************** CREATE ITEMS ******************/
 
 /*
+EXPERIMENTS
+
 #define ItemWithSymbol(item, symbolIndex) \
 do { \
   (item).type = TypeSymbol; \
   (item).value.symbol = symbolIndex; \
 } while(0)
+
+#define ItemWithSymbol(item, symbolIndex) \
+((item).type = TypeSymbol, (item).value.symbol = symbolIndex)
 
 void ItemWithSymbol(Item* item, Index symbolIndex)
 {
@@ -130,7 +135,7 @@ Item ItemWithFun(List* fun)
 Item ItemWithPrimFun(PrimFun fun)
 {
   Item item;
-  item.type = TypeList | TypePrimFun;
+  item.type = TypePrimFun;
   item.value.primFun = fun;
   return item;
 }
@@ -140,6 +145,7 @@ Item ItemWithVirgin()
 {
   Item item;
   item.type = TypeVirgin;
+  item.value.list = NULL; // Sets value to zero.
   return item;
 }
 
@@ -163,13 +169,14 @@ Item ItemWithBool(Bool truth)
 
 // Get the list of an item.
 #ifdef OPTIMIZE
-#define ItemList(itemWithList) (itemWithList).value.list
+#define ItemList(item) (item).value.list
 #else
-List* ItemList(Item itemWithList)
+List* ItemList(Item item)
 {
-  if (!IsList(itemWithList))
+  if (!IsList(item))
     ErrorExit("ItemList: Item is not of TypeList");
-  return itemWithList.value.list;
+  else
+    return item.value.list;
 }
 #endif
 
@@ -181,7 +188,8 @@ IntNum ItemIntNum(Item item)
 {
   if (!IsIntNum(item))
     ErrorExit("ItemIntNum: Item is not of TypeIntNum");
-  return item.value.intNum;
+  else
+    return item.value.intNum;
 }
 #endif
 
@@ -193,153 +201,7 @@ Bool ItemBool(Item item)
 {
   if (!IsBool(item))
     ErrorExit("ItemBool: Item is not of TypeBool");
-  return item.value.truth;
+  else
+    return item.value.truth;
 }
 #endif
-
-/****************** EQUALS ******************/
-
-// MOVED THIS CODE TO primfuns.h
-
-/*
-Bool ItemEquals(Item a, Item b)
-{
-  if (IsSymbol(a) && IsSymbol(b))
-  {
-    return a.value.symbol == b.value.symbol;
-  }
-  
-  if (IsString(a) && IsString(b))
-  {
-    return StringEquals(a.value.string, b.value.string);
-  }
-  
-  if (IsIntNum(a) && IsIntNum(b))
-  {
-    return a.value.intNum == b.value.intNum;
-  }
-
-  if (IsIntNum(a) && IsDecNum(b))
-  {
-    return a.value.intNum == b.value.decNum;
-  }
-  
-  if (IsDecNum(a) && IsIntNum(b))
-  {
-    return a.value.decNum == b.value.intNum;
-  }
-  
-  if (IsDecNum(a) && IsDecNum(b))
-  {
-    return a.value.decNum == b.value.decNum;
-  }
-  
-  ErrorExit("ItemEquals: Cannot compare items");
-}
-*/
-
-/****************** ITEM MATH ******************/
-
-// MOVED THIS CODE TO primfuns.h
-
-/*
-Item ItemPlus(Item a, Item b)
-{
-  if (IsIntNum(a) && IsIntNum(b))
-    return ItemWithIntNum(a.value.intNum + b.value.intNum);
-  
-  if (IsIntNum(a) && IsDecNum(b))
-    return ItemWithDecNum(a.value.intNum + b.value.decNum);
-  
-  if (IsDecNum(a) && IsIntNum(b))
-    return ItemWithDecNum(a.value.decNum + b.value.intNum);
-  
-  if (IsDecNum(a) && IsDecNum(b))
-    return ItemWithDecNum(a.value.decNum + b.value.decNum);
-  
-  ErrorExit("ItemPlus: Unsupported item types");
-}
-
-// EXPERIMENT
-#define ItemMinusP(a, b, res) \
-do { \
-  if (IsIntNum(*(a)) && IsIntNum(*(b))) \
-  { \
-    (res)->type = TypeIntNum; \
-    (res)->value.intNum = (a)->value.intNum - (b)->value.intNum; \
-  } \
-  else \
-    ErrorExit("ItemMinusP: Unsupported item types"); \
-} while(0)
-
-void X_ItemMinusP(Item* a, Item* b, Item* res)
-{
-  if (IsIntNum(*a) && IsIntNum(*b))
-  {
-    res->type = TypeIntNum;
-    res->value.intNum = a->value.intNum - b->value.intNum;
-    return;
-  }
-
-  ErrorExit("ItemMinusP: Unsupported item types");
-}
-
-Item ItemMinus(Item a, Item b)
-{
-  if (IsIntNum(a) && IsIntNum(b))
-    return ItemWithIntNum(a.value.intNum - b.value.intNum);
-  
-  if (IsIntNum(a) && IsDecNum(b))
-    return ItemWithDecNum(a.value.intNum - b.value.decNum);
-  
-  if (IsDecNum(a) && IsIntNum(b))
-    return ItemWithDecNum(a.value.decNum - b.value.intNum);
-  
-  if (IsDecNum(a) && IsDecNum(b))
-    return ItemWithDecNum(a.value.decNum - b.value.decNum);
-  
-  ErrorExit("ItemMinus: Unsupported item types");
-}
-
-Item ItemTimes(Item a, Item b)
-{
-  if (IsIntNum(a) && IsIntNum(b))
-    return ItemWithIntNum(a.value.intNum * b.value.intNum);
-
-  if (IsIntNum(a) && IsDecNum(b))
-    return ItemWithDecNum(a.value.intNum * b.value.decNum);
-  
-  if (IsDecNum(a) && IsIntNum(b))
-    return ItemWithDecNum(a.value.decNum * b.value.intNum);
-  
-  if (IsDecNum(a) && IsDecNum(b))
-    return ItemWithDecNum(a.value.decNum * b.value.decNum);
-  
-  ErrorExit("ItemTimes: Unsupported item types");
-}
-
-Item ItemDiv(Item a, Item b)
-{
-  if (IsIntNum(a) && IsIntNum(b))
-    return ItemWithIntNum(a.value.intNum / b.value.intNum);
-  
-  if (IsIntNum(a) && IsDecNum(b))
-    return ItemWithDecNum(a.value.intNum / b.value.decNum);
-  
-  if (IsDecNum(a) && IsIntNum(b))
-    return ItemWithDecNum(a.value.decNum / b.value.intNum);
-  
-  if (IsDecNum(a) && IsDecNum(b))
-    return ItemWithDecNum(a.value.decNum / b.value.decNum);
-  
-  ErrorExit("ItemDiv: Unsupported item types");
-}
-
-Item ItemModulo(Item a, Item b)
-{
-  if (IsIntNum(a) && IsIntNum(b))
-    return ItemWithIntNum(a.value.intNum % b.value.intNum);
-  
-  ErrorExit("ItemModulo: Unsupported item types");
-}
-*/

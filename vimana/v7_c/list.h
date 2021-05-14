@@ -124,6 +124,14 @@ void ListPush(List* list, Item item)
 }
 #endif
 
+#define ListPopSet(list, item) \
+  do { \
+    if ((list)->length < 1) \
+      ErrorExit("ListPopSet: Cannot pop list of length: %i", (list)->length); \
+    (list)->length--; \
+    (item) = (list)->items[list->length]; \
+  } while(0)
+
 Item ListPop(List* list)
 {
   if (list->length < 1)
@@ -141,6 +149,7 @@ Item* ListArray(List* list)
 }
 #endif
 
+/*
 #ifdef OPTIMIZE
 #define ListTop(list) ((list)->items[(list)->length - 1])
 #else
@@ -149,13 +158,14 @@ Item ListTop(List* list)
   return list->items[list->length - 1];
 }
 #endif
+*/
 
 #ifdef OPTIMIZE
 #define ListDrop(list) \
 do { \
-  if (list->length < 1) \
-    ErrorExit("ListDrop: Cannot drop element from list of length: %i", list->length); \
-  list->length--; \
+  if ((list)->length < 1) \
+    ErrorExit("ListDrop: Cannot drop element from list of length: %i", (list)->length); \
+  (list)->length--; \
 } while(0)
 #else
 void ListDrop(List* list)
@@ -211,12 +221,19 @@ Item* ListGetItemPtr(List* list, int index)
 }
 #endif
 
-// TODO: Delete?
-// Associative list
-/*
-Item ListLookup(List* list, Index symbolIndex)
+// Associative list lookup. Assumes symbol and value in pairs.
+Item* ListLookupSymbol(List* list, Index symbolIndex)
 {
-  // TODO
-  return ItemWithVirgin();
+  int length = list->length;
+  size_t itemSize = sizeof(Item);
+  int i = 0;
+  Item* item = list->items;
+  while (i < length)
+  {
+    if (IsSymbol(*item) && (item->value.symbol == symbolIndex))
+      return item + itemSize;
+    i = i + 2;
+    item = item + (itemSize * 2);
+  }
+  return NULL;
 }
-*/

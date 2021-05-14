@@ -22,27 +22,27 @@ int main()
   //ListPrintItems(interp->symbolTable, interp);
   //ListPrintItems(interp->symbolValueTable, interp);
   
-  //List* list = InterpParseCode(interp, "HELLO_WORLD PRINTLN (1.7 2.2 3 + +) DO PRINTLN 1 2 +");
+  //List* list = ParseCode(interp, "HELLO_WORLD PRINTLN (1.7 2.2 3 + +) DO PRINTLN 1 2 +");
 
-  //List* list = InterpParseCode(interp, "((HELLO_WORLD PRINTLN) DO) DO");
+  //List* list = ParseCode(interp, "((HELLO_WORLD PRINTLN) DO) DO");
 
-  //List* list = InterpParseCode(interp, "(() () (HELLO_FUN_WORLD PRINTLN)) FUN HELLO SET HELLO");
+  //List* list = ParseCode(interp, "(() () (HELLO_FUN_WORLD PRINTLN)) FUN HELLO SET HELLO");
 
-  //List* list = InterpParseCode(interp, "((A) () (A PRINTLN)) FUN HELLO SET (WELCOME TO VIMANA) HELLO");
+  //List* list = ParseCode(interp, "((A) () (A PRINTLN)) FUN HELLO SET (WELCOME TO VIMANA) HELLO");
 
-  //List* list = InterpParseCode(interp, "HELLO1 PRINTLN ((HELLO2 PRINTLN) DO) DO");
+  //List* list = ParseCode(interp, "HELLO1 PRINTLN ((HELLO2 PRINTLN) DO) DO");
 
-  //List* list = InterpParseCode(interp, "(HELLO_WORLD PRINTLN) LIST SET LIST DO");
+  //List* list = ParseCode(interp, "(HELLO_WORLD PRINTLN) LIST SET LIST DO");
 
-  //List* list = InterpParseCode(interp, "42 21 2 * EQ (IT_IS_TRUE PRINT) IFTRUE");
+  //List* list = ParseCode(interp, "42 21 2 * EQ (IT_IS_TRUE PRINT) IFTRUE");
   
-  //List* list = InterpParseCode(interp, "41 21 2 * EQ (IT_IS_TRUE PRINT) (IT_IS_FALSE PRINT) IFELSE");
+  //List* list = ParseCode(interp, "41 21 2 * EQ (IT_IS_TRUE PRINT) (IT_IS_FALSE PRINT) IFELSE");
 
-  //List* list = InterpParseCode(interp, "88 FOO SET TRUE (FOO) (42) IFELSE 2 * PRINT");
+  //List* list = ParseCode(interp, "88 FOO SET TRUE (FOO) (42) IFELSE 2 * PRINT");
 
-  //List* list = InterpParseCode(interp, "((A) (B) (A A + B SET  (B B + B SET) DO  B PRINTLN)) FUN DOUBLE-PRINT SET 42 DOUBLE-PRINT");
+  //List* list = ParseCode(interp, "((A) (B) (A A + B SET  (B B + B SET) DO  B PRINTLN)) FUN DOUBLE-PRINT SET 42 DOUBLE-PRINT");
 /*
-  List* list = InterpParseCode(interp, 
+  List* list = ParseCode(interp, 
     "(() (F) ("
     "  (() () ("
     "    HELLO_INNER_FUN PRINTLN"
@@ -51,13 +51,13 @@ int main()
     ")) FUN MYFUN SET "
     "MYFUN");
 */
-  //List* list = InterpParseCode(interp, "2 2 EQ PRINTLN");
+  //List* list = ParseCode(interp, "2 2 EQ PRINTLN");
 
-  //List* list = InterpParseCode(interp, "42 FOO SET FOO PRINTLN 888888888 FOO SET FOO PRINTLN HELLO_FOO FOO SET FOO PRINTLN");
+  //List* list = ParseCode(interp, "42 FOO SET FOO PRINTLN 888888888 FOO SET FOO PRINTLN HELLO_FOO FOO SET FOO PRINTLN");
   
-  //List* list = InterpParseCode(interp, "((A) (B C) (A B C HELLO PRINTLN)) FUN PRINTLN");
+  //List* list = ParseCode(interp, "((A) (B C) (A B C HELLO PRINTLN)) FUN PRINTLN");
 /*
-  List* list = InterpParseCode(interp, 
+  List* list = ParseCode(interp, 
     "((N) () ("
     "  N 0 EQ (1) (N 1 - FACT N *) IFELSE))"
     "FUN FACT SET "
@@ -114,23 +114,27 @@ compiler optimization and macro inlining.
 210508: Source code 1572 lines
 */
 
-/*
-  List* list = InterpParseCode(interp, 
+
+  List* list = ParseCode(interp, 
     "((N) () ("
     "  N 0 EQ (1) (N 1 - FACT N *) IFELSE))"
     "FUN FACT SET "
     "((L N) () ("
     " N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE))"
     "FUN TIMESDO SET "
-    "(20 FACT DROP) 100000 TIMESDO");
-                 //10000000
-*/
+    "(20 FACT DROP) 10000000 TIMESDO");
+                  //10000000
 
-  List* list = InterpParseCode(interp, 
+// ./vimana  23.05s user 0.03s system 98% cpu 23.320 total (-O3 + OPTIMIZE)
+
+
+/*
+  List* list = ParseCode(interp, 
     "((L N) () ("
     " N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE))"
     "FUN TIMESDO SET "
     "(HELLO_WORLD DROP) 10000000 TIMESDO");
+*/
 /*
 5000000 TIMESDO
 
@@ -202,21 +206,26 @@ Inlined in math in primfuns (see commit log):
 ./vimana  1.68s user 0.00s system 80% cpu 2.079 total (-O3)
 ./vimana  1.67s user 0.00s system 99% cpu 1.678 total (-O3)
 With OPTIMIZE defined:
-./vimana  3.23s user 0.01s system 89% cpu 3.611 total
+./vimana  3.23s user 0.01s system 89% cpu 3.611 total (OPTIMIZE)
 With OPTIMIZE defined and -O3:
-./vimana  1.32s user 0.00s system 75% cpu 1.758 total (-O3)
+./vimana  1.32s user 0.00s system 75% cpu 1.758 total (-O3 + OPTIMIZE)
 
 Macro InterpPopEvalSet used in Prim_MINUS and Prim_IFTRUE:
 ./vimana  3.18s user 0.00s system 88% cpu 3.605 total
 
 Further use of InterpPopEvalSet:
-./vimana  6.45s user 0.01s system 95% cpu 6.744 total (WITHOUT OPTIMIZE)
+./vimana  6.45s user 0.01s system 95% cpu 6.744 total
 ./vimana  6.44s user 0.01s system 93% cpu 6.867 total
-./vimana  3.15s user 0.00s system 89% cpu 3.518 total (WITH OPTIMIZE)
-./vimana  1.26s user 0.00s system 76% cpu 1.653 total (-O3)
+./vimana  3.15s user 0.00s system 89% cpu 3.518 total (OPTIMIZE)
+./vimana  1.26s user 0.00s system 76% cpu 1.653 total (-O3 + OPTIMIZE)
 
 ./vimana  6.54s user 0.01s system 94% cpu 6.928 total
 
+PrimFuns in code list:
+./vimana  6.40s user 0.01s system 96% cpu 6.628 total
+./vimana  1.53s user 0.00s system 80% cpu 1.902 total (-O3)
+./vimana  3.07s user 0.01s system 93% cpu 3.305 total (OPTIMIZE)
+./vimana  1.24s user 0.01s system 79% cpu 1.568 total (-O3 + OPTIMIZE)
 */
 
   //PrintDebug("SYMBOL TABLE:\n");
@@ -227,8 +236,8 @@ Further use of InterpPopEvalSet:
   
   InterpRun(interp, list);
   
-  //PrintDebug("PRINTING STACK:");
-  //ListPrintItems(interp->stack, interp);
+  PrintDebug("PRINTING STACK:");
+  ListPrintItems(interp->stack, interp);
   
   InterpFree(interp);
   PrintLine("PROGRAM ENDED");
