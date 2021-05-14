@@ -10,7 +10,11 @@ void Prim_DROP(Interp* interp)
 void Prim_DO(Interp* interp)
 {
   //PrintDebug("HELLO DO");
-  Item item = InterpPopEval(interp);
+
+  Item item;
+  InterpPopEvalSet(interp, item);
+  //Item item = InterpPopEval(interp);
+
   //PrintDebug("ITEM TYPE: %u", item.type);
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item))
@@ -21,25 +25,43 @@ void Prim_DO(Interp* interp)
 
 void Prim_IFTRUE(Interp* interp)
 {
-  Item item = InterpPopEval(interp);
-  Bool truth = ItemBool(InterpPopEval(interp));
+  //Item item = InterpPopEval(interp);
+  //Bool truth = ItemBool(InterpPopEval(interp));
+
+  Item item;
+  Item truth;
+
+  InterpPopEvalSet(interp, item);
+  InterpPopEvalSet(interp, truth);
+
   if (!IsList(item))
     ErrorExit("IFTRUE got a non-list of type: %lu", item.type);
-  if (truth)
+  else
+  if (ItemBool(truth))
     InterpEvalList(interp, ItemList(item));
 }
 
 void Prim_IFELSE(Interp* interp)
 {
-  Item branch2 = InterpPopEval(interp);
-  Item branch1 = InterpPopEval(interp);
-  Bool truth = ItemBool(InterpPopEval(interp));
-  if (!(IsList(branch1) && IsList(branch2)))
-    ErrorExit("IFELSE got a non-list items");
-  if (truth)
-    InterpEvalList(interp, ItemList(branch1));
+  //Item branch2 = InterpPopEval(interp);
+  //Item branch1 = InterpPopEval(interp);
+  //Bool truth = ItemBool(InterpPopEval(interp));
+
+  Item branch2;
+  Item branch1;
+  Item truth;
+
+  InterpPopEvalSet(interp, branch2);
+  InterpPopEvalSet(interp, branch1);
+  InterpPopEvalSet(interp, truth);
+
+  if (IsList(branch1) && IsList(branch2))
+    if (ItemBool(truth))
+      InterpEvalList(interp, ItemList(branch1));
+    else
+      InterpEvalList(interp, ItemList(branch2));
   else
-    InterpEvalList(interp, ItemList(branch2));
+    ErrorExit("IFELSE got a non-list items");
 }
 
 // FUN turns a list into a function.
@@ -62,7 +84,9 @@ void Prim_SET(Interp* interp)
   
   // Get name and value.
   Item name = InterpPop(interp);
-  Item value = InterpPopEval(interp);
+  //Item value = InterpPopEval(interp);
+  Item value;
+  InterpPopEvalSet(interp, value);
 
   //PrintDebug("  NAME TYPE:  %lu", name.type);
   //PrintDebug("  VALUE TYPE: %lu", value.type);
@@ -85,7 +109,9 @@ void Prim_SET(Interp* interp)
 void Prim_PRINT(Interp* interp)
 {
   //PrintDebug("HELLO PRINT");
-  Item item = InterpPopEval(interp);
+  //Item item = InterpPopEval(interp);
+  Item item;
+  InterpPopEvalSet(interp, item);
   char* buf = ItemToString(item, interp);
   puts(buf);
   free(buf);
@@ -93,9 +119,16 @@ void Prim_PRINT(Interp* interp)
 
 void Prim_PLUS(Interp* interp)
 {
-  Item b = InterpPopEval(interp);
-  Item a = InterpPopEval(interp);
+  //Item b = InterpPopEval(interp);
+  //Item a = InterpPopEval(interp);
+  //Item res;
+
+  Item a;
+  Item b;
   Item res;
+
+  InterpPopEvalSet(interp, b);
+  InterpPopEvalSet(interp, a);
 
   if (IsIntNum(a) && IsIntNum(b))
   {
@@ -128,9 +161,18 @@ void Prim_PLUS(Interp* interp)
 
 void Prim_MINUS(Interp* interp)
 {
+  /*
   Item b = InterpPopEval(interp);
   Item a = InterpPopEval(interp);
   Item res;
+  */
+
+  Item a;
+  Item b;
+  Item res;
+
+  InterpPopEvalSet(interp, b);
+  InterpPopEvalSet(interp, a);
 
   if (IsIntNum(a) && IsIntNum(b))
   {
@@ -163,9 +205,16 @@ void Prim_MINUS(Interp* interp)
 
 void Prim_TIMES(Interp* interp)
 {
-  Item b = InterpPopEval(interp);
-  Item a = InterpPopEval(interp);
+  //Item b = InterpPopEval(interp);
+  //Item a = InterpPopEval(interp);
+  //Item res;
+
+  Item a;
+  Item b;
   Item res;
+
+  InterpPopEvalSet(interp, b);
+  InterpPopEvalSet(interp, a);
 
   if (IsIntNum(a) && IsIntNum(b))
   {
@@ -198,9 +247,16 @@ void Prim_TIMES(Interp* interp)
 
 void Prim_DIV(Interp* interp)
 {
-  Item b = InterpPopEval(interp);
-  Item a = InterpPopEval(interp);
+  //Item b = InterpPopEval(interp);
+  //Item a = InterpPopEval(interp);
+  //Item res;
+
+  Item a;
+  Item b;
   Item res;
+
+  InterpPopEvalSet(interp, b);
+  InterpPopEvalSet(interp, a);
 
   if (IsIntNum(a) && IsIntNum(b))
   {
@@ -233,10 +289,16 @@ void Prim_DIV(Interp* interp)
 
 void Prim_MODULO(Interp* interp)
 {
-  Item a = InterpPopEval(interp);
-  Item b = InterpPopEval(interp);
+  //Item a = InterpPopEval(interp);
+  //Item b = InterpPopEval(interp);
+  
+  Item a;
+  Item b;
   Item res;
   res.type = TypeIntNum;
+
+  InterpPopEvalSet(interp, b);
+  InterpPopEvalSet(interp, a);
 
   if (IsIntNum(a) && IsIntNum(b))
     res.value.intNum = a.value.intNum % b.value.intNum;
@@ -262,7 +324,11 @@ void Prim_FALSE(Interp* interp)
 
 void Prim_NOT(Interp* interp)
 {
-  Item item = InterpPopEval(interp);
+  Item item;
+  InterpPopEvalSet(interp, item);
+
+  //Item item = InterpPopEval(interp);
+
   Bool x = item.value.truth;
   item.value.truth = !x;
   InterpPush(interp, item);
@@ -270,10 +336,16 @@ void Prim_NOT(Interp* interp)
 
 void Prim_EQ(Interp* interp)
 {
-  Item a = InterpPopEval(interp);
-  Item b = InterpPopEval(interp);
+  //Item a = InterpPopEval(interp);
+  //Item b = InterpPopEval(interp);
 
+  Item a;
+  Item b;
   Item res;
+
+  InterpPopEvalSet(interp, b);
+  InterpPopEvalSet(interp, a);
+
   res.type = TypeBool;
 
   if (IsIntNum(a) && IsIntNum(b))

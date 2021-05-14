@@ -74,6 +74,12 @@ Item InterpPop(Interp* interp)
 }
 #endif
 
+#define InterpPopEvalSet(interp, item) \
+  ((item) = ListPop((interp)->stack), \
+  ((item) = (IsGlobalVar(item) || IsLocalVar(item)) ? \
+    InterpEvalSymbol(interp, item) : \
+    item))
+
 // Pop item off the data stack and evaluate it
 // if it is a symbol.
 #ifdef OPTIMIZE
@@ -89,7 +95,10 @@ Item InterpPopEval(Interp* interp)
 
   //PrintDebug("ITEM TYPE: %lu", item.type);
 
-  return InterpEvalSymbol(interp, item);
+  if (IsGlobalVar(item) || IsLocalVar(item))
+    return InterpEvalSymbol(interp, item);
+  else 
+    return item;
 }
 #endif
 
@@ -353,9 +362,11 @@ void InterpEvalFun(Interp* interp, List* fun)
   //ListSet(env, 0, ItemWithList(fun));
 
   // Bind parameters.
+  Item arg;
   for (int i = numArgs - 1; i >= 0; i--)
   {
-    Item arg = InterpPopEval(interp);
+    //Item arg = InterpPopEval(interp);
+    InterpPopEvalSet(interp, arg);
     ListSet(env, i, arg);
   }
 
