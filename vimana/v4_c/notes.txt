@@ -7,7 +7,27 @@ man cc | col -bx > ccman.txt
 
 git remote set-url origin git@github.com:mikaelkindborg/VimanaCode.git
 
+https://medium.com/@sathishramyen/a-five-thousand-year-old-ancient-indian-vimana-found-in-afghanistan-cave-eight-american-soldiers-453253fa002b
+
+https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html
+https://blog.robertelder.org/switch-statements-statement-expressions/
+https://en.wikipedia.org/wiki/Duff's_device
+
+https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html (gcc only)
 https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/localtime.3.html
+https://github.com/arduino/ArduinoCore-samd/blob/master/libraries/SDU/extras/SDUBoot/SDUBoot.ino
+https://www.arduino.cc/en/Guide/MKRWiFi1010
+https://hackaday.com/2021/03/20/arduino-serial-vs-serialusb/
+https://www.arduino.cc/en/Reference/SDU
+https://create.arduino.cc/projecthub/Arduino_Genuino/sd-sketch-update-534404
+https://forum.arduino.cc/t/how-to-flash-arduino-program-through-micro-sd-card-without-using-arduino-ide/485349
+https://mongoose-os.com
+
+https://www.youtube.com/watch?v=MGivF9O8vn4
+https://gitlab.com/nakst/essence
+https://github.com/nakst/flip
+
+http://arclanguage.org/forum
 
 https://www.cprogramming.com/reference/preprocessor/ifdef.html
 https://hownot2code.com/2016/12/05/do-while-0-in-macros/
