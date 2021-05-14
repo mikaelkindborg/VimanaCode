@@ -77,6 +77,13 @@ char* ItemToString(Item item, Interp* interp)
   return buffer;
 }
 
+void ItemPrint(Item item, Interp* interp)
+{
+  char* string = ItemToString(item, interp);
+  puts(string);
+  free(string);
+}
+
 /****************** PRINT LISTS ******************/
 
 // Recursively print list.

@@ -73,7 +73,7 @@ void Prim_IFELSE(Interp* interp)
 // ((X) () (X X +) FUN DOUBLE SET
 void Prim_FUN(Interp* interp)
 {
-  //PrintDebug("HELLO FUN");
+  PrintDebug("HELLO FUN");
   //Item list = InterpPopEval(interp);
   Item list;
   InterpPopEvalSet(interp, list);
@@ -118,7 +118,7 @@ void Prim_SET(Interp* interp)
 
 void Prim_PRINT(Interp* interp)
 {
-  //PrintDebug("HELLO PRINT");
+  //PrintLine("*** HELLO PRINT ***");
   //Item item = InterpPopEval(interp);
   Item item;
   InterpPopEvalSet(interp, item);
@@ -406,94 +406,3 @@ void InterpDefinePrimFuns(Interp* interp)
   InterpAddPrimFun("NOT", &Prim_NOT, interp);
   InterpAddPrimFun("EQ", &Prim_EQ, interp);
 }
-
-/*** OLD CODE AHEAD **************************************/
-
-/*
-void Prim_PLUS(Interp* interp)
-{
-  Item a = InterpPopEval(interp);
-  Item b = InterpPopEval(interp);
-  Item res = ItemPlus(b, a);
-  InterpPush(interp, res);
-}
-
-void Prim_MINUS(Interp* interp)
-{
-  Item a = InterpPopEval(interp);
-  Item b = InterpPopEval(interp);
-  Item res = ItemMinus(b, a);
-  InterpPush(interp, res);
-}
-
-void Prim_TIMES(Interp* interp)
-{
-  Item a = InterpPopEval(interp);
-  Item b = InterpPopEval(interp);
-  Item res = ItemTimes(b, a);
-  InterpPush(interp, res);
-}
-
-void Prim_DIV(Interp* interp)
-{
-  Item a = InterpPopEval(interp);
-  Item b = InterpPopEval(interp);
-  Item res = ItemDiv(b, a);
-  InterpPush(interp, res);
-}
-
-void Prim_MODULO(Interp* interp)
-{
-  Item a = InterpPopEval(interp);
-  Item b = InterpPopEval(interp);
-  Item res = ItemModulo(b, a);
-  InterpPush(interp, res);
-}
-
-// EXPERIMENT
-void Prim_MINUS(Interp* interp)
-{
-  Item a = InterpPopEval(interp);
-  Item b = InterpPopEval(interp);
-  Item res;
-  ItemMinusP(&b, &a, &res);
-  InterpPush(interp, res);
-}
-
-// EXPERIMENT
-void Prim_MINUS(Interp* interp)
-{
-  //Item b = InterpPopEval(interp);
-  //Item a = InterpPopEval(interp);
-  //Item res;
-
-  //PrintDebug("Prim_MINUS item a type: %lu", a.type);
-  //PrintDebug("Prim_MINUS item b type: %lu", a.type);
-
-  List* stack = interp->stack;
-  Item* items = stack->items;
-  Index last = stack->length - 1;
-  Index nextlast = last - 1;
-  Item* a = InterpEvalSymbolP(interp, &(items[nextlast]));
-  Item* b = InterpEvalSymbolP(interp, &(items[last]));
-
-  if (IsIntNum(*a) && IsIntNum(*a))
-  {
-    IntNum res = a->value.intNum - b->value.intNum;
-    items[nextlast].value.intNum = res;
-    items[nextlast].type = TypeIntNum;
-    stack->length = last;
-
-    //res.value.intNum = (a.value.intNum - b.value.intNum);
-    //res.type = TypeIntNum;
-    //InterpPush(interp, res);
-
-    //PrintDebug("ITEM TYPE: %lu", item.type);
-
-    //InterpPush(interp, ItemWithIntNum(a.value.intNum - b.value.intNum));
-    return;
-  }
-
-  ErrorExit("ItemMinus: Unsupported item types");
-}
-*/

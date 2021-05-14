@@ -1,27 +1,7 @@
-/*
-Ways to lookup variables:
-
-Get values from the stack and dulicate and shuffle around as needed (Forth)
-Lookup in a hashtable with ints or strings O(logn)
-Lookup in a tree O(logn)
-Lookup in an array by index (precompiled indexes) O(1)
-Lookup in an array with binary search (array must be ordered) O(logn)
-Lookup in an array with linear search O(n)
-*/
-
 int GMallocCounter = 0;
 int GReallocCounter = 0;
 
 /****************** LISTS ******************/
-
-/*
-Item
-  Context
-    List
-    Env
-    ParentEnv
-    instrPointer
-*/
 
 typedef struct MyList
 {

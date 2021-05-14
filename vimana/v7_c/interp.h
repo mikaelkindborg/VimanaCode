@@ -1,32 +1,61 @@
 
-// StackFrame fields.
-#define StackFrameCodeList     0
-#define StackFrameCodePointer  1
-#define StackFrameEnv          2
-
 // Function fields.
 #define FunNumArgs             0
 #define FunNumVars             1
 #define FunBody                2
 
+// Context environment handling.
+#define ContextNoBorrowEnv     0
+#define ContextBorrowEnv       1
+
 // Declarations.
 Item  InterpEvalSymbol(Interp* interp, Item item);
 void  InterpEvalList(Interp* interp, List* list);
 Item  InterpCompileFun(Interp* interp, Item funList);
-List* InterpGetLocalEnv(Interp* interp);
 
-//octo: that was new
+// Octo: That was new
 
-/****************** INTERPRETER ******************/
+// With freedom comes responsibilities (for the programmer).
+// Dynamic languages in action.
+
+/***** CONTEXT *******************************************/
+
+typedef struct MyContext
+{
+  List* code;
+  List* env;
+  Index codePointer;
+}
+Context;
+
+Context* ContextCreate()
+{
+  Context* context = malloc(sizeof(Context));
+  context->env = ListCreate();
+  context->code = NULL;
+  context->codePointer = -1;
+  return context;
+}
+
+void ContextFree(Context* context)
+{
+  if (context->env)
+    ListFree(context->env, ListFreeShallow);
+  free(context);
+}
+
+#define ContextEnv(context) ((context)->env)
+
+/***** INTERPRETER ***************************************/
 
 typedef struct MyInterp
 {
   // TODO: Make table for primfuns.
   List* symbolTable;      // List of global names
-  List* symbolValueTable; // List of global values (primfuns, funs, ...)
+  List* symbolValueTable; // List of global values (primfuns, funs, etc)
   List* stack;            // The data stack
-  List* callstack;        // Callstack with stack frames
-  int   stackframeIndex;  // Index of current stack frame
+  List* callstack;        // Callstack with context frames
+  int   callstackIndex;   // Index of current frame
   Bool  run;              // Run flag
 }
 Interp;
@@ -38,7 +67,7 @@ Interp* InterpCreate()
   interp->symbolValueTable = ListCreate();
   interp->stack = ListCreate();
   interp->callstack = ListCreate();
-  interp->stackframeIndex = -1;
+  interp->callstackIndex = -1;
   interp->run = TRUE;
   return interp;
 }
@@ -68,7 +97,7 @@ void InterpPush(Interp* interp, Item item)
 #define InterpPopEvalSet(interp, item) \
   do { \
     ListPopSet((interp)->stack, item); \
-    (item) = (IsGlobalVar(item) || IsLocalVar(item)) ? \
+    (item) = (IsSymbol(item) || IsLocalVar(item)) ? \
       InterpEvalSymbol(interp, item) : \
       item; \
   } while(0)
@@ -89,11 +118,14 @@ void InterpSetGlobalSymbolValue(Interp* interp, Index index, Item value)
 
 void InterpSetLocalSymbolValue(Interp* interp, Index index, Item value)
 {
+  ErrorExit("InterpSetLocalSymbolValue is not implemented!");
+  /*
   List* env = InterpGetLocalEnv(interp);
   if (env)
     ListSet(env, index, value);
   else
     ErrorExit("InterpSetLocalSymbolValue: Local environment not found");
+  */
 }
 
 char* InterpGetSymbolString(Interp* interp, Index symbolIndex)
@@ -102,111 +134,84 @@ char* InterpGetSymbolString(Interp* interp, Index symbolIndex)
   return item.value.string;
 }
 
-/****************** STACKFRAME ******************/
+/***** CONTEXT FRAMES ************************************/
 
-// Stackframe rules: 
-// Every stackframe has an environment list.
-// The environment is empty for non-function calls.
-// Search for local vars is made in the first non-empty
-// environment of the current frame or a parent frame.
-
-/*
-void StackFrameFree(List* stackframe)
+// Return the context for the next call.
+Context* InterpEnterContext(Interp* interp, List* code, int borrowEnv)
 {
-  List* env = ItemList(ListGet(stackframe, StackFrameEnv));
-  ListFree(env, ListFreeShallow);
-  ListFree(stackframe, ListFreeShallow);
-}
-*/
+  List* callstack = interp->callstack;
+  Index callstackIndex = interp->callstackIndex;
 
-// New function that returns the next stackframe.
-List* InterpObtainStackFrame(Interp* interp)
-{
   // 1. Check for tail call optimization.
-  if (interp->stackframeIndex > -1)
+  if (interp->callstackIndex > -1)
   {
-    List* stackframe = ItemList(ListGet(interp->callstack, interp->stackframeIndex));
-    // TODO: Rename to instrPointer
-    IntNum codePointer = ItemIntNum(ListGet(stackframe, StackFrameCodePointer));
-    List* currentCodeList = ItemList(ListGet(stackframe, StackFrameCodeList));
+    Context* context = ItemContext(ListGet(callstack, callstackIndex));
+    
+    Index codePointer = context->codePointer;
+    List* currentCodeList = context->code;
 
     // Check for tail call.
     if (codePointer + 1 >= ListLength(currentCodeList))
     {
+      PrintDebug("TAILCALL AT INDEX: %i", interp->callstackIndex);
       // Tail call.
-      //PrintLine("TAILCALL AT INDEX: %i", interp->stackframeIndex);
-      return stackframe;
+      context->code = code;
+      context->codePointer = -1;
+      if (!borrowEnv)
+        context->env->length = 0;
+      return context;
     }
   }
 
   // Increment stackframe index.
-  interp->stackframeIndex ++;
+  callstackIndex ++;
+  interp->callstackIndex = callstackIndex;
 
   // 2. Create new stackframe if needed.
-  if (ListLength(interp->callstack) <= interp->stackframeIndex)
+  if (ListLength(callstack) <= callstackIndex)
   {
+    PrintDebug("NEW CONTEXT AT INDEX: %i", callstackIndex);
     // Create stackframe.
-    List* stackframe = ListCreate();
-    ListSet(stackframe, StackFrameEnv, ItemWithList(ListCreate()));
-    ListSet(interp->callstack, interp->stackframeIndex, ItemWithList(stackframe));
-    //PrintLine("NEW STACKFRAME AT INDEX: %i", interp->stackframeIndex);
-    return stackframe;
+    Context* context = ContextCreate();
+    context->code = code;
+    context->codePointer = -1;
+    if (!borrowEnv)
+      context->env->length = 0;
+    ListSet(callstack, callstackIndex, ItemWithContext(context));
+    return context;
   }
 
   // 3. Reuse existing stackframe.
-  List* stackframe = ItemList(ListGet(interp->callstack, interp->stackframeIndex));
-  //PrintLine("ENTER STACKFRAME AT INDEX: %i", interp->stackframeIndex);
-  //ListPrint(stackframe, interp);
-  return stackframe;
+  PrintDebug("ENTER CONTEXT AT INDEX: %i", callstackIndex);
+  Context* context = ItemContext(ListGet(callstack, callstackIndex));
+  context->code = code;
+  context->codePointer = -1;
+  if (!borrowEnv)
+    context->env->length = 0;
+  return context;
 }
 
-void InterpExitStackFrame(Interp* interp)
+void InterpExitContext(Interp* interp)
 {
-  //PrintDebug("EXIT STACKFRAME: %i", interp->stackframeIndex);
-  //List* stackframe = ItemList(ListPop(interp->callstack));
-  interp->stackframeIndex--;
-  //StackFrameFree(stackframe);
+  PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+
+  //Context* context = ItemContext(ListPop(interp->callstack));
+  //ContextFree(stackframe);
+
+  interp->callstackIndex--;
 }
 
-List* InterpGetLocalEnv(Interp* interp)
-{
-  List* stackframe;
-  Index stackFrameIndex = interp->stackframeIndex;
-  while (stackFrameIndex > -1)
-  {
-    stackframe = ItemList(ListGet(interp->callstack, stackFrameIndex));
-
-    //PrintDebug("STACKFRAME in InterpGetLocalEnv:");
-    //ListPrint(stackframe, interp);
-
-    // Do we have an environment?
-    if (ListLength(stackframe) >= StackFrameEnv + 1)
-    {
-      Item item = ListGet(stackframe, StackFrameEnv);
-      if (IsList(item))
-      {
-        // Return env if it is not empty.
-        List* env = ItemList(item);
-        if (ListLength(env) > 0)
-          return env;
-      }
-    }
-    stackFrameIndex--;
-  }
-  return NULL;
-}
-
-/****************** SYMBOL LOOKUP ******************/
+/***** SYMBOL TABLE **************************************/
 
 // Lookup the symbol string in the symbol table.
-Index InterpLookupSymbolIndex(Interp* interp, char* symbol)
+Index InterpLookupSymbolIndex(Interp* interp, char* symbolString)
 {
   List* symbolTable = interp->symbolTable;
   for (int i = 0; i < ListLength(symbolTable); i++)
   {
     Item item = ListGet(symbolTable, i);
     char* string = item.value.string;
-    if (StringEquals(string, symbol))
+    if (StringEquals(string, symbolString))
     {
       // Found it.
       return i;
@@ -228,13 +233,13 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
     //PrintDebug("SYMBOL EXISTS IN SYMTABLE: %s\n", symbol);
 
     // Special case for primfuns. We return the primfun item.
-    Item value = ListGet(interp->symbolValueTable, index);
+    /*Item value = ListGet(interp->symbolValueTable, index);
     //PrintDebug("InterpAddSymbol: %s", symbolString);
     if (IsPrimFun(value))
     {
       //PrintDebug("InterpAddSymbol Symbol is PrimFun: %s", symbolString);  
       return value;
-    }
+    }*/
 
     // It was not a primfun, return a symbol item.
     Item item = ItemWithSymbol(index);
@@ -253,7 +258,7 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
   }
 }
 
-/****************** EVAL SYMBOL ******************/
+/***** EVAL SYMBOL ***************************************/
 
 // Lookup the value of a symbol (variable value).
 // If the item is a symbol, evaluate it.
@@ -266,24 +271,30 @@ Item InterpEvalSymbol(Interp* interp, Item item)
   // Lookup symbol in stackframe local environment.
   if (IsLocalVar(item))
   {
-    //PrintDebug("EVALSYMBOL LOCALVAR: %i TYPE: %lu", item.value.symbol, item.type);
-    // Get current local environment.
-    List* env = InterpGetLocalEnv(interp);
-    if (env)
+    Context* context;
+    List* env;
+    List* callstack = interp->callstack;
+    Index callstackIndex = interp->callstackIndex;
+    while (callstackIndex > -1)
     {
-      Item value = ListGet(env, item.value.symbol);
-      if (TypeVirgin != value.type) 
-        return value;
+      context = ItemContext(ListGet(callstack, callstackIndex));
+      env = context->env;
+
+      PrintLine("CONTEXT in InterpEvalSymbol:");
+      ListPrint(env, interp);
+
+      // Search environment.
+      if (ListLength(env) > 0)
+        return ListGet(env, item.value.symbol);
+      callstackIndex--;
     }
-    else
-      ErrorExit("InterpEvalSymbol: Local environment not found");
   }
 
   // Lookup symbol in global symbol table.
   if (IsSymbol(item))
   {
     Item value = ListGet(interp->symbolValueTable, item.value.symbol);
-    if (TypeVirgin != value.type) 
+    if (!IsVirgin(value))
       return value;
   }
 
@@ -293,20 +304,21 @@ Item InterpEvalSymbol(Interp* interp, Item item)
 
 /****************** EVAL FUNCTION ******************/
 
-// Bind stack parameters and push a stackframe with
-// the function body.
+// Bind stack parameters and push a context on the
+// callstack with the function body.
 void InterpEvalFun(Interp* interp, List* fun)
 {
-  // Get info for the stackframe of the function.
+  // Get info for the call context of the function.
   IntNum numArgs = ItemIntNum(ListGet(fun, FunNumArgs));
   IntNum numVars = ItemIntNum(ListGet(fun, FunNumVars));
   List* funBody = ItemList(ListGet(fun, FunBody));
 
-  // Get stackframe. 
-  List* stackframe = InterpObtainStackFrame(interp);
+  // Get context for the function call. 
+  Context* context = InterpEnterContext(interp, funBody, ContextNoBorrowEnv);
 
   // Get environment.
-  List* env = ItemList(ListGet(stackframe, StackFrameEnv));
+  List* env = context->env;
+
   // Set it to empty.
   env->length = 0;
 
@@ -318,104 +330,68 @@ void InterpEvalFun(Interp* interp, List* fun)
     InterpPopEvalSet(interp, arg);
     ListSet(env, i, arg);
   }
-
+/*
   // Set all localvars to TypeVirgin.
   for (int i = numArgs; i < numArgs + numVars; i++)
   {
     ListSet(env, i, ItemWithVirgin());
   }
-
-  // Set code and code pointer.
-  ListSet(stackframe, StackFrameCodeList, ItemWithList(funBody));
-  ListSet(stackframe, StackFrameCodePointer, ItemWithIntNum(-1));
-
-  //PrintDebug("STACKFRAME IN InterpEvalFun:");
-  //ListPrint(stackframe, interp);
+*/
 }
 
-/****************** EVAL LIST ******************/
+/**** EVAL LIST ******************************************/
 
-void InterpEvalList(Interp* interp, List* list)
+void InterpEvalList(Interp* interp, List* code)
 {
-  // Get stackframe. 
-  List* stackframe = InterpObtainStackFrame(interp);
-
-  // Set code and code pointer.
-  ListSet(stackframe, StackFrameCodeList, ItemWithList(list));
-  ListSet(stackframe, StackFrameCodePointer, ItemWithIntNum(-1));
-
-  //PrintDebug("STACKFRAME IN InterpEvalList:");
-  //ListPrint(stackframe, interp);
+  InterpEnterContext(interp, code, ContextBorrowEnv);
 }
 
-/****************** EVAL ELEMENT ******************/
-
-
-
-/****************** MAIN INTERPRETER LOOP ******************/
+/**** MAIN INTERPRETER LOOP ******************************/
 
 // TODO: Begin Optimizing
 void InterpRun(Interp* interp, List* list)
 {
-  // Set root stackframe.
+  // Create root context.
   InterpEvalList(interp, list);
-  //PrintDebug("CREATED ROOT FRAME AT INDEX: %i", interp->stackframeIndex);
+
+  PrintDebug("CREATED ROOT FRAME AT INDEX: %i", interp->callstackIndex);
   
+  //ListPrint(list, interp);
+    
   while (interp->run)
   {
-    // Get current stackframe.
-    List* stackframe = ItemList(ListGet(interp->callstack, interp->stackframeIndex));
+    // Get current context.
+    Context* context = ItemContext(ListGet(interp->callstack, interp->callstackIndex));
 
     // Increment code pointer.
-    /*
-    Item codePointer = ListGet(stackframe, StackFrameCodePointer);
-    codePointer.value.intNum ++;
-    ListSet(stackframe, StackFrameCodePointer, codePointer);
-    */
-    Item* codePtr = ListGetItemPtr(stackframe, StackFrameCodePointer);
-    codePtr->value.intNum ++;
+    context->codePointer ++;
 
-    // If the code in the stackframe has finished executing
+    // If the code in the current context has finished executing
     // we exit the frame.
-    List* codeList = ItemList(ListGet(stackframe, StackFrameCodeList));
+    List* code = context->code;
 
-    if (codePtr->value.intNum >= ListLength(codeList))
+    if (context->codePointer >= ListLength(code))
     {
-      // EXIT STACK FRAME
-      //InterpExitStackFrame(interp);
-      interp->stackframeIndex--;
+      // EXIT Context
+      InterpExitContext(interp);
+      //interp->callstackIndex--;
     }
     else
     {
       // Evaluate the current element. Note that new stackframes
       // may be created during evaluation, and that this will 
       // increment the stackframe index.
-      Item element = ListGet(codeList, codePtr->value.intNum);
+      Item element = ListGet(code, context->codePointer);
+
+      PrintDebug("EVAL GOT ELEMENT");
+      //ItemPrint(element, interp);
 
       // If the elements points directly to a primful we run it.
       if (IsPrimFun(element))
       {
+        PrintDebug("CALLING PRIMFUN");
         element.value.primFun(interp);
         goto exit;
-      }
-
-      // If a symbol we check the bound value can be evaluated (primfun or fun).
-      if (IsSymbol(element))
-      {
-        // Here we get the global value.
-        // TODO: We should get local value first.
-        Item value = ListGet(interp->symbolValueTable, element.value.symbol);
-        
-        if (IsPrimFun(value))
-        {
-          value.value.primFun(interp);
-          goto exit;
-        }
-        if (IsFun(value))
-        {
-          InterpEvalFun(interp, value.value.list);
-          goto exit;
-        }
       }
 
       // Get value from local environment.
@@ -428,17 +404,38 @@ void InterpRun(Interp* interp, List* list)
           goto exit;
         }
       }
+
+  PrintDebug("P3");
+      // If a symbol we check the bound value can be evaluated (primfun or fun).
+      if (IsSymbol(element))
+      {
+  PrintDebug("P31");
+        // Here we get the global value and check for functions
+        // and primitives.
+        Item value = ListGet(interp->symbolValueTable, element.value.symbol);
+        if (IsPrimFun(value))
+        {
+          value.value.primFun(interp);
+          goto exit;
+        }
+        if (IsFun(value))
+        {
+          InterpEvalFun(interp, value.value.list);
+          goto exit;
+        }
+      }
+
       // Otherwise
-      //PrintDebug("PUSHING ON STACK: %lu", element.type);
+      PrintDebug("PUSHING ON STACK: %lu", element.type);
 
       ListPush(interp->stack, element);
 
-      //PrintDebug("PRINTING STACK:");
+      PrintDebug("PRINTING STACK:");
       //ListPrintItems(interp->stack, interp);
     }
 exit:
     // Was this the last stackframe?
-    if (interp->stackframeIndex < 0)
+    if (interp->callstackIndex < 0)
     {
       //PrintDebug("EXIT InterpRun");
       interp->run = FALSE;
@@ -491,6 +488,24 @@ Example of defining and calling a function:
 21 DOUBLE PRINTLN
 
 ***************************************************************/
+/*
+Ways to lookup variables:
+
+Get values from the stack and dulicate and shuffle around as needed (Forth)
+Lookup in a hashtable with ints or strings O(logn)
+Lookup in a tree O(logn)
+Lookup in an array by index (precompiled indexes) O(1)
+Lookup in an array with binary search (array must be ordered) O(logn)
+Lookup in an array with linear search O(n)
+*/
+/*
+Item
+  Context
+    List
+    Env
+    ParentEnv
+    instrPointer
+*/
 
 /****************** "COMPILE" ******************/
 
@@ -595,132 +610,3 @@ Item InterpCompileFun(Interp* interp, Item funList)
   return ItemWithFun(compiledFun);
 }
 
-
-/*** EXPERIMENTS AND OLD CODE ****************************/
-
-
-/*
-// Pop item off the data stack.
-#ifdef OPTIMIZE
-#define InterpPop(interp) ListPop((interp)->stack)
-#else
-Item InterpPop(Interp* interp)
-{
-  //PrintDebug("INTERP POP");
-  //PrintDebug("PRINTING STACK:");
-  //ListPrintItems(interp->stack, interp);
-
-  return ListPop(interp->stack);
-}
-#endif
-*/
-
-/*
-#define X_InterpPopEvalSet(interp, item) \
-  ((item) = ListPop((interp)->stack), \
-  ((item) = (IsGlobalVar(item) || IsLocalVar(item)) ? \
-    InterpEvalSymbol(interp, item) : \
-    item))
-*/
-
-// NOTE: This function is inlined in InterpRun.
-/*
-void InterpEval(Interp* interp, Item element)
-{
-  // Optimize for primfun lookup.
-  if (IsSymbol(element))
-  {
-    Item value = ListGet(interp->symbolValueTable, element.value.symbol);
-    
-    // If primitive function, evaluate it.
-    if (IsPrimFun(value))
-    {
-      //PrintDebug("PRIM FOUND: %i", element.value.symbol);
-      // Call the primitive.
-      value.value.primFun(interp);
-      return;
-    }
-    
-    if (IsFun(value))
-    {
-      //PrintDebug("FUN FOUND: %i", element.value.symbol);
-      // Call the function.
-      InterpEvalFun(interp, value.value.list);
-      return;
-    }
-  }
-
-  if (IsLocalVar(element))
-  {
-    // Evaluate symbol to see if it is bound to a function.
-    Item value = InterpEvalSymbol(interp, element);
-    
-    if (IsFun(value))
-    {
-      //PrintDebug("FUN FOUND: %i", element.value.symbol);
-      // Call the function.
-      InterpEvalFun(interp, ItemList(value));
-      return;
-    }
-  }
-
-  // Otherwise push element onto the data stack (not evaluated).
-  ListPush(interp->stack, element);
-  //PrintDebug("PUSH ELEMENT ONTO DATA STACK TYPE: %u", element.type);
-}
-*/
-
-
-/*
-// EXPERIMENT
-Item* InterpEvalSymbolP(Interp* interp, Item* item)
-{
-  if (IsLocalVar(*item))
-  {
-    List* env = InterpGetLocalEnv(interp);
-    if (env)
-    {
-      Item* value = &(env->items[item->value.symbol]);
-      if (TypeVirgin != value->type) 
-        return value;
-    }
-    else
-      ErrorExit("InterpEvalSymbol: Local environment not found");
-  }
-
-  // Lookup symbol in global symbol table.
-  if (IsSymbol(*item))
-  {
-    Item* value = &(interp->symbolValueTable->items[item->value.symbol]);
-    if (TypeVirgin != value->type) 
-      return value;
-  }
-
-  return item;
-}
-*/
-
-
-// Pop item off the data stack and evaluate it
-// if it is a symbol.
-/*
-#ifdef OPTIMIZE
-#define InterpPopEval(interp) InterpEvalSymbol(interp, ListPop((interp)->stack))
-#else
-Item InterpPopEval(Interp* interp)
-{
-  //PrintDebug("INTERP POPEVAL");
-  //PrintDebug("PRINTING STACK:");
-  //ListPrintItems(interp->stack, interp);
-
-  Item item = ListPop(interp->stack);
-
-  //PrintDebug("ITEM TYPE: %lu", item.type);
-
-  if (IsGlobalVar(item) || IsLocalVar(item))
-    return InterpEvalSymbol(interp, item);
-  else 
-    return item;
-}
-#endif
-*/

@@ -22,5 +22,5 @@ typedef FILE          Stream;
 #define Print(str, args...)      printf(str, ## args)
 #define PrintLine(str, args...)  printf(str "\n", ## args)
 #define PrintToStream(stream, str, args...)  fprintf(stream, str, ## args)
-#define PrintDebug(str, args...) printf("[DEBUG] " str "\n", ## args)
+#define PrintDebug(str, args...) //printf("[DEBUG] " str "\n", ## args)
 #define ErrorExit(str, args...)  do { printf("[ERROR] " str "\n", ## args); exit(0); } while (0)

@@ -7,6 +7,7 @@ typedef long             IntNum;
 typedef double           DecNum;
 typedef struct MyItem    Item;
 typedef struct MyList    List;
+typedef struct MyContext Context;
 typedef struct MyInterp  Interp;
 typedef void   (*PrimFun)(Interp*);
 
@@ -19,9 +20,10 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeList         16
 #define TypePrimFun      32
 #define TypeFun          64
-#define TypeGlobalVar    128  
+//#define TypeGlobalVar    128  
 #define TypeLocalVar     256 
 #define TypeString       512
+#define TypeContext      1024
 #define TypeVirgin       0  // Represents unbound symbol/uninitialized item
 
 #define IsVirgin(item)      ((item).type == TypeVirgin)
@@ -32,9 +34,10 @@ typedef void   (*PrimFun)(Interp*);
 #define IsList(item)        ((item).type & TypeList)
 #define IsPrimFun(item)     ((item).type & TypePrimFun)
 #define IsFun(item)         ((item).type & TypeFun)
-#define IsGlobalVar(item)   ((item).type & TypeGlobalVar)
+//#define IsGlobalVar(item)   ((item).type & TypeGlobalVar)
 #define IsLocalVar(item)    ((item).type & TypeLocalVar)
 #define IsString(item)      ((item).type & TypeString)
+#define IsContext(item)     ((item).type & TypeContext)
 
 /****************** STRUCTS ******************/
 
@@ -46,12 +49,13 @@ typedef struct MyItem
   union
   {
     // Fields used by data lists and code.
-    Index   symbol; // Index in symbol table or local environment table
-    DecNum  decNum;
-    IntNum  intNum;
-    List*   list;
-    char*   string; // TODO: Make custom string object
-    Bool    truth;
+    Index     symbol; // Index in symbol table or local environment table
+    DecNum    decNum;
+    IntNum    intNum;
+    List*     list;
+    Context*  context;
+    char*     string; // TODO: Make custom string object
+    Bool      truth;
     
     // Field used only by global symbol table items.
     PrimFun primFun;
@@ -124,6 +128,14 @@ Item ItemWithList(List* list)
   return item;
 }
 
+Item ItemWithContext(Context* context)
+{
+  Item item;
+  item.type = TypeContext;
+  item.value.context = context;
+  return item;
+}
+
 Item ItemWithFun(List* fun)
 {
   Item item;
@@ -169,7 +181,7 @@ Item ItemWithBool(Bool truth)
 
 // Get the list of an item.
 #ifdef OPTIMIZE
-#define ItemList(item) (item).value.list
+#define ItemList(item) ((item).value.list)
 #else
 List* ItemList(Item item)
 {
@@ -180,9 +192,22 @@ List* ItemList(Item item)
 }
 #endif
 
+// Get the context object of an item.
+#ifdef OPTIMIZE
+#define ItemContext(item) ((item).value.context)
+#else
+Context* ItemContext(Item item)
+{
+  if (!IsContext(item))
+    ErrorExit("ItemContext: Item is not of TypeContext");
+  else
+    return item.value.context;
+}
+#endif
+
 // Get the IntNum of an item.
 #ifdef OPTIMIZE 
-#define ItemIntNum(item) (item).value.intNum
+#define ItemIntNum(item) ((item).value.intNum)
 #else
 IntNum ItemIntNum(Item item)
 {
@@ -195,7 +220,7 @@ IntNum ItemIntNum(Item item)
 
 // Get the Bool of an item.
 #ifdef OPTIMIZE
-#define ItemBool(item) (item).value.truth 
+#define ItemBool(item) ((item).value.truth )
 #else
 Bool ItemBool(Item item)
 {
