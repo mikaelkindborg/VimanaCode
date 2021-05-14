@@ -38,6 +38,8 @@ The file examples.php conytains the vimana code, as a HEREDOC string. You can ea
 
 ## C-version
 
+UPDATE 210514. New version in the works: vimana/v7_c
+
 To run the C version, do as follows (compile with cc or gcc):
 
     cd vimana/v4_c
@@ -66,17 +68,20 @@ Working on a web app for mantra meditation where the server code is implemented 
 
 The following are the performance test results for the interpreter and native code in C, PHP and Python.
 
-I have used factorial(20) with 10.000.000 iterations for the benchmark test.
+I have used factorial(20) with 10,000,000 iterations for the benchmark test.
 
     C:            0.84s
     PHP:          6.14s
     Python:      21.38s
     Vimana PHP: 433.00s (optimized version)
     Vimana C:   254.00s (first version)
-    Vimana C:    26.61s (optimized version)
+    Vimana C:    26.61s (optimized version v4_c)
+    Vimana C:    17.79s (optimized version v7_c)
     Vimana JS:  425.00s (first version)
 
-My goal is to be as fast as Python, and it is pretty close. Futher optimizations are possible.
+My goal is to be as fast as Python, and it is pretty close. Futher optimizations are possible. 
+
+UPDATE 210514: Latest version is faster than the Python benchmark. The environment lookup is however not that flexible, will try a new model that will probably be slower. Then there is the issue of GC. However, using Forth-style parameter passing rather than named variables could provide a speedup. Still more to come!
 
 This is the test program for the C-version:
 
