@@ -260,6 +260,37 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
 
 /***** EVAL SYMBOL ***************************************/
 
+// Lookup symbol in the context list
+Item InterpEvalSymbol(Interp* interp, Item item)
+{
+  // Lookup symbol.
+  if (IsSymbol(item))
+  {
+    Context* context;
+    List* env;
+    List* callstack = interp->callstack;
+    Index callstackIndex = interp->callstackIndex;
+    while (callstackIndex > -1)
+    {
+      context = ItemContext(ListGet(callstack, callstackIndex));
+      env = context->env;
+
+      //PrintLine("CONTEXT in InterpEvalSymbol:");
+      //ListPrint(env, interp);
+
+      // Search environment.
+      Item* value = ListLookupSymbol(env, item.value.symbol);
+      if (value)
+        return *value;
+      callstackIndex--;
+    }
+  }
+
+  // Otherwise return the item itself (evaluate to itself).
+  return item;
+}
+
+#ifdef EXCLUDE
 // Lookup the value of a symbol (variable value).
 // If the item is a symbol, evaluate it.
 // Return Virgin item if no value exists.
@@ -301,12 +332,45 @@ Item InterpEvalSymbol(Interp* interp, Item item)
   // Otherwise return the item itself (evaluate to itself).
   return item;
 }
+#endif
 
 /****************** EVAL FUNCTION ******************/
 
 // Bind stack parameters and push a context on the
 // callstack with the function body.
 void InterpEvalFun(Interp* interp, List* fun)
+{
+  // Get args and body of the function.
+  List* funArgs = ItemList(ListGet(fun, 0));
+  List* funBody = ItemList(ListGet(fun, 1));
+
+  // Get context for the function call. 
+  Context* context = InterpEnterContext(interp, funBody, ContextNoBorrowEnv);
+
+  // Get environment.
+  List* env = context->env;
+
+  // Set it to empty.
+  env->length = 0;
+
+  // Bind parameters.
+  int numArgs = ListLength(funArgs);
+  for (int i = numArgs - 1; i >= 0; i--)
+  {
+    //Item arg = InterpPopEval(interp);
+    Item arg;
+    InterpPopEvalSet(interp, arg);
+    //ListSet(env, i, arg);
+    // Push a symbol -> value pair.
+    // Push symbol.
+    ListPush(env, ListGet(funArgs, i));
+    // Push value.
+    ListPush(env, arg);
+  }
+}
+
+#ifdef EXCLUDE
+void InterpEvalCompiledFun(Interp* interp, List* fun)
 {
   // Get info for the call context of the function.
   IntNum numArgs = ItemIntNum(ListGet(fun, FunNumArgs));
@@ -338,6 +402,7 @@ void InterpEvalFun(Interp* interp, List* fun)
   }
 */
 }
+#endif
 
 /**** EVAL LIST ******************************************/
 
@@ -360,6 +425,8 @@ void InterpRun(Interp* interp, List* list)
     
   while (interp->run)
   {
+    //ListPrint(interp->stack, interp);
+
     // Get current context.
     Context* context = ItemContext(ListGet(interp->callstack, interp->callstackIndex));
 
@@ -383,7 +450,7 @@ void InterpRun(Interp* interp, List* list)
       // increment the stackframe index.
       Item element = ListGet(code, context->codePointer);
 
-      PrintDebug("EVAL GOT ELEMENT");
+      //PrintDebug("EVAL GOT ELEMENT");
       //ItemPrint(element, interp);
 
       // If the elements points directly to a primful we run it.
@@ -394,22 +461,31 @@ void InterpRun(Interp* interp, List* list)
         goto exit;
       }
 
-      // Get value from local environment.
+#ifdef EXCLUDE
+      // If local var, get value from local environment.
+      // TODO: Comment out this
       if (IsLocalVar(element))
       {
         Item value = InterpEvalSymbol(interp, element);
+        if (IsCompiledFun(value))
+        {
+          InterpEvalCompiledFun(interp, ItemList(value));
+          goto exit;
+        }
         if (IsFun(value))
         {
           InterpEvalFun(interp, ItemList(value));
           goto exit;
         }
       }
+#endif
 
-  PrintDebug("P3");
-      // If a symbol we check the bound value can be evaluated (primfun or fun).
+      // If symbol we check the global value is primfun or fun.
+      // This means that functions defined with DEF will take 
+      // precedence over local variables with the same name. 
+      // Furthermore, local functions need to be called with CALL.
       if (IsSymbol(element))
       {
-  PrintDebug("P31");
         // Here we get the global value and check for functions
         // and primitives.
         Item value = ListGet(interp->symbolValueTable, element.value.symbol);
@@ -423,6 +499,13 @@ void InterpRun(Interp* interp, List* list)
           InterpEvalFun(interp, value.value.list);
           goto exit;
         }
+#ifdef EXCLUDE
+        if (IsCompiledFun(value))
+        {
+          InterpEvalCompiledFun(interp, value.value.list);
+          goto exit;
+        }
+#endif
       }
 
       // Otherwise
@@ -442,6 +525,8 @@ exit:
     }
   }
 }
+
+#ifdef EXCLUDE
 
 /***************************************************************
 
@@ -607,6 +692,10 @@ Item InterpCompileFun(Interp* interp, Item funList)
   //ListPrint(compiledFun, interp);
   
   // Return item with the compiled list.
-  return ItemWithFun(compiledFun);
+  Item item;
+  item.type = TypeList | TypeCompiledFun;
+  item.value.list = compiledFun;
+  return item;
 }
 
+#endif

@@ -20,11 +20,11 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeList         16
 #define TypePrimFun      32
 #define TypeFun          64
-//#define TypeGlobalVar    128  
+#define TypeCompiledFun  128  
 #define TypeLocalVar     256 
 #define TypeString       512
 #define TypeContext      1024
-#define TypeVirgin       0  // Represents unbound symbol/uninitialized item
+#define TypeVirgin       0 // Represents unbound symbol/uninitialized item
 
 #define IsVirgin(item)      ((item).type == TypeVirgin)
 #define IsSymbol(item)      ((item).type & TypeSymbol)
@@ -34,7 +34,7 @@ typedef void   (*PrimFun)(Interp*);
 #define IsList(item)        ((item).type & TypeList)
 #define IsPrimFun(item)     ((item).type & TypePrimFun)
 #define IsFun(item)         ((item).type & TypeFun)
-//#define IsGlobalVar(item)   ((item).type & TypeGlobalVar)
+#define IsCompiledFun(item) ((item).type & TypeCompiledFun)
 #define IsLocalVar(item)    ((item).type & TypeLocalVar)
 #define IsString(item)      ((item).type & TypeString)
 #define IsContext(item)     ((item).type & TypeContext)
@@ -133,14 +133,6 @@ Item ItemWithContext(Context* context)
   Item item;
   item.type = TypeContext;
   item.value.context = context;
-  return item;
-}
-
-Item ItemWithFun(List* fun)
-{
-  Item item;
-  item.type = TypeList | TypeFun;
-  item.value.list = fun;
   return item;
 }
 

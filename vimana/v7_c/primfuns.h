@@ -1,30 +1,66 @@
 
 /****************** PRIMFUNS ******************/
 
-void Prim_DROP(Interp* interp)
-{
-  Index length = interp->stack->length;
-  length = length - 1;
-  if (length < 0) 
-    ErrorExit("DROP list length < 0");
-  interp->stack->length = length;
-}
-
 // DO evaluates a list. Other types generates an error.
 void Prim_DO(Interp* interp)
 {
   //PrintDebug("HELLO DO");
-
   Item item;
   InterpPopEvalSet(interp, item);
   //Item item = InterpPopEval(interp);
-
   //PrintDebug("ITEM TYPE: %u", item.type);
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item))
     InterpEvalList(interp, ItemList(item));
   else
     ErrorExit("DO got a non-list of type: %lu", item.type);
+}
+
+// ((X) (X X +) DOUBLE DEF
+void Prim_DEF(Interp* interp)
+{
+  Item name;
+  Item value;
+  InterpPopSet(interp, name);
+  InterpPopEvalSet(interp, value);
+  // Check that name is a symbol.
+  if (!IsSymbol(name))
+    ErrorExit("DEF got a non-symbol of type: %lu", name.type);
+  // Check that list has two element.
+  // TODO: Check that both elements are lists.
+  if (!IsList(value))
+    ErrorExit("DEF got a non-list of type: %lu", value.type);
+  if (ListLength(ItemList(value)) != 2)
+    ErrorExit("DEF got a list of length != 2");
+  // Set type to TypeFun and bind global var to list.
+  value.type = value.type | TypeFun;
+  InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
+}
+
+// 21 ((X) (X X +) CALL
+// ((X) (X X +) DOUBLE SET  21 DOUBLE CALL
+void Prim_CALL(Interp* interp)
+{
+  // Bind params and enter new context.
+}
+
+void Prim_RECUR(Interp* interp)
+{
+  // Enter new context with current code list.
+}
+
+// FUN turns a list into a function.
+// Example:
+// ((X) () (X X +) FUN DOUBLE SET
+void Prim_FUN(Interp* interp)
+{
+  // TODO: Set type to TypeCompiledFun
+  PrintDebug("HELLO FUN");
+  //Item list = InterpPopEval(interp);
+  Item list;
+  InterpPopEvalSet(interp, list);
+  Item compiledFun = InterpCompileFun(interp, list);
+  InterpPush(interp, compiledFun);
 }
 
 void Prim_IFTRUE(Interp* interp)
@@ -68,19 +104,11 @@ void Prim_IFELSE(Interp* interp)
     ErrorExit("IFELSE got a non-list items");
 }
 
-// FUN turns a list into a function.
-// Example:
-// ((X) () (X X +) FUN DOUBLE SET
-void Prim_FUN(Interp* interp)
-{
-  PrintDebug("HELLO FUN");
-  //Item list = InterpPopEval(interp);
-  Item list;
-  InterpPopEvalSet(interp, list);
-  Item compiledFun = InterpCompileFun(interp, list);
-  InterpPush(interp, compiledFun);
-}
-
+// TODO: 
+// Handle SET of local vars, use current environment.
+// Set the first var found.
+// SETG and SETL ??
+//
 // SET a global symbol to a value.
 // Example:
 // 42 FOO SET FOO PRINTLN
@@ -114,6 +142,33 @@ void Prim_SET(Interp* interp)
   }
   else
     ErrorExit("SET got a non-symbol of type: %lu", name.type);
+}
+
+void Prim_DROP(Interp* interp)
+{
+  Index length = interp->stack->length;
+  length = length - 1;
+  if (length < 0) 
+    ErrorExit("DROP list length < 0");
+  interp->stack->length = length;
+}
+
+void Prim_DUP(Interp* interp)
+{
+  List* stack = interp->stack;
+  Item item = ListGet(stack, ListLength(stack) - 1);
+  ListPush(stack, item);
+}
+
+void Prim_SWAP(Interp* interp)
+{
+  List* stack = interp->stack;
+  Index index1 = ListLength(stack) - 1;
+  Index index2 = ListLength(stack) - 2;
+  Item item1 = ListGet(stack, index1);
+  Item item2 = ListGet(stack, index2);
+  ListSet(stack, index2, item1);
+  ListSet(stack, index1, item2);
 }
 
 void Prim_PRINT(Interp* interp)
@@ -384,13 +439,18 @@ void Prim_EQ(Interp* interp)
 
 void InterpDefinePrimFuns(Interp* interp)
 {
-  InterpAddPrimFun("DROP", &Prim_DROP, interp);
-  InterpAddPrimFun("DOC", &Prim_DROP, interp);
   InterpAddPrimFun("DO", &Prim_DO, interp);
+  InterpAddPrimFun("FUN", &Prim_FUN, interp);
+  InterpAddPrimFun("DEF", &Prim_DEF, interp);
+  InterpAddPrimFun("CALL", &Prim_CALL, interp);
+  InterpAddPrimFun("RECUR", &Prim_RECUR, interp);
   InterpAddPrimFun("IFTRUE", &Prim_IFTRUE, interp);
   InterpAddPrimFun("IFELSE", &Prim_IFELSE, interp);
-  InterpAddPrimFun("FUN", &Prim_FUN, interp);
   InterpAddPrimFun("SET", &Prim_SET, interp);
+  InterpAddPrimFun("DROP", &Prim_DROP, interp);
+  InterpAddPrimFun("DOC", &Prim_DROP, interp);
+  InterpAddPrimFun("DUP", &Prim_DUP, interp);
+  InterpAddPrimFun("SWAP", &Prim_SWAP, interp);
   InterpAddPrimFun("PRINT", &Prim_PRINT, interp);
   //InterpAddPrimFun("PRN", &Prim_PRN, interp);
   //InterpAddPrimFun("NEWLINE", &Prim_NEWLINE, interp);
