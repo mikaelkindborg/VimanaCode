@@ -1,5 +1,7 @@
 
-/****************** PARSER ******************/
+/***** PARSER ********************************************/
+
+#define TokenBufferSize 512
 
 int ParserWorker(Interp* interp, char* code, int i, int length, List* list);
 
@@ -13,7 +15,7 @@ List* ParseCode(Interp* interp, char* code)
 int ParserIsNumber(char* token)
 {
   Bool decimalSignUsed = FALSE;
-  for (int i = 0; i < strlen(token); i++)
+  for (int i = 0; i < strlen(token); ++ i)
   {
     char c = token[i];
     if ('.' == c)
@@ -47,16 +49,16 @@ void ParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
   }
   else
   {
-    item = InterpAddSymbol(interp, token);
+    item = EvalCoreAddSymbol(interp, token);
   }
   ListPush(list, item);
 }
 
 int ParserWorker(Interp* interp, char* code, int i, int length, List* list)
 {
-  int foo = 0;
-  char token[512]; // TODO: Check buffer overrun
+  char token[TokenBufferSize];
   char* ptoken = NULL;
+  int tokenLength; // To check buffer overrun
 
   while (i < length)
   {
@@ -101,7 +103,7 @@ int ParserWorker(Interp* interp, char* code, int i, int length, List* list)
         //PrintDebug("ADD TOKEN: %s", token);
         ParserAddSymbolOrNumber(interp, token, list);
       }
-      i++;
+      ++ i;
       continue;
     }
 
@@ -111,12 +113,16 @@ int ParserWorker(Interp* interp, char* code, int i, int length, List* list)
     if (!ptoken)
     {
       ptoken = token;
+      tokenLength = 0;
     }
     
     // Copy char to token
     *ptoken = code[i];
-    ptoken++;
-    i++;
+    ++ ptoken;
+    ++ i;
+    ++ tokenLength;
+    if (tokenLength >= TokenBufferSize)
+      ErrorExit("ParserWorker: Token length exceeded");
   }
   
   // End last token

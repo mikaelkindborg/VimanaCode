@@ -14,6 +14,7 @@ $numlines =
   countlines("list.h") +
   countlines("print.h") +
   countlines("interp.h") +
+  countlines("evalcore.h") +
   countlines("parser.h") +
   countlines("primfuns.h");
   

@@ -1,5 +1,5 @@
 
-/****************** PRIMFUNS ******************/
+/***** PRIMFUNS ******************************************/
 
 // DO evaluates a list. Other types generates an error.
 void Prim_DO(Interp* interp)
@@ -19,6 +19,7 @@ void Prim_DO(Interp* interp)
 // ((X) (X X +) DOUBLE DEF
 void Prim_DEF(Interp* interp)
 {
+/*
   Item name;
   Item value;
   InterpPopSet(interp, name);
@@ -35,6 +36,7 @@ void Prim_DEF(Interp* interp)
   // Set type to TypeFun and bind global var to list.
   value.type = value.type | TypeFun;
   InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
+*/
 }
 
 // 21 ((X) (X X +) CALL
@@ -54,6 +56,7 @@ void Prim_RECUR(Interp* interp)
 // ((X) () (X X +) FUN DOUBLE SET
 void Prim_FUN(Interp* interp)
 {
+/*
   // TODO: Set type to TypeCompiledFun
   PrintDebug("HELLO FUN");
   //Item list = InterpPopEval(interp);
@@ -61,6 +64,7 @@ void Prim_FUN(Interp* interp)
   InterpPopEvalSet(interp, list);
   Item compiledFun = InterpCompileFun(interp, list);
   InterpPush(interp, compiledFun);
+*/
 }
 
 void Prim_IFTRUE(Interp* interp)
@@ -104,11 +108,6 @@ void Prim_IFELSE(Interp* interp)
     ErrorExit("IFELSE got a non-list items");
 }
 
-// TODO: 
-// Handle SET of local vars, use current environment.
-// Set the first var found.
-// SETG and SETL ??
-//
 // SET a global symbol to a value.
 // Example:
 // 42 FOO SET FOO PRINTLN
@@ -129,15 +128,8 @@ void Prim_SET(Interp* interp)
   //PrintDebug("  NAME TYPE:  %lu", name.type);
   //PrintDebug("  VALUE TYPE: %lu", value.type);
 
-  // Check type.
-  if (IsLocalVar(name))
+  if (IsSymbol(name))
   {
-    //PrintDebug("LOCAL SET");
-    InterpSetLocalSymbolValue(interp, name.value.symbol, value);
-  }
-  else if (IsSymbol(name))
-  {
-    //PrintDebug("GLOBAL SET");
     InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
   }
   else
@@ -466,3 +458,46 @@ void InterpDefinePrimFuns(Interp* interp)
   InterpAddPrimFun("NOT", &Prim_NOT, interp);
   InterpAddPrimFun("EQ", &Prim_EQ, interp);
 }
+
+/*
+
+// TODO: 
+// Handle SET of local vars, use current environment.
+// Set the first var found.
+// SETG and SETL ??
+//
+// SET a global symbol to a value.
+// Example:
+// 42 FOO SET FOO PRINTLN
+void Prim_SET(Interp* interp)
+{
+  //PrintDebug("HELLO SET");
+  
+  // Get name and value.
+  //Item name = InterpPop(interp);
+  //Item value = InterpPopEval(interp);
+
+  Item name;
+  Item value;
+
+  InterpPopSet(interp, name);
+  InterpPopEvalSet(interp, value);
+
+  //PrintDebug("  NAME TYPE:  %lu", name.type);
+  //PrintDebug("  VALUE TYPE: %lu", value.type);
+
+  // Check type.
+  if (IsLocalVar(name))
+  {
+    //PrintDebug("LOCAL SET");
+    InterpSetLocalSymbolValue(interp, name.value.symbol, value);
+  }
+  else if (IsSymbol(name))
+  {
+    //PrintDebug("GLOBAL SET");
+    InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
+  }
+  else
+    ErrorExit("SET got a non-symbol of type: %lu", name.type);
+}
+*/

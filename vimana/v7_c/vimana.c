@@ -3,8 +3,9 @@
 #include "list.h"
 #include "print.h"
 #include "interp.h"
-#include "parser.h"
+#include "evalcore.h"
 #include "primfuns.h"
+#include "parser.h"
 
 /****************** MAIN ******************/
 
@@ -16,10 +17,12 @@ int main()
   InterpDefinePrimFuns(interp);
   
   //PrintLine("PRIMFUNS:");
-  //ListPrintItems(interp->symbolTable, interp);
-  //ListPrintItems(interp->symbolValueTable, interp);
+  //ListPrintItems(interp->globalSymbolTable, interp);
+  //ListPrintItems(interp->globalValueTable, interp);
   
+  List* list = ParseCode(interp, "HELLO_WORLD PRINT 1 2 + PRINT");
 
+/*
   List* list1 = ParseCode(interp, 
     "(()() (DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE)) FUN FACT SET 6 FACT PRINT");
 
@@ -62,6 +65,8 @@ int main()
     " DUP 0 EQ (DROP DROP) (SWAP DUP DO SWAP 1 - TIMESDO) IFELSE))"
     "FUN TIMESDO SET "
     "(20 FACT DROP) 10000000 TIMESDO");
+*/
+
 /*
 Tests 210514:
 ./vimana  23.05s user 0.03s system 98% cpu 23.320 total (-O3 + OPTIMIZE)
@@ -75,12 +80,11 @@ Reprite also of TIMESDO with DUP and SWAP:
 ./vimana  14.56s user 0.03s system 97% cpu 14.919 total
 */
 
-
   //PrintDebug("SYMBOL TABLE:\n");
-  //ListPrintItems(interp->symbolTable, interp);
+  //ListPrintItems(interp->globalSymbolTable, interp);
 
-  //PrintDebug("PARSED LIST:");
-  //ListPrint(list, interp);
+  PrintDebug("PARSED LIST:");
+  ListPrint(list, interp);
   
   InterpRun(interp, list);
   
