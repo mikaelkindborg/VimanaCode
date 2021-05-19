@@ -101,7 +101,7 @@ function InterpCreate()
     return (typeof fun === "object") && (fun[0] === "FUN")
   }
 
-  // Eval with timer that drives the loop.
+  // Eval a list (evalList).
   function eval(code)
   {
     // Push root context
@@ -315,6 +315,7 @@ interp.addPrimFun("DO", function(interp)
   interp.pushContext(code)
 })
 
+// Set global variable
 interp.addPrimFun("SET", function(interp)
 {
   let name = interp.pop()
