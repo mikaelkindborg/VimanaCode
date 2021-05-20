@@ -86,14 +86,14 @@ The optimized environment lookup used in the first optimized C version was fast 
 
 Then there is the issue of GC, closures and so on. Still more to come!
 
-This is the test program for the C-version:
+This is the benchmark program for the C-version:
 
     ((N) =>
       N 0 EQ (1) (N 1 - FACT N *) IFELSE)
     FACT DEF
 
     ((L N) =>
-      N 0 EQ NOT (L DO  L N 1 - TIMESDO) IFTRUE))
+      N 0 EQ NOT (L DO  L N 1 - TIMESDO) IFTRUE)
       TIMESDO DEF 
 
     (20 FACT DROP) 10000000 TIMESDO
@@ -105,7 +105,7 @@ Lower-case would also be possible (note that symbols are case-sensitive):
     fact def
 
     ((l n) =>
-      n 0 eq not (l do  l n 1 - timesdo) iftrue))
+      n 0 eq not (l do  l n 1 - timesdo) iftrue)
       timesdo def 
 
     (20 fact drop) 10000000 timesdo
@@ -122,13 +122,15 @@ Forth-inspired version:
 
 The ":" function pops a value of the stack and binds it to a variable in the local environment. 
 
-The arrow symbol "=>" is also a function that binds one or more items on the stack to local variables. It is a bit slower, but is easier to read since the variable order matches the order on the stack.
+The arrow symbol "=>" is also a function that binds one or more items on the stack to local variables. It is a bit slower than ":", but is easier to read since the variable order matches the order on the stack.
 
 Both ":" and "=>" are like any other functions. They are runtime operations, and are not part of any special syntax or "reserved words". They could be named anything. (In a sense they are like reserved words, but you get the idea.)
 
-Note that virtually everything happens at runtime. Very litte is done during parsing (like setting the basic types of objects). There is no compile step.
+Note that virtually everything happens at runtime. Very litte is done during parsing (only setting the basic types of objects). There is no compile step.
 
-As few assumptions as possible are coded into the interpreter. Many different styles are possible. Postfix operations are fundamental, this is not as easy to change, and in the end you might as well go with Lisp if you want prefix functions. (Postfix notation means that the function name is the last element in a function call) 
+As few assumptions as possible are coded into the interpreter in interp.h. Most of what defined the language is specified by primitives in primfuns.h. Many different styles are possible. Postfix operations are fundamental, this is not as easy to change, and in the end you might as well go with Lisp if you want prefix functions. (Postfix notation means that the function name is the last element in a function call.) 
+
+Everything is just one file split up into modules in .h files.
 
 Vimana is my personal experimental project. There are yet additional functionality to be implemented. Like garbage collection in the C-version.
 
