@@ -148,7 +148,7 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
   {
 #ifdef OPTIMIZE
     // Special case for primfuns. We return the primfun item.
-    Item value = ListGet(interp->symbolValueTable, index);
+    Item value = ListGet(interp->globalValueTable, index);
     if (IsPrimFun(value))
     {
       return value;
@@ -189,11 +189,11 @@ void InterpEnterContext(Interp* interp, List* code, int newEnv)
   Context* currentContext = NULL;
 
   // Remember current context.
-  if (interp->callstackIndex > -1)
+  if (callstackIndex > -1)
     currentContext = ItemContext(ListGet(callstack, callstackIndex));
 
   // 1. Check for tail call optimization.
-  if (interp->callstackIndex > -1)
+  if (callstackIndex > -1)
   {
     Index codePointer = currentContext->codePointer;
     List* currentCodeList = currentContext->code;
@@ -201,11 +201,12 @@ void InterpEnterContext(Interp* interp, List* code, int newEnv)
     // Check for tail call.
     if (codePointer + 1 >= ListLength(currentCodeList))
     {
-      PrintDebug("TAILCALL AT INDEX: %i", interp->callstackIndex);
+      PrintDebug("TAILCALL AT INDEX: %i", callstackIndex);
       // Tail call.
       currentContext->code = code;
       currentContext->codePointer = -1;
-      ContextInitEnv(currentContext, newEnv);
+      // For tailcalls we don't init the environment, but keep it as it is!
+      //ContextInitEnv(currentContext, newEnv);
       return;
     }
   }
@@ -240,7 +241,7 @@ void InterpEnterContext(Interp* interp, List* code, int newEnv)
 void InterpExitContext(Interp* interp)
 {
   PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-  --interp->callstackIndex;
+  -- interp->callstackIndex;
 #ifndef OPTIMIZE
   Context* context = ItemContext(ListPop(interp->callstack));
   ContextFree(context);
@@ -261,11 +262,13 @@ void InterpRun(Interp* interp, List* list)
     interp->currentContext = context;
 
     // Increment code pointer.
-    ++ context->codePointer;
+    int codePointer = ++ context->codePointer;
+
+    //PrintDebug("InterpRun: codePointer: %i", codePointer);
 
     // Exit the frame if the code in the current context has finished executing.
     List* code = context->code;
-    if (context->codePointer >= ListLength(code))
+    if (codePointer >= ListLength(code))
     {
       InterpExitContext(interp);
       //-- interp->callstackIndex;
@@ -273,33 +276,34 @@ void InterpRun(Interp* interp, List* list)
     }
 
     // Get the next element.
-    Item element = ListGet(code, context->codePointer);
+    Item element = ListGet(code, codePointer);
+    //PrintDebug("InterpRun: element type: %lu", element.type);
 
 #ifdef OPTIMIZE
     // If the elements points directly to a primfun we run it.
     if (IsPrimFun(element))
     {
-      PrintDebug("CALLING PRIMFUN");
+      //PrintDebug("CALLING PRIMFUN");
       element.value.primFun(interp);
       goto exit;
     }
 #endif
 
-    // If symbol we check the global value is primfun or fun.
+    // If symbol we check if the global value is primfun or fun.
     // This means that functions defined with DEF will take 
     // precedence over local variables with the same name. 
     // Furthermore, local functions need to be called with CALL.
     if (IsSymbol(element))
     {
-      Item value = ListGet(interp->globalValueTable, element.value.symbol);
-      if (IsPrimFun(value))
+      Item item = ListGet(interp->globalValueTable, element.value.symbol);
+      if (IsPrimFun(item))
       {
-        value.value.primFun(interp);
+        item.value.primFun(interp);
         goto exit;
       }
-      if (IsFun(value))
+      if (IsFun(item))
       {
-        PrimEval_EvalFun(interp, value.value.list);
+        PrimEval_EvalFun(interp, item.value.list);
         goto exit;
       }
     }

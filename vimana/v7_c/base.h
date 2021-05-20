@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-//#define OPTIMIZE
-#define DEBUG
+#define OPTIMIZE
+//#define DEBUG
 
 typedef unsigned char Byte;
 typedef int           Bool;

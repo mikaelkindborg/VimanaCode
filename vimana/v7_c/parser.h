@@ -54,22 +54,38 @@ void ParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
   ListPush(list, item);
 }
 
+#define ParserBeginToken() \
+  if (!ptoken) \
+  { \
+    ptoken = token; \
+    tokenLength = 0; \
+  } 
+
+#define ParserEndToken() \
+  if (ptoken) \
+  { \
+    *ptoken = 0; \
+    ptoken = NULL;  \
+    /*PrintDebug("ADD TOKEN: %s", token);*/ \
+    ParserAddSymbolOrNumber(interp, token, list); \
+  }
+
 int ParserWorker(Interp* interp, char* code, int i, int length, List* list)
 {
-  char token[TokenBufferSize];
+  char  token[TokenBufferSize];
   char* ptoken = NULL;
-  int tokenLength; // To check buffer overrun
+  int   tokenLength; // Used to check buffer overrun
 
   while (i < length)
   {
     // Begin list.
     if (code[i] == '(')
     {
+      ParserEndToken();
       //PrintDebug("BEGIN LIST");
       List* childList = ListCreate();
       Item item = ItemWithList(childList);
       ListPush(list, item);
-      // ParserWorker will add iten to the child list.
       i = ParserWorker(interp, code, i + 1, length, childList);
       continue;
     }
@@ -77,15 +93,8 @@ int ParserWorker(Interp* interp, char* code, int i, int length, List* list)
     // End list.
     if (code[i] == ')')
     {
-      //PrintDebug("END LIST");  
-      // End token
-      if (ptoken)
-      {
-        *ptoken = 0; // Zero terminate token
-        //PrintDebug("ADD TOKEN: %s", token);
-        ParserAddSymbolOrNumber(interp, token, list);
-      }
-      // Returning ends the list
+      //PrintDebug("END LIST");
+      ParserEndToken();
       return i + 1;
     }
     
@@ -94,29 +103,15 @@ int ParserWorker(Interp* interp, char* code, int i, int length, List* list)
     if (code[i] == ' '  || code[i] == '\t' ||  
         code[i] == '\n' || code[i] == '\r')
     {
-      // End token
-      if (ptoken)
-      {
-        
-        *ptoken = 0; // Zero terminate token
-        ptoken = NULL; // Indicates no token 
-        //PrintDebug("ADD TOKEN: %s", token);
-        ParserAddSymbolOrNumber(interp, token, list);
-      }
+      ParserEndToken();
       ++ i;
       continue;
     }
 
-    // When we are here, we have a token character.
+    // When we got here, we have a new token.
+    ParserBeginToken();
 
-    // Begin token.
-    if (!ptoken)
-    {
-      ptoken = token;
-      tokenLength = 0;
-    }
-    
-    // Copy char to token
+    // Copy char to token and move to next character.
     *ptoken = code[i];
     ++ ptoken;
     ++ i;
@@ -125,13 +120,8 @@ int ParserWorker(Interp* interp, char* code, int i, int length, List* list)
       ErrorExit("ParserWorker: Token length exceeded");
   }
   
-  // End last token
-  if (ptoken)
-  {
-    *ptoken = 0; // Zero terminate token
-    //PrintDebug("ADD TOKEN: %s", token);
-    ParserAddSymbolOrNumber(interp, token, list);
-  }
+  // End last token.
+  ParserEndToken();
 
   return i;
 }

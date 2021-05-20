@@ -28,10 +28,10 @@ void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
     ErrorExit("SET: Got a non-symbol of type: %lu", name.type);
 }
 
-void PrimEval_SetLocal(Interp* interp, Item value, Item name)
+void PrimEval_SetLocal(Interp* interp, Item name, Item value)
 {
   if (!IsSymbol(name))
-    ErrorExit("SETLOCAL: Got a non-symbol of type: %lu", name.type);
+    ErrorExit("PrimEval_SetLocal: Got a non-symbol of type: %lu", name.type);
 
   // Get first context that has an environment.
   Context* context = interp->currentContext;
@@ -49,43 +49,42 @@ void PrimEval_SetLocal(Interp* interp, Item value, Item name)
 
   // Set symbol value.
   ListAssocSet(context->env, name.value.symbol, &value);
-  PrintDebug("SETLOCAL: PRINTING ENV");
-  ListPrint(context->env, interp);
+
+  //PrintDebug("SETLOCAL: PRINTING ENV");
+  //ListPrint(context->env, interp);
 }
 
 Item PrimEval_EvalSymbol(Interp* interp, Item item)
 {
-  // Lookup local symbol.
-  //if (IsSymbol(item) && IsLocalVar(item))
-  if (IsSymbol(item))
-  {
-    // Get first context that has an environment.
-    Context* context = interp->currentContext;
-    while (context && (!context->hasEnv))
-    {
-      context = context->prevContext;
-    }
+  // Non-symbols evaluates to themselves.
+  if (!IsSymbol(item))
+    return item;
 
-    if (context && context->hasEnv)
+  // Lookup local symbol.
+  //if (IsLocalVar(item))
+  {
+    // Search contexts for the symbol.
+    Context* context = interp->currentContext;
+    while (context)
     {
-      PrintDebug("PrimEval_EvalSymbol: PRINTING ENV");
-      ListPrint(context->env, interp);
-      Item* value = ListAssocGet(context->env, item.value.symbol);
-      if (value)
-        return *value;
+      if (context && context->hasEnv)
+      {
+        //PrintDebug("PrimEval_EvalSymbol: PRINTING ENV");
+        //ListPrint(context->env, interp);
+        Item* value = ListAssocGet(context->env, item.value.symbol);
+        if (value)
+          return *value;
+      }
+      context = context->prevContext;
     }
   }
 
   // Lookup global symbol.
-  //if (IsSymbol(item) && !IsLocalVar(item))
-  if (IsSymbol(item))
-  {
-    Item value = ListGet(interp->globalValueTable, item.value.symbol);
-    if (TypeVirgin != value.type) 
-      return value;
-  }
+  Item value = ListGet(interp->globalValueTable, item.value.symbol);
+  if (TypeVirgin != value.type) 
+    return value;
 
-  // Item not a variable, evaluates to itself.
+  // Symbol is unbound and evaluates to itself.
   return item;
 }
 
@@ -102,11 +101,10 @@ void Prim_SET(Interp* interp)
   // Get name and value.
   Item name, value;
   InterpPopSet(interp, name);
-  InterpPopEvalSet(interp, value);
-  PrimEval_SetGlobal(interp, value, name);
-
   //PrintDebug("  NAME TYPE:  %lu", name.type);
+  InterpPopEvalSet(interp, value);
   //PrintDebug("  VALUE TYPE: %lu", value.type);
+  PrimEval_SetGlobal(interp, value, name);
 }
 
 void Prim_DROP(Interp* interp)
@@ -157,11 +155,30 @@ void Prim_FUN(Interp* interp)
 
 void Prim_SETLOCAL(Interp* interp)
 {
-  PrintDebug("HELLO SETLOCAL");
-  Item item, name;
+  //PrintDebug("HELLO SETLOCAL");
+  Item name, value;
   InterpPopSet(interp, name);
-  InterpPopEvalSet(interp, item);
-  PrimEval_SetLocal(interp, item, name);
+  InterpPopEvalSet(interp, value);
+  PrimEval_SetLocal(interp, name, value);
+}
+
+void Prim_SETPARAMS(Interp* interp)
+{
+  PrintDebug("HELLO SETPARAMS");
+  Item params, name, value;
+
+  InterpPopSet(interp, params);
+  if (!IsList(params))
+    ErrorExit("Prim_SETPARAMS: Param list not of TypeList");
+
+  List* list = ItemList(params);
+  int length = ListLength(list);
+  for (int i = length - 1; i >= 0; --i)
+  {
+    name = ListGet(list, i);
+    InterpPopEvalSet(interp, value);
+    PrimEval_SetLocal(interp, name, value);
+  }
 }
 
 void Prim_DEF(Interp* interp)
@@ -178,6 +195,8 @@ void Prim_DEF(Interp* interp)
 void Prim_DO(Interp* interp)
 {
   //PrintDebug("HELLO DO");
+  //ListPrint(interp->stack, interp);
+  //ListPrint(interp->currentContext->env, interp);
   Item item;
   InterpPopEvalSet(interp, item);
   // If item is a list, create a stackframe and push it onto the stack.
@@ -196,7 +215,13 @@ void Prim_CALL(Interp* interp)
 
 void Prim_RECUR(Interp* interp)
 {
+  PrintDebug("HELLO RECUR");
+
+  // TODO: Add info to context about current function and use that code list recur.
+
+  // Below code does not work, need to get the function context.
   // Enter new context with current code list.
+  //PrimEval_EvalFun(interp, interp->currentContext->code);
 }
 
 void Prim_IFTRUE(Interp* interp)
@@ -453,7 +478,7 @@ void Prim_EQ(Interp* interp)
 
 void Prim_PRINT(Interp* interp)
 {
-  PrintDebug("HELLO PRINT");
+  //PrintDebug("HELLO PRINT");
   Item item;
   InterpPopEvalSet(interp, item);
   char* buf = ItemToString(item, interp);
@@ -471,6 +496,8 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("FUN", &Prim_FUN, interp);
   InterpAddPrimFun("DEF", &Prim_DEF, interp);
   InterpAddPrimFun("SETLOCAL", Prim_SETLOCAL, interp);
+  InterpAddPrimFun(":", Prim_SETLOCAL, interp);
+  InterpAddPrimFun("=>", Prim_SETPARAMS, interp);
   InterpAddPrimFun("DO", &Prim_DO, interp);
   InterpAddPrimFun("CALL", &Prim_CALL, interp);
   InterpAddPrimFun("RECUR", &Prim_RECUR, interp);
