@@ -14,8 +14,9 @@ $numlines =
   countlines("list.h") +
   countlines("print.h") +
   countlines("interp.h") +
+  countlines("primfuns.h") +
   countlines("parser.h") +
-  countlines("primfuns.h");
+  countlines("vimana.h");
   
 echo "NUMBER OF LINES: ".$numlines."\n";
 
@@ -28,6 +29,7 @@ echo "NUMBER OF LINES: ".$numlines."\n";
 210506: 1321 lines
 210508: 1572 lines
 210514: 1773 lines
+210520: 1581 lines
 
 ***/
 

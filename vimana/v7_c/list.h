@@ -1,7 +1,7 @@
 int GMallocCounter = 0;
 int GReallocCounter = 0;
 
-/****************** LISTS ******************/
+// LISTS -------------------------------------------------------
 
 typedef struct MyList
 {
@@ -201,19 +201,50 @@ Item* ListGetItemPtr(List* list, int index)
 }
 #endif
 
-// Associative list lookup. Assumes symbol and value in pairs.
-Item* ListLookupSymbol(List* list, Index symbolIndex)
+// Associative list set or get. Assumes symbol and value in pairs.
+Item* ListAssocSetGet(List* list, Index symbol, Item* value)
 {
-  int length = list->length;
+  int    length = list->length;
   size_t itemSize = sizeof(Item);
-  int i = 0;
-  Item* item = list->items;
+  Item*  item = list->items;
+  int    i = 0;
+
   while (i < length)
   {
-    if (IsSymbol(*item) && (item->value.symbol == symbolIndex))
-      return item + itemSize;
+    if (IsSymbol(*item) && (item->value.symbol == symbol))
+    {
+      // Found symbol entry.
+      Item* p = item + 1;
+      if (value)
+      {
+        *p = *value;
+      }
+      return p;
+    }
     i = i + 2;
-    item = item + (itemSize * 2);
+    item = item + 2;
   }
+
+  // Reached end of list, add symbol/value if set.
+  if (value)
+  {
+    ListPush(list, ItemWithSymbol(symbol));
+    ListPush(list, *value);
+    return value;
+  }
+
+  // Otherwise return NULL.
   return NULL;
+}
+
+// Associative list lookup.
+Item* ListAssocGet(List* list, Index symbolIndex)
+{
+  return ListAssocSetGet(list, symbolIndex, NULL);
+}
+
+// Associative list set.
+void ListAssocSet(List* list, Index symbolIndex, Item* value)
+{
+  ListAssocSetGet(list, symbolIndex, value);
 }
