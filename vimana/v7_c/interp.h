@@ -4,8 +4,8 @@
 #define ContextCurrentEnv   0
 
 // Declarations.
-void PrimEval_EvalList(Interp* interp, List* list);
-void PrimEval_EvalFun(Interp* interp, List* fun);
+//void PrimEval_EvalList(Interp* interp, List* list);
+//void PrimEval_EvalFun(Interp* interp, List* fun);
 Item PrimEval_EvalSymbol(Interp* interp, Item item);
 
 // Octo: That was new
@@ -46,6 +46,7 @@ void InterpFree(Interp* interp)
   ListFree(interp->globalValueTable, ListFreeShallow);
   ListFree(interp->stack, ListFreeShallow);
   ListFree(interp->callstack, ListFreeDeep);
+  free(interp);
 }
 
 // CONTEXT -----------------------------------------------------
@@ -303,7 +304,8 @@ void InterpRun(Interp* interp, List* list)
       }
       if (IsFun(item))
       {
-        PrimEval_EvalFun(interp, item.value.list);
+        //PrimEval_EvalFun(interp, item.value.list);
+        InterpEnterContext(interp, item.value.list, ContextNewEnv);
         goto exit;
       }
     }

@@ -24,7 +24,7 @@ int main()
   List* list8 = ParseCode(interp, 
     "((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) FACT DEF 6 FACT PRINT");
 
-  List* listx = ParseCode(interp, 
+  List* list10 = ParseCode(interp, 
     "(N : N 0 EQ (1) (N 1 - FACT N *) IFELSE) FACT DEF "
     "(N : L : N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF "
     "(20 FACT DROP) 10000000 TIMESDO"
@@ -38,19 +38,28 @@ int main()
     );
   // ./vimana  18.99s user 0.01s system 95% cpu 19.939 total (OPTIMIZE + -Ofast)
 
-  List* list12 = ParseCode(interp, 
+  List* list = ParseCode(interp, 
     "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) FACT DEF "
     "(N : L : N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF "
     "(20 FACT DROP) 10000000 TIMESDO"
     );
   // ./vimana  13.80s user 0.01s system 96% cpu 14.357 total (OPTIMIZE + -Ofast)
+  // ./vimana  14.53s user 0.01s system 97% cpu 14.881 total
 
-  List* list = ParseCode(interp, 
+  List* list13 = ParseCode(interp, 
     "HELLO-WORLD MESSAGE : "
-    "(N : L : N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF "
+    "(DUP 0 EQ (DROP DROP) (SWAP DUP DO SWAP 1 - TIMESDO) IFELSE) TIMESDO DEF "
     "(MESSAGE PRINT) BLOCK : "
     "BLOCK 10 TIMESDO FOO"
     );
+
+  List* list14 = ParseCode(interp, 
+    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) FACT DEF "
+    "(DUP 0 EQ (DROP DROP) (SWAP DUP DO SWAP 1 - TIMESDO) IFELSE) TIMESDO DEF "
+    "(20 FACT DROP) 10000000 TIMESDO"
+    );
+  // ./vimana  18.51s user 0.17s system 96% cpu 19.265 total
+  // ./vimana  15.86s user 0.04s system 97% cpu 16.253 total
 
   //  "((L N) => N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF"
 /*
@@ -79,7 +88,6 @@ int main()
     " N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE))"
     "FUN TIMESDO SET "
     "(20 FACT DROP) 10000000 TIMESDO");
-                  //10000000
 
   // ./vimana  14.49s user 0.01s system 99% cpu 14.530 total (-Ofast)
   List* list5 = ParseCode(interp, 

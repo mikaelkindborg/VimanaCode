@@ -48,7 +48,8 @@ void PrimEval_SetLocal(Interp* interp, Item name, Item value)
     ErrorExit("SETLOCAL: Context has no environment");
 
   // Set symbol value.
-  ListAssocSet(context->env, name.value.symbol, &value);
+  //ListAssocSet(context->env, name.value.symbol, &value);
+  ListAssocSetGet(context->env, name.value.symbol, &value);
 
   //PrintDebug("SETLOCAL: PRINTING ENV");
   //ListPrint(context->env, interp);
@@ -71,7 +72,8 @@ Item PrimEval_EvalSymbol(Interp* interp, Item item)
       {
         //PrintDebug("PrimEval_EvalSymbol: PRINTING ENV");
         //ListPrint(context->env, interp);
-        Item* value = ListAssocGet(context->env, item.value.symbol);
+        //Item* value = ListAssocGet(context->env, item.value.symbol);
+        Item* value = ListAssocSetGet(context->env, item.value.symbol, NULL);
         if (value)
           return *value;
       }
@@ -112,7 +114,7 @@ void Prim_DROP(Interp* interp)
   Index length = interp->stack->length;
   length = length - 1;
   if (length < 0) 
-    ErrorExit("DROP list length < 0");
+    ErrorExit("DROP: list length < 0");
   interp->stack->length = length;
 }
 
@@ -128,10 +130,9 @@ void Prim_SWAP(Interp* interp)
   List* stack = interp->stack;
   Index index1 = ListLength(stack) - 1;
   Index index2 = ListLength(stack) - 2;
-  Item item1 = ListGet(stack, index1);
-  Item item2 = ListGet(stack, index2);
-  ListSet(stack, index2, item1);
-  ListSet(stack, index1, item2);
+  Item item1 = stack->items[index1];
+  stack->items[index1] = stack->items[index2];
+  stack->items[index2] = item1;
 }
 
 // FUN turns a list into a function.
@@ -142,8 +143,8 @@ void Prim_SWAP(Interp* interp)
 // ((X Y) => X Y +) FUN MYADD SET
 // ((X Y) : X Y +) FUN MYADD SET
 // ((X Y) (X Y +)) FUN MYADD SET // This one requires bindning by EvalCore_EvalFun()
-// (X : Y : X Y +) FUN MYADD SET
-// (X PARAM Y PARAM X Y +) FUN MYADD SET
+// (Y : X : X Y +) FUN MYADD SET
+// (Y PARAM X PARAM X Y +) FUN MYADD SET
 void Prim_FUN(Interp* interp)
 {
   //PrintDebug("HELLO FUN");
@@ -164,7 +165,7 @@ void Prim_SETLOCAL(Interp* interp)
 
 void Prim_SETPARAMS(Interp* interp)
 {
-  PrintDebug("HELLO SETPARAMS");
+  //PrintDebug("HELLO SETPARAMS");
   Item params, name, value;
 
   InterpPopSet(interp, params);
@@ -201,7 +202,8 @@ void Prim_DO(Interp* interp)
   InterpPopEvalSet(interp, item);
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item))
-    PrimEval_EvalList(interp, ItemList(item));
+    //PrimEval_EvalList(interp, ItemList(item));
+    InterpEnterContext(interp, ItemList(item), ContextCurrentEnv);
   else
     ErrorExit("Prim_DO got a non-list of type: %lu", item.type);
 }
@@ -227,6 +229,7 @@ void Prim_RECUR(Interp* interp)
 void Prim_IFTRUE(Interp* interp)
 {
   Item item, truth;
+
   InterpPopEvalSet(interp, item);
   InterpPopEvalSet(interp, truth);
 
@@ -234,21 +237,25 @@ void Prim_IFTRUE(Interp* interp)
     ErrorExit("IFTRUE got a non-list of type: %lu", item.type);
   else
   if (ItemBool(truth))
-    PrimEval_EvalList(interp, ItemList(item));
+    //PrimEval_EvalList(interp, ItemList(item));
+    InterpEnterContext(interp, ItemList(item), ContextCurrentEnv); 
 }
 
 void Prim_IFELSE(Interp* interp)
 {
   Item branch2, branch1, truth;
+
   InterpPopEvalSet(interp, branch2);
   InterpPopEvalSet(interp, branch1);
   InterpPopEvalSet(interp, truth);
 
   if (IsList(branch1) && IsList(branch2))
     if (ItemBool(truth))
-      PrimEval_EvalList(interp, ItemList(branch1));
+      //PrimEval_EvalList(interp, ItemList(branch1));
+      InterpEnterContext(interp, ItemList(branch1), ContextCurrentEnv); 
     else
-      PrimEval_EvalList(interp, ItemList(branch2));
+      //PrimEval_EvalList(interp, ItemList(branch2));
+      InterpEnterContext(interp, ItemList(branch2), ContextCurrentEnv); 
   else
     ErrorExit("IFELSE got a non-list items");
 }
@@ -433,8 +440,6 @@ void Prim_NOT(Interp* interp)
   Item item;
 
   InterpPopEvalSet(interp, item);
-
-  //Item item = InterpPopEval(interp);
 
   Bool x = item.value.truth;
   item.value.truth = !x;
