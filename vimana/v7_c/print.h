@@ -1,9 +1,9 @@
 
 // Declarations.
 char* InterpGetSymbolString(Interp* interp, Index index);
-void ListPrintToStream(Stream* stream, List* list, Bool useNewLine, Interp* interp);
+void  ListPrintToStream(Stream* stream, List* list, Bool useNewLine, Interp* interp);
 
-/****************** PRINT ITEMS ******************/
+// PRINT ITEMS -------------------------------------------------
 
 void ItemPrintToStream(Stream* stream, Item item, Interp* interp)
 {
@@ -84,7 +84,7 @@ void ItemPrint(Item item, Interp* interp)
   free(string);
 }
 
-/****************** PRINT LISTS ******************/
+// PRINT LISTS -------------------------------------------------
 
 // Recursively print list.
 void ListPrintWorker(Stream* stream, List* list, Bool useNewLine, Interp* interp)

@@ -1,26 +1,24 @@
-#include "base.h"
-#include "item.h"
-#include "list.h"
-#include "print.h"
-#include "interp.h"
-#include "evalcore.h"
-#include "primfuns.h"
-#include "parser.h"
+#include "vimana.h"
 
-/****************** MAIN ******************/
+// MAIN ------------------------------------------------
 
 int main()
 {
   PrintLine("WELCOME TO THE WONDERFUL WORLD OF VIMANA");
 
   Interp* interp = InterpCreate();
-  InterpDefinePrimFuns(interp);
+  DefinePrimFuns(interp);
   
   //PrintLine("PRIMFUNS:");
   //ListPrintItems(interp->globalSymbolTable, interp);
   //ListPrintItems(interp->globalValueTable, interp);
   
-  List* list = ParseCode(interp, "HELLO_WORLD PRINT 1 2 + PRINT");
+  List* list1 = ParseCode(interp, "HELLO_WORLD PRINT 1 2 + PRINT");
+  List* list2 = ParseCode(interp, "(HELLO_WORLD PRINT) DO");
+  List* list3 = ParseCode(interp, "(HELLO_WORLD PRINT) SAYHELLO DEF SAYHELLO");
+  List* list4 = ParseCode(interp, "(X PRINT) SAYHELLO DEF HELLO_WORLD X SET SAYHELLO HELLO_AGAIN PRINT");
+  List* list5 = ParseCode(interp, "HELLO_SETLOCAL_TEST X SETLOCAL X PRINT FOOBAR X SETLOCAL X PRINT");
+  List* list = ParseCode(interp, "HELLO_SETLOCAL_TEST X (X PRINT) TESTLOCAL DEF TESTLOCAL");
 
 /*
   List* list1 = ParseCode(interp, 

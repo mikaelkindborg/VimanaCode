@@ -1,4 +1,50 @@
-// This file contains code used for "compfiled functions".
+
+// This section contains code for "compfiled functions".
+// This code is not used in latest v7_c
+// Look in v4_c for full implementation.
+// Also available v7_c branch performance
+
+/* 
+// Support for TypeLocalVar
+#define InterpPopEvalSet(interp, item) \
+  do { \
+    ListPopSet((interp)->stack, item); \
+    (item) = (IsSymbol(item) || IsLocalVar(item)) ? \
+      EvalPrim_EvalSymbol(interp, item) : \
+      item; \
+  } while(0)
+*/
+
+void Prim_DEF(Interp* interp)
+{
+  Item name;
+  Item value;
+  InterpPopSet(interp, name);
+  InterpPopEvalSet(interp, value);
+  // Check that name is a symbol.
+  if (!IsSymbol(name))
+    ErrorExit("DEF got a non-symbol of type: %lu", name.type);
+  // Check that list has two element.
+  // TODO: Check that both elements are lists.
+  if (!IsList(value))
+    ErrorExit("DEF got a non-list of type: %lu", value.type);
+  if (ListLength(ItemList(value)) != 2)
+    ErrorExit("DEF got a list of length != 2");
+  // Set type to TypeFun and bind global var to list.
+  value.type = value.type | TypeFun;
+  InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
+}
+
+// FUN turns a list into a function.
+// Example:
+// ((X) () (X X +) FUN DOUBLE SET
+void Prim_FUN(Interp* interp)
+{
+  //PrintDebug("HELLO FUN");
+  Item list = InterpPopEval(interp);
+  Item compiledFun = InterpCompileFun(interp, list);
+  InterpPush(interp, compiledFun);
+}
 
 // Lookup the value of a symbol (variable value).
 // If the item is a symbol, evaluate it.
@@ -365,3 +411,251 @@ Item InterpCompileFun(Interp* interp, Item funList)
 }
 
 #endif
+
+// ------------------------------------------
+
+/*** interp.c ***/
+
+/*
+// Pop item off the data stack.
+#ifdef OPTIMIZE
+#define InterpPop(interp) ListPop((interp)->stack)
+#else
+Item InterpPop(Interp* interp)
+{
+  //PrintDebug("INTERP POP");
+  //PrintDebug("PRINTING STACK:");
+  //ListPrintItems(interp->stack, interp);
+
+  return ListPop(interp->stack);
+}
+#endif
+*/
+
+/*
+#define X_InterpPopEvalSet(interp, item) \
+  ((item) = ListPop((interp)->stack), \
+  ((item) = (IsGlobalVar(item) || IsLocalVar(item)) ? \
+    InterpEvalSymbol(interp, item) : \
+    item))
+*/
+
+// NOTE: This function is inlined in InterpRun.
+/*
+void InterpEval(Interp* interp, Item element)
+{
+  // Optimize for primfun lookup.
+  if (IsSymbol(element))
+  {
+    Item value = ListGet(interp->symbolValueTable, element.value.symbol);
+    
+    // If primitive function, evaluate it.
+    if (IsPrimFun(value))
+    {
+      //PrintDebug("PRIM FOUND: %i", element.value.symbol);
+      // Call the primitive.
+      value.value.primFun(interp);
+      return;
+    }
+    
+    if (IsFun(value))
+    {
+      //PrintDebug("FUN FOUND: %i", element.value.symbol);
+      // Call the function.
+      InterpEvalFun(interp, value.value.list);
+      return;
+    }
+  }
+
+  if (IsLocalVar(element))
+  {
+    // Evaluate symbol to see if it is bound to a function.
+    Item value = InterpEvalSymbol(interp, element);
+    
+    if (IsFun(value))
+    {
+      //PrintDebug("FUN FOUND: %i", element.value.symbol);
+      // Call the function.
+      InterpEvalFun(interp, ItemList(value));
+      return;
+    }
+  }
+
+  // Otherwise push element onto the data stack (not evaluated).
+  ListPush(interp->stack, element);
+  //PrintDebug("PUSH ELEMENT ONTO DATA STACK TYPE: %u", element.type);
+}
+*/
+
+/*
+// EXPERIMENT
+Item* InterpEvalSymbolP(Interp* interp, Item* item)
+{
+  if (IsLocalVar(*item))
+  {
+    List* env = InterpGetLocalEnv(interp);
+    if (env)
+    {
+      Item* value = &(env->items[item->value.symbol]);
+      if (TypeVirgin != value->type) 
+        return value;
+    }
+    else
+      ErrorExit("InterpEvalSymbol: Local environment not found");
+  }
+
+  // Lookup symbol in global symbol table.
+  if (IsSymbol(*item))
+  {
+    Item* value = &(interp->symbolValueTable->items[item->value.symbol]);
+    if (TypeVirgin != value->type) 
+      return value;
+  }
+
+  return item;
+}
+*/
+
+// Pop item off the data stack and evaluate it
+// if it is a symbol.
+/*
+#ifdef OPTIMIZE
+#define InterpPopEval(interp) InterpEvalSymbol(interp, ListPop((interp)->stack))
+#else
+Item InterpPopEval(Interp* interp)
+{
+  //PrintDebug("INTERP POPEVAL");
+  //PrintDebug("PRINTING STACK:");
+  //ListPrintItems(interp->stack, interp);
+
+  Item item = ListPop(interp->stack);
+
+  //PrintDebug("ITEM TYPE: %lu", item.type);
+
+  if (IsGlobalVar(item) || IsLocalVar(item))
+    return InterpEvalSymbol(interp, item);
+  else 
+    return item;
+}
+#endif
+*/
+
+// ------------------------------------------
+
+/*
+// primfuns.h
+
+// EXPERIMENT
+void Prim_MINUS(Interp* interp)
+{
+  Item a = InterpPopEval(interp);
+  Item b = InterpPopEval(interp);
+  Item res;
+  ItemMinusP(&b, &a, &res);
+  InterpPush(interp, res);
+}
+
+// EXPERIMENT
+void Prim_MINUS(Interp* interp)
+{
+  //Item b = InterpPopEval(interp);
+  //Item a = InterpPopEval(interp);
+  //Item res;
+
+  //PrintDebug("Prim_MINUS item a type: %lu", a.type);
+  //PrintDebug("Prim_MINUS item b type: %lu", a.type);
+
+  List* stack = interp->stack;
+  Item* items = stack->items;
+  Index last = stack->length - 1;
+  Index nextlast = last - 1;
+  Item* a = InterpEvalSymbolP(interp, &(items[nextlast]));
+  Item* b = InterpEvalSymbolP(interp, &(items[last]));
+
+  if (IsIntNum(*a) && IsIntNum(*a))
+  {
+    IntNum res = a->value.intNum - b->value.intNum;
+    items[nextlast].value.intNum = res;
+    items[nextlast].type = TypeIntNum;
+    stack->length = last;
+
+    //res.value.intNum = (a.value.intNum - b.value.intNum);
+    //res.type = TypeIntNum;
+    //InterpPush(interp, res);
+
+    //PrintDebug("ITEM TYPE: %lu", item.type);
+
+    //InterpPush(interp, ItemWithIntNum(a.value.intNum - b.value.intNum));
+    return;
+  }
+
+  ErrorExit("ItemMinus: Unsupported item types");
+}
+*/
+
+/*
+item.h
+
+EXPERIMENTS/IDEAS:
+
+The ideas was to speed up creating new items, but these functions
+are not called in time-critical code, so this additional complexity 
+is not needed for now.
+
+#define ItemWithSymbol(item, symbolIndex) \
+do { \
+  (item).type = TypeSymbol; \
+  (item).value.symbol = symbolIndex; \
+} while(0)
+
+#define ItemWithSymbol(item, symbolIndex) \
+((item).type = TypeSymbol, (item).value.symbol = symbolIndex)
+
+void ItemWithSymbol(Item* item, Index symbolIndex)
+{
+  item->type = TypeSymbol;
+  item->value.symbol = symbolIndex;
+}
+*/
+
+/*
+// TODO: 
+// Handle SET of local vars, use current environment.
+// Set the first var found.
+// SETG and SETL ??
+//
+// SET a global symbol to a value.
+// Example:
+// 42 FOO SET FOO PRINTLN
+void Prim_SET(Interp* interp)
+{
+  //PrintDebug("HELLO SET");
+  
+  // Get name and value.
+  //Item name = InterpPop(interp);
+  //Item value = InterpPopEval(interp);
+
+  Item name;
+  Item value;
+
+  InterpPopSet(interp, name);
+  InterpPopEvalSet(interp, value);
+
+  //PrintDebug("  NAME TYPE:  %lu", name.type);
+  //PrintDebug("  VALUE TYPE: %lu", value.type);
+
+  // Check type.
+  if (IsLocalVar(name))
+  {
+    //PrintDebug("LOCAL SET");
+    InterpSetLocalSymbolValue(interp, name.value.symbol, value);
+  }
+  else if (IsSymbol(name))
+  {
+    //PrintDebug("GLOBAL SET");
+    InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
+  }
+  else
+    ErrorExit("SET got a non-symbol of type: %lu", name.type);
+}
+*/

@@ -1,5 +1,5 @@
 
-/****************** C TYPES ******************/
+// C TYPES -----------------------------------------------------
 
 typedef unsigned long    Type;
 typedef int              Index;
@@ -11,7 +11,7 @@ typedef struct MyContext Context;
 typedef struct MyInterp  Interp;
 typedef void   (*PrimFun)(Interp*);
 
-/****************** VIMANA TYPES ******************/
+// VIMANA TYPES ------------------------------------------------
 
 #define TypeSymbol       1
 #define TypeIntNum       2
@@ -20,7 +20,7 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeList         16
 #define TypePrimFun      32
 #define TypeFun          64
-#define TypeCompiledFun  128  
+//#define TypeCompiledFun  128  
 #define TypeLocalVar     256 
 #define TypeString       512
 #define TypeContext      1024
@@ -34,12 +34,12 @@ typedef void   (*PrimFun)(Interp*);
 #define IsList(item)        ((item).type & TypeList)
 #define IsPrimFun(item)     ((item).type & TypePrimFun)
 #define IsFun(item)         ((item).type & TypeFun)
-#define IsCompiledFun(item) ((item).type & TypeCompiledFun)
+//#define IsCompiledFun(item) ((item).type & TypeCompiledFun)
 #define IsLocalVar(item)    ((item).type & TypeLocalVar)
 #define IsString(item)      ((item).type & TypeString)
 #define IsContext(item)     ((item).type & TypeContext)
 
-/****************** STRUCTS ******************/
+// STRUCTS -----------------------------------------------------
 
 // An item encapsulates C data types. Everything in the
 // high-level language is an item.
@@ -64,26 +64,7 @@ typedef struct MyItem
 }
 Item;
 
-/****************** CREATE ITEMS ******************/
-
-/*
-EXPERIMENTS
-
-#define ItemWithSymbol(item, symbolIndex) \
-do { \
-  (item).type = TypeSymbol; \
-  (item).value.symbol = symbolIndex; \
-} while(0)
-
-#define ItemWithSymbol(item, symbolIndex) \
-((item).type = TypeSymbol, (item).value.symbol = symbolIndex)
-
-void ItemWithSymbol(Item* item, Index symbolIndex)
-{
-  item->type = TypeSymbol;
-  item->value.symbol = symbolIndex;
-}
-*/
+// CREATE ITEMS ------------------------------------------------
 
 Item ItemWithSymbol(Index symbolIndex)
 {
@@ -100,7 +81,6 @@ Item ItemWithString(char* string)
   char* stringbuf = malloc(strlen(string) + 1);
   strcpy(stringbuf, string);
   item.value.string = stringbuf;
-  //PrintDebug("[TypeString: %s]", item.value.string);
   return item;
 }
 
@@ -128,6 +108,14 @@ Item ItemWithList(List* list)
   return item;
 }
 
+Item ItemWithFun(List* list)
+{
+  Item item;
+  item.type = TypeList | TypeFun;
+  item.value.list = list;
+  return item;
+}
+
 Item ItemWithContext(Context* context)
 {
   Item item;
@@ -144,20 +132,12 @@ Item ItemWithPrimFun(PrimFun fun)
   return item;
 }
 
-// Unbound/uninitialized value
+// Uninitialized value
 Item ItemWithVirgin()
 {
   Item item;
   item.type = TypeVirgin;
-  item.value.list = NULL; // Sets value to zero.
-  return item;
-}
-
-Item ItemWithLocalSymbol(Index symbolIndex)
-{
-  Item item;
-  item.type = TypeLocalVar;
-  item.value.symbol = symbolIndex;
+  item.value.list = 0; // Sets value to zero.
   return item;
 }
 
@@ -169,7 +149,7 @@ Item ItemWithBool(Bool truth)
   return item;
 }
 
-/****************** ITEM ACCESS ******************/
+// ITEM ACCESS -------------------------------------------------
 
 // Get the list of an item.
 #ifdef OPTIMIZE

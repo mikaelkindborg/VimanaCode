@@ -14,9 +14,9 @@ $numlines =
   countlines("list.h") +
   countlines("print.h") +
   countlines("interp.h") +
-  countlines("evalcore.h") +
+  countlines("primfuns.h") +
   countlines("parser.h") +
-  countlines("primfuns.h");
+  countlines("vimana.h");
   
 echo "NUMBER OF LINES: ".$numlines."\n";
 

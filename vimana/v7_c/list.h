@@ -1,7 +1,7 @@
 int GMallocCounter = 0;
 int GReallocCounter = 0;
 
-/****************** LISTS ******************/
+// LISTS -------------------------------------------------------
 
 typedef struct MyList
 {
@@ -201,19 +201,59 @@ Item* ListGetItemPtr(List* list, int index)
 }
 #endif
 
-// Associative list lookup. Assumes symbol and value in pairs.
-Item* ListLookupSymbol(List* list, Index symbolIndex)
+// Associative list set or get. Assumes symbol and value in pairs.
+Item* ListAssocSetGet(List* list, Index symbol, Item* value)
 {
-  int length = list->length;
+  int    length = list->length;
   size_t itemSize = sizeof(Item);
-  int i = 0;
-  Item* item = list->items;
+  Item*  item = list->items;
+  int    i = 0;
+
+  PrintDebug("ListAssocSetGet:");
+
   while (i < length)
   {
-    if (IsSymbol(*item) && (item->value.symbol == symbolIndex))
-      return item + itemSize;
+    PrintDebug("  i = %i", i);
+    if (IsSymbol(*item) && (item->value.symbol == symbol))
+    {
+      PrintDebug("  Found symbol: %i", item->value.symbol);
+      // Found symbol entry.
+      Item* p = item + 1;
+      if (value)
+      {
+        PrintDebug("  Set existing symbol: %i to valueType: %lu", symbol, value->type);
+        *p = *value;
+      }
+      PrintDebug("  return symbol: %i valueType: %lu", p->value.symbol, p->type);
+      return p;
+    }
     i = i + 2;
-    item = item + (itemSize * 2);
+    item = item + 2;
   }
+
+  // Reached end of list, add symbol/value if set.
+  if (value)
+  {
+    PrintDebug("  Set symbol: %i to valueType: %lu", symbol, (*value).type);
+    ListPush(list, ItemWithSymbol(symbol));
+    ListPush(list, *value);
+    return value;
+  }
+
+  // Otherwise return NULL.
   return NULL;
+}
+
+// Associative list lookup.
+Item* ListAssocGet(List* list, Index symbolIndex)
+{
+  PrintDebug("ListAssocGet:");
+  return ListAssocSetGet(list, symbolIndex, NULL);
+}
+
+// Associative list set.
+void ListAssocSet(List* list, Index symbolIndex, Item* value)
+{
+  PrintDebug("ListAssocSet:");
+  ListAssocSetGet(list, symbolIndex, value);
 }

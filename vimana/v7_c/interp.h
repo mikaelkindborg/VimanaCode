@@ -1,27 +1,29 @@
 
 // Context environment handling.
-#define ContextResetEnv     0
-#define ContextBorrowEnv    1
+#define ContextNewEnv       1
+#define ContextCurrentEnv   0
 
 // Declarations.
-Item EvalCoreEvalSymbol(Interp* interp, Item item);
-void EvalCoreEvalFun(Interp* interp, List* fun);
+void PrimEval_EvalList(Interp* interp, List* list);
+void PrimEval_EvalFun(Interp* interp, List* fun);
+Item PrimEval_EvalSymbol(Interp* interp, Item item);
 
 // Octo: That was new
 
 // With freedom comes responsibilities (for the programmer).
 // Dynamic languages in action.
 
-/***** INTERPRETER ***************************************/
+// INTERPRETER -------------------------------------------------
 
 typedef struct MyInterp
 {
-  List* globalSymbolTable; // List of symbols
-  List* globalValueTable;  // List of global values (primfuns, funs, etc)
-  List* stack;             // The data stack
-  List* callstack;         // Callstack with context frames
-  int   callstackIndex;    // Index of current frame
-  Bool  run;               // Run flag
+  List*    globalSymbolTable; // List of symbols
+  List*    globalValueTable;  // List of global values (primfuns, funs, etc)
+  List*    stack;             // The data stack
+  List*    callstack;         // Callstack with context frames
+  int      callstackIndex;    // Index of current frame
+  Context* currentContext;    // Currently executing context
+  Bool     run;               // Run flag
 }
 Interp;
 
@@ -33,6 +35,7 @@ Interp* InterpCreate()
   interp->stack = ListCreate();
   interp->callstack = ListCreate();
   interp->callstackIndex = -1;
+  interp->currentContext = NULL;
   interp->run = TRUE;
   return interp;
 }
@@ -45,13 +48,15 @@ void InterpFree(Interp* interp)
   ListFree(interp->callstack, ListFreeDeep);
 }
 
-/***** CONTEXT *******************************************/
+// CONTEXT -----------------------------------------------------
 
 typedef struct MyContext
 {
+  Bool  hasEnv;
   List* env;
   List* code;
   Index codePointer;
+  struct MyContext* prevContext;
 }
 Context;
 
@@ -59,8 +64,10 @@ Context* ContextCreate()
 {
   Context* context = malloc(sizeof(Context));
   context->env = ListCreate();
+  context->hasEnv = TRUE;
   context->code = NULL;
   context->codePointer = -1;
+  context->prevContext = NULL;
   return context;
 }
 
@@ -70,9 +77,22 @@ void ContextFree(Context* context)
   free(context);
 }
 
+void ContextInitEnv(Context* context, int newEnv)
+{
+  if (newEnv) 
+  {
+    context->env->length = 0;
+    context->hasEnv = TRUE;
+  }
+  else
+  {
+    context->hasEnv = FALSE;
+  }
+}
+
 #define ContextEnv(context) ((context)->env)
 
-/***** DATA STACK ****************************************/
+// DATA STACK --------------------------------------------------
 
 // Push an item onto the data stack.
 #define InterpPush(interp, item) ListPush((interp)->stack, item)
@@ -85,20 +105,12 @@ void ContextFree(Context* context)
   do { \
     ListPopSet((interp)->stack, item); \
     (item) = IsSymbol(item) ? \
-      EvalCoreEvalSymbol(interp, item) : \
+      PrimEval_EvalSymbol(interp, item) : \
       item; \
   } while(0)
 
-/*
-#define InterpPopEvalSet(interp, item) \
-  do { \
-    ListPopSet((interp)->stack, item); \
-    (item) = (IsSymbol(item) || IsLocalVar(item)) ? \
-      EvalCoreEvalSymbol(interp, item) : \
-      item; \
-  } while(0)
-*/
-/***** SYMBOL TABLE **************************************/
+
+// SYMBOL TABLE ------------------------------------------------
 
 void InterpSetGlobalSymbolValue(Interp* interp, Index index, Item value)
 {
@@ -126,6 +138,39 @@ Index InterpLookupSymbolIndex(Interp* interp, char* symbolString)
   return -1; // Not found.
 }
 
+// Add a symbol to the symbol table and return an
+// item with the entry. Used by the parser.
+Item InterpAddSymbol(Interp* interp, char* symbolString)
+{
+  // Lookup the symbol.
+  Index index = InterpLookupSymbolIndex(interp, symbolString);
+  if (index > -1)
+  {
+#ifdef OPTIMIZE
+    // Special case for primfuns. We return the primfun item.
+    Item value = ListGet(interp->symbolValueTable, index);
+    if (IsPrimFun(value))
+    {
+      return value;
+    }
+#endif
+    // Symbol is already added, return an item for it.
+    Item item = ItemWithSymbol(index);
+    return item;
+  }
+  else
+  {
+    // Symbol does not exist, create it.
+    Item newItem = ItemWithString(symbolString);
+    ListPush(interp->globalSymbolTable, newItem);
+    ListPush(interp->globalValueTable, ItemWithVirgin());
+    Index newIndex = ListLength(interp->globalSymbolTable) - 1;
+    // Make a symbol item and return it.
+    Item item = ItemWithSymbol(newIndex);
+    return item;
+  }
+}
+
 void InterpAddPrimFun(char* name, PrimFun fun, Interp* interp)
 {
   // Add name to symbol table.
@@ -135,32 +180,33 @@ void InterpAddPrimFun(char* name, PrimFun fun, Interp* interp)
   ListPush(interp->globalValueTable, ItemWithPrimFun(fun));
 }
 
-/***** CALL STACK ****************************************/
+// CALLSTACK ---------------------------------------------------
 
-// Return the context for the next call.
-Context* InterpEnterContext(Interp* interp, List* code, int borrowEnv)
+void InterpEnterContext(Interp* interp, List* code, int newEnv)
 {
   List* callstack = interp->callstack;
   Index callstackIndex = interp->callstackIndex;
+  Context* currentContext = NULL;
+
+  // Remember current context.
+  if (interp->callstackIndex > -1)
+    currentContext = ItemContext(ListGet(callstack, callstackIndex));
 
   // 1. Check for tail call optimization.
   if (interp->callstackIndex > -1)
   {
-    Context* context = ItemContext(ListGet(callstack, callstackIndex));
-    
-    Index codePointer = context->codePointer;
-    List* currentCodeList = context->code;
+    Index codePointer = currentContext->codePointer;
+    List* currentCodeList = currentContext->code;
 
     // Check for tail call.
     if (codePointer + 1 >= ListLength(currentCodeList))
     {
       PrintDebug("TAILCALL AT INDEX: %i", interp->callstackIndex);
       // Tail call.
-      context->code = code;
-      context->codePointer = -1;
-      if (!borrowEnv)
-        context->env->length = 0;
-      return context;
+      currentContext->code = code;
+      currentContext->codePointer = -1;
+      ContextInitEnv(currentContext, newEnv);
+      return;
     }
   }
 
@@ -173,23 +219,22 @@ Context* InterpEnterContext(Interp* interp, List* code, int borrowEnv)
   {
     PrintDebug("NEW CONTEXT AT INDEX: %i", callstackIndex);
     // Create stackframe.
-    Context* context = ContextCreate();
-    context->code = code;
-    context->codePointer = -1;
-    if (!borrowEnv)
-      context->env->length = 0;
-    ListSet(callstack, callstackIndex, ItemWithContext(context));
-    return context;
+    Context* newContext = ContextCreate();
+    newContext->code = code;
+    newContext->codePointer = -1;
+    ContextInitEnv(newContext, newEnv);
+    newContext->prevContext = currentContext;
+    ListSet(callstack, callstackIndex, ItemWithContext(newContext));
+    return;
   }
 
   // 3. Reuse existing stackframe.
   PrintDebug("ENTER CONTEXT AT INDEX: %i", callstackIndex);
-  Context* context = ItemContext(ListGet(callstack, callstackIndex));
-  context->code = code;
-  context->codePointer = -1;
-  if (!borrowEnv)
-    context->env->length = 0;
-  return context;
+  Context* newContext = ItemContext(ListGet(callstack, callstackIndex));
+  newContext->code = code;
+  newContext->codePointer = -1;
+  ContextInitEnv(newContext, newEnv);
+  newContext->prevContext = currentContext;
 }
 
 void InterpExitContext(Interp* interp)
@@ -202,24 +247,18 @@ void InterpExitContext(Interp* interp)
 #endif
 }
 
-/**** EVAL LIST ******************************************/
-
-void InterpEvalList(Interp* interp, List* code)
-{
-  InterpEnterContext(interp, code, ContextBorrowEnv);
-}
-
-/**** MAIN INTERPRETER LOOP ******************************/
+// MAIN INTERPRETER LOOP ---------------------------------------
 
 void InterpRun(Interp* interp, List* list)
 {
   // Create root context.
-  InterpEvalList(interp, list);
+  InterpEnterContext(interp, list, ContextNewEnv);
 
   while (interp->run)
   { 
     // Get current context.
     Context* context = ItemContext(ListGet(interp->callstack, interp->callstackIndex));
+    interp->currentContext = context;
 
     // Increment code pointer.
     ++ context->codePointer;
@@ -260,7 +299,7 @@ void InterpRun(Interp* interp, List* list)
       }
       if (IsFun(value))
       {
-        EvalCoreEvalFun(interp, value.value.list);
+        PrimEval_EvalFun(interp, value.value.list);
         goto exit;
       }
     }

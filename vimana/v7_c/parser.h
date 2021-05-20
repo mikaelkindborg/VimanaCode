@@ -1,5 +1,5 @@
 
-/***** PARSER ********************************************/
+// PARSER ------------------------------------------------------
 
 #define TokenBufferSize 512
 
@@ -49,7 +49,7 @@ void ParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
   }
   else
   {
-    item = EvalCoreAddSymbol(interp, token);
+    item = InterpAddSymbol(interp, token);
   }
   ListPush(list, item);
 }
