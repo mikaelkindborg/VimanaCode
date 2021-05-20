@@ -94,7 +94,7 @@ This is the benchmark program for the C-version:
 
     ((L N) =>
       N 0 EQ NOT (L DO  L N 1 - TIMESDO) IFTRUE)
-      TIMESDO DEF 
+    TIMESDO DEF 
 
     (20 FACT DROP) 10000000 TIMESDO
 
@@ -106,7 +106,7 @@ Lower-case would also be possible (note that symbols are case-sensitive):
 
     ((l n) =>
       n 0 eq not (l do  l n 1 - timesdo) iftrue)
-      timesdo def 
+    timesdo def 
 
     (20 fact drop) 10000000 timesdo
 
@@ -115,7 +115,7 @@ Forth-inspired version:
     (DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) 
     FACT DEF
 
-    (N : L : N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) 
+    (N : L : N 0 EQ NOT (L DO  L N 1 - TIMESDO) IFTRUE) 
     TIMESDO DEF
 
     (20 FACT DROP) 10000000 TIMESDO
