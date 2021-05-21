@@ -21,7 +21,7 @@ Vimana is a personal project. I created Vimana as an experiment, for the fun of 
 
 The Vimana project has several goals:
 
-- Make the language as minimalistic as possible
+- Make the language as minimalistic and consistent as possible
 - Make the interpreter as simple and understandable as possible
 - Make the source code for the interpreter as small as possible
 - Make the language as fast as possible
@@ -225,6 +225,8 @@ Everything in Vimana is a list of symbols. Symbols can be words or numbers or tr
 
 At the top level, parens are not used (as in the Hello World example above).
 
+The syntax is very uniform. A program is just a stream of symbols separated by spaces. Lists are used to express "blocks" of code and to represent data. The beauty of postfix notation is that there little need to syntactically group expressions or nest functions calls. This is different from Lisp, which is a bit notorius for nested of lists that results in many parenthesis.
+
 ## Execution
 
 Almost everything happens at runtime. The interpreter scans the program list and pushes elements onto a data stack. Elements are not evaluated in this step.
@@ -265,7 +267,7 @@ Everything is just one file split up into modules in .h files.
 
 ## Code Size
 
-Current code size (2021-05-20):
+Current code size (2021-05-21):
 
     PHP: 500 lines
     C:  1580 lines (fewer primitives than PHP)
