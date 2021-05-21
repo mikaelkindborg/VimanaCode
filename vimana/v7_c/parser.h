@@ -1,9 +1,11 @@
 
-// PARSER ------------------------------------------------------
+// DECLARATIONS ------------------------------------------------
 
 #define TokenBufferSize 512
 
 int ParserWorker(Interp* interp, char* code, int i, int length, List* list);
+
+// PARSER ------------------------------------------------------
 
 List* ParseCode(Interp* interp, char* code)
 {
@@ -11,6 +13,8 @@ List* ParseCode(Interp* interp, char* code)
   ParserWorker(interp, code, 0, strlen(code), list);
   return list;
 }
+
+// PARSER FUNCTIONS --------------------------------------------
 
 int ParserIsNumber(char* token)
 {

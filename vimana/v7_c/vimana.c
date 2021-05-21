@@ -24,36 +24,7 @@ int main()
   List* list8 = ParseCode(interp, 
     "((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) FACT DEF 6 FACT PRINT");
 
-  List* list = ParseCode(interp, 
-    "(N : N 0 EQ (1) (N 1 - FACT N *) IFELSE) FACT DEF "
-    "(N : L : N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF "
-    "(20 FACT DROP) 10000000 TIMESDO"
-    );
-  // ./vimana  18.85s user 0.01s system 97% cpu 19.266 total (OPTIMIZE + -Ofast)
-  // WITH GC (cold machine):
-  // ./vimana  19.02s user 0.01s system 97% cpu 19.585 total
-  // WITHOUT GC (cold machine):
-  // ./vimana  18.89s user 0.01s system 96% cpu 19.532 total
-
-  List* list11 = ParseCode(interp, 
-    "((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) FACT DEF "
-    "((L N) => N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF "
-    "(20 FACT DROP) 10000000 TIMESDO"
-    );
-  // ./vimana  18.99s user 0.01s system 95% cpu 19.939 total (OPTIMIZE + -Ofast)
-
-  List* list12 = ParseCode(interp, 
-    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) FACT DEF "
-    "(N : L : N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF "
-    "(20 FACT DROP) 10000000 TIMESDO"
-    );
-  // ./vimana  13.80s user 0.01s system 96% cpu 14.357 total (OPTIMIZE + -Ofast)
-  // ./vimana  14.53s user 0.01s system 97% cpu 14.881 total
-  // WITH GC (cold machine):
-  // ./vimana  14.43s user 0.01s system 93% cpu 15.462 total
-  // WITHOUT GC (cold machine):
-  // ./vimana  13.64s user 0.01s system 96% cpu 14.141 total
-
+  // Testing variable scope.
   List* list13 = ParseCode(interp, 
     "HELLO-WORLD MESSAGE : "
     "(DUP 0 EQ (DROP DROP) (SWAP DUP DO SWAP 1 - TIMESDO) IFELSE) TIMESDO DEF "
@@ -61,13 +32,58 @@ int main()
     "BLOCK 10 TIMESDO FOO"
     );
 
+  // BENCHMARKS
+
+  List* list10 = ParseCode(interp, 
+    "(N : N 0 EQ (1) (N 1 - FACT N *) IFELSE) FACT DEF "
+    "(N : L : N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF "
+    "(20 FACT DROP) 10000000 TIMESDO"
+    );
+  // Pre-GC version:
+  // ./vimana  18.85s user 0.01s system 97% cpu 19.266 total (OPTIMIZE + -Ofast)
+  // WITH GC (cold machine):
+  // ./vimana  19.02s user 0.01s system 97% cpu 19.585 total
+  // WITHOUT GC (cold machine):
+  // ./vimana  18.86s user 0.01s system 97% cpu 19.294 total
+
+  List* list11 = ParseCode(interp, 
+    "((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) FACT DEF "
+    "((L N) => N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF "
+    "(20 FACT DROP) 10000000 TIMESDO"
+    );
+  // Pre-GC version:
+  // ./vimana  18.99s user 0.01s system 95% cpu 19.939 total (OPTIMIZE + -Ofast)
+  // WITH GC:
+  // ./vimana  19.60s user 0.01s system 98% cpu 19.994 total
+  // WITHOUT GC (warm machine possibly):
+  // ./vimana  19.85s user 0.01s system 99% cpu 19.879 total
+  // ./vimana  19.30s user 0.01s system 98% cpu 19.644 total (setting full fan)
+
+  List* list12 = ParseCode(interp, 
+    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) FACT DEF "
+    "(N : L : N 0 EQ NOT (L DO L N 1 - TIMESDO) IFTRUE) TIMESDO DEF "
+    "(20 FACT DROP) 10000000 TIMESDO"
+    );
+  // Pre-GC version:
+  // ./vimana  13.80s user 0.01s system 96% cpu 14.357 total (OPTIMIZE + -Ofast)
+  // ./vimana  14.53s user 0.01s system 97% cpu 14.881 total
+  // WITH GC (cold machine):
+  // ./vimana  14.43s user 0.01s system 93% cpu 15.462 total
+  // WITHOUT GC (cold machine):
+  // ./vimana  13.64s user 0.01s system 96% cpu 14.141 total
+
   List* list14 = ParseCode(interp, 
     "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) FACT DEF "
     "(DUP 0 EQ (DROP DROP) (SWAP DUP DO SWAP 1 - TIMESDO) IFELSE) TIMESDO DEF "
     "(20 FACT DROP) 10000000 TIMESDO"
     );
+  // Pre-GC version (warm machine):
   // ./vimana  18.51s user 0.17s system 96% cpu 19.265 total
   // ./vimana  15.86s user 0.04s system 97% cpu 16.253 total
+  // WITH GC (cold machine):
+  // ./vimana  13.72s user 0.01s system 97% cpu 14.123 total
+  // WITHOUT GC (cold machine):
+  // ./vimana  13.17s user 0.01s system 96% cpu 13.615 total
 
   // Experimenting with GC.
   List* list15 = ParseCode(interp, 
@@ -75,16 +91,22 @@ int main()
     "LISTNEW L : L PRINT 43 L : L PRINT"
     );
   List* list16 = ParseCode(interp, 
-    "(A B C) L SET L PRINT  42 L SET L PRINT "
+    "(A B C) L SET L PRINT 42 L SET L PRINT "
     "(D E F) L : L PRINT 43 L : L PRINT"
     );
   List* list17 = ParseCode(interp, 
     "LISTNEW DROP LISTNEW PRINT "
     );
 
-
-
+  List* list = ParseCode(interp, 
+    "(Hello-I-am-the-Vimana-interpreter. PRINT "
+    "(your-name) => I-can-see-that-your-name-is: PRINT "
+    "your-name PRINT) say-hello DEF "
+    "Mikael say-hello");
+    
 /*
+  TESTS FOR OLDER VERSION:
+
   List* list1 = ParseCode(interp, 
     "(()() (DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE)) FUN FACT SET 6 FACT PRINT");
 

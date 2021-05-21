@@ -1,5 +1,6 @@
 
-// Declarations.
+// DECLARTIONS -------------------------------------------------
+
 char* InterpGetSymbolString(Interp* interp, Index index);
 void  ListPrintToStream(Stream* stream, List* list, Bool useNewLine, Interp* interp);
 
@@ -86,7 +87,6 @@ void ItemPrint(Item item, Interp* interp)
 
 // PRINT LISTS -------------------------------------------------
 
-// Recursively print list.
 void ListPrintWorker(Stream* stream, List* list, Bool useNewLine, Interp* interp)
 {
   for (int i = 0; i < ListLength(list); i++)
@@ -138,7 +138,7 @@ void ListPrint(List* list, Interp* interp)
   ListPrintHelper(list, FALSE, interp);
 }
 
-// Print list with each element on a new line.
+// Print list with each top-level element on a new line.
 void ListPrintItems(List* list, Interp* interp)
 {
   ListPrintHelper(list, TRUE, interp);

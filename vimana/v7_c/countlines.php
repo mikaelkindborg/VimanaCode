@@ -30,10 +30,13 @@ echo "NUMBER OF LINES: ".$numlines."\n";
 210508: 1572 lines
 210514: 1773 lines
 210520: 1581 lines
+210521: 1641 lines
 
 ***/
 
 /***
+
+OLD NOTES:
 
 ((N FOO) (A B) 
  (...)) DEF

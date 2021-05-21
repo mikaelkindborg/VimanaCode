@@ -1,5 +1,5 @@
 
-// EVAL PRIMS --------------------------------------------------
+// EVAL PRIMITIVES ---------------------------------------------
 
 //
 // The following functions can be changed to alter
@@ -90,7 +90,7 @@ Item PrimEval_EvalSymbol(Interp* interp, Item item)
   return item;
 }
 
-// PRIM FUNS ---------------------------------------------------
+// PRIMITIVE FUNCTIONS -----------------------------------------
 
 // SET a global symbol to a value.
 // Example:
