@@ -1,4 +1,6 @@
 
+// DECLARATIONS ------------------------------------------------
+
 // Context environment handling.
 #define ContextNewEnv       1
 #define ContextCurrentEnv   0
@@ -91,8 +93,6 @@ void ContextInitEnv(Context* context, int newEnv)
   }
 }
 
-#define ContextEnv(context) ((context)->env)
-
 // DATA STACK --------------------------------------------------
 
 // Push an item onto the data stack.
@@ -109,7 +109,6 @@ void ContextInitEnv(Context* context, int newEnv)
       PrimEval_EvalSymbol(interp, item) : \
       item; \
   } while(0)
-
 
 // SYMBOL TABLE ------------------------------------------------
 
@@ -148,7 +147,8 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
   if (index > -1)
   {
 #ifdef OPTIMIZE
-    // Special case for primfuns. We return the primfun item.
+    // Special case for primfuns. We return the primfun item
+    // for faster lookup in eval.
     Item value = ListGet(interp->globalValueTable, index);
     if (IsPrimFun(value))
     {
@@ -251,6 +251,7 @@ void InterpExitContext(Interp* interp)
 
 // MAIN INTERPRETER LOOP ---------------------------------------
 
+// Evaluate the list.
 void InterpRun(Interp* interp, List* list)
 {
   // Create root context.

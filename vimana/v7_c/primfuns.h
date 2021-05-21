@@ -28,6 +28,17 @@ void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
     ErrorExit("SET: Got a non-symbol of type: %lu", name.type);
 }
 
+#ifdef OPTIMIZE
+#define PrimEval_SetLocal(interp, name, value) \
+do { \
+  if (!IsSymbol(name)) \
+    ErrorExit("PrimEval_SetLocal: Got a non-symbol of type: %lu", (name).type); \
+  Context* context = (interp)->currentContext; \
+  while (context && (!context->hasEnv)) \
+    context = context->prevContext; \
+  ListAssocSetGet(context->env, (name).value.symbol, &(value)); \
+} while(0)
+#else
 void PrimEval_SetLocal(Interp* interp, Item name, Item value)
 {
   if (!IsSymbol(name))
@@ -54,16 +65,19 @@ void PrimEval_SetLocal(Interp* interp, Item name, Item value)
   //PrintDebug("SETLOCAL: PRINTING ENV");
   //ListPrint(context->env, interp);
 }
+#endif
 
 Item PrimEval_EvalSymbol(Interp* interp, Item item)
 {
+#ifndef OPTIMIZE
   // Non-symbols evaluates to themselves.
   if (!IsSymbol(item))
     return item;
+#endif
 
   // Lookup local symbol.
   //if (IsLocalVar(item))
-  {
+  //{
     // Search contexts for the symbol.
     Context* context = interp->currentContext;
     while (context)
@@ -79,7 +93,7 @@ Item PrimEval_EvalSymbol(Interp* interp, Item item)
       }
       context = context->prevContext;
     }
-  }
+  //}
 
   // Lookup global symbol.
   Item value = ListGet(interp->globalValueTable, item.value.symbol);

@@ -45,6 +45,7 @@ int main()
   // ./vimana  19.02s user 0.01s system 97% cpu 19.585 total
   // WITHOUT GC (cold machine):
   // ./vimana  18.86s user 0.01s system 97% cpu 19.294 total
+  // ./vimana  18.79s user 0.01s system 97% cpu 19.259 total
 
   List* list11 = ParseCode(interp, 
     "((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) FACT DEF "
@@ -55,9 +56,10 @@ int main()
   // ./vimana  18.99s user 0.01s system 95% cpu 19.939 total (OPTIMIZE + -Ofast)
   // WITH GC:
   // ./vimana  19.60s user 0.01s system 98% cpu 19.994 total
-  // WITHOUT GC (warm machine possibly):
-  // ./vimana  19.85s user 0.01s system 99% cpu 19.879 total
+  // WITHOUT GC:
+  // ./vimana  19.85s user 0.01s system 99% cpu 19.879 total (warm machine possibly)
   // ./vimana  19.30s user 0.01s system 98% cpu 19.644 total (setting full fan)
+  // ./vimana  19.26s user 0.01s system 97% cpu 19.784 total
 
   List* list12 = ParseCode(interp, 
     "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) FACT DEF "
@@ -72,7 +74,7 @@ int main()
   // WITHOUT GC (cold machine):
   // ./vimana  13.64s user 0.01s system 96% cpu 14.141 total
 
-  List* list14 = ParseCode(interp, 
+  List* list = ParseCode(interp, 
     "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) FACT DEF "
     "(DUP 0 EQ (DROP DROP) (SWAP DUP DO SWAP 1 - TIMESDO) IFELSE) TIMESDO DEF "
     "(20 FACT DROP) 10000000 TIMESDO"
@@ -98,13 +100,14 @@ int main()
     "LISTNEW DROP LISTNEW PRINT "
     );
 
+
+/*
   List* list = ParseCode(interp, 
     "(Hello-I-am-the-Vimana-interpreter. PRINT "
     "(your-name) => I-can-see-that-your-name-is: PRINT "
     "your-name PRINT) say-hello DEF "
     "Mikael say-hello");
-    
-/*
+
   TESTS FOR OLDER VERSION:
 
   List* list1 = ParseCode(interp, 
