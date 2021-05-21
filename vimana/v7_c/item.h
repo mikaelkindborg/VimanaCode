@@ -24,6 +24,7 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeLocalVar     256 
 #define TypeString       512
 #define TypeContext      1024
+#define TypeDynAlloc     2048
 #define TypeVirgin       0 // Represents unbound symbol/uninitialized item
 
 #define IsVirgin(item)      ((item).type == TypeVirgin)
@@ -38,6 +39,7 @@ typedef void   (*PrimFun)(Interp*);
 #define IsLocalVar(item)    ((item).type & TypeLocalVar)
 #define IsString(item)      ((item).type & TypeString)
 #define IsContext(item)     ((item).type & TypeContext)
+#define IsDynAlloc(item)    ((item).type & TypeDynAlloc)
 
 // STRUCTS -----------------------------------------------------
 
@@ -108,14 +110,6 @@ Item ItemWithList(List* list)
   return item;
 }
 
-Item ItemWithFun(List* list)
-{
-  Item item;
-  item.type = TypeList | TypeFun;
-  item.value.list = list;
-  return item;
-}
-
 Item ItemWithContext(Context* context)
 {
   Item item;
@@ -141,11 +135,11 @@ Item ItemWithVirgin()
   return item;
 }
 
-Item ItemWithBool(Bool truth)
+Item ItemWithBool(Bool boolVal)
 {
   Item item;
   item.type = TypeBool;
-  item.value.truth = truth;
+  item.value.truth = boolVal;
   return item;
 }
 
@@ -174,31 +168,5 @@ Context* ItemContext(Item item)
     ErrorExit("ItemContext: Item is not of TypeContext");
   else
     return item.value.context;
-}
-#endif
-
-// Get the IntNum of an item.
-#ifdef OPTIMIZE 
-#define ItemIntNum(item) ((item).value.intNum)
-#else
-IntNum ItemIntNum(Item item)
-{
-  if (!IsIntNum(item))
-    ErrorExit("ItemIntNum: Item is not of TypeIntNum");
-  else
-    return item.value.intNum;
-}
-#endif
-
-// Get the Bool of an item.
-#ifdef OPTIMIZE
-#define ItemBool(item) ((item).value.truth )
-#else
-Bool ItemBool(Item item)
-{
-  if (!IsBool(item))
-    ErrorExit("ItemBool: Item is not of TypeBool");
-  else
-    return item.value.truth;
 }
 #endif

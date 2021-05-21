@@ -5,6 +5,7 @@
 #include <ctype.h>
 
 #define OPTIMIZE
+//#define USE_GC
 //#define DEBUG
 
 typedef unsigned char Byte;
@@ -13,10 +14,6 @@ typedef FILE          Stream;
 
 #define FALSE 0
 #define TRUE  1
-
-#define ListFreeShallow 1
-#define ListFreeDeep    2
-#define ListFreeDeeper  3
 
 #define StringEquals(s1, s2) (0 == strcmp(s1, s2))
 

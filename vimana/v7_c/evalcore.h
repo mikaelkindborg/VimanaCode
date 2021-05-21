@@ -54,7 +54,7 @@ void EvalCoreFunEvalFun(Interp* interp, List* fun)
   {
     //Item arg = InterpPopEval(interp);
     Item arg;
-    InterpPopEvalSet(interp, arg);
+    InterpPopEvalInto(interp, arg);
     //ListSet(env, i, arg);
     // Push a symbol -> value pair.
     // Push symbol.

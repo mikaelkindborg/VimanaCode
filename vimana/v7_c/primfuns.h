@@ -102,9 +102,9 @@ void Prim_SET(Interp* interp)
   
   // Get name and value.
   Item name, value;
-  InterpPopSet(interp, name);
+  InterpPopInto(interp, name);
   //PrintDebug("  NAME TYPE:  %lu", name.type);
-  InterpPopEvalSet(interp, value);
+  InterpPopEvalInto(interp, value);
   //PrintDebug("  VALUE TYPE: %lu", value.type);
   PrimEval_SetGlobal(interp, value, name);
 }
@@ -115,6 +115,8 @@ void Prim_DROP(Interp* interp)
   length = length - 1;
   if (length < 0) 
     ErrorExit("DROP: list length < 0");
+  ItemRefCountDecr(interp->stack->items[length]);
+  ItemGC(interp->stack->items[length]);
   interp->stack->length = length;
 }
 
@@ -149,8 +151,10 @@ void Prim_FUN(Interp* interp)
 {
   //PrintDebug("HELLO FUN");
   Item list;
-  InterpPopEvalSet(interp, list);
-  list.type = TypeFun | TypeList;
+  InterpPopEvalInto(interp, list);
+  if (!IsList(list))
+    ErrorExit("FUN: Got a non-list!");
+  list.type = list.type | TypeFun;
   InterpPush(interp, list);
 }
 
@@ -158,8 +162,8 @@ void Prim_SETLOCAL(Interp* interp)
 {
   //PrintDebug("HELLO SETLOCAL");
   Item name, value;
-  InterpPopSet(interp, name);
-  InterpPopEvalSet(interp, value);
+  InterpPopInto(interp, name);
+  InterpPopEvalInto(interp, value);
   PrimEval_SetLocal(interp, name, value);
 }
 
@@ -168,7 +172,7 @@ void Prim_SETPARAMS(Interp* interp)
   //PrintDebug("HELLO SETPARAMS");
   Item params, name, value;
 
-  InterpPopSet(interp, params);
+  InterpPopInto(interp, params);
   if (!IsList(params))
     ErrorExit("Prim_SETPARAMS: Param list not of TypeList");
 
@@ -177,7 +181,7 @@ void Prim_SETPARAMS(Interp* interp)
   for (int i = length - 1; i >= 0; --i)
   {
     name = ListGet(list, i);
-    InterpPopEvalSet(interp, value);
+    InterpPopEvalInto(interp, value);
     PrimEval_SetLocal(interp, name, value);
   }
 }
@@ -199,7 +203,7 @@ void Prim_DO(Interp* interp)
   //ListPrint(interp->stack, interp);
   //ListPrint(interp->currentContext->env, interp);
   Item item;
-  InterpPopEvalSet(interp, item);
+  InterpPopEvalInto(interp, item);
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item))
     //PrimEval_EvalList(interp, ItemList(item));
@@ -228,44 +232,56 @@ void Prim_RECUR(Interp* interp)
 
 void Prim_IFTRUE(Interp* interp)
 {
-  Item item, truth;
+  Item list, boolVal;
 
-  InterpPopEvalSet(interp, item);
-  InterpPopEvalSet(interp, truth);
+  InterpPopEvalInto(interp, list);
+  InterpPopEvalInto(interp, boolVal);
 
-  if (!IsList(item))
-    ErrorExit("IFTRUE got a non-list of type: %lu", item.type);
-  else
-  if (ItemBool(truth))
-    //PrimEval_EvalList(interp, ItemList(item));
-    InterpEnterContext(interp, ItemList(item), ContextCurrentEnv); 
+  if (!IsList(list))
+    ErrorExit("IFTRUE: branch is non-list of type: %lu", list.type);
+  if (!IsBool(boolVal))
+    ErrorExit("IFTRUE: got non-bool of type: %lu", boolVal.type);
+
+  if (boolVal.value.truth)
+  {
+    //PrimEval_EvalList(interp, ItemList(list));
+    InterpEnterContext(interp, ItemList(list), ContextCurrentEnv);
+  }
 }
 
 void Prim_IFELSE(Interp* interp)
 {
-  Item branch2, branch1, truth;
+  Item branch2, branch1, boolVal;
 
-  InterpPopEvalSet(interp, branch2);
-  InterpPopEvalSet(interp, branch1);
-  InterpPopEvalSet(interp, truth);
+  InterpPopEvalInto(interp, branch2);
+  InterpPopEvalInto(interp, branch1);
+  InterpPopEvalInto(interp, boolVal);
 
-  if (IsList(branch1) && IsList(branch2))
-    if (ItemBool(truth))
-      //PrimEval_EvalList(interp, ItemList(branch1));
-      InterpEnterContext(interp, ItemList(branch1), ContextCurrentEnv); 
-    else
-      //PrimEval_EvalList(interp, ItemList(branch2));
-      InterpEnterContext(interp, ItemList(branch2), ContextCurrentEnv); 
+  if (!IsList(branch1))
+    ErrorExit("IFELSE: branch1 is non-list of type: %lu", branch1.type);
+  if (!IsList(branch2))
+    ErrorExit("IFELSE: branch2 is non-list of type: %lu", branch2.type);
+  if (!IsBool(boolVal))
+    ErrorExit("IFTRUE: got non-bool of type: %lu", boolVal.type);
+
+  if (boolVal.value.truth)
+  {
+    //PrimEval_EvalList(interp, ItemList(branch1));
+    InterpEnterContext(interp, ItemList(branch1), ContextCurrentEnv); 
+  }
   else
-    ErrorExit("IFELSE got a non-list items");
+  {
+    //PrimEval_EvalList(interp, ItemList(branch2));
+    InterpEnterContext(interp, ItemList(branch2), ContextCurrentEnv);
+  }
 }
 
 void Prim_PLUS(Interp* interp)
 {
   Item a, b, res;
 
-  InterpPopEvalSet(interp, b);
-  InterpPopEvalSet(interp, a);
+  InterpPopEvalInto(interp, b);
+  InterpPopEvalInto(interp, a);
 
   if (IsIntNum(a) && IsIntNum(b))
   {
@@ -300,8 +316,8 @@ void Prim_MINUS(Interp* interp)
 {
   Item a, b, res;
 
-  InterpPopEvalSet(interp, b);
-  InterpPopEvalSet(interp, a);
+  InterpPopEvalInto(interp, b);
+  InterpPopEvalInto(interp, a);
 
   if (IsIntNum(a) && IsIntNum(b))
   {
@@ -336,8 +352,8 @@ void Prim_TIMES(Interp* interp)
 {
   Item a, b, res;
 
-  InterpPopEvalSet(interp, b);
-  InterpPopEvalSet(interp, a);
+  InterpPopEvalInto(interp, b);
+  InterpPopEvalInto(interp, a);
 
   if (IsIntNum(a) && IsIntNum(b))
   {
@@ -372,8 +388,8 @@ void Prim_DIV(Interp* interp)
 {
   Item a, b, res;
 
-  InterpPopEvalSet(interp, b);
-  InterpPopEvalSet(interp, a);
+  InterpPopEvalInto(interp, b);
+  InterpPopEvalInto(interp, a);
 
   if (IsIntNum(a) && IsIntNum(b))
   {
@@ -408,8 +424,8 @@ void Prim_MODULO(Interp* interp)
 {
   Item a, b, res;
 
-  InterpPopEvalSet(interp, b);
-  InterpPopEvalSet(interp, a);
+  InterpPopEvalInto(interp, b);
+  InterpPopEvalInto(interp, a);
 
   res.type = TypeIntNum;
 
@@ -439,7 +455,7 @@ void Prim_NOT(Interp* interp)
 {
   Item item;
 
-  InterpPopEvalSet(interp, item);
+  InterpPopEvalInto(interp, item);
 
   Bool x = item.value.truth;
   item.value.truth = !x;
@@ -450,8 +466,8 @@ void Prim_EQ(Interp* interp)
 {
   Item a, b, res;
 
-  InterpPopEvalSet(interp, b);
-  InterpPopEvalSet(interp, a);
+  InterpPopEvalInto(interp, b);
+  InterpPopEvalInto(interp, a);
 
   res.type = TypeBool;
 
@@ -485,10 +501,21 @@ void Prim_PRINT(Interp* interp)
 {
   //PrintDebug("HELLO PRINT");
   Item item;
-  InterpPopEvalSet(interp, item);
+  InterpPopEvalInto(interp, item);
   char* buf = ItemToString(item, interp);
   puts(buf);
   free(buf);
+  ItemGC(item);
+}
+
+void Prim_LISTNEW(Interp* interp)
+{
+  PrintDebug("HELLO LISTNEW");
+  Item item;
+  List* list = ListCreate();
+  item.type = TypeList | TypeDynAlloc;
+  item.value.list = list;
+  InterpPush(interp, item);
 }
 
 void DefinePrimFuns(Interp* interp)
@@ -518,6 +545,7 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("NOT", &Prim_NOT, interp);
   InterpAddPrimFun("EQ", &Prim_EQ, interp);
   InterpAddPrimFun("PRINT", &Prim_PRINT, interp);
+  InterpAddPrimFun("LISTNEW", &Prim_LISTNEW, interp);
   //InterpAddPrimFun("PRN", &Prim_PRN, interp);
   //InterpAddPrimFun("NEWLINE", &Prim_NEWLINE, interp);
   //InterpAddPrimFun("SPACE", &Prim_SPACE, interp);

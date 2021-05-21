@@ -6,9 +6,9 @@
 
 /* 
 // Support for TypeLocalVar
-#define InterpPopEvalSet(interp, item) \
+#define InterpPopEvalInto(interp, item) \
   do { \
-    ListPopSet((interp)->stack, item); \
+    ListPopInto((interp)->stack, item); \
     (item) = (IsSymbol(item) || IsLocalVar(item)) ? \
       EvalPrim_EvalSymbol(interp, item) : \
       item; \
@@ -19,8 +19,8 @@ void Prim_DEF(Interp* interp)
 {
   Item name;
   Item value;
-  InterpPopSet(interp, name);
-  InterpPopEvalSet(interp, value);
+  InterpPopInto(interp, name);
+  InterpPopEvalInto(interp, value);
   // Check that name is a symbol.
   if (!IsSymbol(name))
     ErrorExit("DEF got a non-symbol of type: %lu", name.type);
@@ -224,7 +224,7 @@ void InterpEvalCompiledFun(Interp* interp, List* fun)
   {
     //Item arg = InterpPopEval(interp);
     Item arg;
-    InterpPopEvalSet(interp, arg);
+    InterpPopEvalInto(interp, arg);
     ListSet(env, i, arg);
   }
 /*
@@ -638,8 +638,8 @@ void Prim_SET(Interp* interp)
   Item name;
   Item value;
 
-  InterpPopSet(interp, name);
-  InterpPopEvalSet(interp, value);
+  InterpPopInto(interp, name);
+  InterpPopEvalInto(interp, value);
 
   //PrintDebug("  NAME TYPE:  %lu", name.type);
   //PrintDebug("  VALUE TYPE: %lu", value.type);

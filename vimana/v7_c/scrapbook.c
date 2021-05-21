@@ -145,10 +145,10 @@ With OPTIMIZE defined:
 With OPTIMIZE defined and -O3:
 ./vimana  1.32s user 0.00s system 75% cpu 1.758 total (-O3 + OPTIMIZE)
 
-Macro InterpPopEvalSet used in Prim_MINUS and Prim_IFTRUE:
+Macro InterpPopEvalInto used in Prim_MINUS and Prim_IFTRUE:
 ./vimana  3.18s user 0.00s system 88% cpu 3.605 total
 
-Further use of InterpPopEvalSet:
+Further use of InterpPopEvalInto:
 ./vimana  6.45s user 0.01s system 95% cpu 6.744 total
 ./vimana  6.44s user 0.01s system 93% cpu 6.867 total
 ./vimana  3.15s user 0.00s system 89% cpu 3.518 total (OPTIMIZE)

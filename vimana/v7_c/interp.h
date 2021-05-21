@@ -99,12 +99,12 @@ void ContextInitEnv(Context* context, int newEnv)
 #define InterpPush(interp, item) ListPush((interp)->stack, item)
 
 // Pop an item from the data stack and set variable to it.
-#define InterpPopSet(interp, item) ListPopSet((interp)->stack, item)
+#define InterpPopInto(interp, item) ListPopInto((interp)->stack, item)
 
 // Pop and evaluate an item from the stack and set variable to it.
-#define InterpPopEvalSet(interp, item) \
+#define InterpPopEvalInto(interp, item) \
   do { \
-    ListPopSet((interp)->stack, item); \
+    ListPopInto((interp)->stack, item); \
     (item) = IsSymbol(item) ? \
       PrimEval_EvalSymbol(interp, item) : \
       item; \

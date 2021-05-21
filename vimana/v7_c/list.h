@@ -3,19 +3,25 @@ int GReallocCounter = 0;
 
 // LISTS -------------------------------------------------------
 
+#define ListFreeShallow 1
+#define ListFreeDeep    2
+#define ListFreeDeeper  3
+
 typedef struct MyList
 {
-  // TODO: int last;
+  int refCount;
+  // TODO: int last; ???
   int   length;     // Current number of items
   int   maxLength;  // Max number of items
   Item* items;      // Array of items
-  int   refCount;
-  int   listType;
+  // ?? int   listType;
 }
 List;
 
 // Initial list array size and how much to grow on each reallocation.
 #define ListGrowIncrement 10
+
+// CREATE / FREE -----------------------------------------------
 
 List* ListCreate()
 {
@@ -26,6 +32,7 @@ List* ListCreate()
   //printf("MALLOC CONUTER: %i\n", GMallocCounter);
 
   List* list = malloc(sizeof(List));
+  list->refCount = 0;
   list->length = 0;
   list->maxLength = size;
 
@@ -48,6 +55,46 @@ void ListFree(List* list, int whatToFree)
   free(list->items);
   free(list);
 }
+
+// GARBAGE COLLECTION ------------------------------------------
+
+#ifdef USE_GC
+void ItemRefCountIncr(Item item)
+{
+  if (IsDynAlloc(item))
+  {
+    PrintDebug("ItemRefCountIncr");
+    ++ (item.value.list->refCount);
+  }
+}
+
+void ItemRefCountDecr(Item item)
+{
+  if (IsDynAlloc(item))
+  {
+    PrintDebug("ItemRefCountDecr");
+    -- (item.value.list->refCount);
+  }
+}
+
+void ItemGC(Item item)
+{
+  if (IsDynAlloc(item))
+  {
+    if (0 >= item.value.list->refCount)
+    {
+      PrintDebug("ItemGC: ListFree");
+      ListFree(item.value.list, ListFreeShallow);
+    }
+  }
+}
+#else
+#define ItemRefCountIncr(item)
+#define ItemRefCountDecr(item)
+#define ItemGC(item)
+#endif
+
+// LIST FUNCTIONS ----------------------------------------------
 
 #ifdef OPTIMIZE
 #define ListLength(list) ((list)->length)
@@ -91,6 +138,7 @@ do { \
     ListGrow(list, (list)->length + ListGrowIncrement); \
   (list)->items[(list)->length] = (item); \
   (list)->length++; \
+  ItemRefCountIncr(item); \
 } while (0)
 #else
 void ListPush(List* list, Item item)
@@ -100,16 +148,17 @@ void ListPush(List* list, Item item)
     ListGrow(list, list->length + ListGrowIncrement);
   list->items[list->length] = item;
   list->length++;
-  //return list->length - 1; // Index of new item.
+  ItemRefCountIncr(item);
 }
 #endif
 
-#define ListPopSet(list, item) \
+#define ListPopInto(list, item) \
   do { \
     if ((list)->length < 1) \
-      ErrorExit("ListPopSet: Cannot pop list of length: %i", (list)->length); \
+      ErrorExit("ListPopInto: Cannot pop list of length: %i", (list)->length); \
     (list)->length--; \
     (item) = (list)->items[list->length]; \
+    ItemRefCountDecr(item); \
   } while(0)
 
 Item ListPop(List* list)
@@ -117,44 +166,10 @@ Item ListPop(List* list)
   if (list->length < 1)
     ErrorExit("ListPop: Cannot pop list of length: %i", list->length);
   list->length--;
-  return list->items[list->length];
+  Item item = list->items[list->length];
+  ItemRefCountDecr(item);
+  return item;
 }
-
-#ifdef OPTIMIZE
-#define ListArray(list) ((list)->items)
-#else
-Item* ListArray(List* list)
-{
-  return list->items;
-}
-#endif
-
-/*
-#ifdef OPTIMIZE
-#define ListTop(list) ((list)->items[(list)->length - 1])
-#else
-Item ListTop(List* list)
-{
-  return list->items[list->length - 1];
-}
-#endif
-*/
-
-#ifdef OPTIMIZE
-#define ListDrop(list) \
-do { \
-  if ((list)->length < 1) \
-    ErrorExit("ListDrop: Cannot drop element from list of length: %i", (list)->length); \
-  (list)->length--; \
-} while(0)
-#else
-void ListDrop(List* list)
-{
-  if (list->length < 1)
-    ErrorExit("ListDrop: Cannot drop element from list of length: %i", list->length);
-  list->length--;
-}
-#endif
 
 #ifdef OPTIMIZE
 #define ListGet(list, index) ((list)->items[index])
@@ -174,6 +189,9 @@ do { \
     ListGrow((list), (index) + ListGrowIncrement); \
   if ((index) >= (list)->length) \
     (list)->length = (index) + 1; \
+  ItemRefCountDecr((list)->items[index]); \
+  ItemGC((list)->items[index]); \
+  ItemRefCountIncr(item); \
   (list)->items[index] = (item); \
 } while (0)
 #else
@@ -184,6 +202,11 @@ void ListSet(List* list, int index, Item item)
     ListGrow(list, index + ListGrowIncrement);
   if (index >= list->length)
     list->length = index + 1;
+  // GC
+  ItemRefCountDecr(list->items[index]);
+  ItemGC(list->items[index]);
+  ItemRefCountIncr(item);
+  // Set new item.
   list->items[index] = item;
 }
 #endif
@@ -217,6 +240,9 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
       Item* p = item + 1;
       if (value)
       {
+        ItemRefCountDecr(*p);
+        ItemGC(*p);
+        ItemRefCountIncr(*value);
         *p = *value;
       }
       return p;
@@ -237,6 +263,7 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
   return NULL;
 }
 
+/*
 // Associative list lookup.
 Item* ListAssocGet(List* list, Index symbolIndex)
 {
@@ -248,3 +275,4 @@ void ListAssocSet(List* list, Index symbolIndex, Item* value)
 {
   ListAssocSetGet(list, symbolIndex, value);
 }
+*/
