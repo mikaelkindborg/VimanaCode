@@ -7,13 +7,21 @@ Current implementation exists in two versions, written in PHP and in C.
 
 The PHP version or JS version are by far the most friendly ones to get started with.
 
-The JavaScript implementation is very basic, but it runs the factorial benchmark. I also began doing a simple coding workbench with Amiga-inspired colors.
+The JavaScript implementation is very basic, but it runs the factorial benchmark. I also started doing a simple coding workbench with Amiga-inspired colors.
+
+## A Dynamic Language Playground 
+
+Vimana is a personal project. I created Vimana as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
+
+[Watch introduction video](https://youtu.be/BE7UpUuumc4)
+
+![Screenshot](screenshot.jpg)
 
 ## Project Goals
 
 The Vimana project has several goals:
 
-- Make the language as minimalistic as possible.
+- Make the language as minimalistic as possible
 - Make the interpreter as simple and understandable as possible
 - Make the source code for the interpreter as small as possible
 - Make the language as fast as possible
@@ -24,55 +32,19 @@ Another goal is to make the language easy to understand and to use. This is howe
 
 ## Hello World
 
+Here is Hello World:
+
     HELLO_WORLD PRINT
 
 Or:
 
     (HELLO WORLD) PRINT
 
-## Language Grammar
+## JS-version
 
-Vimana has no grammar. Or rather, the grammar is really simple, and is best explained by giving some examples. 
+A version of JavaScript is now implemented, download and open this file in a web browser:
 
-The only reserved characters are left paren, right paren, and whitespace charaters. Line breaks are whitespace, and do not have any special meaning other than formatting to code to be more readable.
-
-Everything in vimana is a list of symbols. Symbols can be words or numbers or truth values. Lists can contain lists.
-
-At the top level, the parens are not used (as in the Hello World example above).
-
-## Execution
-
-Almost everything happens at runtime. The interpreter scans the program list and pushes elements onto a data stack. Elements are not evaluated in this step.
-
-When a function is found it is evaluated (element is a primitive function or a uder-defined global function).
-
-A function takes its parameters from the data stack. 
-
-Primitive functions can decide to evaluate parameters, to find the value of a variable, for example. They can also operate directly on the "literal" values on the data stack.
-
-User-defined functions evaluate parameters when binding values to local variables, but can also operate directly on the stack without evaluating symbols, by using "Forth-style" stack operations.
-
-In Lisp, lists and symbols are evaluated by default. In Vimana, lists and symbols are not evaluated until a function does so. This enables the use of unbound symbols to display text. There is no string type in the language (yet). This is also a common style in Lisp (using quoted lists and symbols).
-
-## Quoting
-
-I did not want to introduce quoting, since that involves adding one more notation. You can quote symbols, for example a function symbols, preventing it from being executed, by enclosing it in a list:
-
-   (PRINT)
-
-Then you can pushed the value of the symbol onto the data stack (without invoking the function), by using VALUE:
-
-   (PRINT) VALUE
-
-You can also get the value of a value, as in this example:
-
-   42 FOO SET
-   FOO BAR SET
-   BAR VALUE PRINT
-
-(Not tested the above, however. VALUE in not yet in the C-version.)
-
-There could be better ways to do this. Everything is an experiment.
+    [vimana/v5_js/vimana.html](vimana/v5_js/vimana.html)
 
 ## PHP-version
 
@@ -89,7 +61,11 @@ Or go to the directory with the files and run from there:
     cd vimana/v1_takeoff/
     php examples.php
 
-The file examples.php conytains the vimana code, as a HEREDOC string. You can easily create your own PHP-files with Vimana code and run them using php myfile.php.
+The file examples.php contains the vimana code, as a HEREDOC string. You can easily create your own PHP-files with Vimana code and run them using php myfile.php.
+
+## Mantra Meditation
+
+Working on a web app for mantra meditation where the server code is implemented in Vimana PHP. See folder [vimana/v6_mantras](vimana/v6_mantras).
 
 ## C-version
 
@@ -108,16 +84,6 @@ Optimizations are enabled by defining the OPTIMIZE preprocessor symbol in base.h
 Example of how to enable compiler optimizations:
 
     cc vimana.c -o vimana -O3
-
-## JS-version
-
-A version of JavaScript is now implemented, download and open this file in a web browser:
-
-    [vimana/v5_js/vimana.html](vimana/v5_js/vimana.html)
-
-## Mantra Meditation
-
-Working on a web app for mantra meditation where the server code is implemented in Vimana. See folder [vimana/v6_mantras](vimana/v6_mantras).
 
 ## Benchmarks
 
@@ -247,13 +213,57 @@ Just as a concluding example, here is the same function written in "Forth-style"
 
     (-) mysub DEF
 
-It is truly wonderful how many aspects there are to this, and the beauty in the details of the various representations. Making my own interperer is like builing a railroad model, I can experiment with things and change small details to study what the effect is.
+It is truly wonderful how many aspects there are to this, and the beauty in the details of the various representations. Making your own interperer is like builing a railroad model. You can experiment with things and change small details to study what the effect is.
 
-## Source Code Structure
+## Language Grammar
+
+Vimana has no grammar. Or rather, the grammar is really simple, and is best explained by giving some examples. 
+
+The only reserved characters are left paren, right paren, and whitespace charaters. Line breaks are whitespace, and do not have any special meaning other than formatting to code to be more readable.
+
+Everything in Vimana is a list of symbols. Symbols can be words or numbers or truth values. Lists can contain lists.
+
+At the top level, parens are not used (as in the Hello World example above).
+
+## Execution
+
+Almost everything happens at runtime. The interpreter scans the program list and pushes elements onto a data stack. Elements are not evaluated in this step.
+
+A function takes its parameters from the data stack. 
+
+Primitive functions can decide to evaluate parameters, to find the value of a variable, for example. They can also operate directly on the "literal" values on the data stack.
+
+User-defined functions evaluate parameters when binding values to local variables, but can also operate directly on the stack without evaluating symbols, by using "Forth-style" stack operations.
+
+In Lisp, lists and symbols are evaluated by default. In Vimana, lists and symbols are not evaluated until a function does so. This enables the use of unbound symbols to display text. There is no string type in the language (yet). This is also a common style in Lisp (using quoted lists and symbols).
+
+## Quoting
+
+I did not want to introduce quoting, since that involves adding one more special character. You can however quote a symbol, for example a function symbol (preventing it from being executed), by enclosing it in a list:
+
+   (PRINT)
+
+Then you can pushed the value of the symbol onto the data stack (without invoking the function), by using VALUE:
+
+   (PRINT) VALUE
+
+You can also get the value of a value, as in this example:
+
+   42 FOO SET
+   FOO BAR SET
+   BAR VALUE PRINT
+
+(Not tested the above. VALUE is not yet in the C-version.)
+
+There could be better ways to do this. Everything is an experiment.
+
+## C Code Structure
 
 As few assumptions as possible are coded into the interpreter in interp.h. Most of what defined the language is specified by primitives in primfuns.h. Many different styles are possible. Postfix operations are fundamental, this is not as easy to change, and in the end you might as well go with Lisp if you want prefix functions. (Postfix notation means that the function name is the last element in a function call.) 
 
 Everything is just one file split up into modules in .h files.
+
+## Code Size
 
 Current code size (2021-05-20):
 
@@ -261,14 +271,6 @@ Current code size (2021-05-20):
     C:  1580 lines (fewer primitives than PHP)
     C:  1640 lines (with minimalistic GC)
     JS:  350 lines (fewer primitives than PHP)
-
-## Playground for a Dynamic Language
-
-Vimana is my personal project. I created Vimana as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
-
-[Watch introduction video](https://youtu.be/BE7UpUuumc4)
-
-![Screenshot](screenshot.jpg)
 
 ## License
 
