@@ -199,7 +199,7 @@ Here you can see that the parameters are in the reverse order, because the items
 
 First 1 is popped off and bound to b. Then 43 is popped off and bound to a.
 
-So "=>" reads more declarative since it reflects the stack order visually, but is a bit slower than ":".
+So "=>" reads more declarative since it reflects the stack order visually, but is a bit slower than ":".One might be tempted to rewrite the code in the parsing step to the slightly faster version. However, this would break the principle of coding directly in the abstract syntax tree.
 
 The ":" could be named something else, for example "setlocal":
 
@@ -243,17 +243,17 @@ In Lisp, lists and symbols are evaluated by default. In Vimana, lists and symbol
 
 I did not want to introduce quoting, since that involves adding one more special character. You can however quote a symbol, for example a function symbol (preventing it from being executed), by enclosing it in a list:
 
-   (PRINT)
+    (PRINT)
 
 Then you can pushed the value of the symbol onto the data stack (without invoking the function), by using VALUE:
 
-   (PRINT) VALUE
+    (PRINT) VALUE
 
 You can also get the value of a value, as in this example:
 
-   42 FOO SET
-   FOO BAR SET
-   BAR VALUE PRINT
+    42 FOO SET
+    FOO BAR SET
+    BAR VALUE PRINT
 
 (Not tested the above. VALUE is not yet in the C-version.)
 
