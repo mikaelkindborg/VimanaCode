@@ -9,6 +9,19 @@ The PHP version or JS version are by far the most friendly ones to get started w
 
 The JavaScript implementation is very basic, but it runs the factorial benchmark. I also began doing a simple coding workbench with Amiga-inspired colors.
 
+## Project Goals
+
+The Vimana project has several goals:
+
+- Make the language as minimalistic as possible.
+- Make the interpreter as simple and understandable as possible
+- Make the source code for the interpreter as small as possible
+- Make the language as fast as possible
+
+These goals are sometimes in conflict with each other. Optimizing code, for example, can make it harder to understand.
+
+Another goal is to make the language easy to understand and to use. This is however not the highest priority. Making it useful for practical purposes is also not of high priority.
+
 ## Hello World
 
     HELLO_WORLD PRINT
@@ -16,6 +29,50 @@ The JavaScript implementation is very basic, but it runs the factorial benchmark
 Or:
 
     (HELLO WORLD) PRINT
+
+## Language Grammar
+
+Vimana has no grammar. Or rather, the grammar is really simple, and is best explained by giving some examples. 
+
+The only reserved characters are left paren, right paren, and whitespace charaters. Line breaks are whitespace, and do not have any special meaning other than formatting to code to be more readable.
+
+Everything in vimana is a list of symbols. Symbols can be words or numbers or truth values. Lists can contain lists.
+
+At the top level, the parens are not used (as in the Hello World example above).
+
+## Execution
+
+Almost everything happens at runtime. The interpreter scans the program list and pushes elements onto a data stack. Elements are not evaluated in this step.
+
+When a function is found it is evaluated (element is a primitive function or a uder-defined global function).
+
+A function takes its parameters from the data stack. 
+
+Primitive functions can decide to evaluate parameters, to find the value of a variable, for example. They can also operate directly on the "literal" values on the data stack.
+
+User-defined functions evaluate parameters when binding values to local variables, but can also operate directly on the stack without evaluating symbols, by using "Forth-style" stack operations.
+
+In Lisp, lists and symbols are evaluated by default. In Vimana, lists and symbols are not evaluated until a function does so. This enables the use of unbound symbols to display text. There is no string type in the language (yet). This is also a common style in Lisp (using quoted lists and symbols).
+
+## Quoting
+
+I did not want to introduce quoting, since that involves adding one more notation. You can quote symbols, for example a function symbols, preventing it from being executed, by enclosing it in a list:
+
+   (PRINT)
+
+Then you can pushed the value of the symbol onto the data stack (without invoking the function), by using VALUE:
+
+   (PRINT) VALUE
+
+You can also get the value of a value, as in this example:
+
+   42 FOO SET
+   FOO BAR SET
+   BAR VALUE PRINT
+
+(Not tested the above, however. VALUE in not yet in the C-version.)
+
+There could be better ways to do this. Everything is an experiment.
 
 ## PHP-version
 
@@ -68,23 +125,27 @@ The following are the performance test results for the interpreter and native co
 
 I have used factorial(20) with 10,000,000 iterations for the benchmark test.
 
-    C:            0.84s
+    C:            0.84s (no compiler optimization)
     JS:           2.12s
     PHP:          6.14s
     Python:      21.38s
     Vimana PHP: 433.00s (optimized version)
+    Vimana JS:  425.00s (first version)
     Vimana C:   254.00s (first version)
     Vimana C:    26.61s (optimized version v4_c)
     Vimana C:    17.79s (optimized version v7_c branch performance)
     Vimana C:    18.99s (optimized version v7_c generalised lookup)
-    Vimana C:    13.80s (same benchmark using Forth stack operations)
-    Vimana JS:  425.00s (first version)
+    Vimana C:    19.60s (optimized version v7_c with ref counting GC)
+    Vimana C:    13.17s (same benchmark using Forth-style operations)
+    Vimana C:    13.72s (Forth-style with ref counting GC)
 
-My goal has been to be as fast as the Python benchmark, and the latest version is faster than Python.
+My goal has been to be as fast as the Python benchmark, and the latest version is faster than that.
 
-The optimized environment lookup used in the first optimized C version was fast but not flexible. Now I am using a more conventional model that is a bit slower, but still performs well. When using Forth stack operations, no or few lookups are needed, so that performs even better.
+The local environment lookup used in the first optimized C version was fast but not flexible. Now I am using a more conventional model that is a bit slower, but still performs well. When using Forth stack operations, no or few lookups are needed, so that performs better.
 
-Then there is the issue of GC, closures and so on. Still more to come!
+A first version of reference counting GC is now implemented. It is not fully complete with respect to nested and circular lists. Lists are the only type that can be created dynamically. Performance was not affected that badly by running with GC turned on. Note that no GC happens in the factorial bechmark, but there are still checks for reference counting that take some time.
+
+## Code Examples and Coding Style
 
 This is the benchmark program for the C-version:
 
@@ -115,34 +176,95 @@ Forth-inspired version:
     (DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) 
     FACT DEF
 
-    (N : L : N 0 EQ NOT (L DO  L N 1 - TIMESDO) IFTRUE) 
+    (DUP 0 EQ (DROP DROP) (SWAP DUP DO SWAP 1 - TIMESDO) IFELSE) 
     TIMESDO DEF
 
     (20 FACT DROP) 10000000 TIMESDO
 
-The ":" function pops a value of the stack and binds it to a variable in the local environment. 
+The arrow symbol "=>" is also a function that binds one or more items on the stack to local variables.  It is like any other function, and is not a "reserved word" or part of any special syntax. It could be named anything. (In a sense it is like a reserved symbol, but you get the idea.)
 
-The arrow symbol "=>" is also a function that binds one or more items on the stack to local variables. It is a bit slower than ":", but is easier to read since the variable order matches the order on the stack.
+Virtually everything happens at runtime. Very litte is done during parsing (only setting the basic types of objects). There is no compile step.
 
-Both ":" and "=>" are like any other functions. They are runtime operations, and are not part of any special syntax or "reserved words". They could be named anything. (In a sense they are like reserved words, but you get the idea.)
+## Procedural vs Declarative Style
 
-Note that virtually everything happens at runtime. Very litte is done during parsing (only setting the basic types of objects). There is no compile step.
+Program code can be interpreted declarative or procedurally. Some languages are intended to use a declarative style (for example constraint languages, and logic programming languages), others are more procedural. Many languages speak of "declarations", for example variable declarations.
+
+Forth is very procedural in its style. You have to execute the code in your head in order to understand it.
+
+Vimana is meant to be procedurally orinted, and there are no purley declarative statements in a program (such as variable declarations). Every primitive is a functions. There are no "notations" in the source code, so to speak.
+
+Still, the code is meant to map visually to the data stack structure, which is not the case with Forth. 
+
+Here is an example of a function DOUBLE, written in Forth-style:
+
+    (DUP +) double DEF
+
+Example of calling this function:
+
+    21 double PRINT
+
+Here is the same function, written in a more declarative style:
+
+    ((x) => x x +) double DEF
+
+In Vimana you can use both of the above styles.
+
+The arrow function looks like it is part of the language syntax, but it is not. The parser knows nothing about it. Still, introducing the arrow function and the use of variables give the code a declarative touch to it.
+
+The ":" function pops a value of the stack and binds it to a variable in the local environment. It can be used as an alternative to "=>", as in this example:
+
+    (x : x x +) double DEF
+
+An interesting observation with respect to a more declarative style can be made when we introduce more than one parameter. Here is an an example:
+
+    ((a b) => a b -) mysub DEF
+
+This function subtracts one number from the other:
+
+    43 1 mysub PRINT
+
+Here is the same function written using the ":" function:
+
+    (b : a : a b -) mysub DEF
+
+Here you can see that the parameters are in the reverse order, because the items are popped off the stack in that order. Stack contains:
+
+    43 1
+
+First 1 is popped off and bound to b. Then 43 is popped off and bound to a.
+
+So "=>" reads more declarative since it reflects the stack order visually, but is a bit slower than ":".
+
+The ":" could be named something else, for example "setlocal":
+
+    (b setlocal
+     a setlocal
+     a b -) mysub DEF
+
+Note how this feels more "procedural" because of the name of the function (and ":" feels more "declarative").
+
+Just as a concluding example, here is the same function written in "Forth-style":
+
+    (-) mysub DEF
+
+It is truly wonderful how many aspects there are to this, and the beauty in the details of the various representations. Making my own interperer is like builing a railroad model, I can experiment with things and change small details to study what the effect is.
+
+## Source Code Structure
 
 As few assumptions as possible are coded into the interpreter in interp.h. Most of what defined the language is specified by primitives in primfuns.h. Many different styles are possible. Postfix operations are fundamental, this is not as easy to change, and in the end you might as well go with Lisp if you want prefix functions. (Postfix notation means that the function name is the last element in a function call.) 
 
 Everything is just one file split up into modules in .h files.
 
-Vimana is my personal experimental project. There are yet additional functionality to be implemented. Like garbage collection in the C-version.
-
 Current code size (2021-05-20):
 
     PHP: 500 lines
     C:  1580 lines (fewer primitives than PHP)
+    C:  1640 lines (with minimalistic GC)
     JS:  350 lines (fewer primitives than PHP)
 
-## Playground
+## Playground for a Dynamic Language
 
-I created Vimana as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
+Vimana is my personal project. I created Vimana as an experiment, for the fun of it. I am on old Lisp programmer and in school I had a Hewlett & Packard calculator with Reverse Polish Notation. Sweet memories. This is a retro project.
 
 [Watch introduction video](https://youtu.be/BE7UpUuumc4)
 
