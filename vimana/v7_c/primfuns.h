@@ -172,6 +172,23 @@ void Prim_FUN(Interp* interp)
   InterpPush(interp, list);
 }
 
+void Prim_SYMBOL(Interp* interp)
+{
+  Item item;
+  InterpPopInto(interp, item);
+  item = ListGet(ItemList(item), 0);
+  InterpPush(interp, item); // Push symbol
+}
+
+void Prim_VALUE(Interp* interp)
+{
+  Item item;
+  InterpPopInto(interp, item);
+  item = ListGet(ItemList(item), 0);
+  item = PrimEval_EvalSymbol(interp, item);
+  InterpPush(interp, item); // Push value
+}
+
 void Prim_SETLOCAL(Interp* interp)
 {
   //PrintDebug("HELLO SETLOCAL");
@@ -540,6 +557,8 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("DUP", &Prim_DUP, interp);
   InterpAddPrimFun("SWAP", &Prim_SWAP, interp);
   InterpAddPrimFun("FUN", &Prim_FUN, interp);
+  InterpAddPrimFun("SYMBOL", &Prim_SYMBOL, interp);
+  InterpAddPrimFun("VALUE", &Prim_VALUE, interp);
   InterpAddPrimFun("DEF", &Prim_DEF, interp);
   InterpAddPrimFun("SETLOCAL", Prim_SETLOCAL, interp);
   InterpAddPrimFun(":", Prim_SETLOCAL, interp);
