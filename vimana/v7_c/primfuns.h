@@ -54,15 +54,15 @@ void PrimEval_SetLocal(Interp* interp, Item name, Item value)
 
   // Error checking.
   if (!context)
-    ErrorExit("SETLOCAL: Context not found");
+    ErrorExit("PrimEval_SetLocal: Context not found");
   if (!context->hasEnv)
-    ErrorExit("SETLOCAL: Context has no environment");
+    ErrorExit("PrimEval_SetLocal: Context has no environment");
 
   // Set symbol value.
   //ListAssocSet(context->env, name.value.symbol, &value);
   ListAssocSetGet(context->env, name.value.symbol, &value);
 
-  //PrintDebug("SETLOCAL: PRINTING ENV");
+  //PrintDebug("PrimEval_SetLocal: PRINTING ENV");
   //ListPrint(context->env, interp);
 }
 #endif
@@ -192,35 +192,52 @@ void Prim_VALUE(Interp* interp)
 void Prim_SETLOCAL(Interp* interp)
 {
   //PrintDebug("HELLO SETLOCAL");
-  Item name, value;
-  InterpPopInto(interp, name);
-  InterpPopEvalInto(interp, value);
-  PrimEval_SetLocal(interp, name, value);
+  Item item, value;
+  InterpPopInto(interp, item);
+  if (IsSymbol(item))
+  {
+    InterpPopEvalInto(interp, value);
+    PrimEval_SetLocal(interp, item, value);
+  }
+  else
+  if (IsList(item))
+  {
+    List* list = ItemList(item);
+    int length = ListLength(list);
+    for (int i = length - 1; i >= 0; --i)
+    {
+      Item name = ListGet(list, i);
+      InterpPopEvalInto(interp, value);
+      PrimEval_SetLocal(interp, name, value);
+    }
+  }
+  else
+  {
+    ErrorExit("Prim_SETLOCAL: VAR not of TypeSymbol or TypeList");
+  }
 }
 
-void Prim_SETPARAMS(Interp* interp)
+// Don't evaluate next element, just push it onto the data stack.
+void Prim_QUOTE(Interp* interp)
 {
-  //PrintDebug("HELLO SETPARAMS");
-  Item params, name, value;
-
-  InterpPopInto(interp, params);
-  if (!IsList(params))
-    ErrorExit("Prim_SETPARAMS: Param list not of TypeList");
-
-  List* list = ItemList(params);
-  int length = ListLength(list);
-  for (int i = length - 1; i >= 0; --i)
+  //PrintDebug("HELLO QUOTE");
+  
+  Context* context = interp->currentContext;
+  int codePointer = ++ context->codePointer;
+  List* code = context->code;
+  if (codePointer < ListLength(code))
   {
-    name = ListGet(list, i);
-    InterpPopEvalInto(interp, value);
-    PrimEval_SetLocal(interp, name, value);
+    // Get the next element and push it.
+    Item element = ListGet(code, codePointer);
+    ListPush(interp->stack, element);
   }
 }
 
 void Prim_DEF(Interp* interp)
 {
   //PrintDebug("HELLO DEF");
-  // (SWAP FUN SWAP SET) FUN DEF SET
+
+  // (SWAP FUN SWAP SET) FUN : DEF SET
   Prim_SWAP(interp);
   Prim_FUN(interp);
   Prim_SWAP(interp);
@@ -250,6 +267,7 @@ void Prim_CALL(Interp* interp)
   // Enter new context with empty env.
 }
 
+/*
 void Prim_RECUR(Interp* interp)
 {
   PrintDebug("HELLO RECUR");
@@ -260,6 +278,7 @@ void Prim_RECUR(Interp* interp)
   // Enter new context with current code list.
   //PrimEval_EvalFun(interp, interp->currentContext->code);
 }
+*/
 
 void Prim_IFTRUE(Interp* interp)
 {
@@ -561,11 +580,13 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("VALUE", &Prim_VALUE, interp);
   InterpAddPrimFun("DEF", &Prim_DEF, interp);
   InterpAddPrimFun("SETLOCAL", Prim_SETLOCAL, interp);
-  InterpAddPrimFun(":", Prim_SETLOCAL, interp);
-  InterpAddPrimFun("=>", Prim_SETPARAMS, interp);
+  InterpAddPrimFun("POP", Prim_SETLOCAL, interp);
+  InterpAddPrimFun("=>", Prim_SETLOCAL, interp);
+  InterpAddPrimFun("QUOTE", Prim_QUOTE, interp);
+  InterpAddPrimFun(":", Prim_QUOTE, interp);
   InterpAddPrimFun("DO", &Prim_DO, interp);
   InterpAddPrimFun("CALL", &Prim_CALL, interp);
-  InterpAddPrimFun("RECUR", &Prim_RECUR, interp);
+  //InterpAddPrimFun("RECUR", &Prim_RECUR, interp);
   InterpAddPrimFun("IFTRUE", &Prim_IFTRUE, interp);
   InterpAddPrimFun("IFELSE", &Prim_IFELSE, interp);
   InterpAddPrimFun("+", &Prim_PLUS, interp);

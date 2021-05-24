@@ -100,11 +100,20 @@ int main()
     "LISTNEW DROP LISTNEW PRINT "
     );
 
-  List* list = ParseCode(interp, 
+  List* list18 = ParseCode(interp, 
     "FOO BAR SET "
     "(HELLO PRINT) (FOO) SYMBOL DEF FOO "
     "(HELLO2222 PRINT) (BAR) VALUE DEF FOO "
     );
+  List* list19 = ParseCode(interp, 
+    "(HELLO PRINT) : FOO DEF FOO "
+    "(HELLO2222 PRINT) : FOO DEF FOO "
+    );
+  List* list = ParseCode(interp, 
+    "(X POP  X PRINT) : FOO DEF HELLO2222 FOO "
+    "((X Y) =>  X PRINT Y PRINT) : FOO DEF HELLO WORLD FOO "
+    );
+
 /*
   List* list = ParseCode(interp, 
     "(Hello-I-am-the-Vimana-interpreter. PRINT "

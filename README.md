@@ -21,7 +21,9 @@ Vimana is a personal project. I created Vimana as an experiment, for the fun of 
 
 The Vimana project has several goals:
 
+- Create a language where you code directly in the abstract syntax tree (like Lisp)
 - Make the language as minimalistic and consistent as possible
+- Make the language as easy to implement as possible
 - Make the interpreter as simple and understandable as possible
 - Make the source code for the interpreter as small as possible
 - Make the language as fast as possible
@@ -117,37 +119,39 @@ This is the benchmark program for the C-version:
 
     ((N) =>
       N 0 EQ (1) (N 1 - FACT N *) IFELSE)
-    FACT DEF
+    : FACT DEF
 
     ((L N) =>
       N 0 EQ NOT (L DO  L N 1 - TIMESDO) IFTRUE)
-    TIMESDO DEF 
+    : TIMESDO DEF 
 
     (20 FACT DROP) 10000000 TIMESDO
+
+The symbol ":" means "quote" (it is a function just like "*", "-", and "EQ"). It is used to prevent the function symbol being evaluated (which is a problem in case you wish to redefine it, thus the convention of using ":" is used in function definitions).
 
 Lower-case would also be possible (note that symbols are case-sensitive):
 
     ((n) =>
       n 0 eq (1) (n 1 - fact n *) ifelse)
-    fact def
+    : fact def
 
     ((l n) =>
       n 0 eq not (l do  l n 1 - timesdo) iftrue)
-    timesdo def 
+    : timesdo def 
 
     (20 fact drop) 10000000 timesdo
 
 Forth-inspired version:
 
     (DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) 
-    FACT DEF
+    : FACT DEF
 
     (DUP 0 EQ (DROP DROP) (SWAP DUP DO SWAP 1 - TIMESDO) IFELSE) 
-    TIMESDO DEF
+    : TIMESDO DEF
 
     (20 FACT DROP) 10000000 TIMESDO
 
-The arrow symbol "=>" is also a function that binds one or more items on the stack to local variables.  It is like any other function, and is not a "reserved word" or part of any special syntax. It could be named anything. (In a sense it is like a reserved symbol, but you get the idea.)
+The arrow symbol "=>" is also a function that binds one or more items on the stack to local variables.  It is like any other function, and is not a "reserved word" or part of any special syntax. It could be named anything. (In a sense it is like a reserved symbol, but you get the idea.) "QUOTE" is a synonym for ":".
 
 Virtually everything happens at runtime. Very litte is done during parsing (only setting the basic types of objects). There is no compile step.
 
@@ -163,7 +167,7 @@ Still, the code is meant to map visually to the data stack structure, which is n
 
 Here is an example of a function DOUBLE, written in Forth-style:
 
-    (DUP +) double DEF
+    (DUP +) : double DEF
 
 Example of calling this function:
 
@@ -171,27 +175,27 @@ Example of calling this function:
 
 Here is the same function, written in a more declarative style:
 
-    ((x) => x x +) double DEF
+    (x => x x +) : double DEF
 
 In Vimana you can use both of the above styles.
 
-The arrow function looks like it is part of the language syntax, but it is not. The parser knows nothing about it. Still, introducing the arrow function and the use of variables give the code a declarative touch to it.
+The function "=>" looks like it is part of the language syntax, but it is not. The parser knows nothing about it. Still, introducing the arrow function and the use of variables give the code a declarative touch to it.
 
-The ":" function pops a value of the stack and binds it to a variable in the local environment. It can be used as an alternative to "=>", as in this example:
+This function pops a value of the stack and binds it to a variable in the local environment. As an alternative you can use the synonym "POP", as in this example:
 
-    (x : x x +) double DEF
+    (x POP x x +) double DEF
 
 An interesting observation with respect to a more declarative style can be made when we introduce more than one parameter. Here is an an example:
 
-    ((a b) => a b -) mysub DEF
+    ((a b) => a b -) : mysub DEF
 
 This function subtracts one number from the other:
 
     43 1 mysub PRINT
 
-Here is the same function written using the ":" function:
+Here is the same function written using the "POP" function to bind local variables one at a time:
 
-    (b : a : a b -) mysub DEF
+    (b POP a POP a b -) : mysub DEF
 
 Here you can see that the parameters are in the reverse order, because the items are popped off the stack in that order. Stack contains:
 
@@ -199,19 +203,30 @@ Here you can see that the parameters are in the reverse order, because the items
 
 First 1 is popped off and bound to b. Then 43 is popped off and bound to a.
 
-So "=>" reads more declarative since it reflects the stack order visually, but is a bit slower than ":".One might be tempted to rewrite the code in the parsing step to the slightly faster version. However, this would break the principle of coding directly in the abstract syntax tree.
+As we can see, "=>" reads more declarative since it reflects the stack order visually.
 
-The ":" could be named something else, for example "setlocal":
+<!--
+"POP" is actually a synonym for "=>". It could be named something else, for example "SETLOCAL":
 
-    (b setlocal
-     a setlocal
-     a b -) mysub DEF
+    (b SETLOCAL
+     a SETLOCAL
+     a b -) : mysub DEF
 
-Note how this feels more "procedural" because of the name of the function (and ":" feels more "declarative").
+Note how this feels more "procedural" because of the naming (and "=>" feels more "declarative").
+-->
+
+"POP" is actually a synonym for "=>". You can use POP with a symbol or a list of symbols, as in these examples:
+
+    ((a b) POP a b -) : mysub DEF
+    (b POP a POP a b -) : mysub DEF
+
+The spirit of "=>" is to provide a nicer notation that looks similar to other languages, like arrow functions JavaScript. 
+
+Note how "POP" feels more "procedural" because of the naming (and "=>" feels more "declarative").
 
 Just as a concluding example, here is the same function written in "Forth-style":
 
-    (-) mysub DEF
+    (-) : mysub DEF
 
 It is truly wonderful how many aspects there are to this, and the beauty in the details of the various representations. Making your own interperer is like builing a railroad model. You can experiment with things and change small details to study what the effect is.
 
@@ -241,9 +256,42 @@ In Lisp, lists and symbols are evaluated by default. In Vimana, lists and symbol
 
 ## Quoting
 
-I did not want to introduce quoting, since that involves adding one more special character. You can however quote a symbol, for example a function symbol (preventing it from being executed), by enclosing it in a list:
+Quoting is used when you want to prevent a function from being evaluated. One way to quote a symbol is by enclosing it in a list:
 
-    (PRINT)
+    (DOUBLE)
+
+This will prevent the function DOUBLE from being evaluated. 
+
+Quoting is useful when you want to redefine a function. First time you defined a function, its name is unbound, so there exists no function yet. That is why you can write:
+
+    (DUP +) DOUBLE DEF
+
+However, if you attempt to redefine the function, DOUBLE will get evaluated before DEF is called, which is not what we want. This example will therefore NOT work:
+
+    (2 *) DOUBLE DEF <-- Will NOT work to redefine like this
+
+You can use this pattern to redefine a function:
+
+    (2 *) (DOUBLE) SYMBOL DEF
+
+That will push the symbol "DOUBLE" onto the stack without evaluating it, before calling DEF.
+
+As this is a bit cumbersome to write, a new primitive QUOTE is introduced. It is different from all other functions and primitives in that it comes before the symbol it operates on. It is the only prefix function in the entire language. 
+
+QUOTE takes the next symbol from the list being evaluated and pushes it into the data stack.
+
+Here is how QUOTE is used:
+
+    (2 *) QUOTE DOUBLE DEF
+
+By using the symbol ":" as a synonym for QUOTE, we get a nicer notation:
+
+    (2 *) : DOUBLE DEF
+
+I really did not want to introduce special symbols or prefix operations for quoting, but this is so much easier to write and read than using the "(DOUBLE) SYMBOL" notation.
+
+<!--
+You can however quote a symbol, for example a function symbol (preventing it from being executed), by enclosing it in a list:
 
 Then you can pushed the value of the symbol onto the data stack (without invoking the function), by using VALUE:
 
@@ -258,6 +306,7 @@ You can also get the value of a value, as in this example:
 (Not tested the above. VALUE is not yet in the C-version.)
 
 There could be better ways to do this. Everything is an experiment.
+-->
 
 ## C Code Structure
 
