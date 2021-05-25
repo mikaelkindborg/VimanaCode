@@ -58,7 +58,6 @@ typedef struct MyItem
     Context*  context;
     char*     string; // TODO: Make custom string object
     Bool      truth;
-    
     // Field used only by global symbol table items.
     PrimFun primFun;
   }
@@ -86,22 +85,6 @@ Item ItemWithString(char* string)
   return item;
 }
 
-Item ItemWithIntNum(IntNum number)
-{
-  Item item;
-  item.type = TypeIntNum;
-  item.value.intNum = number;
-  return item;
-}
-
-Item ItemWithDecNum(DecNum number)
-{
-  Item item;
-  item.type = TypeDecNum;
-  item.value.decNum = number;
-  return item;
-}
-
 Item ItemWithList(List* list)
 {
   Item item;
@@ -115,14 +98,6 @@ Item ItemWithContext(Context* context)
   Item item;
   item.type = TypeContext;
   item.value.context = context;
-  return item;
-}
-
-Item ItemWithPrimFun(PrimFun fun)
-{
-  Item item;
-  item.type = TypePrimFun;
-  item.value.primFun = fun;
   return item;
 }
 

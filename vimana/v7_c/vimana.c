@@ -24,12 +24,14 @@ int main()
   List* list1a = ParseCode(interp,
     "((L N) => N 0 EQ NOT (L EVAL L N 1 - TIMESDO) IFTRUE) (TIMESDO) DEF "
     "(HELLO DROP) 100000000 TIMESDO");
+  // Tests 210525
   //./vimana  10.72s user 0.01s system 97% cpu 10.957 total
 
   // TIMESDO RECURSIVE STACK
   List* list1b = ParseCode(interp,
     "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ (DROP DROP) (TIMESDO) IFELSE) (TIMESDO) DEF "
     "(HELLO DROP) 100000000 TIMESDO");
+  // Tests 210525
   //./vimana  7.83s user 0.01s system 96% cpu 8.098 total
 
   // TIMESDO ITERATIVE VARS
@@ -37,41 +39,19 @@ int main()
     "((L N) => L EVAL N 1 - N => "
       "N 0 EQ 2 GOTOIFFALSE) (TIMESDO) DEF "
     "(HELLO DROP) 100000000 TIMESDO");
+  // Tests 210525
   //./vimana  7.93s user 0.01s system 95% cpu 8.294 total
 
   // TIMESDO ITERATIVE STACK
   List* list2b = ParseCode(interp,
     "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE) (TIMESDO) DEF "
     "(HELLO DROP) 100000000 TIMESDO");
+  // Tests 210525
   //./vimana  6.45s user 0.01s system 94% cpu 6.816 total
 
-
-
+  // EXPERIMEMNT WITH GOTO
+  // 0 FACT NOT HANDLED!
   List* list1 = ParseCode(interp,
-    //"(HELLO WORLD) PRINT " 
-    "((L N) => "
-      //"LOOP LABEL "
-        "L EVAL "
-        "N 1 -  N => "
-        "N 0 EQ "
-      "2 GOTOIFFALSE) "
-    "(TIMESDO) DEF "
-    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
-    "(20 FACT) 10000000 TIMESDO");
-  // ./vimana  13.22s user 0.07s system 97% cpu 13.565 total
-  // ./vimana  14.25s user 0.01s system 96% cpu 14.733 total (with DROP)
-  // ./vimana  14.67s user 0.07s system 96% cpu 15.255 total (without DROP)
-
-  List* list2 = ParseCode(interp,
-    //"(HELLO WORLD) PRINT " 
-    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE) (TIMESDO) DEF "
-    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
-    "(20 FACT DROP) 10000000 TIMESDO");
-  // ./vimana  12.95s user 0.01s system 94% cpu 13.769 total
-  // ./vimana  13.07s user 0.01s system 90% cpu 14.422 total
-
-  List* list3 = ParseCode(interp,
-    //"(HELLO WORLD) PRINT " 
     "((L N) => "
       //"LOOP LABEL "
         "L EVAL "
@@ -87,45 +67,78 @@ int main()
       "5 GOTOIFFALSE "
       "RES 0 +) (FACT) DEF "
     "(20 FACT DROP) 10000000 TIMESDO");
-  // ./vimana  19.39s user 0.01s system 97% cpu 19.805 total  !!!!!!!!
+  // Tests 210525
+  // ./vimana  19.41s user 0.02s system 98% cpu 19.677 total  !!!!!!!!
+  // Local set and lookup is slow.
+
+  List* list2 = ParseCode(interp,
+    "((L N) => "
+      //"LOOP LABEL "
+        "L EVAL "
+        "N 1 -  N => "
+        "N 0 EQ "
+      "2 GOTOIFFALSE) "
+    "(TIMESDO) DEF "
+    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
+    "(20 FACT) 10000000 TIMESDO");
+  // Tests 210525
+  // ./vimana  13.22s user 0.07s system 97% cpu 13.565 total
+  // ./vimana  14.25s user 0.01s system 96% cpu 14.733 total (with DROP)
+  // ./vimana  14.67s user 0.07s system 96% cpu 15.255 total (without DROP)
 
   List* list4 = ParseCode(interp,
+    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE) (TIMESDO) DEF "
+    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
+    "(20 FACT DROP) 10000000 TIMESDO");
+  // Tests 210525
+  // ./vimana  12.95s user 0.01s system 94% cpu 13.769 total
+  // ./vimana  13.07s user 0.01s system 90% cpu 14.422 total
+
+  List* list5 = ParseCode(interp,
     //"(HELLO WORLD) PRINT " 
-    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ (DROP DROP) (TIMESDO) IFELSE) (TIMESDO) DEF "
+    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ "
+      "(DROP DROP) (TIMESDO) IFELSE) (TIMESDO) DEF "
     "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
     "(20 FACT DROP) 10000000 TIMESDO");
   // ./vimana  14.21s user 0.01s system 98% cpu 14.482 total
 
-
-  List* list5 = ParseCode(interp,
-    "(1 SWAP DUP * SWAP 1 - SWAP DUP 0 EQ 1 GOTOIFFALSE DROP) "
+  // Problem here ts that 0 FACT is not handled.
+  List* list = ParseCode(interp,
+    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE) (TIMESDO) DEF "
+    "(DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP) "
     "(FACT) DEF "
-    "6 FACT PRINT");
+    "(20 FACT DROP) 100000 TIMESDO");
+  // ./vimana  12.06s user 0.01s system 97% cpu 12.345 total
+  // ./vimana  11.99s user 0.01s system 99% cpu 12.011 total
+  // After optimization of currentContext:
+  // ./vimana  10.44s user 0.01s system 96% cpu 10.856 total
+
+// https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/
 
 /*
   N
-1
-  N 1
-SWAP
-  1 N
 DUP
-  1 N N
-
-  N N RES
-*
+  N N
+1
+  N N RES (1)
+LOOP: *
   N RES
 SWAP
   RES N
 1 -
-  RES N
+  RES N 
+SWAP OVER
+  N RES N
 DUP
-  RES N N
+  N RES N N
 0 EQ
-  RES N TRUE/FALSE
+  N RES N TRUE/FALSE
 1 GOTOIFFALSE
 DROP
+SWAP
+DROP
 
-1 SWAP DUP * SWAP 1 - SWAP DUP 0 EQ 1 GOTOIFFALSE DROP
+DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP
 */
 
   InterpRun(interp, list);

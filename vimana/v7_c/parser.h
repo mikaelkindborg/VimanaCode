@@ -41,15 +41,17 @@ void ParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
   int type = ParserIsNumber(token);
   if (TypeIntNum == type)
   {
-    long num = strtol(token, NULL, 10);
+    long number = strtol(token, NULL, 10);
     //PrintDebug("TOKEN INTNUM: %s %li\n", token, num);
-    item = ItemWithIntNum(num);
+    item.type = TypeIntNum;
+    item.value.intNum = number;
   }
   else if (TypeDecNum == type)
   {
-    double num = strtod(token, NULL);
+    double number = strtod(token, NULL);
     //PrintDebug("TOKEN DECNUM: %s %f\n", token, num);
-    item = ItemWithDecNum(num);
+    item.type = TypeDecNum;
+    item.value.decNum = number;
   }
   else
   {

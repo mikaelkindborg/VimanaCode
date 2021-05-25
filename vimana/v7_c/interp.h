@@ -80,6 +80,16 @@ void ContextFree(Context* context)
   free(context);
 }
 
+#ifdef OPTIMIZE
+#define ContextInitEnv(context, newEnv) \
+  do { \
+    if (newEnv) { \
+      context->env->length = 0; \
+      context->hasEnv = TRUE; } \
+    else \
+      context->hasEnv = FALSE; \
+  } while(0)
+#else
 void ContextInitEnv(Context* context, int newEnv)
 {
   if (newEnv) 
@@ -92,6 +102,7 @@ void ContextInitEnv(Context* context, int newEnv)
     context->hasEnv = FALSE;
   }
 }
+#endif
 
 // DATA STACK --------------------------------------------------
 
@@ -178,7 +189,10 @@ void InterpAddPrimFun(char* name, PrimFun fun, Interp* interp)
   ListPush(interp->globalSymbolTable, ItemWithString(name));
   
   // Add function to value table.
-  ListPush(interp->globalValueTable, ItemWithPrimFun(fun));
+  Item item;
+  item.type = TypePrimFun;
+  item.value.primFun = fun;
+  ListPush(interp->globalValueTable, item);
 }
 
 // CALLSTACK ---------------------------------------------------
@@ -188,6 +202,7 @@ void InterpEnterContext(Interp* interp, List* code, int newEnv)
   List* callstack = interp->callstack;
   Index callstackIndex = interp->callstackIndex;
   Context* currentContext = NULL;
+  interp->currentContext = NULL;
 
   // Remember current context.
   if (callstackIndex > -1)
@@ -220,8 +235,8 @@ void InterpEnterContext(Interp* interp, List* code, int newEnv)
   if (ListLength(callstack) <= callstackIndex)
   {
     PrintDebug("NEW CONTEXT AT INDEX: %i", callstackIndex);
-    // Create stackframe.
-    Context* newContext = ContextCreate();
+    interp->currentContext = NULL;
+    Context* newContext = ContextCreate(); // Create stackframe
     newContext->code = code;
     newContext->codePointer = -1;
     ContextInitEnv(newContext, newEnv);
@@ -232,21 +247,22 @@ void InterpEnterContext(Interp* interp, List* code, int newEnv)
 
   // 3. Reuse existing stackframe.
   PrintDebug("ENTER CONTEXT AT INDEX: %i", callstackIndex);
+  interp->currentContext = NULL;
   Context* newContext = ItemContext(ListGet(callstack, callstackIndex));
   newContext->code = code;
   newContext->codePointer = -1;
   ContextInitEnv(newContext, newEnv);
-  newContext->prevContext = currentContext;
+  //newContext->prevContext = currentContext;
 }
 
 void InterpExitContext(Interp* interp)
 {
   PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+  interp->currentContext = NULL;
+  //interp->currentContext = interp->currentContext->prevContext;
   -- interp->callstackIndex;
-#ifndef OPTIMIZE
   Context* context = ItemContext(ListPop(interp->callstack));
   ContextFree(context);
-#endif
 }
 
 // MAIN INTERPRETER LOOP ---------------------------------------
@@ -254,26 +270,42 @@ void InterpExitContext(Interp* interp)
 // Evaluate the list.
 void InterpRun(Interp* interp, List* list)
 {
+  Context* context;
+  List* code;
+  int codePointer;
+  Item item;
+
   // Create root context.
   InterpEnterContext(interp, list, ContextNewEnv);
 
   while (interp->run)
   { 
     // Get current context.
-    Context* context = ItemContext(ListGet(interp->callstack, interp->callstackIndex));
-    interp->currentContext = context;
+    if (NULL == interp->currentContext)
+    {
+      interp->currentContext = ItemContext(ListGet(interp->callstack, interp->callstackIndex));
+      context = interp->currentContext;
+      code = context->code;
+    }
+    //context = interp->currentContext;
 
+    //code = context->code;
     // Increment code pointer.
-    int codePointer = ++ context->codePointer;
+    codePointer = ++ context->codePointer;
 
     //PrintDebug("InterpRun: codePointer: %i", codePointer);
 
     // Exit the frame if the code in the current context has finished executing.
-    List* code = context->code;
+    //code = context->code;
     if (codePointer >= ListLength(code))
     {
+#ifdef OPTIMIZE
+      //interp->currentContext = interp->currentContext->prevContext;
+      interp->currentContext = NULL;
+      -- interp->callstackIndex;
+#else
       InterpExitContext(interp);
-      //-- interp->callstackIndex;
+#endif
       goto exit;
     }
 
@@ -297,7 +329,7 @@ void InterpRun(Interp* interp, List* list)
     // Furthermore, local functions need to be called with CALL.
     if (IsSymbol(element))
     {
-      Item item = ListGet(interp->globalValueTable, element.value.symbol);
+      item = ListGet(interp->globalValueTable, element.value.symbol);
       if (IsPrimFun(item))
       {
         item.value.primFun(interp);
@@ -321,5 +353,5 @@ exit:
       //PrintDebug("EXIT InterpRun");
       interp->run = FALSE;
     }
-  }
+  } // while
 }

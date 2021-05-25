@@ -8,17 +8,21 @@
 // this is to make the code more modular.
 //
 
+/*
 void PrimEval_EvalList(Interp* interp, List* list)
 {
   // Enter new context with current env.
   InterpEnterContext(interp, list, ContextCurrentEnv);
 }
+*/
 
+/*
 void PrimEval_EvalFun(Interp* interp, List* fun)
 {
   // Just push it on the callstack, binding is done by primitives
   InterpEnterContext(interp, fun, ContextNewEnv);
 }
+*/
 
 void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
 {
@@ -29,14 +33,14 @@ void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
 }
 
 #ifdef OPTIMIZE
-#define PrimEval_SetLocal(interp, name, value) \
+#define PrimEval_SetLocal(interp, name, item) \
 do { \
   if (!IsSymbol(name)) \
     ErrorExit("PrimEval_SetLocal: Got a non-symbol of type: %lu", (name).type); \
   Context* context = (interp)->currentContext; \
   while (context && (!context->hasEnv)) \
     context = context->prevContext; \
-  ListAssocSetGet(context->env, (name).value.symbol, &(value)); \
+  ListAssocSetGet(context->env, (name).value.symbol, &(item)); \
 } while(0)
 #else
 void PrimEval_SetLocal(Interp* interp, Item name, Item value)
@@ -138,6 +142,13 @@ void Prim_DUP(Interp* interp)
 {
   List* stack = interp->stack;
   Item item = ListGet(stack, ListLength(stack) - 1);
+  ListPush(stack, item);
+}
+
+void Prim_OVER(Interp* interp)
+{
+  List* stack = interp->stack;
+  Item item = ListGet(stack, ListLength(stack) - 2);
   ListPush(stack, item);
 }
 
@@ -373,7 +384,6 @@ void Prim_GOTOIFTRUE(Interp* interp)
 
 void Prim_GOTOIFFALSE(Interp* interp)
 {
-  PrintDebug("HELLO GOTOIFFALSE");
   Item codePointer, boolVal;
 
   InterpPopEvalInto(interp, codePointer);
@@ -394,7 +404,7 @@ void Prim_GOTOIFFALSE(Interp* interp)
 
 void Prim_LABEL(Interp* interp)
 {
-  Item symbol, value;
+  Item symbol, item;
 
   InterpPopInto(interp, symbol);
 
@@ -403,8 +413,9 @@ void Prim_LABEL(Interp* interp)
 
   Context* context = interp->currentContext;
   IntNum codePointer = context->codePointer + 1;
-  value = ItemWithIntNum(codePointer);
-  PrimEval_SetLocal(interp, symbol, value);
+  item.type = TypeIntNum;
+  item.value.intNum = codePointer;
+  PrimEval_SetLocal(interp, symbol, item);
 }
 
 void Prim_PLUS(Interp* interp)
@@ -655,6 +666,7 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("DROP", &Prim_DROP, interp);
   InterpAddPrimFun("DOC", &Prim_DROP, interp);
   InterpAddPrimFun("DUP", &Prim_DUP, interp);
+  InterpAddPrimFun("OVER", &Prim_OVER, interp);
   InterpAddPrimFun("SWAP", &Prim_SWAP, interp);
   InterpAddPrimFun("FUN", &Prim_FUN, interp);
   InterpAddPrimFun("FIRST", &Prim_FIRST, interp);

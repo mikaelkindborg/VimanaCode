@@ -243,7 +243,7 @@ int main()
   //addItems2(); // 0.77s (structs)
   //addItems3(); // 1.75s (function call with pointers, No radom)
   //addItems3A(); // 1.75s without rand(), 6.76s WITH rand() !!!
-  addItems3B(); // 2.40s without rand(), 6.78s WITH rand()
+  //addItems3B(); // 2.40s without rand(), 6.78s WITH rand()
   //addItems4A(); // 1.27s (pointers)
   //addItems4B(); // 1.28s (pointers alternative syntax)
   //addItems5(); // 0.78s (array indexes)
