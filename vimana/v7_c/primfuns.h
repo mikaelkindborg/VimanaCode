@@ -172,14 +172,15 @@ void Prim_FUN(Interp* interp)
   InterpPush(interp, list);
 }
 
-void Prim_SYMBOL(Interp* interp)
+void Prim_FIRST(Interp* interp)
 {
   Item item;
   InterpPopInto(interp, item);
   item = ListGet(ItemList(item), 0);
-  InterpPush(interp, item); // Push symbol
+  InterpPush(interp, item); // Pushes first element
 }
 
+/*
 void Prim_VALUE(Interp* interp)
 {
   Item item;
@@ -188,6 +189,7 @@ void Prim_VALUE(Interp* interp)
   item = PrimEval_EvalSymbol(interp, item);
   InterpPush(interp, item); // Push value
 }
+*/
 
 void Prim_SETLOCAL(Interp* interp)
 {
@@ -217,6 +219,7 @@ void Prim_SETLOCAL(Interp* interp)
   }
 }
 
+/*
 // Don't evaluate next element, just push it onto the data stack.
 void Prim_QUOTE(Interp* interp)
 {
@@ -232,22 +235,24 @@ void Prim_QUOTE(Interp* interp)
     ListPush(interp->stack, element);
   }
 }
+*/
 
 void Prim_DEF(Interp* interp)
 {
   //PrintDebug("HELLO DEF");
 
-  // (SWAP FUN SWAP SET) FUN : DEF SET
+  // (SWAP FUN SWAP FIRST SET) FUN (DEF) FIRST SET
   Prim_SWAP(interp);
   Prim_FUN(interp);
   Prim_SWAP(interp);
+  Prim_FIRST(interp);
   Prim_SET(interp);
 }
 
-// DO evaluates a list. Other types generates an error.
-void Prim_DO(Interp* interp)
+// EVAL evaluates a list. Other types generates an error.
+void Prim_EVAL(Interp* interp)
 {
-  //PrintDebug("HELLO DO");
+  //PrintDebug("HELLO EVAL");
   //ListPrint(interp->stack, interp);
   //ListPrint(interp->currentContext->env, interp);
   Item item;
@@ -257,7 +262,7 @@ void Prim_DO(Interp* interp)
     //PrimEval_EvalList(interp, ItemList(item));
     InterpEnterContext(interp, ItemList(item), ContextCurrentEnv);
   else
-    ErrorExit("Prim_DO got a non-list of type: %lu", item.type);
+    ErrorExit("Prim_EVAL got a non-list of type: %lu", item.type);
 }
 
 // 21 ((X) => X X +) CALL
@@ -299,6 +304,25 @@ void Prim_IFTRUE(Interp* interp)
   }
 }
 
+void Prim_IFFALSE(Interp* interp)
+{
+  Item list, boolVal;
+
+  InterpPopEvalInto(interp, list);
+  InterpPopEvalInto(interp, boolVal);
+
+  if (!IsList(list))
+    ErrorExit("IFTRUE: branch is non-list of type: %lu", list.type);
+  if (!IsBool(boolVal))
+    ErrorExit("IFTRUE: got non-bool of type: %lu", boolVal.type);
+
+  if (!boolVal.value.truth)
+  {
+    //PrimEval_EvalList(interp, ItemList(list));
+    InterpEnterContext(interp, ItemList(list), ContextCurrentEnv);
+  }
+}
+
 void Prim_IFELSE(Interp* interp)
 {
   Item branch2, branch1, boolVal;
@@ -312,7 +336,7 @@ void Prim_IFELSE(Interp* interp)
   if (!IsList(branch2))
     ErrorExit("IFELSE: branch2 is non-list of type: %lu", branch2.type);
   if (!IsBool(boolVal))
-    ErrorExit("IFTRUE: got non-bool of type: %lu", boolVal.type);
+    ErrorExit("IFELSE: got non-bool of type: %lu", boolVal.type);
 
   if (boolVal.value.truth)
   {
@@ -324,6 +348,63 @@ void Prim_IFELSE(Interp* interp)
     //PrimEval_EvalList(interp, ItemList(branch2));
     InterpEnterContext(interp, ItemList(branch2), ContextCurrentEnv);
   }
+}
+
+void Prim_GOTOIFTRUE(Interp* interp)
+{
+  PrintDebug("HELLO GOTOIFTRUE");
+  Item codePointer, boolVal;
+
+  InterpPopEvalInto(interp, codePointer);
+  InterpPopEvalInto(interp, boolVal);
+
+  if (!IsIntNum(codePointer))
+    ErrorExit("Prim_GOTOIFTRUE: Expected TypeIntNum");
+  if (!IsBool(boolVal))
+    ErrorExit("Prim_GOTOIFTRUE: Expected TypeBool");
+
+  if (boolVal.value.truth)
+  {
+    Context* context = interp->currentContext;
+    context->codePointer = codePointer.value.intNum - 1;
+    PrintDebug("GOTO codepointer: %u", context->codePointer);
+  }
+}
+
+void Prim_GOTOIFFALSE(Interp* interp)
+{
+  PrintDebug("HELLO GOTOIFFALSE");
+  Item codePointer, boolVal;
+
+  InterpPopEvalInto(interp, codePointer);
+  InterpPopEvalInto(interp, boolVal);
+
+  if (!IsIntNum(codePointer))
+    ErrorExit("Prim_GOTOIFTRUE: Expected TypeIntNum");
+  if (!IsBool(boolVal))
+    ErrorExit("Prim_GOTOIFTRUE: Expected TypeBool");
+
+  if (!boolVal.value.truth)
+  {
+    Context* context = interp->currentContext;
+    context->codePointer = codePointer.value.intNum - 1;
+    PrintDebug("GOTO codepointer: %u", context->codePointer);
+  }
+}
+
+void Prim_LABEL(Interp* interp)
+{
+  Item symbol, value;
+
+  InterpPopInto(interp, symbol);
+
+  if (!IsSymbol(symbol))
+    ErrorExit("Prim_LABEL: Expected TypeSymbol");
+
+  Context* context = interp->currentContext;
+  IntNum codePointer = context->codePointer + 1;
+  value = ItemWithIntNum(codePointer);
+  PrimEval_SetLocal(interp, symbol, value);
 }
 
 void Prim_PLUS(Interp* interp)
@@ -357,7 +438,7 @@ void Prim_PLUS(Interp* interp)
     res.value.decNum = a.value.decNum + b.value.decNum;
   }
   else
-    ErrorExit("Prim_PLUS: Unsupported item types");
+    ErrorExit("Prim_PLUS: Unsupported types");
 
   InterpPush(interp, res);
 }
@@ -393,7 +474,7 @@ void Prim_MINUS(Interp* interp)
     res.value.decNum = a.value.decNum - b.value.decNum;
   }
   else
-    ErrorExit("Prim_MINUS: Unsupported item types");
+    ErrorExit("Prim_MINUS: Unsupported types");
 
   InterpPush(interp, res);
 }
@@ -429,7 +510,7 @@ void Prim_TIMES(Interp* interp)
     res.value.decNum = a.value.decNum * b.value.decNum;
   }
   else
-    ErrorExit("Prim_TIMES: Unsupported item types");
+    ErrorExit("Prim_TIMES: Unsupported types");
 
   InterpPush(interp, res);
 }
@@ -465,7 +546,7 @@ void Prim_DIV(Interp* interp)
     res.value.decNum = a.value.decNum / b.value.decNum;
   }
   else
-    ErrorExit("Prim_DIV: Unsupported item types");
+    ErrorExit("Prim_DIV: Unsupported types");
 
   InterpPush(interp, res);
 }
@@ -482,7 +563,7 @@ void Prim_MODULO(Interp* interp)
   if (IsIntNum(a) && IsIntNum(b))
     res.value.intNum = a.value.intNum % b.value.intNum;
   else
-    ErrorExit("Prim_MODULO: Unsupported item types");
+    ErrorExit("Prim_MODULO: Unsupported types");
 
   InterpPush(interp, res);
 }
@@ -576,19 +657,23 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("DUP", &Prim_DUP, interp);
   InterpAddPrimFun("SWAP", &Prim_SWAP, interp);
   InterpAddPrimFun("FUN", &Prim_FUN, interp);
-  InterpAddPrimFun("SYMBOL", &Prim_SYMBOL, interp);
-  InterpAddPrimFun("VALUE", &Prim_VALUE, interp);
+  InterpAddPrimFun("FIRST", &Prim_FIRST, interp);
+  //InterpAddPrimFun("VALUE", &Prim_VALUE, interp);
   InterpAddPrimFun("DEF", &Prim_DEF, interp);
   InterpAddPrimFun("SETLOCAL", Prim_SETLOCAL, interp);
   InterpAddPrimFun("POP", Prim_SETLOCAL, interp);
   InterpAddPrimFun("=>", Prim_SETLOCAL, interp);
-  InterpAddPrimFun("QUOTE", Prim_QUOTE, interp);
-  InterpAddPrimFun(":", Prim_QUOTE, interp);
-  InterpAddPrimFun("DO", &Prim_DO, interp);
+  //InterpAddPrimFun("QUOTE", Prim_QUOTE, interp);
+  //InterpAddPrimFun(":", Prim_QUOTE, interp);
+  InterpAddPrimFun("EVAL", &Prim_EVAL, interp);
   InterpAddPrimFun("CALL", &Prim_CALL, interp);
   //InterpAddPrimFun("RECUR", &Prim_RECUR, interp);
   InterpAddPrimFun("IFTRUE", &Prim_IFTRUE, interp);
+  InterpAddPrimFun("IFFALSE", &Prim_IFTRUE, interp);
   InterpAddPrimFun("IFELSE", &Prim_IFELSE, interp);
+  InterpAddPrimFun("GOTOIFTRUE", &Prim_GOTOIFTRUE, interp);
+  InterpAddPrimFun("GOTOIFFALSE", &Prim_GOTOIFFALSE, interp);
+  InterpAddPrimFun("LABEL", &Prim_LABEL, interp);
   InterpAddPrimFun("+", &Prim_PLUS, interp);
   InterpAddPrimFun("-", &Prim_MINUS, interp);
   InterpAddPrimFun("*", &Prim_TIMES, interp);

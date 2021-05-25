@@ -212,6 +212,12 @@ PrimFuns in code list:
 
 
 
+
+
+
+
+
+/*
 Here is an example that illustrates that the arrow function does nothing more than popping values off the data stack and binding local variables:
 
     (Hello-I-am-the-Vimana-interpreter. PRINT
@@ -230,4 +236,5 @@ Prints:
     Mikael
 
 (As you can see, strings are not yet invented, so unbound symbols are used to represent text.)
+*/
 

@@ -13,6 +13,133 @@ int main()
   //ListPrintItems(interp->globalSymbolTable, interp);
   //ListPrintItems(interp->globalValueTable, interp);
   
+  //PrintDebug("SYMBOL TABLE:\n");
+  //ListPrintItems(interp->globalSymbolTable, interp);
+
+  //PrintDebug("PARSED LIST:");
+  //ListPrint(list, interp);
+  
+
+  // TIMESDO RECURSIVE VARS
+  List* list1a = ParseCode(interp,
+    "((L N) => N 0 EQ NOT (L EVAL L N 1 - TIMESDO) IFTRUE) (TIMESDO) DEF "
+    "(HELLO DROP) 100000000 TIMESDO");
+  //./vimana  10.72s user 0.01s system 97% cpu 10.957 total
+
+  // TIMESDO RECURSIVE STACK
+  List* list1b = ParseCode(interp,
+    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ (DROP DROP) (TIMESDO) IFELSE) (TIMESDO) DEF "
+    "(HELLO DROP) 100000000 TIMESDO");
+  //./vimana  7.83s user 0.01s system 96% cpu 8.098 total
+
+  // TIMESDO ITERATIVE VARS
+  List* list2a = ParseCode(interp,
+    "((L N) => L EVAL N 1 - N => "
+      "N 0 EQ 2 GOTOIFFALSE) (TIMESDO) DEF "
+    "(HELLO DROP) 100000000 TIMESDO");
+  //./vimana  7.93s user 0.01s system 95% cpu 8.294 total
+
+  // TIMESDO ITERATIVE STACK
+  List* list2b = ParseCode(interp,
+    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE) (TIMESDO) DEF "
+    "(HELLO DROP) 100000000 TIMESDO");
+  //./vimana  6.45s user 0.01s system 94% cpu 6.816 total
+
+
+
+  List* list1 = ParseCode(interp,
+    //"(HELLO WORLD) PRINT " 
+    "((L N) => "
+      //"LOOP LABEL "
+        "L EVAL "
+        "N 1 -  N => "
+        "N 0 EQ "
+      "2 GOTOIFFALSE) "
+    "(TIMESDO) DEF "
+    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
+    "(20 FACT) 10000000 TIMESDO");
+  // ./vimana  13.22s user 0.07s system 97% cpu 13.565 total
+  // ./vimana  14.25s user 0.01s system 96% cpu 14.733 total (with DROP)
+  // ./vimana  14.67s user 0.07s system 96% cpu 15.255 total (without DROP)
+
+  List* list2 = ParseCode(interp,
+    //"(HELLO WORLD) PRINT " 
+    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE) (TIMESDO) DEF "
+    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
+    "(20 FACT DROP) 10000000 TIMESDO");
+  // ./vimana  12.95s user 0.01s system 94% cpu 13.769 total
+  // ./vimana  13.07s user 0.01s system 90% cpu 14.422 total
+
+  List* list3 = ParseCode(interp,
+    //"(HELLO WORLD) PRINT " 
+    "((L N) => "
+      //"LOOP LABEL "
+        "L EVAL "
+        "N 1 -  N => "
+        "N 0 EQ "
+      "2 GOTOIFFALSE) "
+    "(TIMESDO) DEF "
+    "((N) => "
+      "1 RES => "
+      "N RES * RES => "
+      "N 1 - N => "
+      "N 0 EQ "
+      "5 GOTOIFFALSE "
+      "RES 0 +) (FACT) DEF "
+    "(20 FACT DROP) 10000000 TIMESDO");
+  // ./vimana  19.39s user 0.01s system 97% cpu 19.805 total  !!!!!!!!
+
+  List* list4 = ParseCode(interp,
+    //"(HELLO WORLD) PRINT " 
+    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ (DROP DROP) (TIMESDO) IFELSE) (TIMESDO) DEF "
+    "(DUP 1 EQ (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
+    "(20 FACT DROP) 10000000 TIMESDO");
+  // ./vimana  14.21s user 0.01s system 98% cpu 14.482 total
+
+
+  List* list5 = ParseCode(interp,
+    "(1 SWAP DUP * SWAP 1 - SWAP DUP 0 EQ 1 GOTOIFFALSE DROP) "
+    "(FACT) DEF "
+    "6 FACT PRINT");
+
+/*
+  N
+1
+  N 1
+SWAP
+  1 N
+DUP
+  1 N N
+
+  N N RES
+*
+  N RES
+SWAP
+  RES N
+1 -
+  RES N
+DUP
+  RES N N
+0 EQ
+  RES N TRUE/FALSE
+1 GOTOIFFALSE
+DROP
+
+1 SWAP DUP * SWAP 1 - SWAP DUP 0 EQ 1 GOTOIFFALSE DROP
+*/
+
+  InterpRun(interp, list);
+  
+  //PrintDebug("PRINTING STACK:");
+  //ListPrintItems(interp->stack, interp);
+  
+  InterpFree(interp);
+  //PrintLine("PROGRAM ENDED");
+}
+
+
+
+/*
   List* list1 = ParseCode(interp, "HELLO_WORLD PRINT 1 2 + PRINT");
   List* list2 = ParseCode(interp, "(HELLO_WORLD PRINT) DO");
   List* list3 = ParseCode(interp, "(HELLO_WORLD PRINT) SAYHELLO DEF SAYHELLO");
@@ -110,9 +237,10 @@ int main()
     "(HELLO2222 PRINT) : FOO DEF FOO "
     );
   List* list = ParseCode(interp, 
-    "(X POP  X PRINT) : FOO DEF HELLO2222 FOO "
-    "((X Y) =>  X PRINT Y PRINT) : FOO DEF HELLO WORLD FOO "
+    "(X POP  X PRINT) (FOO) DEF  HELLO2222 FOO "
+    "((X Y) =>  X PRINT Y PRINT) (FOO) DEF  HELLO WORLD FOO "
     );
+*/
 
 /*
   List* list = ParseCode(interp, 
@@ -178,18 +306,3 @@ Rewrite also of TIMESDO with DUP and SWAP:
 ./vimana  14.90s user 0.02s system 98% cpu 15.155 total
 ./vimana  14.56s user 0.03s system 97% cpu 14.919 total
 */
-
-  //PrintDebug("SYMBOL TABLE:\n");
-  //ListPrintItems(interp->globalSymbolTable, interp);
-
-  //PrintDebug("PARSED LIST:");
-  //ListPrint(list, interp);
-  
-  InterpRun(interp, list);
-  
-  //PrintDebug("PRINTING STACK:");
-  //ListPrintItems(interp->stack, interp);
-  
-  InterpFree(interp);
-  //PrintLine("PROGRAM ENDED");
-}
