@@ -195,15 +195,10 @@ void Prim_DEF(Interp* interp)
 void Prim_DEFINE(Interp* interp)
 {
   // (FUN SWAP FIRST SET) FUN (DEFINE) LISTFIRST SET
-  PrintDebug("Define1");
   Prim_FUN(interp);
-  PrintDebug("Define2");
   Prim_SWAP(interp);
-  PrintDebug("Define3");
   Prim_LISTFIRST(interp);
-  PrintDebug("Define4");
   Prim_SET(interp);
-  PrintDebug("Define5");
 }
 
 // EVAL evaluates a list. Other types generates an error.

@@ -226,6 +226,8 @@ void InterpEnterFunCallContext(
 {
   Context* context;
 
+  //ListPrint(interp->stack, interp);
+
   // Check for known tailcall.
   if (currentContext && isTailCall)
   {
@@ -240,20 +242,20 @@ void InterpEnterFunCallContext(
   // Obtain current context.
   if (!currentContext)
     currentContext = interp->currentContext;
-/*
+
   // Check for possible tailcall.
   if (currentContext && 
       (currentContext->codePointer + 1 >= ListLength(currentContext->code)))
   {
     PrintDebug("TAILCALL AT INDEX: %i", interp->callstackIndex);
-    ListPrint(code, interp);
+    interp->contextSwitch = TRUE;
     currentContext->code = code;
     currentContext->codePointer = -1;
     // Keep env! //currentContext->env->length = 0;
-    currentContext->hasEnv = isFunCall;
+    //currentContext->hasEnv = isFunCall;
     return;
   }
-*/
+
   // Increment callstack index.
   Index callstackIndex = ++ interp->callstackIndex;
 
@@ -280,17 +282,18 @@ void InterpEnterFunCallContext(
   if (isFunCall)
     context->env->length = 0;
 }
-
+/*
 void InterpExitContext(Interp* interp)
 {
   PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-  //interp->currentContext = interp->currentContext->prevContext;
-  interp->contextSwitch = TRUE;
+  //ListPrint(interp->stack, interp);
+  interp->currentContext = interp->currentContext->prevContext;
   -- interp->callstackIndex;
+  interp->contextSwitch = TRUE;
   Context* context = ItemContext(ListPop(interp->callstack));
   ContextFree(context);
 }
-
+*/
 /*
 void InterpEnterContext(Interp* interp, List* code, int newEnv)
 {
@@ -405,13 +408,13 @@ void InterpRun(Interp* interp, List* list)
     //code = context->code;
     if (codePointer >= codeLength)
     {
-#ifdef OPTIMIZE
-      //interp->currentContext = interp->currentContext->prevContext;
-      //interp->currentContext = NULL;
+      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+      interp->currentContext = interp->currentContext->prevContext;
       interp->contextSwitch = TRUE;
-      -- interp->callstackIndex;
-#else
-      InterpExitContext(interp);
+      -- interp->callstackIndex;  
+#ifndef OPTIMIZE
+      Context* context = ItemContext(ListPop(interp->callstack));
+      ContextFree(context);
 #endif
       goto exit;
     }
@@ -437,7 +440,7 @@ void InterpRun(Interp* interp, List* list)
     if (IsSymbol(element))
     {
       item = ListGet(interp->globalValueTable, element.value.symbol);
-      PrintDebug("SYMBOL: %s", InterpGetSymbolString(interp, element.value.symbol));
+      //PrintDebug("SYMBOL: %s", InterpGetSymbolString(interp, element.value.symbol));
       if (IsPrimFun(item))
       {
         item.value.primFun(interp);

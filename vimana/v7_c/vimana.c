@@ -20,11 +20,14 @@ int main()
   //PrintDebug("PARSED LIST:");
   //ListPrint(list, interp);
   
-  List* list = ParseCode(interp, 
-    "HELLOWORLD PRINT "
+  List* list0 = ParseCode(interp, 
+    //"HELLOWORLD PRINT "
     "(FACT) ((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEFINE "
-    "6 FACT PRINT"
+    "(TIMESDO) ((L N) => N 0 EQ NOT (L EVAL L N 1 - TIMESDO) IFTRUE) DEFINE "
+    "(20 FACT DROP) 10000000 TIMESDO "
     );
+  // Test 210526
+  // ./vimana  17.05s user 0.01s system 98% cpu 17.296 total
 
   // TIMESDO RECURSIVE VARS
   List* list1a = ParseCode(interp,
@@ -32,6 +35,8 @@ int main()
     "(HELLO DROP) 100000000 TIMESDO");
   // Tests 210525
   //./vimana  10.72s user 0.01s system 97% cpu 10.957 total
+  // Test 210526
+  // ./vimana  9.82s user 0.01s system 96% cpu 10.216 total
 
   // TIMESDO RECURSIVE STACK
   List* list1b = ParseCode(interp,
@@ -109,7 +114,7 @@ int main()
   // ./vimana  14.21s user 0.01s system 98% cpu 14.482 total
 
   // Problem here ts that 0 FACT is not handled.
-  List* list6 = ParseCode(interp,
+  List* list = ParseCode(interp,
     "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE DROP DROP) (TIMESDO) DEF "
     "(DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP) "
     "(FACT) DEF "
@@ -125,6 +130,8 @@ int main()
   // ./vimana  11.55s user 0.01s system 96% cpu 12.024 total
   // ./vimana  11.38s user 0.01s system 96% cpu 11.742 total
   // ./vimana  11.22s user 0.01s system 96% cpu 11.618 total
+  // Test 210526 (optimizing EnterContext)
+  // ./vimana  10.98s user 0.01s system 96% cpu 11.375 total
 
 // https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/
 
@@ -154,9 +161,8 @@ DROP
 DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP
 */
 
-
-  PrintDebug("PARSED LIST:");
-  ListPrint(list, interp);
+  //PrintDebug("PARSED LIST:");
+  //ListPrint(list, interp);
   
   InterpRun(interp, list);
   
