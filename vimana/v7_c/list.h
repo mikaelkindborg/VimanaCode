@@ -208,7 +208,6 @@ Item ListPop(List* list)
     ItemRefCountDecr(list->items[list->length]); \
     ItemGC(list->items[list->length]); \
   } while (0)
-
 #else
 void ListDrop(List* list)
 {
