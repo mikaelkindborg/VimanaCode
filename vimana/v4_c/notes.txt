@@ -7,7 +7,24 @@ man cc | col -bx > ccman.txt
 
 git remote set-url origin git@github.com:mikaelkindborg/VimanaCode.git
 
+https://www.nature.com/articles/s43587-021-00041-7
+https://www.jpost.com/archaeology/oldest-woven-basket-in-the-world-found-in-israel-dates-back-10000-years-662183
 https://medium.com/@sathishramyen/a-five-thousand-year-old-ancient-indian-vimana-found-in-afghanistan-cave-eight-american-soldiers-453253fa002b
+https://www.pinterest.com/pin/585890232753390686/
+https://www.extraordinarybeliefs.com/news4/navy-filmed-pyramid-ufos
+https://www.youtube.com/watch?v=jlERSVSDl7Y
+https://projectavalon.net/forum4/showthread.php?36575-Tiny-Houses&highlight=houseboat
+
+https://stackoverflow.com/questions/3605196/implementing-a-direct-threaded-interpreter-in-a-functional-language-like-ocaml
+http://cs603.cs.ua.edu/2003spring/
+https://github.com/pliba
+https://github.com/pliba/budd/tree/master/kamin
+http://www.buildyourownlisp.com/chapter15_standard_library#minimalism
+http://strlen.com/language-design-overview/
+
+https://www.geeksforgeeks.org/socket-programming-cc/
+https://www.thecrazyprogrammer.com/2017/06/socket-programming.html
+https://www.codeproject.com/articles/586000/networking-and-socket-programming-tutorial-in-c
 
 https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html
 https://blog.robertelder.org/switch-statements-statement-expressions/
