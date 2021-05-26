@@ -1,47 +1,34 @@
+//
+// The functions is this file can be changed to alter
+// the behaviour of the language. The interpreter in
+// interp.h is realively "naked", and the idea behind
+// this is to make the code more mallable.
+//
+
+// DECLARATIONS ------------------------------------------------
+
+void Prim_LISTFIRST(Interp* interp);
 
 // EVAL PRIMITIVES ---------------------------------------------
-
-//
-// The following functions can be changed to alter
-// the behaviour of the language. The interpreter in
-// interp.h is realively "naked" and the idea behind
-// this is to make the code more modular.
-//
-
-/*
-void PrimEval_EvalList(Interp* interp, List* list)
-{
-  // Enter new context with current env.
-  InterpEnterContext(interp, list, ContextCurrentEnv);
-}
-*/
-
-/*
-void PrimEval_EvalFun(Interp* interp, List* fun)
-{
-  // Just push it on the callstack, binding is done by primitives
-  InterpEnterContext(interp, fun, ContextNewEnv);
-}
-*/
 
 void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
 {
   if (IsSymbol(name))
     InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
   else
-    ErrorExit("SET: Got a non-symbol of type: %lu", name.type);
+    ErrorExit("PrimEval_SetGlobal: Got a non-symbol of type: %lu", name.type);
 }
 
 #ifdef OPTIMIZE
 #define PrimEval_SetLocal(interp, name, item) \
-do { \
-  if (!IsSymbol(name)) \
-    ErrorExit("PrimEval_SetLocal: Got a non-symbol of type: %lu", (name).type); \
-  Context* context = (interp)->currentContext; \
-  while (context && (!context->hasEnv)) \
-    context = context->prevContext; \
-  ListAssocSetGet(context->env, (name).value.symbol, &(item)); \
-} while(0)
+  do { \
+    if (!IsSymbol(name)) \
+      ErrorExit("PrimEval_SetLocal: Got a non-symbol of type: %lu", (name).type); \
+    Context* context = (interp)->currentContext; \
+    while (context && (!context->hasEnv)) \
+      context = context->prevContext; \
+    ListAssocSetGet(context->env, (name).value.symbol, &(item)); \
+  } while (0)
 #else
 void PrimEval_SetLocal(Interp* interp, Item name, Item value)
 {
@@ -114,10 +101,10 @@ Item PrimEval_EvalSymbol(Interp* interp, Item item)
 // Example:
 // 42 FOO SET  
 // FOO PRINTLN
+
+// ITEM SYMBOL SET ->
 void Prim_SET(Interp* interp)
 {
-  //PrintDebug("HELLO SET");
-  
   // Get name and value.
   Item name, value;
   InterpPopInto(interp, name);
@@ -127,84 +114,45 @@ void Prim_SET(Interp* interp)
   PrimEval_SetGlobal(interp, value, name);
 }
 
+// ITEM DROP ->
 void Prim_DROP(Interp* interp)
 {
-  Index length = interp->stack->length;
-  length = length - 1;
-  if (length < 0) 
-    ErrorExit("DROP: list length < 0");
-  ItemRefCountDecr(interp->stack->items[length]);
-  ItemGC(interp->stack->items[length]);
-  interp->stack->length = length;
+  ListDrop(interp->stack);
 }
 
+// ITEM DUP -> ITEM ITEM
 void Prim_DUP(Interp* interp)
 {
-  List* stack = interp->stack;
-  Item item = ListGet(stack, ListLength(stack) - 1);
-  ListPush(stack, item);
+  ListDup(interp->stack, ListLength(interp->stack) - 1);
 }
 
+// ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
 void Prim_OVER(Interp* interp)
 {
-  List* stack = interp->stack;
-  Item item = ListGet(stack, ListLength(stack) - 2);
-  ListPush(stack, item);
+  ListDup(interp->stack, ListLength(interp->stack) - 2);
 }
 
+// ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
 void Prim_SWAP(Interp* interp)
 {
-  List* stack = interp->stack;
-  Index index1 = ListLength(stack) - 1;
-  Index index2 = ListLength(stack) - 2;
-  Item item1 = stack->items[index1];
-  stack->items[index1] = stack->items[index2];
-  stack->items[index2] = item1;
+  ListSwap(interp->stack);
 }
 
 // FUN turns a list into a function.
-// Examples/ideas:
-// (X SETLOCAL X X +) FUN DOUBLE SET
-// (X PARAM X X +) FUN DOUBLE SET
-// ((X Y) SETLOCAL X Y +) FUN MYADD SET
-// ((X Y) => X Y +) FUN MYADD SET
-// ((X Y) : X Y +) FUN MYADD SET
-// ((X Y) (X Y +)) FUN MYADD SET // This one requires bindning by EvalCore_EvalFun()
-// (Y : X : X Y +) FUN MYADD SET
-// (Y PARAM X PARAM X Y +) FUN MYADD SET
+// LIST FUN -> FUNOBJ
 void Prim_FUN(Interp* interp)
 {
-  //PrintDebug("HELLO FUN");
   Item list;
   InterpPopEvalInto(interp, list);
   if (!IsList(list))
-    ErrorExit("FUN: Got a non-list!");
+    ErrorExit("Prim_FUN: Got a non-list!");
   list.type = list.type | TypeFun;
   InterpPush(interp, list);
 }
 
-void Prim_FIRST(Interp* interp)
-{
-  Item item;
-  InterpPopInto(interp, item);
-  item = ListGet(ItemList(item), 0);
-  InterpPush(interp, item); // Pushes first element
-}
-
-/*
-void Prim_VALUE(Interp* interp)
-{
-  Item item;
-  InterpPopInto(interp, item);
-  item = ListGet(ItemList(item), 0);
-  item = PrimEval_EvalSymbol(interp, item);
-  InterpPush(interp, item); // Push value
-}
-*/
-
+// ITEM SYMBOL SETLOCAL ->
 void Prim_SETLOCAL(Interp* interp)
 {
-  //PrintDebug("HELLO SETLOCAL");
   Item item, value;
   InterpPopInto(interp, item);
   if (IsSymbol(item))
@@ -230,40 +178,34 @@ void Prim_SETLOCAL(Interp* interp)
   }
 }
 
-/*
-// Don't evaluate next element, just push it onto the data stack.
-void Prim_QUOTE(Interp* interp)
-{
-  //PrintDebug("HELLO QUOTE");
-  
-  Context* context = interp->currentContext;
-  int codePointer = ++ context->codePointer;
-  List* code = context->code;
-  if (codePointer < ListLength(code))
-  {
-    // Get the next element and push it.
-    Item element = ListGet(code, codePointer);
-    ListPush(interp->stack, element);
-  }
-}
-*/
-
+// Order is BODY NAME
+// (FUNBODY) (FUNNAME) DEF ->
 void Prim_DEF(Interp* interp)
 {
-  //PrintDebug("HELLO DEF");
-
-  // (SWAP FUN SWAP FIRST SET) FUN (DEF) FIRST SET
+  // (SWAP FUN SWAP FIRST SET) FUN (DEF) LISTFIRST SET
   Prim_SWAP(interp);
   Prim_FUN(interp);
   Prim_SWAP(interp);
-  Prim_FIRST(interp);
+  Prim_LISTFIRST(interp);
+  Prim_SET(interp);
+}
+
+// Note that order is NAME BODY
+// (FUNNAME) (FUNBODY) DEFINE ->
+void Prim_DEFINE(Interp* interp)
+{
+  // (FUN SWAP FIRST SET) FUN (DEFINE) LISTFIRST SET
+  Prim_FUN(interp);
+  Prim_SWAP(interp);
+  Prim_LISTFIRST(interp);
   Prim_SET(interp);
 }
 
 // EVAL evaluates a list. Other types generates an error.
+// LIST EVAL ->
 void Prim_EVAL(Interp* interp)
 {
-  //PrintDebug("HELLO EVAL");
+  //PrintDebug("Prim_EVAL");
   //ListPrint(interp->stack, interp);
   //ListPrint(interp->currentContext->env, interp);
   Item item;
@@ -283,19 +225,7 @@ void Prim_CALL(Interp* interp)
   // Enter new context with empty env.
 }
 
-/*
-void Prim_RECUR(Interp* interp)
-{
-  PrintDebug("HELLO RECUR");
-
-  // TODO: Add info to context about current function and use that code list recur.
-
-  // Below code does not work, need to get the function context.
-  // Enter new context with current code list.
-  //PrimEval_EvalFun(interp, interp->currentContext->code);
-}
-*/
-
+// BOOL LIST IFTRUE ->
 void Prim_IFTRUE(Interp* interp)
 {
   Item list, boolVal;
@@ -304,9 +234,9 @@ void Prim_IFTRUE(Interp* interp)
   InterpPopEvalInto(interp, boolVal);
 
   if (!IsList(list))
-    ErrorExit("IFTRUE: branch is non-list of type: %lu", list.type);
+    ErrorExit("Prim_IFTRUE: branch is non-list of type: %lu", list.type);
   if (!IsBool(boolVal))
-    ErrorExit("IFTRUE: got non-bool of type: %lu", boolVal.type);
+    ErrorExit("Prim_IFTRUE: got non-bool of type: %lu", boolVal.type);
 
   if (boolVal.value.truth)
   {
@@ -315,6 +245,7 @@ void Prim_IFTRUE(Interp* interp)
   }
 }
 
+// BOOL LIST IFALSE ->
 void Prim_IFFALSE(Interp* interp)
 {
   Item list, boolVal;
@@ -323,9 +254,9 @@ void Prim_IFFALSE(Interp* interp)
   InterpPopEvalInto(interp, boolVal);
 
   if (!IsList(list))
-    ErrorExit("IFTRUE: branch is non-list of type: %lu", list.type);
+    ErrorExit("Prim_IFFALSE: branch is non-list of type: %lu", list.type);
   if (!IsBool(boolVal))
-    ErrorExit("IFTRUE: got non-bool of type: %lu", boolVal.type);
+    ErrorExit("Prim_IFFALSE: got non-bool of type: %lu", boolVal.type);
 
   if (!boolVal.value.truth)
   {
@@ -334,6 +265,7 @@ void Prim_IFFALSE(Interp* interp)
   }
 }
 
+// BOOL LIST LIST IFELSE ->
 void Prim_IFELSE(Interp* interp)
 {
   Item branch2, branch1, boolVal;
@@ -343,11 +275,11 @@ void Prim_IFELSE(Interp* interp)
   InterpPopEvalInto(interp, boolVal);
 
   if (!IsList(branch1))
-    ErrorExit("IFELSE: branch1 is non-list of type: %lu", branch1.type);
+    ErrorExit("Prim_IFELSE: branch1 is non-list of type: %lu", branch1.type);
   if (!IsList(branch2))
-    ErrorExit("IFELSE: branch2 is non-list of type: %lu", branch2.type);
+    ErrorExit("Prim_IFELSE: branch2 is non-list of type: %lu", branch2.type);
   if (!IsBool(boolVal))
-    ErrorExit("IFELSE: got non-bool of type: %lu", boolVal.type);
+    ErrorExit("Prim_IFELSE: got non-bool of type: %lu", boolVal.type);
 
   if (boolVal.value.truth)
   {
@@ -363,7 +295,6 @@ void Prim_IFELSE(Interp* interp)
 
 void Prim_GOTOIFTRUE(Interp* interp)
 {
-  PrintDebug("HELLO GOTOIFTRUE");
   Item codePointer, boolVal;
 
   InterpPopEvalInto(interp, codePointer);
@@ -378,7 +309,7 @@ void Prim_GOTOIFTRUE(Interp* interp)
   {
     Context* context = interp->currentContext;
     context->codePointer = codePointer.value.intNum - 1;
-    PrintDebug("GOTO codepointer: %u", context->codePointer);
+    PrintDebug("GOTO codepointer: %i", context->codePointer);
   }
 }
 
@@ -390,34 +321,19 @@ void Prim_GOTOIFFALSE(Interp* interp)
   InterpPopEvalInto(interp, boolVal);
 
   if (!IsIntNum(codePointer))
-    ErrorExit("Prim_GOTOIFTRUE: Expected TypeIntNum");
+    ErrorExit("Prim_GOTOIFFALSE: Expected TypeIntNum");
   if (!IsBool(boolVal))
-    ErrorExit("Prim_GOTOIFTRUE: Expected TypeBool");
+    ErrorExit("Prim_GOTOIFFALSE: Expected TypeBool");
 
   if (!boolVal.value.truth)
   {
     Context* context = interp->currentContext;
     context->codePointer = codePointer.value.intNum - 1;
-    PrintDebug("GOTO codepointer: %u", context->codePointer);
+    PrintDebug("GOTO codepointer: %i", context->codePointer);
   }
 }
 
-void Prim_LABEL(Interp* interp)
-{
-  Item symbol, item;
-
-  InterpPopInto(interp, symbol);
-
-  if (!IsSymbol(symbol))
-    ErrorExit("Prim_LABEL: Expected TypeSymbol");
-
-  Context* context = interp->currentContext;
-  IntNum codePointer = context->codePointer + 1;
-  item.type = TypeIntNum;
-  item.value.intNum = codePointer;
-  PrimEval_SetLocal(interp, symbol, item);
-}
-
+// NUM NUM PLUS -> NUM
 void Prim_PLUS(Interp* interp)
 {
   Item a, b, res;
@@ -454,6 +370,7 @@ void Prim_PLUS(Interp* interp)
   InterpPush(interp, res);
 }
 
+// NUM NUM MINUS -> NUM
 void Prim_MINUS(Interp* interp)
 {
   Item a, b, res;
@@ -490,6 +407,7 @@ void Prim_MINUS(Interp* interp)
   InterpPush(interp, res);
 }
 
+// NUM NUM TIMES -> NUM
 void Prim_TIMES(Interp* interp)
 {
   Item a, b, res;
@@ -526,6 +444,7 @@ void Prim_TIMES(Interp* interp)
   InterpPush(interp, res);
 }
 
+// NUM NUM DIV -> NUM
 void Prim_DIV(Interp* interp)
 {
   Item a, b, res;
@@ -562,6 +481,7 @@ void Prim_DIV(Interp* interp)
   InterpPush(interp, res);
 }
 
+// INT MODULO -> INT
 void Prim_MODULO(Interp* interp)
 {
   Item a, b, res;
@@ -579,6 +499,7 @@ void Prim_MODULO(Interp* interp)
   InterpPush(interp, res);
 }
 
+// TRUE -> BOOL
 void Prim_TRUE(Interp* interp)
 { 
   // TODO: Test this style.
@@ -588,11 +509,13 @@ void Prim_TRUE(Interp* interp)
   InterpPush(interp, ItemWithBool(TRUE));
 }
 
+// FALSE -> FALSE
 void Prim_FALSE(Interp* interp)
 {
   InterpPush(interp, ItemWithBool(FALSE));
 }
 
+// ITEM NOT -> BOOL
 void Prim_NOT(Interp* interp)
 {
   Item item;
@@ -604,6 +527,7 @@ void Prim_NOT(Interp* interp)
   InterpPush(interp, item);
 }
 
+// ITEM ITEM EQ -> BOOL
 void Prim_EQ(Interp* interp)
 {
   Item a, b, res;
@@ -639,6 +563,7 @@ void Prim_EQ(Interp* interp)
   InterpPush(interp, res);
 }
 
+// ITEM PRINT ->
 void Prim_PRINT(Interp* interp)
 {
   //PrintDebug("HELLO PRINT");
@@ -647,58 +572,258 @@ void Prim_PRINT(Interp* interp)
   char* buf = ItemToString(item, interp);
   puts(buf);
   free(buf);
+  ItemRefCountDecr(item);
   ItemGC(item);
 }
 
+// LISTNEW -> LIST
 void Prim_LISTNEW(Interp* interp)
 {
-  PrintDebug("HELLO LISTNEW");
+  //PrintDebug("HELLO LISTNEW");
+  Item list;
+  list.type = TypeList | TypeDynAlloc;
+  list.value.list = ListCreate();
+  InterpPush(interp, list);
+}
+
+// LIST LENGTH -> NUM
+void Prim_LISTLENGTH(Interp* interp)
+{
+  Item list, item;
+  InterpPopEvalInto(interp, list);
+  if (!IsList(list))
+    ErrorExit("Prim_LISTLENGTH: Got non-list");
+  item.type = TypeIntNum;
+  item.value.intNum = ListLength(ItemList(list));
+  InterpPush(interp, item); // Push length
+}
+
+// LIST LISTFIRST -> ITEM
+void Prim_LISTFIRST(Interp* interp)
+{
   Item item;
-  List* list = ListCreate();
-  item.type = TypeList | TypeDynAlloc;
-  item.value.list = list;
-  InterpPush(interp, item);
+  InterpPopEvalInto(interp, item);
+  if (!IsList(item))
+    ErrorExit("Prim_LISTFIRST: Got non-list");
+  item = ListGet(ItemList(item), 0);
+  InterpPush(interp, item); // Push element
+}
+
+// LIST LISTLAST -> ITEM
+void Prim_LISTLAST(Interp* interp)
+{
+  Item item;
+  InterpPopEvalInto(interp, item);
+  if (!IsList(item))
+    ErrorExit("Prim_LISTLAST: Got non-list");
+  item = ListGet(ItemList(item), ListLength(ItemList(item)) - 1);
+  InterpPush(interp, item); // Push element
+}
+
+// LIST LISTPOP -> ITEM
+void Prim_LISTPOP(Interp* interp)
+{
+  Item item;
+  InterpPopEvalInto(interp, item);
+  if (!IsList(item))
+    ErrorExit("Prim_LISTPOP: Got non-list");
+  item = ListPop(ItemList(item));
+  InterpPush(interp, item); // Push element
+}
+
+// LIST ITEM LISTPUSH ->
+void Prim_LISTPUSH(Interp* interp)
+{
+  Item item, list;
+  InterpPopEvalInto(interp, item);
+  InterpPopEvalInto(interp, list);
+  if (!IsList(item))
+    ErrorExit("Prim_LISTPUSH: Got non-list");
+  ListPush(ItemList(list), item);
+}
+
+// LIST INDEX LISTGET -> ITEM
+void Prim_LISTGET(Interp* interp)
+{
+  Item index, list, item;
+  InterpPopEvalInto(interp, index);
+  InterpPopEvalInto(interp, list);
+  if (!IsIntNum(index))
+    ErrorExit("Prim_LISTGET: Got non-integer index");
+  if (!IsList(list))
+    ErrorExit("Prim_LISTGET: Got non-list");
+  item = ListGet(ItemList(list), index.value.intNum);
+  InterpPush(interp, item); // Push element
+}
+
+// LIST INDEX ITEM LISTSET ->
+void Prim_LISTSET(Interp* interp)
+{
+  Item index, list, item;
+  InterpPopEvalInto(interp, item);
+  InterpPopEvalInto(interp, index);
+  InterpPopEvalInto(interp, list);
+  if (!IsIntNum(index))
+    ErrorExit("Prim_LISTSET: Got non-integer index");
+  if (!IsList(list))
+    ErrorExit("Prim_LISTSET: Got non-list");
+  ListSet(ItemList(list), index.value.intNum, item);
+}
+
+// LIST LISTDUP -> 
+void Prim_LISTDUP(Interp* interp)
+{
+  Item list;
+  InterpPopEvalInto(interp, list);
+  if (!IsList(list))
+    ErrorExit("Prim_LISTDUP: Got non-list");
+  ListDup(ItemList(list), ListLength(ItemList(list)) - 1);
+}
+
+// LIST LISTSWAP -> 
+void Prim_LISTSWAP(Interp* interp)
+{
+  Item list;
+  InterpPopEvalInto(interp, list);
+  if (!IsList(list))
+    ErrorExit("Prim_LISTSWAP: Got non-list");
+  ListSwap(ItemList(list));
+}
+
+// LIST LISTDROP -> 
+void Prim_LISTDROP(Interp* interp)
+{
+  Item list;
+  InterpPopEvalInto(interp, list);
+  if (!IsList(list))
+    ErrorExit("Prim_LISTDROP: Got non-list");
+  ListDrop(ItemList(list));
 }
 
 void DefinePrimFuns(Interp* interp)
 {
-  InterpAddPrimFun("SET", &Prim_SET, interp);
-  InterpAddPrimFun("DROP", &Prim_DROP, interp);
-  InterpAddPrimFun("DOC", &Prim_DROP, interp);
-  InterpAddPrimFun("DUP", &Prim_DUP, interp);
-  InterpAddPrimFun("OVER", &Prim_OVER, interp);
-  InterpAddPrimFun("SWAP", &Prim_SWAP, interp);
-  InterpAddPrimFun("FUN", &Prim_FUN, interp);
-  InterpAddPrimFun("FIRST", &Prim_FIRST, interp);
-  //InterpAddPrimFun("VALUE", &Prim_VALUE, interp);
-  InterpAddPrimFun("DEF", &Prim_DEF, interp);
-  InterpAddPrimFun("SETLOCAL", Prim_SETLOCAL, interp);
-  InterpAddPrimFun("POP", Prim_SETLOCAL, interp);
+  InterpAddPrimFun("Set", Prim_SET, interp);
+  InterpAddPrimFun("Drop", Prim_DROP, interp);
+  InterpAddPrimFun("Doc", Prim_DROP, interp);
+  InterpAddPrimFun("Dup", Prim_DUP, interp);
+  InterpAddPrimFun("Over", Prim_OVER, interp);
+  InterpAddPrimFun("Swap", Prim_SWAP, interp);
+  InterpAddPrimFun("Fun", Prim_FUN, interp);
+  InterpAddPrimFun("Def", Prim_DEF, interp);
+  InterpAddPrimFun("SetLocal", Prim_SETLOCAL, interp);
   InterpAddPrimFun("=>", Prim_SETLOCAL, interp);
-  //InterpAddPrimFun("QUOTE", Prim_QUOTE, interp);
+  InterpAddPrimFun("Eval", Prim_EVAL, interp);
+  InterpAddPrimFun("Call", Prim_CALL, interp);
+  InterpAddPrimFun("IfTrue", Prim_IFTRUE, interp);
+  InterpAddPrimFun("IfFalse", Prim_IFTRUE, interp);
+  InterpAddPrimFun("IfElse", Prim_IFELSE, interp);
+  InterpAddPrimFun("GotoIfTrue", Prim_GOTOIFTRUE, interp);
+  InterpAddPrimFun("GotoIfFalse", Prim_GOTOIFFALSE, interp);
+  InterpAddPrimFun("+", Prim_PLUS, interp);
+  InterpAddPrimFun("-", Prim_MINUS, interp);
+  InterpAddPrimFun("*", Prim_TIMES, interp);
+  InterpAddPrimFun("/", Prim_DIV, interp);
+  InterpAddPrimFun("Modulo", Prim_MODULO, interp);
+  InterpAddPrimFun("True", Prim_TRUE, interp);
+  InterpAddPrimFun("False", Prim_FALSE, interp);
+  InterpAddPrimFun("Not", Prim_NOT, interp);
+  InterpAddPrimFun("Eq", Prim_EQ, interp);
+  InterpAddPrimFun("Print", Prim_PRINT, interp);
+  InterpAddPrimFun("ListNew", Prim_LISTNEW, interp);
+  InterpAddPrimFun("ListLength", Prim_LISTLENGTH, interp);
+  InterpAddPrimFun("ListFirst", Prim_LISTFIRST, interp);
+  InterpAddPrimFun("ListLast", Prim_LISTFIRST, interp);
+  InterpAddPrimFun("ListPop", Prim_LISTPOP, interp);
+  InterpAddPrimFun("ListPush", Prim_LISTPUSH, interp);
+  InterpAddPrimFun("ListGet", Prim_LISTGET, interp);
+  InterpAddPrimFun("ListSet", Prim_LISTSET, interp);
+  InterpAddPrimFun("ListDup", Prim_LISTDUP, interp);
+  InterpAddPrimFun("ListSwap", Prim_LISTSWAP, interp);
+  InterpAddPrimFun("ListDrop", Prim_LISTDROP, interp);
+  //InterpAddPrimFun("Recur", Prim_RECUR, interp);
+  //InterpAddPrimFun("Quote", Prim_QUOTE, interp);
   //InterpAddPrimFun(":", Prim_QUOTE, interp);
-  InterpAddPrimFun("EVAL", &Prim_EVAL, interp);
-  InterpAddPrimFun("CALL", &Prim_CALL, interp);
-  //InterpAddPrimFun("RECUR", &Prim_RECUR, interp);
-  InterpAddPrimFun("IFTRUE", &Prim_IFTRUE, interp);
-  InterpAddPrimFun("IFFALSE", &Prim_IFTRUE, interp);
-  InterpAddPrimFun("IFELSE", &Prim_IFELSE, interp);
-  InterpAddPrimFun("GOTOIFTRUE", &Prim_GOTOIFTRUE, interp);
-  InterpAddPrimFun("GOTOIFFALSE", &Prim_GOTOIFFALSE, interp);
-  InterpAddPrimFun("LABEL", &Prim_LABEL, interp);
-  InterpAddPrimFun("+", &Prim_PLUS, interp);
-  InterpAddPrimFun("-", &Prim_MINUS, interp);
-  InterpAddPrimFun("*", &Prim_TIMES, interp);
-  InterpAddPrimFun("/", &Prim_DIV, interp);
-  InterpAddPrimFun("MODULO", &Prim_MODULO, interp);
-  InterpAddPrimFun("TRUE", &Prim_TRUE, interp);
-  InterpAddPrimFun("FALSE", &Prim_FALSE, interp);
-  InterpAddPrimFun("NOT", &Prim_NOT, interp);
-  InterpAddPrimFun("EQ", &Prim_EQ, interp);
-  InterpAddPrimFun("PRINT", &Prim_PRINT, interp);
-  InterpAddPrimFun("LISTNEW", &Prim_LISTNEW, interp);
-  //InterpAddPrimFun("PRN", &Prim_PRN, interp);
-  //InterpAddPrimFun("NEWLINE", &Prim_NEWLINE, interp);
-  //InterpAddPrimFun("SPACE", &Prim_SPACE, interp);
-  //InterpAddPrimFun("JOIN", &Prim_JOIN, interp);
+  //InterpAddPrimFun("Value", Prim_VALUE, interp);
+  //InterpAddPrimFun("Label", Prim_LABEL, interp);
+  //InterpAddPrimFun("PRN", Prim_PRN, interp);
+  //InterpAddPrimFun("NEWLINE", Prim_NEWLINE, interp);
+  //InterpAddPrimFun("SPACE", Prim_SPACE, interp);
+  //InterpAddPrimFun("JOIN", Prim_JOIN, interp);
 }
+
+/*
+void Prim_RECUR(Interp* interp)
+{
+  PrintDebug("HELLO RECUR");
+
+  // TODO: Add info to context about current function and use that code list recur.
+
+  // Below code does not work, need to get the function context.
+  // Enter new context with current code list.
+  //PrimEval_EvalFun(interp, interp->currentContext->code);
+}
+*/
+
+/*
+// (ITEM) VALUE -> ITEM (evaluated)
+void Prim_VALUE(Interp* interp)
+{
+  Item item;
+  InterpPopInto(interp, item);
+  item = ListGet(ItemList(item), 0);
+  item = PrimEval_EvalSymbol(interp, item);
+  InterpPush(interp, item); // Push value
+}
+*/
+
+/*
+// Don't evaluate next element, just push it onto the data stack.
+void Prim_QUOTE(Interp* interp)
+{
+  //PrintDebug("HELLO QUOTE");
+  
+  Context* context = interp->currentContext;
+  int codePointer = ++ context->codePointer;
+  List* code = context->code;
+  if (codePointer < ListLength(code))
+  {
+    // Get the next element and push it.
+    Item element = ListGet(code, codePointer);
+    ListPush(interp->stack, element);
+  }
+}
+*/
+
+/*
+void Prim_LABEL(Interp* interp)
+{
+  Item symbol, item;
+
+  InterpPopInto(interp, symbol);
+
+  if (!IsSymbol(symbol))
+    ErrorExit("Prim_LABEL: Expected TypeSymbol");
+
+  Context* context = interp->currentContext;
+  IntNum codePointer = context->codePointer + 1;
+  item.type = TypeIntNum;
+  item.value.intNum = codePointer;
+  PrimEval_SetLocal(interp, symbol, item);
+}
+*/
+
+/*
+void PrimEval_EvalList(Interp* interp, List* list)
+{
+  // Enter new context with current env.
+  InterpEnterContext(interp, list, ContextCurrentEnv);
+}
+*/
+
+/*
+void PrimEval_EvalFun(Interp* interp, List* fun)
+{
+  // Just push it on the callstack, binding is done by primitives
+  InterpEnterContext(interp, fun, ContextNewEnv);
+}
+*/

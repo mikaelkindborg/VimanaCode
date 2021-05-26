@@ -155,8 +155,8 @@ void ListPush(List* list, Item item)
 #define ListPopInto(list, item) \
   do { \
     if ((list)->length < 1) \
-      ErrorExit("ListPopInto: Cannot pop list of length: %i", (list)->length); \
-    (list)->length--; \
+      ErrorExit("ListPopInto: Cannot pop list of length < 0"); \
+    (list)->length --; \
     (item) = (list)->items[list->length]; \
     ItemRefCountDecr(item); \
   } while(0)
@@ -165,11 +165,35 @@ Item ListPop(List* list)
 {
   if (list->length < 1)
     ErrorExit("ListPop: Cannot pop list of length: %i", list->length);
-  list->length--;
+  -- list->length;
   Item item = list->items[list->length];
   ItemRefCountDecr(item);
   return item;
 }
+
+// TODO: Test which style is faster.
+#ifdef OPTIMIZE
+#define ListDrop(list) \
+  do { \
+    Index length = (list)->length; \
+    -- length; \
+    if (length < 0)  \
+      ErrorExit("ListDrop: Cannot drop from list length < 0"); \
+    ItemRefCountDecr((list)->items[length]); \
+    ItemGC((list)->items[length]); \
+    (list)->length = length; \
+  } while (0)
+#else
+void ListDrop(List* list)
+{
+  if (list->length < 1)
+    ErrorExit("ListDrop: Cannot drop from list of length: %i", list->length);
+  -- list->length;
+  Item item = list->items[list->length];
+  ItemRefCountDecr(item);
+  ItemGC(item);
+}
+#endif
 
 #ifdef OPTIMIZE
 #define ListGet(list, index) ((list)->items[index])
@@ -184,16 +208,16 @@ Item ListGet(List* list, int index)
 
 #ifdef OPTIMIZE
 #define ListSet(list, index, item) \
-do { \
-  if ((index) >= (list)->maxLength) \
-    ListGrow((list), (index) + ListGrowIncrement); \
-  if ((index) >= (list)->length) \
-    (list)->length = (index) + 1; \
-  ItemRefCountDecr((list)->items[index]); \
-  ItemGC((list)->items[index]); \
-  ItemRefCountIncr(item); \
-  (list)->items[index] = (item); \
-} while (0)
+  do { \
+    if ((index) >= (list)->maxLength) \
+      ListGrow((list), (index) + ListGrowIncrement); \
+    if ((index) >= (list)->length) \
+      (list)->length = (index) + 1; \
+    ItemRefCountDecr((list)->items[index]); \
+    ItemGC((list)->items[index]); \
+    ItemRefCountIncr(item); \
+    (list)->items[index] = (item); \
+  } while (0)
 #else
 void ListSet(List* list, int index, Item item)
 {
@@ -208,6 +232,40 @@ void ListSet(List* list, int index, Item item)
   ItemRefCountIncr(item);
   // Set new item.
   list->items[index] = item;
+}
+#endif
+ 
+#ifdef OPTIMIZE
+#define ListDup(list, index) \
+  do { \
+    Item item = ListGet(list, index); \
+    ListPush(list, item); \
+  } while (0)
+#else
+void ListDup(List* list, Index index)
+{
+  Item item = ListGet(list, index);
+  ListPush(list, item);
+}
+#endif
+
+#ifdef OPTIMIZE
+#define ListSwap(list) \
+  do { \
+    Index index1 = ListLength(list) - 1; \
+    Index index2 = ListLength(list) - 2; \
+    Item item1 = (list)->items[index1]; \
+    (list)->items[index1] = (list)->items[index2]; \
+    (list)->items[index2] = item1; \
+  } while (0)
+#else
+void ListSwap(List* list)
+{
+  Index index1 = ListLength(list) - 1;
+  Index index2 = ListLength(list) - 2;
+  Item item1 = list->items[index1];
+  list->items[index1] = list->items[index2];
+  list->items[index2] = item1;
 }
 #endif
 

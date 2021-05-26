@@ -15,8 +15,6 @@ typedef FILE          Stream;
 #define FALSE 0
 #define TRUE  1
 
-#define StringEquals(s1, s2) (0 == strcmp(s1, s2))
-
 #define Print(str, args...)      printf(str, ## args)
 #define PrintLine(str, args...)  printf(str "\n", ## args)
 #define PrintToStream(stream, str, args...)  fprintf(stream, str, ## args)
@@ -27,3 +25,25 @@ typedef FILE          Stream;
 #else
 #define PrintDebug(str, args...)
 #endif
+
+#define StringEquals(s1, s2) (0 == strcmp(s1, s2))
+
+void StringToUpper(char* s)
+{
+  char* p = s;
+  while (*p)
+  {
+    *p = toupper((unsigned char) *p);
+    ++ p;
+  }
+}
+
+void StringToLower(char* s)
+{
+  char* p = s;
+  while (*p)
+  {
+    *p = tolower((unsigned char) *p);
+    ++ p;
+  }
+}

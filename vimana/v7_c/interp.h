@@ -1,6 +1,11 @@
 
 // DECLARATIONS ------------------------------------------------
 
+// Case of primfun symbols
+#define SymbolUpperCase     1
+#define SymbolLowerCase     2
+#define SymbolMixedCase     3
+
 // Context environment handling.
 #define ContextNewEnv       1
 #define ContextCurrentEnv   0
@@ -26,6 +31,7 @@ typedef struct MyInterp
   int      callstackIndex;    // Index of current frame
   Context* currentContext;    // Currently executing context
   Bool     run;               // Run flag
+  int      symbolCase;        // Casing for primitive functions
 }
 Interp;
 
@@ -39,6 +45,7 @@ Interp* InterpCreate()
   interp->callstackIndex = -1;
   interp->currentContext = NULL;
   interp->run = TRUE;
+  interp->symbolCase = SymbolUpperCase;
   return interp;
 }
 
@@ -88,7 +95,7 @@ void ContextFree(Context* context)
       context->hasEnv = TRUE; } \
     else \
       context->hasEnv = FALSE; \
-  } while(0)
+  } while (0)
 #else
 void ContextInitEnv(Context* context, int newEnv)
 {
@@ -119,7 +126,7 @@ void ContextInitEnv(Context* context, int newEnv)
     (item) = IsSymbol(item) ? \
       PrimEval_EvalSymbol(interp, item) : \
       item; \
-  } while(0)
+  } while (0)
 
 // SYMBOL TABLE ------------------------------------------------
 
@@ -183,8 +190,22 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
   }
 }
 
-void InterpAddPrimFun(char* name, PrimFun fun, Interp* interp)
+void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
 {
+  PrintDebug("InterpAddPrimFun");
+
+  char* name = malloc(strlen(str) + 1);
+  strcpy(name, str);
+  PrintDebug("  name: %s", name);
+  // Symbols for primitives are in mixed case.
+  // If you want to use lower or upper case, you can
+  // specify that in the interpreter object.
+  if (SymbolUpperCase == interp->symbolCase)
+    StringToUpper(name);
+  else if (SymbolLowerCase == interp->symbolCase)
+    StringToLower(name);
+  PrintDebug("  name: %s", name);
+
   // Add name to symbol table.
   ListPush(interp->globalSymbolTable, ItemWithString(name));
   
@@ -249,7 +270,7 @@ void InterpEnterContext(Interp* interp, List* code, int newEnv)
   PrintDebug("ENTER CONTEXT AT INDEX: %i", callstackIndex);
   interp->currentContext = NULL;
   Context* newContext = ItemContext(ListGet(callstack, callstackIndex));
-  newContext->code = code;
+  newContext->code = code; // TODO: GC decr and check code list
   newContext->codePointer = -1;
   ContextInitEnv(newContext, newEnv);
   //newContext->prevContext = currentContext;

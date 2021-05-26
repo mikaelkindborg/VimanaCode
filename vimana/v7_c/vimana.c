@@ -4,9 +4,10 @@
 
 int main()
 {
-  //PrintLine("WELCOME TO THE WONDERFUL WORLD OF VIMANA");
+  PrintLine("WELCOME TO THE WONDERFUL WORLD OF VIMANA");
 
   Interp* interp = InterpCreate();
+
   DefinePrimFuns(interp);
   
   //PrintLine("PRIMFUNS:");
@@ -104,15 +105,17 @@ int main()
 
   // Problem here ts that 0 FACT is not handled.
   List* list = ParseCode(interp,
-    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE) (TIMESDO) DEF "
+    "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE DROP DROP) (TIMESDO) DEF "
     "(DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP) "
     "(FACT) DEF "
-    "(20 FACT DROP) 100000 TIMESDO");
+    "(20 FACT DROP) 10000000 TIMESDO");
   // ./vimana  12.06s user 0.01s system 97% cpu 12.345 total
   // ./vimana  11.99s user 0.01s system 99% cpu 12.011 total
   // After optimization of currentContext:
   // ./vimana  10.44s user 0.01s system 96% cpu 10.856 total
-
+  // With new macros for DUP/SWAP it got slower:
+  // ./vimana  13.94s user 0.03s system 95% cpu 14.680 total
+  
 // https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/
 
 /*
@@ -141,13 +144,20 @@ DROP
 DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP
 */
 
+
+  //PrintDebug("PARSED LIST:");
+  //ListPrint(list, interp);
+  
   InterpRun(interp, list);
   
-  //PrintDebug("PRINTING STACK:");
-  //ListPrintItems(interp->stack, interp);
+  //PrintDebug("SYMBOL TABLE:\n");
+  //ListPrintItems(interp->globalSymbolTable, interp);
+
+  PrintDebug("PRINTING STACK:");
+  ListPrintItems(interp->stack, interp);
   
   InterpFree(interp);
-  //PrintLine("PROGRAM ENDED");
+  PrintDebug("PROGRAM ENDED");
 }
 
 

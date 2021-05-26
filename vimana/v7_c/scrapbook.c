@@ -211,19 +211,12 @@ PrimFuns in code list:
 */
 
 
-
-
-
-
-
-
 /*
 Here is an example that illustrates that the arrow function does nothing more than popping values off the data stack and binding local variables:
 
     (Hello-I-am-the-Vimana-interpreter. PRINT
-    (your-name) => I-can-see-that-your-name-is: PRINT 
-    your-name PRINT) say-hello DEF
-
+      (your-name) => I-can-see-that-your-name-is: PRINT your-name PRINT) 
+    (say-hello) DEF
 
 Running the function:
 
@@ -238,3 +231,12 @@ Prints:
 (As you can see, strings are not yet invented, so unbound symbols are used to represent text.)
 */
 
+// Examples/ideas:
+// (X SETLOCAL X X +) FUN DOUBLE SET
+// (X PARAM X X +) FUN DOUBLE SET
+// ((X Y) SETLOCAL X Y +) FUN MYADD SET
+// ((X Y) => X Y +) FUN MYADD SET
+// ((X Y) : X Y +) FUN MYADD SET
+// ((X Y) (X Y +)) FUN MYADD SET // This one requires bindning by EvalCore_EvalFun()
+// (Y : X : X Y +) FUN MYADD SET
+// (Y PARAM X PARAM X Y +) FUN MYADD SET
