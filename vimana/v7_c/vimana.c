@@ -20,6 +20,11 @@ int main()
   //PrintDebug("PARSED LIST:");
   //ListPrint(list, interp);
   
+  List* list = ParseCode(interp, 
+    "HELLOWORLD PRINT "
+    "(FACT) ((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEFINE "
+    "6 FACT PRINT"
+    );
 
   // TIMESDO RECURSIVE VARS
   List* list1a = ParseCode(interp,
@@ -104,7 +109,7 @@ int main()
   // ./vimana  14.21s user 0.01s system 98% cpu 14.482 total
 
   // Problem here ts that 0 FACT is not handled.
-  List* list = ParseCode(interp,
+  List* list6 = ParseCode(interp,
     "(SWAP DUP EVAL SWAP 1 - DUP 0 EQ 0 GOTOIFFALSE DROP DROP) (TIMESDO) DEF "
     "(DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP) "
     "(FACT) DEF "
@@ -150,8 +155,8 @@ DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP
 */
 
 
-  //PrintDebug("PARSED LIST:");
-  //ListPrint(list, interp);
+  PrintDebug("PARSED LIST:");
+  ListPrint(list, interp);
   
   InterpRun(interp, list);
   

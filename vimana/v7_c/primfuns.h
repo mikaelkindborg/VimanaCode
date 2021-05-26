@@ -195,10 +195,15 @@ void Prim_DEF(Interp* interp)
 void Prim_DEFINE(Interp* interp)
 {
   // (FUN SWAP FIRST SET) FUN (DEFINE) LISTFIRST SET
+  PrintDebug("Define1");
   Prim_FUN(interp);
+  PrintDebug("Define2");
   Prim_SWAP(interp);
+  PrintDebug("Define3");
   Prim_LISTFIRST(interp);
+  PrintDebug("Define4");
   Prim_SET(interp);
+  PrintDebug("Define5");
 }
 
 // EVAL evaluates a list. Other types generates an error.
@@ -213,7 +218,7 @@ void Prim_EVAL(Interp* interp)
   // If item is a list, create a stackframe and push it onto the stack.
   if (IsList(item))
     //PrimEval_EvalList(interp, ItemList(item));
-    InterpEnterContext(interp, ItemList(item), ContextCurrentEnv);
+    InterpEnterContext(interp, ItemList(item));
   else
     ErrorExit("Prim_EVAL got a non-list of type: %lu", item.type);
 }
@@ -241,7 +246,7 @@ void Prim_IFTRUE(Interp* interp)
   if (boolVal.value.truth)
   {
     //PrimEval_EvalList(interp, ItemList(list));
-    InterpEnterContext(interp, ItemList(list), ContextCurrentEnv);
+    InterpEnterContext(interp, ItemList(list));
   }
 }
 
@@ -261,7 +266,7 @@ void Prim_IFFALSE(Interp* interp)
   if (!boolVal.value.truth)
   {
     //PrimEval_EvalList(interp, ItemList(list));
-    InterpEnterContext(interp, ItemList(list), ContextCurrentEnv);
+    InterpEnterContext(interp, ItemList(list));
   }
 }
 
@@ -284,12 +289,12 @@ void Prim_IFELSE(Interp* interp)
   if (boolVal.value.truth)
   {
     //PrimEval_EvalList(interp, ItemList(branch1));
-    InterpEnterContext(interp, ItemList(branch1), ContextCurrentEnv); 
+    InterpEnterContext(interp, ItemList(branch1)); 
   }
   else
   {
     //PrimEval_EvalList(interp, ItemList(branch2));
-    InterpEnterContext(interp, ItemList(branch2), ContextCurrentEnv);
+    InterpEnterContext(interp, ItemList(branch2));
   }
 }
 
@@ -710,6 +715,7 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("Swap", Prim_SWAP, interp);
   InterpAddPrimFun("Fun", Prim_FUN, interp);
   InterpAddPrimFun("Def", Prim_DEF, interp);
+  InterpAddPrimFun("Define", Prim_DEFINE, interp);
   InterpAddPrimFun("SetLocal", Prim_SETLOCAL, interp);
   InterpAddPrimFun("=>", Prim_SETLOCAL, interp);
   InterpAddPrimFun("Eval", Prim_EVAL, interp);
@@ -816,7 +822,7 @@ void Prim_LABEL(Interp* interp)
 void PrimEval_EvalList(Interp* interp, List* list)
 {
   // Enter new context with current env.
-  InterpEnterContext(interp, list, ContextCurrentEnv);
+  InterpEnterContext(interp, list);
 }
 */
 
@@ -824,6 +830,6 @@ void PrimEval_EvalList(Interp* interp, List* list)
 void PrimEval_EvalFun(Interp* interp, List* fun)
 {
   // Just push it on the callstack, binding is done by primitives
-  InterpEnterContext(interp, fun, ContextNewEnv);
+  TODO: InterpEnterContext(interp, fun, ContextNewEnv);
 }
 */

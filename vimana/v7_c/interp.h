@@ -6,10 +6,6 @@
 #define SymbolLowerCase     2
 #define SymbolMixedCase     3
 
-// Context environment handling.
-#define ContextNewEnv       1
-#define ContextCurrentEnv   0
-
 // Declarations.
 //void PrimEval_EvalList(Interp* interp, List* list);
 //void PrimEval_EvalFun(Interp* interp, List* fun);
@@ -32,6 +28,7 @@ typedef struct MyInterp
   Context* currentContext;    // Currently executing context
   Bool     run;               // Run flag
   int      symbolCase;        // Casing for primitive functions
+  Bool     contextSwitch;
 }
 Interp;
 
@@ -46,6 +43,7 @@ Interp* InterpCreate()
   interp->currentContext = NULL;
   interp->run = TRUE;
   interp->symbolCase = SymbolUpperCase;
+  interp->contextSwitch = FALSE;
   return interp;
 }
 
@@ -192,11 +190,10 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
 
 void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
 {
-  PrintDebug("InterpAddPrimFun");
-
+  // TODO: Free these strings in InterpFree().
   char* name = malloc(strlen(str) + 1);
   strcpy(name, str);
-  PrintDebug("  name: %s", name);
+
   // Symbols for primitives are in mixed case.
   // If you want to use lower or upper case, you can
   // specify that in the interpreter object.
@@ -204,7 +201,6 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
     StringToUpper(name);
   else if (SymbolLowerCase == interp->symbolCase)
     StringToLower(name);
-  PrintDebug("  name: %s", name);
 
   // Add name to symbol table.
   ListPush(interp->globalSymbolTable, ItemWithString(name));
@@ -218,6 +214,84 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
 
 // CALLSTACK ---------------------------------------------------
 
+#define InterpEnterContext(interp, code) \
+  InterpEnterFunCallContext(interp, code, NULL, FALSE, FALSE)
+
+void InterpEnterFunCallContext(
+  Interp* interp, 
+  List* code, 
+  Context* currentContext,
+  Bool isTailCall,
+  Bool isFunCall)
+{
+  Context* context;
+
+  // Check for known tailcall.
+  if (currentContext && isTailCall)
+  {
+    PrintDebug("KNOWN TAILCALL AT INDEX: %i", interp->callstackIndex);
+    currentContext->code = code;
+    currentContext->codePointer = -1;
+    // Keep env! //currentContext->env->length = 0;
+    currentContext->hasEnv = isFunCall;
+    return;
+  }
+
+  // Obtain current context.
+  if (!currentContext)
+    currentContext = interp->currentContext;
+/*
+  // Check for possible tailcall.
+  if (currentContext && 
+      (currentContext->codePointer + 1 >= ListLength(currentContext->code)))
+  {
+    PrintDebug("TAILCALL AT INDEX: %i", interp->callstackIndex);
+    ListPrint(code, interp);
+    currentContext->code = code;
+    currentContext->codePointer = -1;
+    // Keep env! //currentContext->env->length = 0;
+    currentContext->hasEnv = isFunCall;
+    return;
+  }
+*/
+  // Increment callstack index.
+  Index callstackIndex = ++ interp->callstackIndex;
+
+  // Create new stackframe or reuse existing frame.
+  if (ListLength(interp->callstack) <= callstackIndex)
+  {
+    PrintDebug("NEW CONTEXT AT INDEX: %i", callstackIndex);
+    context = ContextCreate();
+    context->prevContext = currentContext; 
+    ListSet(interp->callstack, callstackIndex, ItemWithContext(context));
+  }
+  else
+  {
+    PrintDebug("REUSE CONTEXT AT INDEX: %i", callstackIndex);
+    context = ItemContext(ListGet(interp->callstack, callstackIndex));
+  }
+
+  // Set context.
+  interp->currentContext = context;
+  interp->contextSwitch = TRUE;
+  context->code = code; // TODO: What about GC decr and GC?
+  context->codePointer = -1;
+  context->hasEnv = isFunCall;
+  if (isFunCall)
+    context->env->length = 0;
+}
+
+void InterpExitContext(Interp* interp)
+{
+  PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+  //interp->currentContext = interp->currentContext->prevContext;
+  interp->contextSwitch = TRUE;
+  -- interp->callstackIndex;
+  Context* context = ItemContext(ListPop(interp->callstack));
+  ContextFree(context);
+}
+
+/*
 void InterpEnterContext(Interp* interp, List* code, int newEnv)
 {
   List* callstack = interp->callstack;
@@ -285,6 +359,7 @@ void InterpExitContext(Interp* interp)
   Context* context = ItemContext(ListPop(interp->callstack));
   ContextFree(context);
 }
+*/
 
 // MAIN INTERPRETER LOOP ---------------------------------------
 
@@ -294,23 +369,33 @@ void InterpRun(Interp* interp, List* list)
   Context* context;
   List* code;
   int codePointer;
+  int codeLength;
   Item item;
 
   // Create root context.
-  InterpEnterContext(interp, list, ContextNewEnv);
+  InterpEnterContext(interp, list);
 
   while (interp->run)
-  { 
+  {
     // Get current context.
+    if (interp->contextSwitch)
+    {
+      interp->contextSwitch = FALSE;
+      context = interp->currentContext;
+      code = context->code;
+      codeLength = ListLength(code);
+    }
+    /*
     if (NULL == interp->currentContext)
     {
       interp->currentContext = ItemContext(ListGet(interp->callstack, interp->callstackIndex));
       context = interp->currentContext;
       code = context->code;
     }
+    */
     //context = interp->currentContext;
-
     //code = context->code;
+
     // Increment code pointer.
     codePointer = ++ context->codePointer;
 
@@ -318,11 +403,12 @@ void InterpRun(Interp* interp, List* list)
 
     // Exit the frame if the code in the current context has finished executing.
     //code = context->code;
-    if (codePointer >= ListLength(code))
+    if (codePointer >= codeLength)
     {
 #ifdef OPTIMIZE
       //interp->currentContext = interp->currentContext->prevContext;
-      interp->currentContext = NULL;
+      //interp->currentContext = NULL;
+      interp->contextSwitch = TRUE;
       -- interp->callstackIndex;
 #else
       InterpExitContext(interp);
@@ -351,6 +437,7 @@ void InterpRun(Interp* interp, List* list)
     if (IsSymbol(element))
     {
       item = ListGet(interp->globalValueTable, element.value.symbol);
+      PrintDebug("SYMBOL: %s", InterpGetSymbolString(interp, element.value.symbol));
       if (IsPrimFun(item))
       {
         item.value.primFun(interp);
@@ -359,7 +446,19 @@ void InterpRun(Interp* interp, List* list)
       if (IsFun(item))
       {
         //PrimEval_EvalFun(interp, item.value.list);
-        InterpEnterContext(interp, item.value.list, ContextNewEnv);
+        Bool isTailCall = (codePointer + 1 >= codeLength);
+        InterpEnterFunCallContext(
+          interp, 
+          item.value.list,
+          context, // Current context
+          isTailCall, // Tail call flag
+          TRUE // Is funcall
+          );
+        if (isTailCall)
+        {
+          code = item.value.list;
+          codeLength = ListLength(code);
+        }
         goto exit;
       }
     }
