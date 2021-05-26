@@ -171,8 +171,10 @@ Item ListPop(List* list)
   return item;
 }
 
-// TODO: Test which style is faster.
 #ifdef OPTIMIZE
+// TODO: Test which style is faster.
+/*
+// ./vimana  11.53s user 0.01s system 96% cpu 11.898 total
 #define ListDrop(list) \
   do { \
     Index length = (list)->length; \
@@ -183,6 +185,30 @@ Item ListPop(List* list)
     ItemGC((list)->items[length]); \
     (list)->length = length; \
   } while (0)
+*/
+/*
+// ./vimana  11.32s user 0.01s system 96% cpu 11.722 total
+#define ListDrop(list) \
+  do { \
+    if (list->length < 1) \
+      ErrorExit("ListDrop: Cannot drop from list of length: %i", list->length); \
+    -- list->length; \
+    Item item = list->items[list->length]; \
+    ItemRefCountDecr(item); \
+    ItemGC(item); \
+  } while (0)
+*/
+
+// ./vimana  11.27s user 0.01s system 96% cpu 11.668 total
+#define ListDrop(list) \
+  do { \
+    if (list->length < 1) \
+      ErrorExit("ListDrop: Cannot drop from list of length < 0"); \
+    -- list->length; \
+    ItemRefCountDecr(list->items[list->length]); \
+    ItemGC(list->items[list->length]); \
+  } while (0)
+
 #else
 void ListDrop(List* list)
 {

@@ -113,9 +113,14 @@ int main()
   // ./vimana  11.99s user 0.01s system 99% cpu 12.011 total
   // After optimization of currentContext:
   // ./vimana  10.44s user 0.01s system 96% cpu 10.856 total
-  // With new macros for DUP/SWAP it got slower:
+  // With new macros for DUP/SWAP it got slower (this was 
+  // probably because the machine was hot!!!):
   // ./vimana  13.94s user 0.03s system 95% cpu 14.680 total
-  
+  // Running again with presumably colder machine:
+  // ./vimana  11.55s user 0.01s system 96% cpu 12.024 total
+  // ./vimana  11.38s user 0.01s system 96% cpu 11.742 total
+  // ./vimana  11.22s user 0.01s system 96% cpu 11.618 total
+
 // https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/
 
 /*
@@ -154,6 +159,7 @@ DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP
   //ListPrintItems(interp->globalSymbolTable, interp);
 
   PrintDebug("PRINTING STACK:");
+  PrintLine("Stack size: %i", ListLength(interp->stack));
   ListPrintItems(interp->stack, interp);
   
   InterpFree(interp);
