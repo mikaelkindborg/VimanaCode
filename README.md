@@ -157,6 +157,66 @@ The arrow symbol "=>" is also a function that binds one or more items on the sta
 
 Virtually everything happens at runtime. Very litte is done during parsing (only setting the basic types of objects). There is no compile step.
 
+## Function Definition Syntax
+
+I have tested a variety of different styles for function definitions. Below are some variations. Primitive "DEF" defined a global function. To follow the postfix evaluation order, it comes as the last element in the function definition (but it does not necessarily have to be like that).
+
+Current style (the parens around the function name are needed to "quote" it):
+
+    ((N) =>
+      N 0 EQ (1) (N 1 - FACT N *) IFELSE)
+    (FACT) DEF
+
+Alternative style with symbol ":" for quoting the function name (this is a prefix operation):
+
+    ((N) =>
+      N 0 EQ (1) (N 1 - FACT N *) IFELSE)
+    : FACT DEF
+
+Function name comes first ("DEFINE" is longer than "DEF" so it stands out more when on its own at the end of the expression):
+
+    (FACT) ((N) =>
+      N 0 EQ (1) (N 1 - FACT N *) IFELSE) 
+    DEFINE
+
+Function name first and ":" used to quote the name (this looks a bit like the syntax in Forth):
+
+    : FACT ((N) =>
+      N 0 EQ (1) (N 1 - FACT N *) IFELSE)
+    DEFINE
+
+Function name part of the function list:
+
+    (FACT (N) =>
+      N 0 EQ (1) (N 1 - FACT N *) IFELSE)
+    DEFINE
+
+Here the parameter and function name are visually similar to the code for the actual function call:
+
+    ((N FACT) =>
+      N 0 EQ (1) (N 1 - FACT N *) IFELSE)
+    DEFINE
+
+And in this example, "FUNCTION" is a prefix function that also quotes the function name:
+
+    FUNCTION FACT 
+    ((N) =>
+      N 0 EQ (1) (N 1 - FACT N *) IFELSE)
+
+Personally, I am very hesitant to introduce prefix operations. That is why parens are used to quote symbols, and not ":".
+
+Perhaps I will switch to the following style, and put the function name first to make it clearly visible. Note that DEFINE is still a postfix operation:
+
+    (FUNNAME) (FUNBODY) DEFINE
+
+This is the style used in the third example above. An alternative name is "DEFUN", which was used in MacLisp, so there is a nostalgic aspect to it.
+
+Read more in [design.md](design.md) about the design of the language (will eventually move the above examples to that document).
+
+An interesting observation with respect to postfix notation is that it is smimilar to the object-first syntax used in Smalltalk and many other object-oriented languages. Currently there is no "message dispatch" on the parameter object type(s), but this could be introduced.
+
+So the postfix syntax may not be so strange after all, when you consider the message sensing syntax used in many languages.
+
 ## Language Grammar
 
 Vimana has no grammar. Or rather, the grammar is really simple, and is best explained by giving some examples. 
@@ -201,9 +261,12 @@ There could be better ways to do this. Everything is an experiment.
 
 ## C Code Structure
 
-As few assumptions as possible are coded into the interpreter in interp.h. Most of what defined the language is specified by primitives in primfuns.h. Many different styles are possible. Postfix operations are fundamental, this is not as easy to change, and in the end you might as well go with Lisp if you want prefix functions. (Postfix notation means that the function name is the last element in a function call.) 
+Everything is just one file split up into modules in .h files. 
 
-Everything is just one file split up into modules in .h files.
+As few assumptions as possible are coded into the interpreter in interp.h. Most of what defined the language is specified by primitives in primfuns.h. Many different styles are possible. 
+
+Postfix operations are fundamental to the language. This is not so easy to change, and in the end you might as well go with Lisp if you want prefix functions. (Postfix notation means that the function name is the last element in a function call.) 
+
 
 ## Code Size
 

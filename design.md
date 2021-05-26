@@ -261,6 +261,24 @@ However, depending on the host language this can differ. You get loose typing wi
 
 The design philosopy is to integrate with the host language, and implementations are not entirely consistent. This means that Vimana may not be portable between implementations. Then the language also changes as the project progresses. It is an onging experiment.
 
+## List Style
+
+Lisp uses linked list with CONS-cells, and Vimana uses arrays for lists. However, Vimana could use CONS-cells to.
+
+Here is an example of what the function LENGTH looks like in MacLisp:
+
+    (DEFUN LENGTH (L)
+      (COND ((NULL L) 0)
+            (T (+ 1 (LENGTH (CDR L))))))
+
+Same function in Vimana could look like this (not implemented):
+
+    (LENGTH) ((L) => 
+      L NULL (0) (L CDR LENGTH 1 +) IFELSE)
+    DEFUN
+
+These examples illustrate the characteristics of the two languages.
+
 ## Doing the Opposite
 
 Vimana is in a sense the reverse of Lisp. Function calls use postfix notation instead of prefix. Lists are not evaluated by default, but are quoted by default.
