@@ -150,6 +150,16 @@ void Prim_FUN(Interp* interp)
   InterpPush(interp, list);
 }
 
+// LIST OPTIMIZE -> LIST
+void Prim_OPTIMIZE(Interp* interp)
+{
+  // TODO: Replace function symbols with list items.
+  // Add direct call branch to INTERP_RUN
+  // Reintroduce VALUE
+  // (FOO) (...) DEFINE
+  // (FOO) LISTFIRST VALUE OPTIMIZE (FOO) LISTFIRST SET
+}
+
 // ITEM SYMBOL SETLOCAL ->
 void Prim_SETLOCAL(Interp* interp)
 {
@@ -307,9 +317,8 @@ void Prim_GOTOIFTRUE(Interp* interp)
 
   if (boolVal.value.truth)
   {
-    Context* context = interp->currentContext;
-    context->codePointer = codePointer.value.intNum - 1;
-    PrintDebug("GOTO codepointer: %i", context->codePointer);
+    PrintDebug("GOTO codepointer: %i", codePointer.value.intNum);
+    interp->currentContext->codePointer = codePointer.value.intNum - 1;
   }
 }
 
@@ -327,9 +336,27 @@ void Prim_GOTOIFFALSE(Interp* interp)
 
   if (!boolVal.value.truth)
   {
-    Context* context = interp->currentContext;
-    context->codePointer = codePointer.value.intNum - 1;
-    PrintDebug("GOTO codepointer: %i", context->codePointer);
+    PrintDebug("GOTO codepointer: %i", codePointer.value.intNum);
+    interp->currentContext->codePointer = codePointer.value.intNum - 1;
+  }
+}
+
+void Prim_GOTOIFNOTZERO(Interp* interp)
+{
+  Item codePointer, intVal;
+
+  InterpPopEvalInto(interp, codePointer);
+  InterpPopEvalInto(interp, intVal);
+
+  if (!IsIntNum(codePointer))
+    ErrorExit("Prim_GOTOIFNOTZERO: Expected TypeIntNum (1)");
+  if (!IsIntNum(intVal))
+    ErrorExit("Prim_GOTOIFNOTZERO: Expected TypeIntNum (2)");
+
+  if (0 != intVal.value.intNum)
+  {
+    PrintDebug("GOTO codepointer: %i", codePointer.value.intNum);
+    interp->currentContext->codePointer = codePointer.value.intNum - 1;
   }
 }
 
@@ -369,6 +396,40 @@ void Prim_PLUS(Interp* interp)
 
   InterpPush(interp, res);
 }
+
+/*
+// NUM NUM MINUS -> NUM
+void Prim_MINUS(Interp* interp)
+{
+  Item a, b;
+
+  InterpPopEvalInto(interp, b);
+  InterpPopEvalInto(interp, a);
+
+  if (IsIntNum(a) && IsIntNum(b))
+  {
+    a.type = TypeIntNum;
+    a.value.intNum = a.value.intNum - b.value.intNum;
+  }
+  InterpPush(interp, a);
+}
+
+// NUM NUM TIMES -> NUM
+void Prim_TIMES(Interp* interp)
+{
+  Item a, b, res;
+
+  InterpPopEvalInto(interp, b);
+  InterpPopEvalInto(interp, a);
+
+  if (IsIntNum(a) && IsIntNum(b))
+  {
+    a.type = TypeIntNum;
+    a.value.intNum = a.value.intNum * b.value.intNum;
+  }
+  InterpPush(interp, a);
+}
+*/
 
 // NUM NUM MINUS -> NUM
 void Prim_MINUS(Interp* interp)
@@ -502,17 +563,19 @@ void Prim_MODULO(Interp* interp)
 // TRUE -> BOOL
 void Prim_TRUE(Interp* interp)
 { 
-  // TODO: Test this style.
-  //Item item;
-  //ItemInitBool(item, TRUE); // TODO: Macro
-  //InterpPush(interp, item);
-  InterpPush(interp, ItemWithBool(TRUE));
+  Item item;
+  item.type = TypeBool;
+  item.value.truth = TRUE;
+  InterpPush(interp, item);
 }
 
 // FALSE -> FALSE
 void Prim_FALSE(Interp* interp)
 {
-  InterpPush(interp, ItemWithBool(FALSE));
+  Item item;
+  item.type = TypeBool;
+  item.value.truth = TRUE;
+  InterpPush(interp, item);
 }
 
 // ITEM NOT -> BOOL
@@ -524,6 +587,26 @@ void Prim_NOT(Interp* interp)
 
   Bool x = item.value.truth;
   item.value.truth = !x;
+  InterpPush(interp, item);
+}
+
+// ITEM ITEM EQ -> BOOL
+void Prim_ISZERO(Interp* interp)
+{
+  Item item;
+
+  InterpPopEvalInto(interp, item);
+
+  if (IsIntNum(item))
+    item.value.truth = (0 == item.value.intNum);
+  else
+  if (IsDecNum(item))
+    item.value.truth = (0 == item.value.decNum);
+  else
+    ErrorExit("Prim_ISZERO: Item is not a number");
+
+  item.type = TypeBool;
+
   InterpPush(interp, item);
 }
 
@@ -716,10 +799,11 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("Eval", Prim_EVAL, interp);
   InterpAddPrimFun("Call", Prim_CALL, interp);
   InterpAddPrimFun("IfTrue", Prim_IFTRUE, interp);
-  InterpAddPrimFun("IfFalse", Prim_IFTRUE, interp);
+  InterpAddPrimFun("IfFalse", Prim_IFFALSE, interp);
   InterpAddPrimFun("IfElse", Prim_IFELSE, interp);
   InterpAddPrimFun("GotoIfTrue", Prim_GOTOIFTRUE, interp);
   InterpAddPrimFun("GotoIfFalse", Prim_GOTOIFFALSE, interp);
+  InterpAddPrimFun("GotoIfNotZero", Prim_GOTOIFNOTZERO, interp);
   InterpAddPrimFun("+", Prim_PLUS, interp);
   InterpAddPrimFun("-", Prim_MINUS, interp);
   InterpAddPrimFun("*", Prim_TIMES, interp);
@@ -728,6 +812,7 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("True", Prim_TRUE, interp);
   InterpAddPrimFun("False", Prim_FALSE, interp);
   InterpAddPrimFun("Not", Prim_NOT, interp);
+  InterpAddPrimFun("IsZero", Prim_ISZERO, interp);
   InterpAddPrimFun("Eq", Prim_EQ, interp);
   InterpAddPrimFun("Print", Prim_PRINT, interp);
   InterpAddPrimFun("ListNew", Prim_LISTNEW, interp);

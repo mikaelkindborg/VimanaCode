@@ -110,14 +110,6 @@ Item ItemWithVirgin()
   return item;
 }
 
-Item ItemWithBool(Bool boolVal)
-{
-  Item item;
-  item.type = TypeBool;
-  item.value.truth = boolVal;
-  return item;
-}
-
 // ITEM ACCESS -------------------------------------------------
 
 // Get the list of an item.
