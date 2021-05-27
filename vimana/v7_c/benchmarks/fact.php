@@ -44,4 +44,26 @@ function test_fact()
   return $res;
 }
 
-print(test_fact()."\n");
+function fact_iter($n)
+{
+  $res = 1;
+  while ($n > 0):
+    $res = $res * $n;
+    $n = $n - 1;
+  endwhile;
+  return $res;
+}
+
+function test_fact_iter()
+{
+  for ($i = 0; $i < 10000000; $i++):
+    $res = fact_iter(20);
+  endfor;
+  return $res;
+}
+
+// .php fact.php  6.34s user 0.16s system 99% cpu 6.552 total
+//print(test_fact()."\n");
+
+// php fact.php  4.12s user 0.02s system 99% cpu 4.141 total
+print(test_fact_iter()."\n");

@@ -9,6 +9,13 @@ def fact(n):
   else:
     return fact(n - 1) * n
 
+def fact_iter(n):
+  res = 1
+  while (n > 0):
+    res = res * n
+    n = n - 1
+  return res
+
 # python fact.py  20.33s user 0.04s system 99% cpu 20.400 total
 def test_fact_1():
   i = 0
@@ -30,8 +37,17 @@ def test_fact_3():
   for xi in range(0, 10000000):
     res = fact(20)
   return res
-  
-print(test_fact_3())
+
+# Iterative version is much faster.
+# python fact.py  10.27s user 0.03s system 99% cpu 10.317 total
+def test_fact_iter():
+  i = 0
+  while i < 10000000:
+    res = fact_iter(20)
+    i = i + 1
+  return res
+
+print(test_fact_1())
 
 #print(fact(500))
 
