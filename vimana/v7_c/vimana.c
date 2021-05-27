@@ -21,23 +21,30 @@ int main()
   //ListPrint(list, interp);
   
   // Recursve FACT and TIMESDO with variables
-  List* list0 = ParseCode(interp, 
+  List* list = ParseCode(interp, 
     //"HELLOWORLD PRINT "
     //"(FACT) ((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEFINE "
     //"(TIMESDO) ((L N) => N 0 EQ NOT (L EVAL L N 1 - TIMESDO) IFTRUE) DEFINE "
     //"(FACT) ((N) => N ISZERO (1) (N 1 - FACT N *) IFELSE) DEFINE "
     "(FACT) (N => N ISZERO (1) (N 1 - FACT N *) IFELSE) DEFINE "
     "(TIMESDO) ((L N) => N 0 EQ (L EVAL L N 1 - TIMESDO) IFFALSE) DEFINE "
-    "(20 FACT DROP) 10000000 TIMESDO "
-    //"(3 FACT PRINT) 2 TIMESDO "
+    "(TIMESDO) LISTFIRST VALUE OPTIMIZE "
+    "(FACT) LISTFIRST VALUE OPTIMIZE "
+    //"(TIMESDO) LISTFIRST VALUE PRINT "
+    "(20 FACT DROP) OPTIMIZE 10000000 TIMESDO "
+    //"(TIMESDO) LISTFIRST VALUE OPTIMIZE (TIMESDO) LISTFIRST SET "
+    //"(FACT) LISTFIRST VALUE OPTIMIZE (FACT) LISTFIRST SET "
+    //"(TIMESDO) LISTFIRST VALUE PRINT "
+    //"(20 FACT DROP) 10000000 TIMESDO "
+    //"(3 FACT PRINT) 2 TIMESDO "  
     );
   // Test 210526
   // ./vimana  17.05s user 0.01s system 98% cpu 17.296 total
   // With linked contexts:
   // ./vimana  16.63s user 0.02s system 99% cpu 16.664 total
-  // Test 210527
+  // Tests 210527
   // With linked contexts:
-  // ./vimana  17.78s user 0.01s system 99% cpu 17.803 total - why slower?
+  // ./vimana  17.78s user 0.01s system 99% cpu 17.803 total - why so slow?
   // With NO OPTIMIZE for interpreter loop tailcalls:
   // ./vimana  16.50s user 0.01s system 97% cpu 16.892 total - faster
   // ./vimana  15.96s user 0.01s system 92% cpu 17.189 total - faster
@@ -49,9 +56,20 @@ int main()
   // ./vimana  16.06s user 0.01s system 97% cpu 16.499 total
   // With N => instead of (N) =>
   // ./vimana  15.91s user 0.01s system 96% cpu 16.467 total
+  // Direct function call optimization:
+  // ./vimana  14.88s user 0.01s system 97% cpu 15.243 total
+  // ./vimana  14.51s user 0.01s system 96% cpu 15.045 total
+  // Cleanup of InterpRun:
+  // ./vimana  14.35s user 0.01s system 94% cpu 15.152 total
+  // ./vimana  14.14s user 0.02s system 99% cpu 14.176 total
+  // WITHOUT optimised funs:
+  // ./vimana  14.48s user 0.03s system 89% cpu 16.276 total
+  // WITH optimised funs:
+  // ./vimana  13.98s user 0.01s system 96% cpu 14.469 total
+  // ./vimana  13.69s user 0.02s system 99% cpu 13.726 total
 
   // TIMESDO RECURSIVE, VARS
-  List* list = ParseCode(interp,
+  List* list1a = ParseCode(interp,
     "((L N) => N 0 EQ NOT (L EVAL L N 1 - TIMESDO) IFTRUE) (TIMESDO) DEF "
     "(HELLO DROP) 100000000 TIMESDO");
   // Test 210525
@@ -174,16 +192,24 @@ int main()
   // ./vimana  10.62s user 0.01s system 99% cpu 10.638 total - faster on second run
   // Conclusion: Results not consistently reliable on macOS
 
-  // Iterative FACT (does not handle 0 FACT)
+  // Iterative FACT and TIMESDO with GOTOIFNOTZERO (does not handle 0 FACT)
   List* list6 = ParseCode(interp,
     "(SWAP DUP EVAL SWAP 1 - DUP 0 GOTOIFNOTZERO DROP DROP) (TIMESDO) DEF "
-    "(DUP 1 * SWAP 1 - SWAP OVER DUP 2 GOTOIFNOTZERO DROP SWAP DROP) "
-    "(FACT) DEF "
-    "(20 FACT DROP) 10000000 TIMESDO");
+    "(DUP 1 * SWAP 1 - SWAP OVER DUP 2 GOTOIFNOTZERO DROP SWAP DROP) (FACT) DEF "
+    //"(20 FACT DROP) 10000000 TIMESDO"
+    "(TIMESDO) LISTFIRST VALUE OPTIMIZE (TIMESDO) LISTFIRST SET "
+    "(FACT) LISTFIRST VALUE OPTIMIZE (FACT) LISTFIRST SET "
+    "(20 FACT DROP) OPTIMIZE 10000000 TIMESDO "
+    );
   // Test 210527
   // ./vimana  9.25s user 0.01s system 93% cpu 9.853 total
   // ./vimana  9.09s user 0.01s system 95% cpu 9.472 total
   // ./vimana  9.13s user 0.01s system 96% cpu 9.512 total
+  // After cleanup of InterpRun: 
+  // ./vimana  8.93s user 0.02s system 90% cpu 9.946 total
+  // Optimized function calls:
+  // ./vimana  8.74s user 0.01s system 94% cpu 9.275 total
+  // ./vimana  8.23s user 0.01s system 99% cpu 8.246 total
 
   // Recursive FACT using EQ Iterative TIMESDO
   List* list7 = ParseCode(interp,
@@ -198,9 +224,20 @@ int main()
   List* list8 = ParseCode(interp,
     "(SWAP DUP EVAL SWAP 1 - DUP 0 GOTOIFNOTZERO DROP DROP) (TIMESDO) DEF "
     "(DUP ISZERO (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
-    "(20 FACT DROP) 10000000 TIMESDO");
+    "(TIMESDO) LISTFIRST VALUE OPTIMIZE (TIMESDO) LISTFIRST SET "
+    "(FACT) LISTFIRST VALUE OPTIMIZE (FACT) LISTFIRST SET "
+    "(20 FACT DROP) OPTIMIZE 10000000 TIMESDO "
+    //"(20 FACT DROP) 10000000 TIMESDO"
+    );
   // Test 210527
   // ./vimana  10.88s user 0.01s system 89% cpu 12.155 total
+  // After direct call optimization:
+  // ./vimana  10.34s user 0.01s system 87% cpu 11.759 total
+  // ./vimana  10.28s user 0.01s system 96% cpu 10.695 total
+  // ./vimana  10.17s user 0.01s system 99% cpu 10.188 total
+  // After cleanup of InterpRun:
+  // ./vimana  10.10s user 0.01s system 95% cpu 10.534 total
+  // ./vimana  9.97s user 0.01s system 99% cpu 9.996 total
 
 // https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/
 
@@ -239,14 +276,12 @@ DUP 1 * SWAP 1 - SWAP OVER DUP 0 EQ 2 GOTOIFFALSE DROP SWAP DROP
   //ListPrintItems(interp->globalSymbolTable, interp);
 
   //PrintDebug("PRINTING STACK:");
-  PrintLine("Stack size: %i", ListLength(interp->stack));
-  ListPrintItems(interp->stack, interp);
+  //PrintLine("Stack size: %i", ListLength(interp->stack));
+  //ListPrintItems(interp->stack, interp);
   
   InterpFree(interp);
   PrintDebug("PROGRAM ENDED");
 }
-
-
 
 /*
   List* list1 = ParseCode(interp, "HELLO_WORLD PRINT 1 2 + PRINT");

@@ -150,11 +150,49 @@ void Prim_FUN(Interp* interp)
   InterpPush(interp, list);
 }
 
+// This creates a circular list structure for recursive functions,
+// and therefore protection against this is added to ListPrint()
+// in the form of a new type flag: TypeOptimizedFun
+void Prim_Optimize_Worker(Interp* interp, List* list)
+{
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    Item element = ListGet(list, i);
+    if (IsSymbol(element))
+    {
+      // Lookup symbol value
+      Item item = ListGet(interp->globalValueTable, element.value.symbol);
+      if (IsFun(item))
+      {
+        // Replace symbol with function
+        item.type = item.type | TypeOptimizedFun;
+        ListSet(list, i, item);
+      }
+    }
+    else
+    if (IsList(element))
+    {
+      Prim_Optimize_Worker(interp, ItemList(element));
+    }
+  }
+}
+
+// Note: Creates a circular list structure for recursive functions.
 // LIST OPTIMIZE -> LIST
 void Prim_OPTIMIZE(Interp* interp)
 {
-  // TODO: Replace function symbols with list items.
-  // Add direct call branch to INTERP_RUN
+  // Replace function symbols with list items.
+  Item item;
+  InterpPopEvalInto(interp, item);
+  if (!IsList(item))
+    ErrorExit("Prim_OPTIMIZE: Got a non-list!");
+  // Updates the list in place.
+  Prim_Optimize_Worker(interp, ItemList(item));
+  InterpPush(interp, item);
+  // Direct call branch added in Interp_Run()
+
+  // TODO
+  // Do non-destructive version (do this in the target language):
   // Reintroduce VALUE
   // (FOO) (...) DEFINE
   // (FOO) LISTFIRST VALUE OPTIMIZE (FOO) LISTFIRST SET
@@ -226,6 +264,15 @@ void Prim_EVAL(Interp* interp)
     InterpEnterContext(interp, ItemList(item));
   else
     ErrorExit("Prim_EVAL got a non-list of type: %lu", item.type);
+}
+
+// ITEM VALUE -> ITEM (evaluated)
+void Prim_VALUE(Interp* interp)
+{
+  Item item;
+  InterpPopInto(interp, item);
+  item = PrimEval_EvalSymbol(interp, item);
+  InterpPush(interp, item); // Push value
 }
 
 // 21 ((X) => X X +) CALL
@@ -317,7 +364,7 @@ void Prim_GOTOIFTRUE(Interp* interp)
 
   if (boolVal.value.truth)
   {
-    PrintDebug("GOTO codepointer: %i", codePointer.value.intNum);
+    PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
     interp->currentContext->codePointer = codePointer.value.intNum - 1;
   }
 }
@@ -336,7 +383,7 @@ void Prim_GOTOIFFALSE(Interp* interp)
 
   if (!boolVal.value.truth)
   {
-    PrintDebug("GOTO codepointer: %i", codePointer.value.intNum);
+    PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
     interp->currentContext->codePointer = codePointer.value.intNum - 1;
   }
 }
@@ -355,7 +402,7 @@ void Prim_GOTOIFNOTZERO(Interp* interp)
 
   if (0 != intVal.value.intNum)
   {
-    PrintDebug("GOTO codepointer: %i", codePointer.value.intNum);
+    PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
     interp->currentContext->codePointer = codePointer.value.intNum - 1;
   }
 }
@@ -792,11 +839,13 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("Over", Prim_OVER, interp);
   InterpAddPrimFun("Swap", Prim_SWAP, interp);
   InterpAddPrimFun("Fun", Prim_FUN, interp);
+  InterpAddPrimFun("Optimize", Prim_OPTIMIZE, interp);
   InterpAddPrimFun("Def", Prim_DEF, interp);
   InterpAddPrimFun("Define", Prim_DEFINE, interp);
   InterpAddPrimFun("SetLocal", Prim_SETLOCAL, interp);
   InterpAddPrimFun("=>", Prim_SETLOCAL, interp);
   InterpAddPrimFun("Eval", Prim_EVAL, interp);
+  InterpAddPrimFun("Value", Prim_VALUE, interp);
   InterpAddPrimFun("Call", Prim_CALL, interp);
   InterpAddPrimFun("IfTrue", Prim_IFTRUE, interp);
   InterpAddPrimFun("IfFalse", Prim_IFFALSE, interp);
@@ -829,7 +878,6 @@ void DefinePrimFuns(Interp* interp)
   //InterpAddPrimFun("Recur", Prim_RECUR, interp);
   //InterpAddPrimFun("Quote", Prim_QUOTE, interp);
   //InterpAddPrimFun(":", Prim_QUOTE, interp);
-  //InterpAddPrimFun("Value", Prim_VALUE, interp);
   //InterpAddPrimFun("Label", Prim_LABEL, interp);
   //InterpAddPrimFun("PRN", Prim_PRN, interp);
   //InterpAddPrimFun("NEWLINE", Prim_NEWLINE, interp);

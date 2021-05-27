@@ -219,8 +219,10 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
     return;
   }
 
+#ifndef OPTIMIZE
   // Increment callstack index.
   ++ interp->callstackIndex;
+#endif
 
   // Create new stackframe or reuse existing frame.
   if (NULL == currentContext->nextContext)
@@ -248,6 +250,7 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
 
 // MAIN INTERPRETER LOOP ---------------------------------------
 
+#ifdef FOOBAR
 // Evaluate list.
 void InterpRun(Interp* interp, List* list)
 {
@@ -281,7 +284,9 @@ void InterpRun(Interp* interp, List* list)
       PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
       interp->currentContext = interp->currentContext->prevContext;
       interp->contextSwitch = TRUE;
+#ifndef xOPTIMIZE
       -- interp->callstackIndex;
+#endif
 #ifndef OPTIMIZE
       if (interp->currentContext)
       {
@@ -294,7 +299,7 @@ void InterpRun(Interp* interp, List* list)
 
     // Get the next element.
     Item element = ListGet(code, codePointer);
-    //PrintDebug("InterpRun: element type: %lu", element.type);
+    PrintDebug("InterpRun: element type: %lu", element.type);
 
 #ifdef OPTIMIZE
     // If the elements points directly to a primfun we call it.
@@ -304,6 +309,20 @@ void InterpRun(Interp* interp, List* list)
       goto exit;
     }
 #endif
+
+    // Check for function.
+    if (IsIntNum(element))
+    {
+      ListPush(interp->stack, element);
+      goto exit;
+    }
+
+    // Check for function.
+    if (IsOptimizedFun(element))
+    {
+      InterpEnterCallContext(interp, element.value.list, TRUE);
+      goto exit;
+    }
 
     // If symbol we check if the global value is primfun or fun.
     // This means that functions defined with DEFINE will take 
@@ -350,10 +369,98 @@ void InterpRun(Interp* interp, List* list)
 
 exit:
     // Was this the last stackframe?
+#ifdef xOPTIMIZE
+    if (NULL == interp->currentContext)
+#else
     if (interp->callstackIndex < 0)
+#endif
     {
       //PrintDebug("EXIT InterpRun");
       interp->run = FALSE;
     }
   } // while
 }
+#else
+// Evaluate list.
+void InterpRun(Interp* interp, List* list)
+{
+  Context* currentContext;
+  List* code;
+  int codePointer;
+  int codeLength;
+  Item element;
+  Item item;
+  Bool run = TRUE;
+
+  // Initialize local root context.
+  interp->currentContext->code = list;
+  interp->contextSwitch = TRUE;
+
+  while (run) //interp->run
+  {
+    // Get current context.
+    if (interp->contextSwitch)
+    {
+      interp->contextSwitch = FALSE;
+      currentContext = interp->currentContext;
+      code = currentContext->code;
+      codeLength = ListLength(code);
+    }
+
+    // Increment code pointer.
+    codePointer = ++ currentContext->codePointer;
+
+    // Exit the frame if the code in the current context has finished executing.
+    if (codePointer >= codeLength)
+    {
+      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+      interp->currentContext = interp->currentContext->prevContext;
+      interp->contextSwitch = TRUE;
+#ifndef OPTIMIZE
+      -- interp->callstackIndex;
+      if (interp->currentContext)
+      {
+        ContextFree(interp->currentContext->nextContext);
+        interp->currentContext->nextContext = NULL;
+      }
+#endif
+      goto exit;
+    }
+
+    // Get the next element.
+    Item element = ListGet(code, codePointer);
+    if (IsPrimFun(element))
+      element.value.primFun(interp);
+    else
+    if (IsOptimizedFun(element))
+      InterpEnterCallContext(interp, element.value.list, TRUE);
+    else
+    if (IsSymbol(element))
+    {
+      item = ListGet(interp->globalValueTable, element.value.symbol);
+      if (IsPrimFun(item))
+        item.value.primFun(interp);
+      else 
+      if (IsFun(item))
+        InterpEnterCallContext(interp, item.value.list, TRUE);
+      else
+        ListPush(interp->stack, element);
+    }
+    else
+      ListPush(interp->stack, element);
+
+exit:
+    // Was this the last stackframe?
+#ifdef OPTIMIZE
+    if (NULL == interp->currentContext)
+#else
+    if (interp->callstackIndex < 0)
+#endif
+    {
+      //PrintDebug("EXIT InterpRun");
+      //interp->run = FALSE;
+      run = FALSE;
+    }
+  } // while
+}
+#endif

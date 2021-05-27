@@ -20,7 +20,7 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeList         16
 #define TypePrimFun      32
 #define TypeFun          64
-//#define TypeCompiledFun  128  
+#define TypeOptimizedFun 128  
 #define TypeLocalVar     256 
 #define TypeString       512
 #define TypeContext      1024
@@ -35,7 +35,7 @@ typedef void   (*PrimFun)(Interp*);
 #define IsList(item)        ((item).type & TypeList)
 #define IsPrimFun(item)     ((item).type & TypePrimFun)
 #define IsFun(item)         ((item).type & TypeFun)
-//#define IsCompiledFun(item) ((item).type & TypeCompiledFun)
+#define IsOptimizedFun(item) ((item).type & TypeOptimizedFun)
 #define IsLocalVar(item)    ((item).type & TypeLocalVar)
 #define IsString(item)      ((item).type & TypeString)
 #define IsContext(item)     ((item).type & TypeContext)
