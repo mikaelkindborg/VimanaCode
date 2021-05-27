@@ -157,11 +157,17 @@ The arrow symbol "=>" is also a function that binds one or more items on the sta
 
 Virtually everything happens at runtime. Very litte is done during parsing (only setting the basic types of objects). There is no compile step.
 
-## Function Definition Syntax
+## Function Definition Syntax (VimanaC)
 
 I have tested a variety of different styles for function definitions. Below are some variations. Primitive "DEF" defined a global function. To follow the postfix evaluation order, it comes as the last element in the function definition (but it does not necessarily have to be like that).
 
-Current style (the parens around the function name are needed to "quote" it):
+This is the stype I am currently using. The parens around the function name are needed to "quote" it. Function name comes first, then the body. ("DEFINE" is longer than "DEF" so it stands out more when on its own at the end of the expression):
+
+    (FACT) ((N) =>
+      N 0 EQ (1) (N 1 - FACT N *) IFELSE) 
+    DEFINE
+
+This is the previously used style (it is still supported). Function name comes after the function body. I like this stype because the argument order is "postfix". However, it is more readable when the function name comes first.
 
     ((N) =>
       N 0 EQ (1) (N 1 - FACT N *) IFELSE)
@@ -172,12 +178,6 @@ Alternative style with symbol ":" for quoting the function name (this is a prefi
     ((N) =>
       N 0 EQ (1) (N 1 - FACT N *) IFELSE)
     : FACT DEF
-
-Function name comes first ("DEFINE" is longer than "DEF" so it stands out more when on its own at the end of the expression):
-
-    (FACT) ((N) =>
-      N 0 EQ (1) (N 1 - FACT N *) IFELSE) 
-    DEFINE
 
 Function name first and ":" used to quote the name (this looks a bit like the syntax in Forth):
 
@@ -203,13 +203,15 @@ And in this example, "FUNCTION" is a prefix function that also quotes the functi
     ((N) =>
       N 0 EQ (1) (N 1 - FACT N *) IFELSE)
 
-Personally, I am very hesitant to introduce prefix operations. That is why parens are used to quote symbols, and not ":".
+Personally, I am hesitant to introduce prefix operations. That is why parens are used to quote symbols, and not ":".
 
-Perhaps I will switch to the following style, and put the function name first to make it clearly visible. Note that DEFINE is still a postfix operation:
+One can also introduce functions and synbols that are just used as syntactic sugar. This however goes against the minimalistic idea of the language. If this style is wanted, one can use it in a DSL (Domain Specific Language).
+
+I am now using the following style, as shown in the example above, with the function name first to make it clearly visible. Note that DEFINE is still a postfix operation:
 
     (FUNNAME) (FUNBODY) DEFINE
 
-This is the style used in the third example above. An alternative name is "DEFUN", which was used in MacLisp, so there is a nostalgic aspect to it.
+An alternative name for DEFINE would be "DEFUN" (DEfine FUNction), which was used in MacLisp (there is a nostalgic aspect to this).
 
 Read more in [design.md](design.md) about the design of the language (will eventually move the above examples to that document).
 
