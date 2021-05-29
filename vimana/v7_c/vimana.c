@@ -24,7 +24,7 @@ int main()
   //List* list = ParseCode(interp, "HELLO PRINT");
 
   // Recursve FACT and TIMESDO with variables
-  List* list = ParseCode(interp, 
+  List* list0 = ParseCode(interp, 
     //"HELLOWORLD PRINT "
     //"(FACT) ((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEFINE "
     //"(TIMESDO) ((L N) => N 0 EQ NOT (L EVAL L N 1 - TIMESDO) IFTRUE) DEFINE "
@@ -79,8 +79,9 @@ int main()
   // Tests 210529
   // WITH rewrite of optimized funs:
   // ./vimana  13.82s user 0.03s system 99% cpu 13.898 total
-  // WITHOUT OPTIOMIZED MODE is faster!
   // ./vimana  13.58s user 0.01s system 94% cpu 14.370 total
+  // WITHOUT OPTIMIZED MODE:
+  // ./vimana  15.63s user 0.01s system 95% cpu 16.405 total
 
   // TIMESDO RECURSIVE, VARS
   List* list1a = ParseCode(interp,
@@ -235,13 +236,14 @@ int main()
   // ./vimana  11.22s user 0.01s system 99% cpu 11.240 total
 
   // Recursive FACT using ISZERO Iterative TIMESDO
-  List* list8 = ParseCode(interp,
+  List* list = ParseCode(interp,
     "(SWAP DUP EVAL SWAP 1 - DUP 0 GOTOIFNOTZERO DROP DROP) (TIMESDO) DEF "
     "(DUP ISZERO (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
-    "(TIMESDO) LISTFIRST VALUE OPTIMIZE (TIMESDO) LISTFIRST SET "
-    "(FACT) LISTFIRST VALUE OPTIMIZE (FACT) LISTFIRST SET "
-    "(20 FACT DROP) OPTIMIZE 10000000 TIMESDO "
-    //"(20 FACT DROP) 10000000 TIMESDO"
+    //"(20 FACT DROP) 10000000 TIMESDO "
+    //"(TIMESDO) LISTFIRST VALUE OPTIMIZE (TIMESDO) LISTFIRST SET "
+    //"(FACT) LISTFIRST VALUE OPTIMIZE (FACT) LISTFIRST SET "
+    //"(20 FACT DROP) OPTIMIZE 10000000 TIMESDO "
+    "(ENTER-OPTIMIZED-MODE (20 FACT DROP) 10000000 TIMESDO) OPTIMIZE EVAL" 
     );
   // Test 210527
   // ./vimana  10.88s user 0.01s system 89% cpu 12.155 total
@@ -252,6 +254,9 @@ int main()
   // After cleanup of InterpRun:
   // ./vimana  10.10s user 0.01s system 95% cpu 10.534 total
   // ./vimana  9.97s user 0.01s system 99% cpu 9.996 total
+  // Test 210529
+  // Rewrite of optimized mode:
+  // ./vimana  9.94s user 0.01s system 99% cpu 9.969 total
 
 // https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/
 

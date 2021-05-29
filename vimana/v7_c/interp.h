@@ -371,7 +371,7 @@ void InterpRun(Interp* interp, List* list)
 
     // Get next element.
     Item element = ListGet(code, codePointer);
-/*
+
     if (IsString(element) && 
         StringEquals(element.value.string, "ENTER-OPTIMIZED-MODE"))
     {
@@ -382,9 +382,8 @@ void InterpRun(Interp* interp, List* list)
         codePointer,
         codeLength);
       goto exit;
-      //break;
     }
-*/
+
     if (IsSymbol(element))
     {
       item = ListGet(interp->globalValueTable, element.value.symbol);
@@ -404,7 +403,6 @@ void InterpRun(Interp* interp, List* list)
 
 exit:
     // Was this the last stackframe?
-
     if (NULL == interp->currentContext)
     //if (interp->callstackIndex < 0)
     {
