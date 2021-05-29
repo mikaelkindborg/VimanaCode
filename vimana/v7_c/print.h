@@ -20,9 +20,9 @@ void ItemPrintToStream(Stream* stream, Item item, Interp* interp)
   {
     PrintToStream(stream, "[PRIMFUN]");
   }
-  else if (IsOptimizedFun(item))
+  else if (IsOptimizedList(item))
   {
-    PrintToStream(stream, "[OPTIMIZEDFUN]");
+    PrintToStream(stream, "[OPTIMIZEDLIST]");
   }
   else if (IsList(item))
   {
@@ -101,7 +101,7 @@ void ListPrintWorker(Stream* stream, List* list, Bool useNewLine, Interp* interp
     }
     
     Item item = ListGet(list, i);
-    if (IsList(item) && !IsOptimizedFun(item))
+    if (IsList(item) && !IsOptimizedList(item))
     {
       //ListPrintToStream(stream, item.value.list, useNewLine, interp);
       ListPrintToStream(stream, item.value.list, FALSE, interp);

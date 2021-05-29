@@ -32,6 +32,7 @@ void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
 #else
 void PrimEval_SetLocal(Interp* interp, Item name, Item value)
 {
+    PrintDebug("PrimEval_SetLocal");
   if (!IsSymbol(name))
     ErrorExit("PrimEval_SetLocal: Got a non-symbol (2)");
 
@@ -62,29 +63,25 @@ Item PrimEval_EvalSymbol(Interp* interp, Item item)
 {
 #ifndef OPTIMIZE
   // Non-symbols evaluates to themselves.
+  // This check is made by the caller.
   if (!IsSymbol(item))
     return item;
 #endif
 
-  // Lookup local symbol.
-  //if (IsLocalVar(item))
-  //{
-    // Search contexts for the symbol.
-    Context* context = interp->currentContext;
-    while (context)
+  // Search contexts for the symbol.
+  Context* context = interp->currentContext;
+  while (context)
+  {
+    if (context && context->hasEnv)
     {
-      if (context && context->hasEnv)
-      {
-        //PrintDebug("PrimEval_EvalSymbol: PRINTING ENV");
-        //ListPrint(context->env, interp);
-        //Item* value = ListAssocGet(context->env, item.value.symbol);
-        Item* value = ListAssocSetGet(context->env, item.value.symbol, NULL);
-        if (value)
-          return *value;
-      }
-      context = context->prevContext;
+      //PrintDebug("PrimEval_EvalSymbol: ENV");
+      //ListPrint(context->env, interp);
+      Item* value = ListAssocSetGet(context->env, item.value.symbol, NULL);
+      if (value)
+        return *value;
     }
-  //}
+    context = context->prevContext;
+  }
 
   // Lookup global symbol.
   Item value = ListGet(interp->globalValueTable, item.value.symbol);
@@ -153,7 +150,7 @@ void Prim_FUN(Interp* interp)
 // This creates a circular list structure for recursive functions,
 // and therefore protection against this is added to ListPrint()
 // in the form of a new type flag: TypeOptimizedFun
-void Prim_Optimize_Worker(Interp* interp, List* list)
+void Prim_Optimize_Worker(Interp* interp, List* list, List* optimizedFuns)
 {
   for (int i = 0; i < ListLength(list); ++i)
   {
@@ -164,20 +161,37 @@ void Prim_Optimize_Worker(Interp* interp, List* list)
       Item item = ListGet(interp->globalValueTable, element.value.symbol);
       if (IsFun(item))
       {
+        // Optimize function
+        if ( ! ListContainsSymbol(optimizedFuns, element) )
+        {
+          // Mark function as optimized
+          ListPush(optimizedFuns, element);
+          Prim_Optimize_Worker(interp, ItemList(item), optimizedFuns);
+        }
+
         // Replace symbol with function
-        item.type = item.type | TypeOptimizedFun;
+        item.type = item.type | TypeOptimizedList;
+        ListSet(list, i, item);
+      }
+      else
+      if (IsPrimFun(item))
+      {
+        // Replace symbol with primfun
         ListSet(list, i, item);
       }
     }
     else
     if (IsList(element))
     {
-      Prim_Optimize_Worker(interp, ItemList(element));
+      Prim_Optimize_Worker(interp, ItemList(element), optimizedFuns);
     }
   }
 }
 
-// Note: Creates a circular list structure for recursive functions.
+// Optimize simplu replaces function svymbols with actual
+// function objects, to eliminate symbol lookup.
+// Note that this creates a circular list structure for 
+// recursive functions.
 // LIST OPTIMIZE -> LIST
 void Prim_OPTIMIZE(Interp* interp)
 {
@@ -186,10 +200,15 @@ void Prim_OPTIMIZE(Interp* interp)
   InterpPopEvalInto(interp, item);
   if (!IsList(item))
     ErrorExit("Prim_OPTIMIZE: Got a non-list!");
-  // Updates the list in place.
-  Prim_Optimize_Worker(interp, ItemList(item));
+
+  // Update the list in place.
+  List* optimizedFuns = ListCreate();
+  Prim_Optimize_Worker(interp, ItemList(item), optimizedFuns);
+  ListFree(optimizedFuns, ListFreeShallow);
+
   InterpPush(interp, item);
-  // Direct call branch added in Interp_Run()
+
+  // Direct call branch added in InterpRunOptimized()
 
   // TODO
   // Do non-destructive version (do this in the target language):
@@ -201,6 +220,7 @@ void Prim_OPTIMIZE(Interp* interp)
 // ITEM SYMBOL SETLOCAL ->
 void Prim_SETLOCAL(Interp* interp)
 {
+  //PrintDebug("HELLO SETLOCAL");
   Item item, value;
   InterpPopInto(interp, item);
   if (IsSymbol(item))
@@ -271,7 +291,10 @@ void Prim_VALUE(Interp* interp)
 {
   Item item;
   InterpPopInto(interp, item);
-  item = PrimEval_EvalSymbol(interp, item);
+  if (IsSymbol(item))
+  {
+    item = PrimEval_EvalSymbol(interp, item);
+  }
   InterpPush(interp, item); // Push value
 }
 
@@ -895,18 +918,6 @@ void Prim_RECUR(Interp* interp)
   // Below code does not work, need to get the function context.
   // Enter new context with current code list.
   //PrimEval_EvalFun(interp, interp->currentContext->code);
-}
-*/
-
-/*
-// (ITEM) VALUE -> ITEM (evaluated)
-void Prim_VALUE(Interp* interp)
-{
-  Item item;
-  InterpPopInto(interp, item);
-  item = ListGet(ItemList(item), 0);
-  item = PrimEval_EvalSymbol(interp, item);
-  InterpPush(interp, item); // Push value
 }
 */
 

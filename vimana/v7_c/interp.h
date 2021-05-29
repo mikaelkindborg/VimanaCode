@@ -20,8 +20,8 @@ Item PrimEval_EvalSymbol(Interp* interp, Item item);
 
 typedef struct MyContext
 {
-  Bool  hasEnv;
   List* env;
+  Bool  hasEnv;
   List* code;
   Index codePointer;
   struct MyContext* nextContext;
@@ -138,6 +138,13 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
 {
   // Lookup the symbol.
   Index index = InterpLookupSymbolIndex(interp, symbolString);
+
+  if (StringEquals(symbolString, "ENTER-OPTIMIZED-MODE"))
+  {
+    // TODO: Free this string.
+    return ItemWithString(symbolString);
+  }
+
   if (index > -1)
   {
 /*
@@ -246,11 +253,170 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
   nextContext->code = code; // TODO: What about GC decr and GC?
   nextContext->codePointer = -1;
   nextContext->hasEnv = isFunCall;
-  if (isFunCall)
-    nextContext->env->length = 0;
+  if (isFunCall) nextContext->env->length = 0;
 }
 
 // MAIN INTERPRETER LOOP ---------------------------------------
+
+// Evaluate optimized list.
+void InterpRunOptimized(
+  Interp*    interp, 
+  Context*   currentContext,
+  List*      code,
+  int        codePointer,
+  int        codeLength)
+{
+  Item       element;
+
+  PrintDebug("ENTER OPTIMIZED MODE");
+
+  while (TRUE)
+  {
+    // Check context switch.
+    if (interp->contextSwitch)
+    {
+      interp->contextSwitch = FALSE;
+      currentContext = interp->currentContext;
+      code = currentContext->code;
+      codeLength = ListLength(code);
+    }
+
+    // Increment code pointer.
+    codePointer = ++ currentContext->codePointer;
+
+    // Exit the frame if the code in the current context has finished executing.
+    if (codePointer >= codeLength)
+    {
+      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+      interp->currentContext = interp->currentContext->prevContext;
+      interp->contextSwitch = TRUE;
+#ifndef OPTIMIZE
+      -- interp->callstackIndex;
+#endif
+      goto exit;
+    }
+
+    // Get next element.
+    Item element = ListGet(code, codePointer);
+
+    if (IsPrimFun(element))
+    {
+      element.value.primFun(interp);
+      goto exit;
+    }
+
+    if (IsFun(element))
+    {
+      InterpEnterCallContext(interp, element.value.list, TRUE);
+      goto exit;
+    }
+
+    ListPush(interp->stack, element);
+
+exit:
+    // Was this the last stackframe?
+    if (NULL == interp->currentContext)
+    {
+      break;
+    }
+  } // while
+
+  PrintDebug("EXIT OPTIMIZED MODE");
+}
+
+// Evaluate list.
+void InterpRun(Interp* interp, List* list)
+{
+  Context*   currentContext;
+  List*      code;
+  int        codePointer;
+  int        codeLength;
+  Item       element;
+  Item       item;
+
+  // Initialize local root context.
+  interp->currentContext->code = list;
+  interp->contextSwitch = TRUE;
+
+  while (TRUE) //interp->run
+  {
+    // Check context switch.
+    if (interp->contextSwitch)
+    {
+      interp->contextSwitch = FALSE;
+      currentContext = interp->currentContext;
+      code = currentContext->code;
+      codeLength = ListLength(code);
+    }
+
+    // Increment code pointer.
+    codePointer = ++ currentContext->codePointer;
+
+    // Exit the frame if the code in the current context has finished executing.
+    if (codePointer >= codeLength)
+    {
+      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+      interp->currentContext = interp->currentContext->prevContext;
+      interp->contextSwitch = TRUE;
+#ifndef OPTIMIZE
+      -- interp->callstackIndex;
+      if (interp->currentContext)
+      {
+        ContextFree(interp->currentContext->nextContext);
+        interp->currentContext->nextContext = NULL;
+      }
+#endif
+      goto exit;
+    }
+
+    // Get next element.
+    Item element = ListGet(code, codePointer);
+
+    if (IsString(element) && 
+        StringEquals(element.value.string, "ENTER-OPTIMIZED-MODE"))
+    {
+      InterpRunOptimized(
+        interp, 
+        currentContext,
+        code,
+        codePointer,
+        codeLength);
+      goto exit;
+      //break;
+    }
+
+    if (IsSymbol(element))
+    {
+      item = ListGet(interp->globalValueTable, element.value.symbol);
+      if (IsPrimFun(item))
+      {
+        item.value.primFun(interp);
+        goto exit;
+      }
+      if (IsFun(item))
+      {
+        InterpEnterCallContext(interp, item.value.list, TRUE);
+        goto exit;
+      }
+    }
+
+    ListPush(interp->stack, element);
+
+exit:
+      PrintDebug("XX InterpRun");
+    // Was this the last stackframe?
+
+    if (NULL == interp->currentContext)
+    //if (interp->callstackIndex < 0)
+    {
+      PrintDebug("EXIT InterpRun callstackIndex: %i", interp->callstackIndex);
+      //interp->run = FALSE;
+
+      break;
+    }
+      PrintDebug("XX22 InterpRun");
+  } // while
+}
 
 /*
 // Evaluate list.
@@ -382,145 +548,3 @@ exit:
   } // while
 }
 */
-
-// Evaluate list.
-void InterpRun(Interp* interp, List* list)
-{
-  Context*   currentContext;
-  List*      code;
-  int        codePointer;
-  int        codeLength;
-  Item       element;
-  Item       item;
-
-  // Initialize local root context.
-  interp->currentContext->code = list;
-  interp->contextSwitch = TRUE;
-
-  while (TRUE) //interp->run
-  {
-    // Check context switch.
-    if (interp->contextSwitch)
-    {
-      interp->contextSwitch = FALSE;
-      currentContext = interp->currentContext;
-      code = currentContext->code;
-      codeLength = ListLength(code);
-    }
-
-    // Increment code pointer.
-    codePointer = ++ currentContext->codePointer;
-
-    // Exit the frame if the code in the current context has finished executing.
-    if (codePointer >= codeLength)
-    {
-      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-      interp->currentContext = interp->currentContext->prevContext;
-      interp->contextSwitch = TRUE;
-#ifndef OPTIMIZE
-      -- interp->callstackIndex;
-      if (interp->currentContext)
-      {
-        ContextFree(interp->currentContext->nextContext);
-        interp->currentContext->nextContext = NULL;
-      }
-#endif
-      goto exit;
-    }
-
-    // Get next element.
-    Item element = ListGet(code, codePointer);
-
-    if (IsSymbol(element))
-    {
-      item = ListGet(interp->globalValueTable, element.value.symbol);
-      if (IsPrimFun(item))
-      {
-        item.value.primFun(interp);
-        goto exit;
-      }
-      if (IsFun(item))
-      {
-        InterpEnterCallContext(interp, item.value.list, TRUE);
-        goto exit;
-      }
-    }
-
-    ListPush(interp->stack, element);
-
-exit:
-    // Was this the last stackframe?
-#ifdef OPTIMIZE
-    if (NULL == interp->currentContext)
-#else
-    if (interp->callstackIndex < 0)
-#endif
-    {
-      //PrintDebug("EXIT InterpRun");
-      //interp->run = FALSE;
-      //run = FALSE;
-      break;
-    }
-  } // while
-}
-
-// Evaluate optimized list.
-void InterpRunOptimized(Interp* interp, List* list)
-{
-  Context*   currentContext;
-  List*      code;
-  int        codePointer;
-  int        codeLength;
-  Item       element;
-
-  // Initialize local root context.
-  interp->currentContext->code = list;
-  interp->contextSwitch = TRUE;
-
-  while (TRUE)
-  {
-    // Check context switch.
-    if (interp->contextSwitch)
-    {
-      interp->contextSwitch = FALSE;
-      currentContext = interp->currentContext;
-      code = currentContext->code;
-      codeLength = ListLength(code);
-    }
-
-    // Increment code pointer.
-    codePointer = ++ currentContext->codePointer;
-
-    // Exit the frame if the code in the current context has finished executing.
-    if (codePointer >= codeLength)
-    {
-      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-      interp->currentContext = interp->currentContext->prevContext;
-      interp->contextSwitch = TRUE;
-      goto exit;
-    }
-
-    // Get next element.
-    Item element = ListGet(code, codePointer);
-    if (IsPrimFun(element))
-    {
-      element.value.primFun(interp);
-      goto exit;
-    }
-
-    if (IsFun(element))
-    {
-      InterpEnterCallContext(interp, element.value.list, TRUE);
-      goto exit;
-    }
-
-    ListPush(interp->stack, element);
-
-exit:
-    // Was this the last stackframe?
-    if (NULL == interp->currentContext)
-    {
-      break;
-    }
-  } // while
-}

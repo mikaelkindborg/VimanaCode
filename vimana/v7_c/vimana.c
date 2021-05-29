@@ -20,6 +20,9 @@ int main()
   //PrintDebug("PARSED LIST:");
   //ListPrint(list, interp);
   
+  //List* list = ParseCode(interp, "(ENTER-OPTIMIZED-MODE HELLO PRINT) OPTIMIZE EVAL");
+  //List* list = ParseCode(interp, "HELLO PRINT");
+
   // Recursve FACT and TIMESDO with variables
   List* list = ParseCode(interp, 
     //"HELLOWORLD PRINT "
@@ -33,11 +36,12 @@ int main()
     //"(TIMESDO) LISTFIRST VALUE PRINT "
     //"(20 FACT DROP) OPTIMIZE 10000000 TIMESDO "
     //"(20 FACT DROP) 10000000 TIMESDO "
-    "(20 FACT DROP) 10000000 TIMESDO "
+    //"(20 FACT DROP) 10000000 TIMESDO "
     //"(TIMESDO) LISTFIRST VALUE OPTIMIZE (TIMESDO) LISTFIRST SET "
     //"(FACT) LISTFIRST VALUE OPTIMIZE (FACT) LISTFIRST SET "
     //"(TIMESDO) LISTFIRST VALUE PRINT "
-    //"(3 FACT PRINT) 2 TIMESDO "  
+    "(ENTER-OPTIMIZED-MODE (20 FACT DROP) 10000000 TIMESDO) OPTIMIZE EVAL"  
+    "((20 FACT DROP) 10000000 TIMESDO) EVAL"  
     );
   // Test 210526
   // ./vimana  17.05s user 0.01s system 98% cpu 17.296 total
@@ -70,6 +74,13 @@ int main()
   // WITH optimised funs:
   // ./vimana  13.98s user 0.01s system 96% cpu 14.469 total
   // ./vimana  13.69s user 0.02s system 99% cpu 13.726 total
+  // Removed primfun optimization:
+  // ./vimana  14.62s user 0.01s system 99% cpu 14.648 total
+  // Tests 210529
+  // WITH rewrite of optimized funs:
+  // ./vimana  13.82s user 0.03s system 99% cpu 13.898 total
+  // WITHOUT OPTIOMIZED MODE is faster!
+  // ./vimana  13.58s user 0.01s system 94% cpu 14.370 total
 
   // TIMESDO RECURSIVE, VARS
   List* list1a = ParseCode(interp,

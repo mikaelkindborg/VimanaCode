@@ -348,13 +348,12 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
 
 Bool ListContainsSymbol(List* list, Item item)
 {
-  int    length = list->length;
+  int length = list->length;
 
   for (int i = 0; i < length; ++i)
   {
-    Item x = ListGet(list, i);
-    // 
-    if (x.type == item.type && x.value.symbol == item.value.symbol)
+    Item current = ListGet(list, i);
+    if (current.type == item.type && current.value.symbol == item.value.symbol)
     {
       return TRUE;
     }

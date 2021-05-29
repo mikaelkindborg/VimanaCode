@@ -13,19 +13,19 @@ typedef void   (*PrimFun)(Interp*);
 
 // VIMANA TYPES ------------------------------------------------
 
-#define TypeSymbol       1
-#define TypeIntNum       2
-#define TypeDecNum       4
-#define TypeBool         8
-#define TypeList         16
-#define TypePrimFun      32
-#define TypeFun          64
-#define TypeOptimizedFun 128  
-#define TypeLocalVar     256 
-#define TypeString       512
-#define TypeContext      1024
-#define TypeDynAlloc     2048
-#define TypeVirgin       0 // Represents unbound symbol/uninitialized item
+#define TypeSymbol        1
+#define TypeIntNum        2
+#define TypeDecNum        4
+#define TypeBool          8
+#define TypeList          16
+#define TypePrimFun       32
+#define TypeFun           64
+#define TypeOptimizedList 128  
+#define TypeLocalVar      256 
+#define TypeString        512
+#define TypeContext       1024
+#define TypeDynAlloc      2048
+#define TypeVirgin        0 // Represents unbound symbol/uninitialized item
 
 #define IsVirgin(item)      ((item).type == TypeVirgin)
 #define IsSymbol(item)      ((item).type & TypeSymbol)
@@ -35,7 +35,7 @@ typedef void   (*PrimFun)(Interp*);
 #define IsList(item)        ((item).type & TypeList)
 #define IsPrimFun(item)     ((item).type & TypePrimFun)
 #define IsFun(item)         ((item).type & TypeFun)
-#define IsOptimizedFun(item) ((item).type & TypeOptimizedFun)
+#define IsOptimizedList(item) ((item).type & TypeOptimizedList)
 #define IsLocalVar(item)    ((item).type & TypeLocalVar)
 #define IsString(item)      ((item).type & TypeString)
 #define IsContext(item)     ((item).type & TypeContext)
