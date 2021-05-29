@@ -11,11 +11,13 @@ int GRandNum;
 
 typedef struct MyItem
 {
-  unsigned long type;
+  //unsigned long type;
+  unsigned int type;
+  int symbol;
   union
   {
     // Fields used by data lists and code.
-    int     symbol; // Index in symbol table or local environment table
+    //int     symbol; // Index in symbol table or local environment table
     double  decNum;
     long    intNum;
     void*   list;

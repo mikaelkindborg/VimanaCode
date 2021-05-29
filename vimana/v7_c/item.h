@@ -2,7 +2,7 @@
 // C TYPES -----------------------------------------------------
 
 typedef unsigned long    Type;
-typedef int              Index;
+typedef long             Index;
 typedef long             IntNum;
 typedef double           DecNum;
 typedef struct MyItem    Item;
@@ -47,10 +47,9 @@ typedef void   (*PrimFun)(Interp*);
 // high-level language is an item.
 typedef struct MyItem
 {
-  Type  type;
+  Type type;
   union
   {
-    // Fields used by data lists and code.
     Index     symbol; // Index in symbol table or local environment table
     DecNum    decNum;
     IntNum    intNum;
@@ -58,8 +57,7 @@ typedef struct MyItem
     Context*  context;
     char*     string; // TODO: Make custom string object
     Bool      truth;
-    // Field used only by global symbol table items.
-    PrimFun primFun;
+    PrimFun   primFun;
   }
   value;
 }

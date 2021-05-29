@@ -52,7 +52,7 @@ void ItemPrintToStream(Stream* stream, Item item, Interp* interp)
   }
   else if (IsLocalVar(item))
   {
-    PrintToStream(stream, "[VAR %i]", item.value.symbol);
+    PrintToStream(stream, "[VAR %li]", (long)item.value.symbol);
   }
   else if (IsVirgin(item))
   {

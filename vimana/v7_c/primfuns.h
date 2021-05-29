@@ -16,14 +16,14 @@ void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
   if (IsSymbol(name))
     InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
   else
-    ErrorExit("PrimEval_SetGlobal: Got a non-symbol of type: %lu", name.type);
+    ErrorExit("PrimEval_SetGlobal: Got a non-symbol");
 }
 
 #ifdef OPTIMIZE
 #define PrimEval_SetLocal(interp, name, item) \
   do { \
     if (!IsSymbol(name)) \
-      ErrorExit("PrimEval_SetLocal: Got a non-symbol of type: %lu", (name).type); \
+      ErrorExit("PrimEval_SetLocal: Got a non-symbol (1)"); \
     Context* context = (interp)->currentContext; \
     while (context && (!context->hasEnv)) \
       context = context->prevContext; \
@@ -33,7 +33,7 @@ void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
 void PrimEval_SetLocal(Interp* interp, Item name, Item value)
 {
   if (!IsSymbol(name))
-    ErrorExit("PrimEval_SetLocal: Got a non-symbol of type: %lu", name.type);
+    ErrorExit("PrimEval_SetLocal: Got a non-symbol (2)");
 
   // Get first context that has an environment.
   Context* context = interp->currentContext;
@@ -263,7 +263,7 @@ void Prim_EVAL(Interp* interp)
     //PrimEval_EvalList(interp, ItemList(item));
     InterpEnterContext(interp, ItemList(item));
   else
-    ErrorExit("Prim_EVAL got a non-list of type: %lu", item.type);
+    ErrorExit("Prim_EVAL got a non-list");
 }
 
 // ITEM VALUE -> ITEM (evaluated)
@@ -291,9 +291,9 @@ void Prim_IFTRUE(Interp* interp)
   InterpPopEvalInto(interp, boolVal);
 
   if (!IsList(list))
-    ErrorExit("Prim_IFTRUE: branch is non-list of type: %lu", list.type);
+    ErrorExit("Prim_IFTRUE: branch is non-list");
   if (!IsBool(boolVal))
-    ErrorExit("Prim_IFTRUE: got non-bool of type: %lu", boolVal.type);
+    ErrorExit("Prim_IFTRUE: got non-bool");
 
   if (boolVal.value.truth)
   {
@@ -311,9 +311,9 @@ void Prim_IFFALSE(Interp* interp)
   InterpPopEvalInto(interp, boolVal);
 
   if (!IsList(list))
-    ErrorExit("Prim_IFFALSE: branch is non-list of type: %lu", list.type);
+    ErrorExit("Prim_IFFALSE: branch is non-list");
   if (!IsBool(boolVal))
-    ErrorExit("Prim_IFFALSE: got non-bool of type: %lu", boolVal.type);
+    ErrorExit("Prim_IFFALSE: got non-bool");
 
   if (!boolVal.value.truth)
   {
@@ -332,11 +332,11 @@ void Prim_IFELSE(Interp* interp)
   InterpPopEvalInto(interp, boolVal);
 
   if (!IsList(branch1))
-    ErrorExit("Prim_IFELSE: branch1 is non-list of type: %lu", branch1.type);
+    ErrorExit("Prim_IFELSE: branch1 is non-list");
   if (!IsList(branch2))
-    ErrorExit("Prim_IFELSE: branch2 is non-list of type: %lu", branch2.type);
+    ErrorExit("Prim_IFELSE: branch2 is non-list");
   if (!IsBool(boolVal))
-    ErrorExit("Prim_IFELSE: got non-bool of type: %lu", boolVal.type);
+    ErrorExit("Prim_IFELSE: got non-bool of type");
 
   if (boolVal.value.truth)
   {

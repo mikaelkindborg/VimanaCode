@@ -250,7 +250,7 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
 
 // MAIN INTERPRETER LOOP ---------------------------------------
 
-#ifdef FOOBAR
+/*
 // Evaluate list.
 void InterpRun(Interp* interp, List* list)
 {
@@ -308,21 +308,20 @@ void InterpRun(Interp* interp, List* list)
       element.value.primFun(interp);
       goto exit;
     }
-#endif
-
-    // Check for function.
+    else
     if (IsIntNum(element))
     {
       ListPush(interp->stack, element);
       goto exit;
     }
-
-    // Check for function.
-    if (IsOptimizedFun(element))
+    else
+    //if (IsOptimizedFun(element))
+    if (IsFun(element))
     {
       InterpEnterCallContext(interp, element.value.list, TRUE);
       goto exit;
     }
+#endif
 
     // If symbol we check if the global value is primfun or fun.
     // This means that functions defined with DEFINE will take 
@@ -380,25 +379,25 @@ exit:
     }
   } // while
 }
-#else
+*/
+
 // Evaluate list.
 void InterpRun(Interp* interp, List* list)
 {
-  Context* currentContext;
-  List* code;
-  int codePointer;
-  int codeLength;
-  Item element;
-  Item item;
-  Bool run = TRUE;
+  Context*   currentContext;
+  List*      code;
+  int        codePointer;
+  int        codeLength;
+  Item       element;
+  Item       item;
 
   // Initialize local root context.
   interp->currentContext->code = list;
   interp->contextSwitch = TRUE;
 
-  while (run) //interp->run
+  while (TRUE) //interp->run
   {
-    // Get current context.
+    // Check context switch.
     if (interp->contextSwitch)
     {
       interp->contextSwitch = FALSE;
@@ -430,24 +429,22 @@ void InterpRun(Interp* interp, List* list)
     // Get the next element.
     Item element = ListGet(code, codePointer);
     if (IsPrimFun(element))
+    {
       element.value.primFun(interp);
-    else
-    if (IsOptimizedFun(element))
-      InterpEnterCallContext(interp, element.value.list, TRUE);
-    else
+      goto exit;
+    }
+
     if (IsSymbol(element))
     {
       item = ListGet(interp->globalValueTable, element.value.symbol);
-      if (IsPrimFun(item))
-        item.value.primFun(interp);
-      else 
       if (IsFun(item))
         InterpEnterCallContext(interp, item.value.list, TRUE);
       else
         ListPush(interp->stack, element);
+      goto exit;
     }
-    else
-      ListPush(interp->stack, element);
+
+    ListPush(interp->stack, element);
 
 exit:
     // Was this the last stackframe?
@@ -459,8 +456,69 @@ exit:
     {
       //PrintDebug("EXIT InterpRun");
       //interp->run = FALSE;
-      run = FALSE;
+      //run = FALSE;
+      break;
     }
   } // while
 }
-#endif
+
+// Evaluate optimized list.
+void InterpRunOptimized(Interp* interp, List* list)
+{
+  Context*   currentContext;
+  List*      code;
+  int        codePointer;
+  int        codeLength;
+  Item       element;
+
+  // Initialize local root context.
+  interp->currentContext->code = list;
+  interp->contextSwitch = TRUE;
+
+  while (TRUE)
+  {
+    // Check context switch.
+    if (interp->contextSwitch)
+    {
+      interp->contextSwitch = FALSE;
+      currentContext = interp->currentContext;
+      code = currentContext->code;
+      codeLength = ListLength(code);
+    }
+
+    // Increment code pointer.
+    codePointer = ++ currentContext->codePointer;
+
+    // Exit the frame if the code in the current context has finished executing.
+    if (codePointer >= codeLength)
+    {
+      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+      interp->currentContext = interp->currentContext->prevContext;
+      interp->contextSwitch = TRUE;
+      goto exit;
+    }
+
+    // Get next element.
+    Item element = ListGet(code, codePointer);
+    if (IsPrimFun(element))
+    {
+      element.value.primFun(interp);
+      goto exit;
+    }
+
+    if (IsFun(element))
+    {
+      InterpEnterCallContext(interp, element.value.list, TRUE);
+      goto exit;
+    }
+
+    ListPush(interp->stack, element);
+
+exit:
+    // Was this the last stackframe?
+    if (NULL == interp->currentContext)
+    {
+      break;
+    }
+  } // while
+}

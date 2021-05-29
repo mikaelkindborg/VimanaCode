@@ -10,7 +10,7 @@
 
 typedef unsigned char Byte;
 typedef int           Bool;
-typedef FILE          Stream;
+typedef FILE          Stream; // TODO: Rename for Arduino
 
 #define FALSE 0
 #define TRUE  1

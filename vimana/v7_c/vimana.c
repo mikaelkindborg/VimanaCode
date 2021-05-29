@@ -28,14 +28,15 @@ int main()
     //"(FACT) ((N) => N ISZERO (1) (N 1 - FACT N *) IFELSE) DEFINE "
     "(FACT) (N => N ISZERO (1) (N 1 - FACT N *) IFELSE) DEFINE "
     "(TIMESDO) ((L N) => N 0 EQ (L EVAL L N 1 - TIMESDO) IFFALSE) DEFINE "
-    "(TIMESDO) LISTFIRST VALUE OPTIMIZE "
-    "(FACT) LISTFIRST VALUE OPTIMIZE "
+    //"(TIMESDO) LISTFIRST VALUE OPTIMIZE "
+    //"(FACT) LISTFIRST VALUE OPTIMIZE "
     //"(TIMESDO) LISTFIRST VALUE PRINT "
-    "(20 FACT DROP) OPTIMIZE 10000000 TIMESDO "
+    //"(20 FACT DROP) OPTIMIZE 10000000 TIMESDO "
+    //"(20 FACT DROP) 10000000 TIMESDO "
+    "(20 FACT DROP) 10000000 TIMESDO "
     //"(TIMESDO) LISTFIRST VALUE OPTIMIZE (TIMESDO) LISTFIRST SET "
     //"(FACT) LISTFIRST VALUE OPTIMIZE (FACT) LISTFIRST SET "
     //"(TIMESDO) LISTFIRST VALUE PRINT "
-    //"(20 FACT DROP) 10000000 TIMESDO "
     //"(3 FACT PRINT) 2 TIMESDO "  
     );
   // Test 210526
@@ -64,6 +65,8 @@ int main()
   // ./vimana  14.14s user 0.02s system 99% cpu 14.176 total
   // WITHOUT optimised funs:
   // ./vimana  14.48s user 0.03s system 89% cpu 16.276 total
+  // ./vimana  14.12s user 0.01s system 99% cpu 14.233 total
+  // ./vimana  14.17s user 0.01s system 99% cpu 14.265 total
   // WITH optimised funs:
   // ./vimana  13.98s user 0.01s system 96% cpu 14.469 total
   // ./vimana  13.69s user 0.02s system 99% cpu 13.726 total

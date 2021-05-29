@@ -346,6 +346,23 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
   return NULL;
 }
 
+Bool ListContainsSymbol(List* list, Item item)
+{
+  int    length = list->length;
+
+  for (int i = 0; i < length; ++i)
+  {
+    Item x = ListGet(list, i);
+    // 
+    if (x.type == item.type && x.value.symbol == item.value.symbol)
+    {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 /*
 // Associative list lookup.
 Item* ListAssocGet(List* list, Index symbolIndex)

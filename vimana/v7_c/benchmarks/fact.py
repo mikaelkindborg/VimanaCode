@@ -47,7 +47,7 @@ def test_fact_iter():
     i = i + 1
   return res
 
-print(test_fact_1())
+print(test_fact_iter())
 
 #print(fact(500))
 

@@ -1,4 +1,4 @@
-
+/*
 #ifdef EXCLUDE
 
 // Lookup symbol in the context list
@@ -78,3 +78,4 @@ void InterpSetLocalSymbolValue(Interp* interp, Index index, Item value)
 }
 
 #endif
+*/
