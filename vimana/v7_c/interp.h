@@ -140,6 +140,7 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
   Index index = InterpLookupSymbolIndex(interp, symbolString);
   if (index > -1)
   {
+/*
 #ifdef OPTIMIZE
     // Special case for primfuns. We return the primfun item
     // for faster lookup in eval.
@@ -149,6 +150,7 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
       return value;
     }
 #endif
+*/
     // Symbol is already added, return an item for it.
     Item item = ItemWithSymbol(index);
     return item;
@@ -426,22 +428,22 @@ void InterpRun(Interp* interp, List* list)
       goto exit;
     }
 
-    // Get the next element.
+    // Get next element.
     Item element = ListGet(code, codePointer);
-    if (IsPrimFun(element))
-    {
-      element.value.primFun(interp);
-      goto exit;
-    }
 
     if (IsSymbol(element))
     {
       item = ListGet(interp->globalValueTable, element.value.symbol);
+      if (IsPrimFun(item))
+      {
+        item.value.primFun(interp);
+        goto exit;
+      }
       if (IsFun(item))
+      {
         InterpEnterCallContext(interp, item.value.list, TRUE);
-      else
-        ListPush(interp->stack, element);
-      goto exit;
+        goto exit;
+      }
     }
 
     ListPush(interp->stack, element);
