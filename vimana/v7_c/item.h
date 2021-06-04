@@ -41,6 +41,9 @@ typedef void   (*PrimFun)(Interp*);
 #define IsContext(item)     ((item).type & TypeContext)
 #define IsDynAlloc(item)    ((item).type & TypeDynAlloc)
 
+#define TypePushable (TypeIntNum | TypeDecNum | TypeBool | TypeList)
+
+
 // STRUCTS -----------------------------------------------------
 
 // An item encapsulates C data types. Everything in the
