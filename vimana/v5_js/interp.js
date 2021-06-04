@@ -138,6 +138,7 @@ VimanaInterpreter.prototype.doOneStep = function()
 
 VimanaInterpreter.prototype.addPrimFun = function(name, fun)
 {
+  name = name.toUpperCase()
   this.primFuns[name] = fun
 }
 

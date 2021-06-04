@@ -4,7 +4,7 @@ VimanaAddPrimFuns(vimana)
 
 function VimanaEval()
 {
-  //let code = "(HELLO PRINT) DO  21 X SET  X PRINT  X 4 + 5 6 + + PRINT"
+  //let code = "(HELLO PRINT) EVAL  21 X SETGLOBAL  X PRINT  X 4 + 5 6 + + PRINT"
   let code = document.getElementsByTagName("textarea")[0].value
   console.log("EVAL: " + code)
   let list = VimanaParse(code)

@@ -1,27 +1,27 @@
 function VimanaAddPrimFuns(interp)
 {
-  interp.addPrimFun("PRINT", function(interp)
+  interp.addPrimFun("Print", function(interp)
   {
     let x = interp.popEval()
     interp.print(JSON.stringify(x))
   })
 
-  interp.addPrimFun("DO", function(interp)
+  interp.addPrimFun("Eval", function(interp)
   {
     let list = interp.popEval()
     if (!Array.isArray(list))
-      interp.error("Non-array in DO")
+      interp.error("Non-array in Eval")
     interp.pushContext(list)
   })
 
   // Set global variable
-  interp.addPrimFun("SET", function(interp)
+  interp.addPrimFun("SetGlobal", function(interp)
   {
     let name = interp.pop()
     let value = interp.popEval()
     interp.globalEnv[name] = value
   })
-
+/*
   // Get value of element quoted by a list
   interp.addPrimFun("VALUE", function(interp)
   {
@@ -32,36 +32,35 @@ function VimanaAddPrimFuns(interp)
       interp.push(interp.evalSymbol(element))
     interp.printStack()
   })
-
+*/
   // Get value of element quoted by a list
-  interp.addPrimFun("SYMBOL", function(interp)
+  interp.addPrimFun("First", function(interp)
   {
-    let element = interp.pop()
-    if (Array.isArray(element))
-      interp.push(element[0])
-    else
-      interp.push(element)
-    interp.printStack()
+    let list = interp.pop()
+    if (!Array.isArray(list))
+      interp.error("NON-ARRAY IN First")
+    interp.push(list[0])
+    //interp.printStack()
   })
 
-  interp.addPrimFun("FUN", function(interp)
+  interp.addPrimFun("Fun", function(interp)
   {
     // Get function definition
     let list = interp.popEval()
     if (!Array.isArray(list))
-      interp.error("NON-ARRAY IN FUN")
+      interp.error("NON-ARRAY IN Fun")
     // Create and push function object
     let fun = new VimanaFunction()
     fun.code = list
     interp.push(fun)
   })
 
-  interp.addPrimFun("DEF", function(interp)
+  interp.addPrimFun("Def", function(interp)
   {
     // Get function definition
     let list = interp.popEval()
     if (!Array.isArray(list))
-      interp.error("NON-ARRAY IN DEF")
+      interp.error("NON-ARRAY IN Def")
     
     // Get first element, this must be a list with params and the 
     // function name as last element.
@@ -81,7 +80,7 @@ function VimanaAddPrimFuns(interp)
     let env = context.env
 
     // Get parameter list (includes function name as last element)
-    let params = interp.pop() // Overkill to allow this: interp.popEval()
+    let params = interp.pop()
     if (!Array.isArray(params))
     interp.error("NON-ARRAY IN =>")
 
@@ -93,7 +92,7 @@ function VimanaAddPrimFuns(interp)
       env[param] = value
     }
   })
-
+/*
   interp.addPrimFun("TRUE", function(interp)
   {
     // TODO: Create objects for true and false?
@@ -104,8 +103,8 @@ function VimanaAddPrimFuns(interp)
   {
     interp.push("FALSE")
   })
-
-  interp.addPrimFun("EQ", function(interp)
+*/
+  interp.addPrimFun("Eq", function(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
@@ -115,7 +114,7 @@ function VimanaAddPrimFuns(interp)
       interp.push("FALSE")
   })
 
-  interp.addPrimFun("IFELSE", function(interp)
+  interp.addPrimFun("IfElse", function(interp)
   {
     let branch2 = interp.popEval()
     let branch1 = interp.popEval()

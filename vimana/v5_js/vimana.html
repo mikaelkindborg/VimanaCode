@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0, shrink-to-fit=no" />
-  <meta name="copyright" content="(c) 2013-2021 Mikael Kindborg. All Rights Reserved" />
+  <meta name="copyright" content="(c) 2021 Mikael Kindborg. All Rights Reserved" />
   <title>VimanaCode</title>
   <style>@import "vimana.css";</style>
 </head>
@@ -14,7 +14,8 @@
 
 <h2>PROGRAM</h2>
 <div class="vimana-frame vimana-frame-code">
-<textarea style="height:200px;">(HELLO PRINT) FUN (FOO) SYMBOL SET FOO
+<textarea style="height:200px;">(HELLO PRINT) FUN (FOO) FIRST SETGLOBAL FOO
+((FOO) => HELLO2 PRINT) DEF FOO
 ((N DOUBLE) => N N +) DEF
 21 DOUBLE PRINT
 ((N FACT) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
