@@ -29,6 +29,18 @@ function VimanaIsList(obj)
   return (obj instanceof VimanaList)
 }
 
+// NUMBER OBJECT ----------------------------------------
+
+function VimanaNum(num)
+{
+  this.num = num
+}
+
+function VimanaIsNum(obj)
+{
+  return (obj instanceof VimanaNum)
+}
+
 // CONTEXT OBJECT ----------------------------------------
 
 function VimanaContext()
@@ -52,8 +64,8 @@ function VimanaInterp()
   this.stack = []
   this.callstack = []
   this.contextIndex = -1
-  this.speed = 500 // ms delay in eval loop
-  console.log("contextIndex 1: " + this.contextIndex)
+  this.currentContext = null;
+  this.speed = 50 // ms delay in eval loop
 }
 
 VimanaInterp.prototype.evalSymbol = function(x)
@@ -94,8 +106,6 @@ VimanaInterp.prototype.evalGlobalSymbol = function(x)
 // Eval a list (evalList).
 VimanaInterp.prototype.eval = function(code)
 {
-  // TODO Check if list has env.
-
   // Push code context
   this.pushContext(code)
 
@@ -113,7 +123,6 @@ VimanaInterp.prototype.eval = function(code)
 // Eval with timer that drives the loop.
 VimanaInterp.prototype.timerEval = function(code)
 {
-  console.log("contextIndex 2: " + this.contextIndex)
   // Push code context
   this.pushContext(code)
 
@@ -124,15 +133,14 @@ VimanaInterp.prototype.timerEval = function(code)
 
   function runTimer()
   {
-    console.log("contextIndex 3: " + vimana.contextIndex)
     vimana.doOneStep()
 
     if (vimana.contextIndex > -1)
       setTimeout(runTimer, vimana.speed)
     else
     {
-      console.log("EXIT")
-      vimana.printStack()
+      //console.log("EXIT")
+      //vimana.printStack()
     }
   }
 }
@@ -140,6 +148,8 @@ VimanaInterp.prototype.timerEval = function(code)
 VimanaInterp.prototype.doOneStep = function()
 {
   let context = this.callstack[this.contextIndex]
+
+  this.currentContext = context
 
   ++ context.codePointer
   
@@ -149,7 +159,7 @@ VimanaInterp.prototype.doOneStep = function()
     return
   }
 
-  this.printStack()
+  //this.printStack()
 
   let obj = context.code.list[context.codePointer]
   
@@ -158,7 +168,7 @@ VimanaInterp.prototype.doOneStep = function()
     let primFun = this.primFuns[obj]
     if (primFun)
     {
-      vimana.printFunCall(obj)
+      //vimana.printFunCall(obj)
       primFun(this)
       return
     }
@@ -168,7 +178,7 @@ VimanaInterp.prototype.doOneStep = function()
     let value = this.evalGlobalSymbol(obj)
     if (VimanaIsFun(value))
     {
-      vimana.printFunCall(obj)
+      //vimana.printFunCall(obj)
       this.pushContext(value.code)
       return
     }
@@ -191,7 +201,7 @@ VimanaInterp.prototype.pushContext = function(code, env = {})
 
   this.callstack.push(context)
   ++ this.contextIndex
-  //printContext(context)
+  //this.printContext(context)
 }
   
 VimanaInterp.prototype.popContext = function()
@@ -205,15 +215,15 @@ VimanaInterp.prototype.pop = function()
   return this.stack.pop()
 }
   
-VimanaInterp.prototype.push = function(x)
+VimanaInterp.prototype.push = function(obj)
 {
-  return this.stack.push(x)
+  return this.stack.push(obj)
 }
-  
+
 VimanaInterp.prototype.popEval = function()
 {
-  let x = this.stack.pop()
-  return this.evalSymbol(x)
+  let obj = this.stack.pop()
+  return this.evalSymbol(obj)
 }
 
 // PARSER -------------------------------------------------
@@ -253,10 +263,14 @@ function VimanaParseTokens(tokens)
       return list
       
     if (next === "(")
+    {
       next = VimanaParseTokens(tokens)
+    }
     else if (isFinite(next))
-      next = next * 1 // Convert string to number
-    
+    {
+      //next = next * 1 // Convert string to number
+      next = new VimanaNum(next * 1)
+    }
     list.push(next)
   }
 }

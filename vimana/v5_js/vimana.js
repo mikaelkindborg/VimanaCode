@@ -6,17 +6,17 @@ function VimanaEval()
 {
   //let code = "(HELLO PRINT) EVAL  21 X SETGLOBAL  X PRINT  X 4 + 5 6 + + PRINT"
   let code = document.getElementsByTagName("textarea")[0].value
-  console.log("EVAL: " + code)
+  //console.log("EVAL: " + code)
   let list = VimanaParse(code)
-  console.log("LIST: " + code)
-  //vimana.eval(list)
-  vimana.timerEval(list)
+  //console.log("LIST: " + code)
+  vimana.eval(list)
+  //vimana.timerEval(list)
 }
 
 function VimanaBenchmark()
 {
-  //let code = "((N FACT) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF 20 FACT"
-  let code = "((N FACT) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF"
+  //let code = "(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF 20 FACT"
+  let code = "(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF"
   let list = VimanaParse(code)
   vimana.eval(list)
 
@@ -40,6 +40,13 @@ function VimanaBenchmark()
 
   // With DEF called only once in Vivaldi
   // VIMANA TIME: 1.9142899999969814s
+
+  // 210606 (branch js2)
+  // Version 3 in Vivaldi:
+  // 1.1230649999997695s
+
+  // With VimanaNum object:
+  // 1.2570550000000367s
 
   // Version 2 in Safari 
   // VIMANA TIME: 5.48s

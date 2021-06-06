@@ -2,8 +2,8 @@ function VimanaAddPrimFuns(interp)
 {
   interp.addPrimFun("Print", function(interp)
   {
-    let x = interp.popEval()
-    interp.print(JSON.stringify(x))
+    let obj = interp.popEval()
+    interp.print(JSON.stringify(obj))
   })
 
   interp.addPrimFun("Eval", function(interp)
@@ -17,13 +17,12 @@ function VimanaAddPrimFuns(interp)
   // Set global variable
   interp.addPrimFun("SetGlobal", function(interp)
   {
+    //interp.print("STACK: " + JSON.stringify(interp.stack));
     let name = interp.pop()
     let value = interp.popEval()
-    interp.print("SETGLOBAL: " + name);
-    interp.print("FOOBAR");
+    //interp.print("SETGLOBAL: " + name);
     interp.globalEnv[name] = value
-    interp.print("GLOBALENV: " + JSON.stringify(interp.globalEnv));
-
+    //interp.print("GLOBALENV: " + JSON.stringify(interp.globalEnv));
   })
 /*
   // Get value of element quoted by a list
@@ -40,10 +39,10 @@ function VimanaAddPrimFuns(interp)
   // Get value of element quoted by a list
   interp.addPrimFun("First", function(interp)
   {
-    let list = interp.pop()
-    if (!VimanaIsList(list))
+    let obj = interp.pop()
+    if (!VimanaIsList(obj))
       interp.error("Non-list in First")
-    interp.push(list[0])
+    interp.push(obj.list[0])
     //interp.printStack()
   })
 
@@ -71,7 +70,7 @@ function VimanaAddPrimFuns(interp)
     
     // Get function header
     let header = interp.popEval()
-    if (!VimanaIsList(header) && header.list.length)
+    if (!VimanaIsList(header) && header.list.length < 1)
       interp.error("DEF: Non-list or empty header")
 
     let funName
@@ -107,11 +106,12 @@ function VimanaAddPrimFuns(interp)
       interp.error("Non-array in =>")
 
     // Pop and bind parameters
-    for (let i = params.length - 1; i > -1; --i)
+    for (let i = params.list.length - 1; i > -1; --i)
     {
-      let param = params[i]
+      let param = params.list[i]
       let value = interp.popEval()
       env[param] = value
+      //interp.print("ENV: " + JSON.stringify(env))
     }
   })
 /*
@@ -130,6 +130,8 @@ function VimanaAddPrimFuns(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
+    if (VimanaIsNum(a)) a = a.num
+    if (VimanaIsNum(b)) b = b.num
     if (a === b)
       interp.push("TRUE")
     else
@@ -141,37 +143,41 @@ function VimanaAddPrimFuns(interp)
     let branch2 = interp.popEval()
     let branch1 = interp.popEval()
     let truth = interp.popEval()
+    //branch1.env = interp.currentContext.env
+    //branch2.env = interp.currentContext.env
+    //interp.print("BRANCH1: " + JSON.stringify(branch1))
+    //interp.print("BRANCH2: " + JSON.stringify(branch2))
     if (truth === "TRUE")
-      interp.pushContext(branch1)
+      interp.pushContext(branch1, interp.currentContext.env)
     else
-      interp.pushContext(branch2)
+      interp.pushContext(branch2, interp.currentContext.env)
   })
 
   interp.addPrimFun("+", function(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
-    interp.push(a + b)
+    interp.push(new VimanaNum(a.num + b.num))
   })
 
   interp.addPrimFun("-", function(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
-    interp.push(a - b)
+    interp.push(new VimanaNum(a.num - b.num))
   })
 
   interp.addPrimFun("*", function(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
-    interp.push(a * b)
+    interp.push(new VimanaNum(a.num * b.num))
   })
 
   interp.addPrimFun("/", function(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
-    interp.push(a / b)
+    interp.push(new VimanaNum(a.num / b.num))
   })
 }
