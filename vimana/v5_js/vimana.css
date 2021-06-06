@@ -47,21 +47,22 @@ h2
 
 output, code, stack, callstack, textarea
 {
-    display: block;
-    unicode-bidi: embed;
-    font-family: monospace;
-    white-space: pre;
-    font-size: 125%;
-    overflow: scroll;
-    width: 100%;
-    border-width: 0;
+  display: block;
+  unicode-bidi: embed;
+  font-family: monospace;
+  white-space: pre;
+  font-size: 125%;
+  overflow: scroll;
+  width: 100%;
+  border-width: 0;
 }
 
 .vimana-button
 {
-  display: flex;
+  /*display: flex;*/
+  display: inline-block;
   width: 100%;
-  max-width: 200px;
+  max-width: 250px;
   margin: 10px 0px;
   padding: 10px;
   border: 4px solid white;

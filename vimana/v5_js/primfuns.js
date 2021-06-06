@@ -11,6 +11,7 @@ function VimanaAddPrimFuns(interp)
     let list = interp.popEval()
     if (!VimanaIsList(list))
       interp.error("Non-list in Eval")
+    // TODO: Use list.env if set, or interp.currentContext.env
     interp.pushContext(list)
   })
 
@@ -53,8 +54,7 @@ function VimanaAddPrimFuns(interp)
     if (!VimanaIsList(list))
       interp.error("Non-list in Funify")
     // Create and push function object
-    let fun = new VimanaFun()
-    fun.code = list
+    let fun = new VimanaFun(list)
     interp.push(fun)
   })
 
@@ -89,8 +89,7 @@ function VimanaAddPrimFuns(interp)
       body.list.unshift(header)
     }
 
-    let fun = new VimanaFun()
-    fun.code = body
+    let fun = new VimanaFun(body)
     interp.globalEnv[funName] = fun
   })
 
@@ -130,12 +129,10 @@ function VimanaAddPrimFuns(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
-    if (VimanaIsNum(a)) a = a.num
-    if (VimanaIsNum(b)) b = b.num
     if (a === b)
-      interp.push("TRUE")
+      interp.push(true)//"TRUE")
     else
-      interp.push("FALSE")
+      interp.push(false)//"FALSE")
   })
 
   interp.addPrimFun("IfElse", function(interp)
@@ -147,7 +144,7 @@ function VimanaAddPrimFuns(interp)
     //branch2.env = interp.currentContext.env
     //interp.print("BRANCH1: " + JSON.stringify(branch1))
     //interp.print("BRANCH2: " + JSON.stringify(branch2))
-    if (truth === "TRUE")
+    if (truth)// === "TRUE")
       interp.pushContext(branch1, interp.currentContext.env)
     else
       interp.pushContext(branch2, interp.currentContext.env)
@@ -157,27 +154,27 @@ function VimanaAddPrimFuns(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
-    interp.push(new VimanaNum(a.num + b.num))
+    interp.push(a + b)
   })
 
   interp.addPrimFun("-", function(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
-    interp.push(new VimanaNum(a.num - b.num))
+    interp.push(a - b)
   })
 
   interp.addPrimFun("*", function(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
-    interp.push(new VimanaNum(a.num * b.num))
+    interp.push(a * b)
   })
 
   interp.addPrimFun("/", function(interp)
   {
     let b = interp.popEval()
     let a = interp.popEval()
-    interp.push(new VimanaNum(a.num / b.num))
+    interp.push(a / b)
   })
 }

@@ -38,6 +38,9 @@ function VimanaBenchmark()
   // Version 2 in Vivaldi 
   // VIMANA TIME: 2.0683400000016263s
 
+  // Version 2 in Safari 
+  // VIMANA TIME: 5.48s
+
   // With DEF called only once in Vivaldi
   // VIMANA TIME: 1.9142899999969814s
 
@@ -48,26 +51,35 @@ function VimanaBenchmark()
   // With VimanaNum object:
   // 1.2570550000000367s
 
-  // Version 2 in Safari 
-  // VIMANA TIME: 5.48s
+  // Without number object:
+  // 1.187684999999874s
+
+  // Some inlining in interp.evalSymbol:
+  // 1.1437999999998283s
+
+  // Optimized context referencing in interpreter loop:
+  // 1.0306600000003527s
+
+  // Using JS booleans:
+  // 0.9029350000000704s
 }
 
-
-/*
-function fact(n)
+function VimanaNativeBenchmark()
 {
-  if (n === 0)
-    return 1
-  else 
-    return n * fact(n - 1)
+  function fact(n)
+  {
+    if (n === 0)
+      return 1
+    else 
+      return n * fact(n - 1)
+  }
+  let t2 = performance.now()
+  for (let i = 0; i < 10000000; i++)
+  {
+    fact(20)
+  }
+  let t3 = performance.now()
+  vimana.print("NATIVE TIME: " + ((t3 - t2) / 1000) + "s")
+  //TIME: 0.04589500000292901s 100000 iterations
+  //TIME: 2.1241850000005797s  10000000 iterations
 }
-let t2 = performance.now()
-for (let i = 0; i < 10000000; i++)
-{
-  fact(20)
-}
-let t3 = performance.now()
-console.log("NATIVE TIME: " + ((t3 - t2) / 1000) + "s")
-//TIME: 0.04589500000292901s 100000 iterations
-//TIME: 2.1241850000005797s  10000000 iterations
-*/
