@@ -1,5 +1,5 @@
 
-let vimana = new VimanaInterpreter()
+let vimana = new VimanaInterp()
 VimanaAddPrimFuns(vimana)
 
 function VimanaEval()
@@ -9,7 +9,8 @@ function VimanaEval()
   console.log("EVAL: " + code)
   let list = VimanaParse(code)
   console.log("LIST: " + code)
-  vimana.eval(list)
+  //vimana.eval(list)
+  vimana.timerEval(list)
 }
 
 function VimanaBenchmark()

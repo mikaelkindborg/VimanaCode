@@ -1,37 +1,67 @@
 
 // FUNCTION OBJECT ----------------------------------------
 
-function VimanaFunction()
+function VimanaFun()
 {
-  this.code = []
+  this.code = null
 }
 
-// TODO: Inline below.
 function VimanaIsFun(obj)
 {
-  return (obj instanceof VimanaFunction)
+  return (obj instanceof VimanaFun)
 }
 
-// TODO: Global var, Primfun?
+// LIST OBJECT ----------------------------------------
+
+function VimanaList()
+{
+  this.list = []
+  this.env = null
+}
+
+VimanaList.prototype.push = function(obj)
+{
+  this.list.push(obj)
+}
+
+function VimanaIsList(obj)
+{
+  return (obj instanceof VimanaList)
+}
+
+// CONTEXT OBJECT ----------------------------------------
+
+function VimanaContext()
+{
+  this.env = []
+  this.code = []
+  this.codePointer = -1
+}
+
+function VimanaIsContext(obj)
+{
+  return (obj instanceof VimanaContext)
+}
 
 // INTERPRETER OBJECT -------------------------------------
 
-function VimanaInterpreter()
+function VimanaInterp()
 {
   this.primFuns = {}
   this.globalEnv = {}
   this.stack = []
   this.callstack = []
   this.contextIndex = -1
-  this.speed = 50 // ms delay in eval loop
+  this.speed = 500 // ms delay in eval loop
+  console.log("contextIndex 1: " + this.contextIndex)
 }
 
-VimanaInterpreter.prototype.evalSymbol = function(x)
+VimanaInterp.prototype.evalSymbol = function(x)
 {
   // If not string don't evaluate it.
   if (typeof x !== "string")
     return x
-  
+/*
   // Search local environment chain.
   let index = this.contextIndex
   while (index > -1)
@@ -41,12 +71,18 @@ VimanaInterpreter.prototype.evalSymbol = function(x)
       return context.env[x]
     -- index
   }
+*/
 
-  // Finally, look in global environment.
-  return this.evalGlobalSymbol(x)
+  // Search local env, then global env.
+  let index = this.contextIndex
+  let context = this.callstack[index]
+  if (x in context.env)
+    return context.env[x]
+  else
+    return this.evalGlobalSymbol(x)
 }
 
-VimanaInterpreter.prototype.evalGlobalSymbol = function(x)
+VimanaInterp.prototype.evalGlobalSymbol = function(x)
 {
   // Lookup symbol in global environment.
   if (x in this.globalEnv)
@@ -56,8 +92,10 @@ VimanaInterpreter.prototype.evalGlobalSymbol = function(x)
 }
 
 // Eval a list (evalList).
-VimanaInterpreter.prototype.eval = function(code)
+VimanaInterp.prototype.eval = function(code)
 {
+  // TODO Check if list has env.
+
   // Push code context
   this.pushContext(code)
 
@@ -73,80 +111,82 @@ VimanaInterpreter.prototype.eval = function(code)
 }
 
 // Eval with timer that drives the loop.
-VimanaInterpreter.prototype.timerEval = function(code)
+VimanaInterp.prototype.timerEval = function(code)
 {
+  console.log("contextIndex 2: " + this.contextIndex)
   // Push code context
   this.pushContext(code)
 
+  let vimana = this
+  
   // Enter eval loop
   runTimer()
-  
+
   function runTimer()
   {
-    console.log("contextIndex: " + this.contextIndex)
-    this.doOneStep()
+    console.log("contextIndex 3: " + vimana.contextIndex)
+    vimana.doOneStep()
 
-    if (this.contextIndex > -1)
-      setTimeout(runTimer, this.speed)
+    if (vimana.contextIndex > -1)
+      setTimeout(runTimer, vimana.speed)
     else
     {
       console.log("EXIT")
-      //this.printStack()
+      vimana.printStack()
     }
   }
 }
 
-VimanaInterpreter.prototype.doOneStep = function()
+VimanaInterp.prototype.doOneStep = function()
 {
   let context = this.callstack[this.contextIndex]
 
   ++ context.codePointer
   
-  if (context.codePointer >= context.code.length)
+  if (context.codePointer >= context.code.list.length)
   {
     this.popContext()
     return
   }
 
-  //printStack()
+  this.printStack()
 
-  let x = context.code[context.codePointer]
+  let obj = context.code.list[context.codePointer]
   
-  if (typeof x === "string")
+  if (typeof obj === "string")
   {
-    let primFun = this.primFuns[x]
+    let primFun = this.primFuns[obj]
     if (primFun)
     {
-      //printFunCall(x)
+      vimana.printFunCall(obj)
       primFun(this)
       return
     }
     
     // Only global functions are evaluated here.
     // Use CALL for local funs.
-    let value = this.evalGlobalSymbol(x)
+    let value = this.evalGlobalSymbol(obj)
     if (VimanaIsFun(value))
     {
-      //printFunCall(x)
+      vimana.printFunCall(obj)
       this.pushContext(value.code)
       return
     }
   }
 
-  this.push(x)
+  this.push(obj)
 }
 
-VimanaInterpreter.prototype.addPrimFun = function(name, fun)
+VimanaInterp.prototype.addPrimFun = function(name, fun)
 {
   name = name.toUpperCase()
   this.primFuns[name] = fun
 }
 
-VimanaInterpreter.prototype.pushContext = function(code, env = {})
+VimanaInterp.prototype.pushContext = function(code, env = {})
 {
-  let context = {}
+  let context = new VimanaContext()
   context.code = code
-  context.codePointer = -1
   context.env = env
 
   this.callstack.push(context)
@@ -154,23 +194,23 @@ VimanaInterpreter.prototype.pushContext = function(code, env = {})
   //printContext(context)
 }
   
-VimanaInterpreter.prototype.popContext = function()
+VimanaInterp.prototype.popContext = function()
 {
   this.callstack.pop()
   -- this.contextIndex
 }
 
-VimanaInterpreter.prototype.pop = function()
+VimanaInterp.prototype.pop = function()
 {
   return this.stack.pop()
 }
   
-VimanaInterpreter.prototype.push = function(x)
+VimanaInterp.prototype.push = function(x)
 {
   return this.stack.push(x)
 }
   
-VimanaInterpreter.prototype.popEval = function()
+VimanaInterp.prototype.popEval = function()
 {
   let x = this.stack.pop()
   return this.evalSymbol(x)
@@ -196,7 +236,7 @@ function VimanaParse(code)
 // Recursively create the list tree structure.
 function VimanaParseTokens(tokens)
 {
-  let list = []
+  let list = new VimanaList()
   
   while (true)
   {

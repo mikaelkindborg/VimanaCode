@@ -9,8 +9,8 @@ function VimanaAddPrimFuns(interp)
   interp.addPrimFun("Eval", function(interp)
   {
     let list = interp.popEval()
-    if (!Array.isArray(list))
-      interp.error("Non-array in Eval")
+    if (!VimanaIsList(list))
+      interp.error("Non-list in Eval")
     interp.pushContext(list)
   })
 
@@ -19,7 +19,11 @@ function VimanaAddPrimFuns(interp)
   {
     let name = interp.pop()
     let value = interp.popEval()
+    interp.print("SETGLOBAL: " + name);
+    interp.print("FOOBAR");
     interp.globalEnv[name] = value
+    interp.print("GLOBALENV: " + JSON.stringify(interp.globalEnv));
+
   })
 /*
   // Get value of element quoted by a list
@@ -37,39 +41,57 @@ function VimanaAddPrimFuns(interp)
   interp.addPrimFun("First", function(interp)
   {
     let list = interp.pop()
-    if (!Array.isArray(list))
-      interp.error("NON-ARRAY IN First")
+    if (!VimanaIsList(list))
+      interp.error("Non-list in First")
     interp.push(list[0])
     //interp.printStack()
   })
 
-  interp.addPrimFun("Fun", function(interp)
+  interp.addPrimFun("Funify", function(interp)
   {
     // Get function definition
     let list = interp.popEval()
-    if (!Array.isArray(list))
-      interp.error("NON-ARRAY IN Fun")
+    if (!VimanaIsList(list))
+      interp.error("Non-list in Funify")
     // Create and push function object
-    let fun = new VimanaFunction()
+    let fun = new VimanaFun()
     fun.code = list
     interp.push(fun)
   })
 
+  // Forms:
+  // (A B FOO) (A B +) DEF
+  // (FOO) ((A B) => A B +) DEF
   interp.addPrimFun("Def", function(interp)
   {
-    // Get function definition
-    let list = interp.popEval()
-    if (!Array.isArray(list))
-      interp.error("NON-ARRAY IN Def")
+    // Get function body
+    let body = interp.popEval()
+    if (!VimanaIsList(body) && body.list.length < 1)
+      interp.error("DEF: Non-list or empty body")
     
-    // Get first element, this must be a list with params and the 
-    // function name as last element.
-    let params = list[0]
-    let funName = params[params.length - 1]
+    // Get function header
+    let header = interp.popEval()
+    if (!VimanaIsList(header) && header.list.length)
+      interp.error("DEF: Non-list or empty header")
 
-    // Create and set function object
-    let fun = new VimanaFunction()
-    fun.code = list
+    let funName
+    
+    // Does header have a single element?
+    if (0 === header.list.length)
+    {
+      funName = header.list[0]
+    }
+    else
+    {
+      funName = header.list[header.list.length - 1]
+      // TODO: Search for functions
+      header.list.pop()
+      body.list.unshift("=>")
+      body.list.unshift(header)
+    }
+
+    let fun = new VimanaFun()
+    fun.code = body
     interp.globalEnv[funName] = fun
   })
 
@@ -81,11 +103,11 @@ function VimanaAddPrimFuns(interp)
 
     // Get parameter list (includes function name as last element)
     let params = interp.pop()
-    if (!Array.isArray(params))
-    interp.error("NON-ARRAY IN =>")
+    if (!VimanaIsList(params))
+      interp.error("Non-array in =>")
 
-    // Pop and bind parameters (skip last element)
-    for (let i = params.length - 2; i > -1; --i)
+    // Pop and bind parameters
+    for (let i = params.length - 1; i > -1; --i)
     {
       let param = params[i]
       let value = interp.popEval()
