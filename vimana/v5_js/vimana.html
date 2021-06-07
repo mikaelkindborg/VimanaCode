@@ -1,35 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0, shrink-to-fit=no" />
   <meta name="copyright" content="(c) 2021 Mikael Kindborg. All Rights Reserved" />
   <title>VimanaCode</title>
-  <style>@import "vimana.css";</style>
+  <style>
+    @import "vimana.css";
+  </style>
 </head>
 
 <body>
 
-<h1>WELCOME TO THE WONDERFUL WORLD OF VIMANA</h1>
+  <h1>WELCOME TO THE WONDERFUL WORLD OF VIMANA</h1>
 
-<h2>PROGRAM</h2>
-<div class="vimana-frame vimana-frame-code">
-<textarea style="height:200px;">HELLO-WORLD PRINT 
+  <h2>PROGRAM</h2>
+  <div class="vimana-frame vimana-frame-code">
+    <textarea style="height:200px;">HELLO-WORLD PRINT 
 
 (WHILE) (
-  BINDTOOUTERENV BODY SETLOCAL
-  BINDTOOUTERENV COND SETLOCAL
-  COND EVAL IFTRUE BODY EVAL) DEF
+  (COND BODY) =>
+  COND EVAL (
+    BODY EVAL
+    COND VALUE BODY VALUE WHILE) IFTRUE
+) DEF
 
 (FOO) (
-  10 N SETLOCAL
-  (N 0 ISSMALLER) (
+  10 (N) =>
+  (N 0 ISSMALLER) BIND
+    (N PRINT
+     N 1 - (N) =>) BIND
+  WHILE
+) DEF
+
+(FOO) (
+  20 (N) =>
+  [N 0 ISSMALLER] [
     N PRINT
-    N 1 - N SETLOCAL)
-  WHILE) DEF
+    N 1 - (N) =>
+  ]
+  WHILE
+) DEF
+
+FOO
 
 (
+SPRITE :X
+  SPRITE :X GET 10 +
+SET
+
+SPRITE X
+  SPRITE X GET 10 +
+SET
+
+OBJ NAME LISA SET:
+OBJ NAME GET:
+
 (HELLO PRINT) FUNIFY (FOO) FIRST SETGLOBAL FOO
+(HELLO PRINT) FUNIFY (FOO) SETGLOBAL FOO
 (FOO) (HELLO2 PRINT) DEF FOO
 (N DOUBLE) (N N +) DEF
 21 DOUBLE PRINT
@@ -38,31 +67,32 @@
 )
 
 </textarea>
-</div>
+  </div>
 
-<a class="vimana-button" onclick="VimanaEval()" href="javascript:void(0)">EVAL</a>
-<a class="vimana-button" onclick="VimanaBenchmark()" href="javascript:void(0)">BENCHMARK</a>
-<a class="vimana-button" onclick="VimanaNativeBenchmark()" href="javascript:void(0)">NATIVE BENCHMARK</a>
+  <a class="vimana-button" onclick="VimanaEval()" href="javascript:void(0)">EVAL</a>
+  <a class="vimana-button" onclick="VimanaBenchmark()" href="javascript:void(0)">BENCHMARK</a>
+  <a class="vimana-button" onclick="VimanaNativeBenchmark()" href="javascript:void(0)">NATIVE BENCHMARK</a>
 
-<h2>OUTPUT</h2>
-<div class="vimana-frame">
-<output></output>
-</div>
+  <h2>OUTPUT</h2>
+  <div class="vimana-frame">
+    <output></output>
+  </div>
 
-<h2>CALLSTACK</h2>
-<div class="vimana-frame">
-<callstack></callstack>
-</div>
+  <h2>CALLSTACK</h2>
+  <div class="vimana-frame">
+    <callstack></callstack>
+  </div>
 
-<h2>STACK</h2>
-<div class="vimana-frame">
-<stack></stack>
-</div>
+  <h2>STACK</h2>
+  <div class="vimana-frame">
+    <stack></stack>
+  </div>
 
-<script src="interp.js"></script>
-<script src="primfuns.js"></script>
-<script src="ui.js"></script>
-<script src="vimana.js"></script>
+  <script src="interp.js"></script>
+  <script src="primfuns.js"></script>
+  <script src="ui.js"></script>
+  <script src="vimana.js"></script>
 
 </body>
+
 </html>

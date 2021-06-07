@@ -60,7 +60,7 @@ function VimanaInterp()
   this.speed = 50 // ms delay in eval loop
 }
 
-VimanaInterp.prototype.evalSymbol = function(obj)
+VimanaInterp.prototype.evalSymbol = function(obj, env)
 {
   // If not string don't evaluate it.
   if (typeof obj !== "string")
@@ -223,6 +223,12 @@ VimanaInterp.prototype.popEval = function()
   return this.evalSymbol(obj)
 }
 
+VimanaInterp.prototype.bindIfUnbound = function(list, env)
+{
+  if (null === list.env)
+    list.env = env
+}
+
 VimanaInterp.prototype.checkList = function(list, errorMessage)
 {
   if (!VimanaIsList(list))
@@ -239,6 +245,8 @@ function VimanaParse(code)
   code = code.replaceAll("\n", " ")
   code = code.replaceAll("\r", " ")
   code = code.replaceAll("\t", " ")
+  code = code.replaceAll("[", " ( ")
+  code = code.replaceAll("]", " ) BIND ")
   let tokens = code.split(" ")
   //$tokens = array_filter($tokens,
   //  function($token) { return strlen($token) > 0 })

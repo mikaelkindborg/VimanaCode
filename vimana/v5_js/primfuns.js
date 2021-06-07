@@ -4,9 +4,14 @@ function VimanaAddPrimFuns(interp)
   {
     let list = interp.popEval()
     interp.checkList(list, "Eval: Got non-list")
-    if (null === list.env)
-      list.env = interp.currentContext.env
+    interp.bindIfUnbound(list, interp.currentContext.env)
     interp.pushContext(list, list.env)
+  })
+
+  // Get value of element
+  interp.addPrimFun("Value", function(interp)
+  {
+    interp.push(interp.popEval())
   })
 
   interp.addPrimFun("Call", function(interp)
@@ -30,7 +35,7 @@ function VimanaAddPrimFuns(interp)
   {
     let list = interp.popEval()
     interp.checkList(list, "BindToCallerEnv: Got non-list")
-    list.env = interp.currentContext.env
+    list.env = interp.callstack[interp.contextIndex - 1].env
     interp.push(list)
   })
 
@@ -107,7 +112,7 @@ function VimanaAddPrimFuns(interp)
 
     // Get parameter list (includes function name as last element)
     let params = interp.pop()
-    interp.checkList(list, "=> Got non-list")
+    interp.checkList(params, "=> Got non-list")
 
     // Pop and bind parameters
     for (let i = params.list.length - 1; i > -1; --i)
@@ -125,7 +130,7 @@ function VimanaAddPrimFuns(interp)
     let context = interp.callstack[interp.contextIndex]
     let env = context.env
     let name = interp.pop()
-    interp.checkSymbol(list, "SetLocal: Name is not symbol")
+    //interp.checkSymbol(name, "SetLocal: Name is not symbol")
     let value = interp.popEval()
     env[name] = value
   })
@@ -137,10 +142,12 @@ function VimanaAddPrimFuns(interp)
     let truth = interp.popEval()
     interp.checkList(branch1, "IfElse: Branch1 is non-list")
     interp.checkList(branch1, "IfElse: Branch2 is non-list")
+    interp.bindIfUnbound(branch1, interp.currentContext.env)
+    interp.bindIfUnbound(branch2, interp.currentContext.env)
     if (truth)
-      interp.pushContext(branch1, interp.currentContext.env)
+      interp.pushContext(branch1, branch1.env)
     else
-      interp.pushContext(branch2, interp.currentContext.env)
+      interp.pushContext(branch2, branch2.env)
   })
 
   interp.addPrimFun("IfTrue", function(interp)
@@ -148,8 +155,9 @@ function VimanaAddPrimFuns(interp)
     let branch = interp.popEval()
     let truth = interp.popEval()
     interp.checkList(branch, "IfTrue: Branch is non-list")
+    interp.bindIfUnbound(branch, interp.currentContext.env)
     if (truth)
-      interp.pushContext(branch, interp.currentContext.env)
+      interp.pushContext(branch, branch.env)
   })
 
   interp.addPrimFun("Eq", function(interp)
