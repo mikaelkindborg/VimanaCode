@@ -180,8 +180,14 @@ VimanaInterp.prototype.doOneStep = function()
       this.pushContext(value.code)
       return
     }
+
+    // Eval symbol
+    value = this.evalSymbol(obj)
+    this.push(value)
+    return
   }
 
+  // If not a symbol, push it.
   this.push(obj)
 }
 
@@ -220,7 +226,8 @@ VimanaInterp.prototype.push = function(obj)
 VimanaInterp.prototype.popEval = function()
 {
   let obj = this.stack.pop()
-  return this.evalSymbol(obj)
+  return obj
+  //return this.evalSymbol(obj)
 }
 
 VimanaInterp.prototype.bindIfUnbound = function(list, env)

@@ -18,12 +18,19 @@
   <h2>PROGRAM</h2>
   <div class="vimana-frame vimana-frame-code">
     <textarea style="height:200px;">HELLO-WORLD PRINT 
+(
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+(N FACT) (N 0 EQ (1) (N 1 - N *) IFELSE) DEF
+3 FACT PRINT
+)
+
+      (
 
 (WHILE) (
   (COND BODY) =>
   COND EVAL (
     BODY EVAL
-    COND VALUE BODY VALUE WHILE) IFTRUE
+    COND BODY WHILE) IFTRUE
 ) DEF
 
 (FOO) (
@@ -44,6 +51,7 @@
 ) DEF
 
 FOO
+      )
 
 (
 SPRITE :X
