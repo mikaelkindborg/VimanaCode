@@ -223,6 +223,12 @@ VimanaInterp.prototype.popEval = function()
   return this.evalSymbol(obj)
 }
 
+VimanaInterp.prototype.checkList = function(list, errorMessage)
+{
+  if (!VimanaIsList(list))
+    this.error(errorMessage)
+}
+
 // PARSER -------------------------------------------------
 
 // Parse (tokenize) a string and return a list.

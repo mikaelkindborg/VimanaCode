@@ -1,18 +1,37 @@
 function VimanaAddPrimFuns(interp)
 {
-  interp.addPrimFun("Print", function(interp)
-  {
-    let obj = interp.popEval()
-    interp.print(JSON.stringify(obj))
-  })
-
   interp.addPrimFun("Eval", function(interp)
   {
     let list = interp.popEval()
-    if (!VimanaIsList(list))
-      interp.error("Non-list in Eval")
-    // TODO: Use list.env if set, or interp.currentContext.env
-    interp.pushContext(list)
+    interp.checkList(list, "Eval: Got non-list")
+    if (null === list.env)
+      list.env = interp.currentContext.env
+    interp.pushContext(list, list.env)
+  })
+
+  interp.addPrimFun("Call", function(interp)
+  {
+    let list = interp.popEval()
+    interp.checkList(list, "Call: Got non-list")
+    list.env = {}
+    interp.pushContext(list, list.env)
+  })
+
+  interp.addPrimFun("Bind", function(interp)
+  {
+    let list = interp.popEval()
+    interp.checkList(list, "Bind: Got non-list")
+    list.env = interp.currentContext.env
+    interp.push(list)
+  })
+
+  // Bind list to caller's env if NOT aready bound
+  interp.addPrimFun("BindToCallerEnv", function(interp)
+  {
+    let list = interp.popEval()
+    interp.checkList(list, "BindToCallerEnv: Got non-list")
+    list.env = interp.currentContext.env
+    interp.push(list)
   })
 
   // Set global variable
@@ -25,24 +44,12 @@ function VimanaAddPrimFuns(interp)
     interp.globalEnv[name] = value
     //interp.print("GLOBALENV: " + JSON.stringify(interp.globalEnv));
   })
-/*
-  // Get value of element quoted by a list
-  interp.addPrimFun("VALUE", function(interp)
-  {
-    let element = interp.pop()
-    if (Array.isArray(element))
-      interp.push(interp.evalSymbol(element[0]))
-    else
-      interp.push(interp.evalSymbol(element))
-    interp.printStack()
-  })
-*/
+
   // Get value of element quoted by a list
   interp.addPrimFun("First", function(interp)
   {
     let obj = interp.pop()
-    if (!VimanaIsList(obj))
-      interp.error("Non-list in First")
+    interp.checkList(list, "First: Got non-list")
     interp.push(obj.list[0])
     //interp.printStack()
   })
@@ -51,8 +58,7 @@ function VimanaAddPrimFuns(interp)
   {
     // Get function definition
     let list = interp.popEval()
-    if (!VimanaIsList(list))
-      interp.error("Non-list in Funify")
+    interp.checkList(list, "Funify: Got non-list")
     // Create and push function object
     let fun = new VimanaFun(list)
     interp.push(fun)
@@ -66,12 +72,12 @@ function VimanaAddPrimFuns(interp)
     // Get function body
     let body = interp.popEval()
     if (!VimanaIsList(body) && body.list.length < 1)
-      interp.error("DEF: Non-list or empty body")
+      interp.error("Def: Non-list or empty body")
     
     // Get function header
     let header = interp.popEval()
     if (!VimanaIsList(header) && header.list.length < 1)
-      interp.error("DEF: Non-list or empty header")
+      interp.error("Def: Non-list or empty header")
 
     let funName
     
@@ -101,8 +107,7 @@ function VimanaAddPrimFuns(interp)
 
     // Get parameter list (includes function name as last element)
     let params = interp.pop()
-    if (!VimanaIsList(params))
-      interp.error("Non-array in =>")
+    interp.checkList(list, "=> Got non-list")
 
     // Pop and bind parameters
     for (let i = params.list.length - 1; i > -1; --i)
@@ -113,26 +118,16 @@ function VimanaAddPrimFuns(interp)
       //interp.print("ENV: " + JSON.stringify(env))
     }
   })
-/*
-  interp.addPrimFun("TRUE", function(interp)
-  {
-    // TODO: Create objects for true and false?
-    interp.push("TRUE")
-  })
 
-  interp.addPrimFun("FALSE", function(interp)
+  // Bind arguments on the stack to local variables.
+  interp.addPrimFun("SetLocal", function(interp)
   {
-    interp.push("FALSE")
-  })
-*/
-  interp.addPrimFun("Eq", function(interp)
-  {
-    let b = interp.popEval()
-    let a = interp.popEval()
-    if (a === b)
-      interp.push(true)//"TRUE")
-    else
-      interp.push(false)//"FALSE")
+    let context = interp.callstack[interp.contextIndex]
+    let env = context.env
+    let name = interp.pop()
+    interp.checkSymbol(list, "SetLocal: Name is not symbol")
+    let value = interp.popEval()
+    env[name] = value
   })
 
   interp.addPrimFun("IfElse", function(interp)
@@ -140,14 +135,48 @@ function VimanaAddPrimFuns(interp)
     let branch2 = interp.popEval()
     let branch1 = interp.popEval()
     let truth = interp.popEval()
-    //branch1.env = interp.currentContext.env
-    //branch2.env = interp.currentContext.env
-    //interp.print("BRANCH1: " + JSON.stringify(branch1))
-    //interp.print("BRANCH2: " + JSON.stringify(branch2))
-    if (truth)// === "TRUE")
+    interp.checkList(branch1, "IfElse: Branch1 is non-list")
+    interp.checkList(branch1, "IfElse: Branch2 is non-list")
+    if (truth)
       interp.pushContext(branch1, interp.currentContext.env)
     else
       interp.pushContext(branch2, interp.currentContext.env)
+  })
+
+  interp.addPrimFun("IfTrue", function(interp)
+  {
+    let branch = interp.popEval()
+    let truth = interp.popEval()
+    interp.checkList(branch, "IfTrue: Branch is non-list")
+    if (truth)
+      interp.pushContext(branch, interp.currentContext.env)
+  })
+
+  interp.addPrimFun("Eq", function(interp)
+  {
+    let b = interp.popEval()
+    let a = interp.popEval()
+    interp.push(a === b)
+  })
+
+  interp.addPrimFun("Not", function(interp)
+  {
+    let a = interp.popEval()
+    interp.push(!a)
+  })
+
+  interp.addPrimFun("IsSmaller", function(interp)
+  {
+    let b = interp.popEval()
+    let a = interp.popEval()
+    interp.push(a > b)
+  })
+
+  interp.addPrimFun("IsBigger", function(interp)
+  {
+    let b = interp.popEval()
+    let a = interp.popEval()
+    interp.push(a < b)
   })
 
   interp.addPrimFun("+", function(interp)
@@ -177,4 +206,34 @@ function VimanaAddPrimFuns(interp)
     let a = interp.popEval()
     interp.push(a / b)
   })
+
+  interp.addPrimFun("Print", function(interp)
+  {
+    let obj = interp.popEval()
+    interp.print(JSON.stringify(obj))
+  })
 }
+
+/*
+  interp.addPrimFun("TRUE", function(interp)
+  {
+    // TODO: Create objects for true and false?
+    interp.push(true)
+  })
+
+  interp.addPrimFun("FALSE", function(interp)
+  {
+    interp.push(false)
+  })
+
+  // Get value of element quoted by a list
+  interp.addPrimFun("VALUE", function(interp)
+  {
+    let element = interp.pop()
+    if (Array.isArray(element))
+      interp.push(interp.evalSymbol(element[0]))
+    else
+      interp.push(interp.evalSymbol(element))
+    interp.printStack()
+  })
+*/

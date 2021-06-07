@@ -15,14 +15,27 @@
 <h2>PROGRAM</h2>
 <div class="vimana-frame vimana-frame-code">
 <textarea style="height:200px;">HELLO-WORLD PRINT 
+
+(WHILE) (
+  BINDTOOUTERENV BODY SETLOCAL
+  BINDTOOUTERENV COND SETLOCAL
+  COND EVAL IFTRUE BODY EVAL) DEF
+
+(FOO) (
+  10 N SETLOCAL
+  (N 0 ISSMALLER) (
+    N PRINT
+    N 1 - N SETLOCAL)
+  WHILE) DEF
+
 (
 (HELLO PRINT) FUNIFY (FOO) FIRST SETGLOBAL FOO
 (FOO) (HELLO2 PRINT) DEF FOO
 (N DOUBLE) (N N +) DEF
 21 DOUBLE PRINT
-)
 (FACT) ((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
 6 FACT PRINT
+)
 
 </textarea>
 </div>

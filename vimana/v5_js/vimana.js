@@ -41,7 +41,7 @@ function VimanaBenchmark()
   // Version 2 in Safari 
   // VIMANA TIME: 5.48s
 
-  // With DEF called only once in Vivaldi
+  // With DEF called only once in benchmark
   // VIMANA TIME: 1.9142899999969814s
 
   // 210606 (branch js2)
@@ -62,6 +62,7 @@ function VimanaBenchmark()
 
   // Using JS booleans:
   // 0.9029350000000704s
+  // 0.8519100000012259s
 }
 
 function VimanaNativeBenchmark()
