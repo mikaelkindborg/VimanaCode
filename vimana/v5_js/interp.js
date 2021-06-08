@@ -165,12 +165,12 @@ VimanaInterp.prototype.doOneStep = function()
     }
 
     // Push symbol
-    this.push(value)
+    this.stack.push(value)
     return
   }
 
   // If not a symbol, push it.
-  this.push(obj)
+  this.stack.push(obj)
 }
 
 VimanaInterp.prototype.addPrimFun = function(name, fun)
@@ -216,6 +216,7 @@ VimanaInterp.prototype.popContext = function()
   this.currentContext = this.callstack[this.contextIndex]
 }
 
+/*
 VimanaInterp.prototype.pop = function()
 {
   return this.stack.pop()
@@ -226,7 +227,7 @@ VimanaInterp.prototype.push = function(obj)
   this.stack.push(obj)
   //this.printStack();
 }
-
+*/
 /*
 VimanaInterp.prototype.bindIfUnbound = function(list, env)
 {
