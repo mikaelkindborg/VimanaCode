@@ -57,7 +57,7 @@ function VimanaInterp()
   this.contextIndex = -1
   this.currentContext = null;
   this.contextSwitch = true
-  this.speed = 50 // ms delay in eval loop
+  this.speed = 0 //50 // ms delay in eval loop
 }
 
 VimanaInterp.prototype.evalSymbol = function(obj, env)
@@ -137,14 +137,12 @@ VimanaInterp.prototype.doOneStep = function()
   
   if (context.codePointer >= context.code.list.length)
   {
-    //this.popContext()
+    // Inline of popContext:
     -- this.contextIndex
     this.callstack.pop()
     this.currentContext = this.callstack[this.contextIndex]
     return
   }
-
-  //this.printStack()
 
   let obj = context.code.list[context.codePointer]
   
@@ -158,9 +156,6 @@ VimanaInterp.prototype.doOneStep = function()
       return
     }
     
-    // Only global functions are evaluated here.
-    // Use CALL for local funs.
-    //let value = this.evalGlobalSymbol(obj)
     let value = this.evalSymbol(obj)
     if (VimanaIsFun(value))
     {
@@ -169,8 +164,7 @@ VimanaInterp.prototype.doOneStep = function()
       return
     }
 
-    // Eval symbol
-    value = this.evalSymbol(obj)
+    // Push symbol
     this.push(value)
     return
   }
@@ -181,7 +175,7 @@ VimanaInterp.prototype.doOneStep = function()
 
 VimanaInterp.prototype.addPrimFun = function(name, fun)
 {
-  // TODO: Specify case in an interpreter setting.
+  // TODO: Specify case in interpreter settings.
   name = name.toUpperCase()
   this.primFuns[name] = fun
 }

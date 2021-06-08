@@ -18,6 +18,11 @@
   <h2>PROGRAM</h2>
   <div class="vimana-frame vimana-frame-code">
     <textarea style="height:200px;">HELLO-WORLD PRINT 
+
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+(L N REPEAT) (0 N ISBIGGER (L EVAL L N 1 - REPEAT) IFTRUE) DEF
+(20 FACT PRINT) 3 REPEAT
+
 (
 22 (FUBAR) =>
 FUBAR PRINT 

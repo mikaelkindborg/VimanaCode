@@ -15,14 +15,24 @@ function VimanaEval()
 
 function VimanaBenchmark()
 {
-  //let code = "(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF 20 FACT"
+
+  let code = `
+  (N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+  (L N REPEAT) (0 N ISBIGGER (L EVAL L N 1 - REPEAT) IFTRUE) DEF
+  [20 FACT DROP] 100000 REPEAT
+  `
+  let t0 = performance.now()
+  let list = VimanaParse(code)
+  vimana.eval(list)
+  let t1 = performance.now()
+  vimana.print("VIMANA TIME: " + ((t1 - t0) / 1000) + "s")
+
+/*
   let code = "(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF"
   let list = VimanaParse(code)
   vimana.eval(list)
-
-  code = "20 FACT"
+  code = "20 FACT DROP"
   list = VimanaParse(code)
-
   let t0 = performance.now()
   for (let i = 0; i < 100000; i++)
   {
@@ -31,7 +41,8 @@ function VimanaBenchmark()
   }
   let t1 = performance.now()
   vimana.print("VIMANA TIME: " + ((t1 - t0) / 1000) + "s")
-
+  vimana.print("STACKSIZE: " + vimana.stack.length)
+*/
   // Version 1 in Vivaldi 
   // VIMANA TIME: 4.252065000000584s
 
@@ -67,8 +78,18 @@ function VimanaBenchmark()
   // 210608 (branch js2)
   // Tailcall version:
   // 0.8155650000007881s
+
   // Some further cleanup:
   // 0.7900100000006205s
+
+  // Removal of redundant evalSymbol:
+  // 0.7702100000005885s
+
+  // 210608 
+  // New benchmark using REPEAT:
+  // 0.9401600000001054s
+  // I am very happy with this performance given the  
+  // nature of the implementation of the interpreter
 }
 
 function VimanaNativeBenchmark()
