@@ -106,8 +106,8 @@ VimanaInterp.prototype.evalGlobalSymbol = function(obj)
 // Eval a list (evalList).
 VimanaInterp.prototype.eval = function(code)
 {
-  // Push code context
-  this.pushContext(code)
+  // Push root context
+  this.pushContext(code, {})
 
   // Eval loop
   while (this.contextIndex > -1)
@@ -123,8 +123,8 @@ VimanaInterp.prototype.eval = function(code)
 // Eval with timer that drives the loop.
 VimanaInterp.prototype.timerEval = function(code)
 {
-  // Push code context
-  this.pushContext(code)
+  // Push root context
+  this.pushContext(code, {})
 
   let vimana = this
   
@@ -177,7 +177,7 @@ VimanaInterp.prototype.doOneStep = function()
     if (VimanaIsFun(value))
     {
       //vimana.printFunCall(obj)
-      this.pushContext(value.code)
+      this.pushContext(value.code, {})
       return
     }
 
@@ -198,12 +198,33 @@ VimanaInterp.prototype.addPrimFun = function(name, fun)
   this.primFuns[name] = fun
 }
 
-VimanaInterp.prototype.pushContext = function(code, env = {})
+VimanaInterp.prototype.pushContext = function(code, env = null)
 {
-  this.currentContext = new VimanaContext(code, env)
-  this.callstack.push(this.currentContext)
-  ++ this.contextIndex
-  //this.printContext(context)
+  // Set env
+  if (null === env)
+  {
+    env = (null !== code.env) ? code.env : this.currentContext.env
+  }
+
+  // Check tail call
+  let context = this.currentContext
+  if (context && (context.codePointer + 1 >= context.code.list.length))
+  {
+    // Reuse current context
+    context.codePointer = -1
+    context.code = code
+    context.env = env
+    //this.print("TAILCALL: " + this.contextIndex)
+  }
+  else
+  {
+    // Push new context
+    this.currentContext = new VimanaContext(code, env)
+    this.callstack.push(this.currentContext)
+    ++ this.contextIndex
+  }
+
+  //this.printContext(this.currentContext)
 }
 
 VimanaInterp.prototype.popContext = function()
@@ -220,7 +241,8 @@ VimanaInterp.prototype.pop = function()
   
 VimanaInterp.prototype.push = function(obj)
 {
-  return this.stack.push(obj)
+  this.stack.push(obj)
+  //this.printStack();
 }
 
 VimanaInterp.prototype.popEval = function()
@@ -230,11 +252,13 @@ VimanaInterp.prototype.popEval = function()
   //return this.evalSymbol(obj)
 }
 
+/*
 VimanaInterp.prototype.bindIfUnbound = function(list, env)
 {
   if (null === list.env)
     list.env = env
 }
+*/
 
 VimanaInterp.prototype.checkList = function(list, errorMessage)
 {
@@ -288,6 +312,7 @@ function VimanaParseTokens(tokens)
     {
       next = next * 1 // Convert string to number
     }
+    
     list.push(next)
   }
 }

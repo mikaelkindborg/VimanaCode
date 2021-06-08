@@ -18,13 +18,13 @@
   <h2>PROGRAM</h2>
   <div class="vimana-frame vimana-frame-code">
     <textarea style="height:200px;">HELLO-WORLD PRINT 
-(
-(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
-(N FACT) (N 0 EQ (1) (N 1 - N *) IFELSE) DEF
-3 FACT PRINT
-)
 
       (
+        
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+3 FACT PRINT
+
+) DROP
 
 (WHILE) (
   (COND BODY) =>
@@ -51,18 +51,28 @@
 ) DEF
 
 FOO
-      )
+
+
 
 (
+
 SPRITE :X
   SPRITE :X GET 10 +
+SET
+
+SPRITE 'X
+  SPRITE 'X GET 10 +
+SET
+
+SPRITE (X)
+  SPRITE (X) GET 10 +
 SET
 
 SPRITE X
   SPRITE X GET 10 +
 SET
 
-OBJ NAME LISA SET:
+OBJ NAME LISA SET
 OBJ NAME GET:
 
 (HELLO PRINT) FUNIFY (FOO) FIRST SETGLOBAL FOO
@@ -73,6 +83,7 @@ OBJ NAME GET:
 (FACT) ((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
 6 FACT PRINT
 )
+DROP
 
 </textarea>
   </div>

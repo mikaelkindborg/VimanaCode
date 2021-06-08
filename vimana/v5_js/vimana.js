@@ -63,6 +63,11 @@ function VimanaBenchmark()
   // Using JS booleans:
   // 0.9029350000000704s
   // 0.8519100000012259s
+
+  // 210608 (branch js2)
+  // Tailcall version:
+  // 0.8155650000007881s
+  
 }
 
 function VimanaNativeBenchmark()
