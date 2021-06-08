@@ -62,36 +62,20 @@ function VimanaInterp()
 
 VimanaInterp.prototype.evalSymbol = function(obj, env)
 {
-  // If not string don't evaluate it.
+  // If not string don't evaluate it
   if (typeof obj !== "string")
     return obj
 
-  // Search local env, then global env.
-  //let index = this.contextIndex
-  //let context = this.callstack[index]
-  //let context = this.currentContext
+  // Search local environment
   if (obj in this.currentContext.env)
     return this.currentContext.env[obj]
 
-  // Lookup symbol in global environment.
+  // Search global environment
   if (obj in this.globalEnv)
     return this.globalEnv[obj]
 
+  // Otherwise, return the string itself
   return obj
-
-  //return this.evalGlobalSymbol(obj)
-
-/*
-  // Search local environment chain.
-  let index = this.contextIndex
-  while (index > -1)
-  {
-    let context = this.callstack[index]
-    if (x in context.env)
-      return context.env[x]
-    -- index
-  }
-*/
 }
 
 VimanaInterp.prototype.evalGlobalSymbol = function(obj)
@@ -153,7 +137,10 @@ VimanaInterp.prototype.doOneStep = function()
   
   if (context.codePointer >= context.code.list.length)
   {
-    this.popContext()
+    //this.popContext()
+    -- this.contextIndex
+    this.callstack.pop()
+    this.currentContext = this.callstack[this.contextIndex]
     return
   }
 
@@ -166,14 +153,15 @@ VimanaInterp.prototype.doOneStep = function()
     let primFun = this.primFuns[obj]
     if (primFun)
     {
-      //vimana.printFunCall(obj)
+      //this.printFunCall(obj)
       primFun(this)
       return
     }
     
     // Only global functions are evaluated here.
     // Use CALL for local funs.
-    let value = this.evalGlobalSymbol(obj)
+    //let value = this.evalGlobalSymbol(obj)
+    let value = this.evalSymbol(obj)
     if (VimanaIsFun(value))
     {
       //vimana.printFunCall(obj)
@@ -243,13 +231,6 @@ VimanaInterp.prototype.push = function(obj)
 {
   this.stack.push(obj)
   //this.printStack();
-}
-
-VimanaInterp.prototype.popEval = function()
-{
-  let obj = this.stack.pop()
-  return obj
-  //return this.evalSymbol(obj)
 }
 
 /*

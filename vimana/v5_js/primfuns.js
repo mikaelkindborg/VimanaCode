@@ -2,7 +2,7 @@ function VimanaAddPrimFuns(interp)
 {
   interp.addPrimFun("Eval", function(interp)
   {
-    let list = interp.popEval()
+    let list = interp.pop()
     interp.checkList(list, "Eval: Got non-list")
     interp.pushContext(list)
   })
@@ -15,12 +15,12 @@ function VimanaAddPrimFuns(interp)
   // Get value of element
   interp.addPrimFun("Value", function(interp)
   {
-    interp.push(interp.popEval())
+    interp.push(interp.pop())
   })
 
   interp.addPrimFun("Call", function(interp)
   {
-    let list = interp.popEval()
+    let list = interp.pop()
     interp.checkList(list, "Call: Got non-list")
     interp.pushContext(list, {})
   })
@@ -28,7 +28,7 @@ function VimanaAddPrimFuns(interp)
   // Push a shallow copy bound to current env
   interp.addPrimFun("Bind", function(interp)
   {
-    let list = interp.popEval()
+    let list = interp.pop()
     interp.checkList(list, "Bind: Got non-list")
     // Copy list
     let block = new VimanaList()
@@ -42,7 +42,7 @@ function VimanaAddPrimFuns(interp)
   // Bind list to caller's env if NOT aready bound
   interp.addPrimFun("BindToCallerEnv", function(interp)
   {
-    let list = interp.popEval()
+    let list = interp.pop()
     interp.checkList(list, "BindToCallerEnv: Got non-list")
     list.env = interp.callstack[interp.contextIndex - 1].env
     interp.push(list)
@@ -53,10 +53,11 @@ function VimanaAddPrimFuns(interp)
   {
     //interp.print("STACK: " + JSON.stringify(interp.stack));
     let name = interp.pop()
-    let value = interp.popEval()
-    //interp.print("SETGLOBAL: " + name);
-    interp.globalEnv[name] = value
-    //interp.print("GLOBALENV: " + JSON.stringify(interp.globalEnv));
+    interp.checkList(name, "SetGlobal: Name must be in a list")
+    let value = interp.pop()
+    interp.print("SETGLOBAL: " + name);
+    interp.globalEnv[name.list[0]] = value
+    interp.print("GLOBALENV: " + JSON.stringify(interp.globalEnv));
   })
 
   // Get value of element quoted by a list
@@ -71,7 +72,7 @@ function VimanaAddPrimFuns(interp)
   interp.addPrimFun("Funify", function(interp)
   {
     // Get function definition
-    let list = interp.popEval()
+    let list = interp.pop()
     interp.checkList(list, "Funify: Got non-list")
     // Create and push function object
     let fun = new VimanaFun(list)
@@ -84,12 +85,12 @@ function VimanaAddPrimFuns(interp)
   interp.addPrimFun("Def", function(interp)
   {
     // Get function body
-    let body = interp.popEval()
+    let body = interp.pop()
     if (!VimanaIsList(body) && body.list.length < 1)
       interp.error("Def: Non-list or empty body")
     
     // Get function header
-    let header = interp.popEval()
+    let header = interp.pop()
     if (!VimanaIsList(header) && header.list.length < 1)
       interp.error("Def: Non-list or empty header")
 
@@ -126,28 +127,28 @@ function VimanaAddPrimFuns(interp)
     for (let i = params.list.length - 1; i > -1; --i)
     {
       let param = params.list[i]
-      let value = interp.popEval()
+      let value = interp.pop()
       env[param] = value
       //interp.print("ENV: " + JSON.stringify(env))
     }
   })
-
-  // Bind arguments on the stack to local variables.
+/*
+  // Bind arguments on the stack to local variable.
   interp.addPrimFun("SetLocal", function(interp)
   {
     let context = interp.callstack[interp.contextIndex]
     let env = context.env
     let name = interp.pop()
     //interp.checkSymbol(name, "SetLocal: Name is not symbol")
-    let value = interp.popEval()
+    let value = interp.pop()
     env[name] = value
   })
-
+*/
   interp.addPrimFun("IfElse", function(interp)
   {
-    let branch2 = interp.popEval()
-    let branch1 = interp.popEval()
-    let truth = interp.popEval()
+    let branch2 = interp.pop()
+    let branch1 = interp.pop()
+    let truth = interp.pop()
     interp.checkList(branch1, "IfElse: Branch1 is non-list")
     interp.checkList(branch1, "IfElse: Branch2 is non-list")
     if (truth)
@@ -158,8 +159,8 @@ function VimanaAddPrimFuns(interp)
 
   interp.addPrimFun("IfTrue", function(interp)
   {
-    let branch = interp.popEval()
-    let truth = interp.popEval()
+    let branch = interp.pop()
+    let truth = interp.pop()
     interp.checkList(branch, "IfTrue: Branch is non-list")
     if (truth)
       interp.pushContext(branch)
@@ -167,62 +168,63 @@ function VimanaAddPrimFuns(interp)
 
   interp.addPrimFun("Eq", function(interp)
   {
-    let b = interp.popEval()
-    let a = interp.popEval()
+    let b = interp.pop()
+    let a = interp.pop()
     interp.push(a === b)
   })
 
   interp.addPrimFun("Not", function(interp)
   {
-    let a = interp.popEval()
+    let a = interp.pop()
     interp.push(!a)
   })
 
   interp.addPrimFun("IsSmaller", function(interp)
   {
-    let b = interp.popEval()
-    let a = interp.popEval()
+    let b = interp.pop()
+    let a = interp.pop()
     interp.push(a > b)
   })
 
   interp.addPrimFun("IsBigger", function(interp)
   {
-    let b = interp.popEval()
-    let a = interp.popEval()
+    let b = interp.pop()
+    let a = interp.pop()
+    //interp.print("ISBIGGER " + a + " " + b)
     interp.push(a < b)
   })
 
   interp.addPrimFun("+", function(interp)
   {
-    let b = interp.popEval()
-    let a = interp.popEval()
+    let b = interp.pop()
+    let a = interp.pop()
     interp.push(a + b)
   })
 
   interp.addPrimFun("-", function(interp)
   {
-    let b = interp.popEval()
-    let a = interp.popEval()
+    let b = interp.pop()
+    let a = interp.pop()
     interp.push(a - b)
   })
 
   interp.addPrimFun("*", function(interp)
   {
-    let b = interp.popEval()
-    let a = interp.popEval()
+    let b = interp.pop()
+    let a = interp.pop()
     interp.push(a * b)
   })
 
   interp.addPrimFun("/", function(interp)
   {
-    let b = interp.popEval()
-    let a = interp.popEval()
+    let b = interp.pop()
+    let a = interp.pop()
     interp.push(a / b)
   })
 
   interp.addPrimFun("Print", function(interp)
   {
-    let obj = interp.popEval()
+    let obj = interp.pop()
     interp.print(JSON.stringify(obj))
   })
 }

@@ -11,12 +11,12 @@ VimanaInterp.prototype.error = function(s)
   this.print(guruMeditation)
   let context = this.callstack[this.contextIndex]
   let index = context.codePointer
-  //let code = Array.from(context.code)
-  //code.splice(index, 0, ">>>>")
-  //this.print(JSON.stringify(code))
+  let list = Array.from(context.code.list)
+  list.splice(index, 0, ">>>>")
+  this.print(JSON.stringify(list))
   this.print(JSON.stringify(context))
-  context = this.callstack[this.contextIndex - 1]
-  this.print(JSON.stringify(context))
+  //context = this.callstack[this.contextIndex - 1]
+  //this.print(JSON.stringify(context))
   throw guruMeditation
 }
 

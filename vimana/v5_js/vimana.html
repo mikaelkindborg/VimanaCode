@@ -18,13 +18,69 @@
   <h2>PROGRAM</h2>
   <div class="vimana-frame vimana-frame-code">
     <textarea style="height:200px;">HELLO-WORLD PRINT 
+(
+22 (FUBAR) =>
+FUBAR PRINT 
 
-      (
-        
+(FOO2) (
+  1 (N) =>
+  [N PRINT N 1 + (N) =>] (BAR) =>
+  BAR
+) DEF
+
+(FOO) (
+  1 (N) =>
+  [N PRINT N 1 + (N) =>]
+) DEF
+FOO (BLOCK) =>
+BLOCK EVAL
+BLOCK EVAL
+      
+(FOO) (
+  1 (N) =>
+  [N PRINT N 1 + (N) =>] (BAR) =>
+  BAR
+) DEF
+FOO EVAL
+
+) DROP
+
+(
+
+
+(L N REPEAT) (
+  0 N ISBIGGER
+    (L EVAL L N 1 - REPEAT)  
+  IFTRUE
+) DEF
+
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+(
+(6 FACT PRINT) 3 REPEAT
+(HELLO2 PRINT) BIND 3 REPEAT
+)
+DROP
+
+(FOO) (
+  (MYF) (N) =>
+  N PRINT
+    [N PRINT] 3 REPEAT
+) DEF
+
+FOO
+
+) DROP
+
+
+
+(
+
 (N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
 3 FACT PRINT
 
 ) DROP
+
+(
 
 (WHILE) (
   (COND BODY) =>
@@ -52,7 +108,7 @@
 
 FOO
 
-
+) DROP
 
 (
 

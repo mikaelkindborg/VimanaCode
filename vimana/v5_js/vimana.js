@@ -9,8 +9,8 @@ function VimanaEval()
   //console.log("EVAL: " + code)
   let list = VimanaParse(code)
   //console.log("LIST: " + code)
-  vimana.eval(list)
-  //vimana.timerEval(list)
+  //vimana.eval(list)
+  vimana.timerEval(list)
 }
 
 function VimanaBenchmark()
@@ -67,7 +67,8 @@ function VimanaBenchmark()
   // 210608 (branch js2)
   // Tailcall version:
   // 0.8155650000007881s
-  
+  // Some further cleanup:
+  // 0.7900100000006205s
 }
 
 function VimanaNativeBenchmark()
