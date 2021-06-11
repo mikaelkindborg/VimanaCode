@@ -16,13 +16,8 @@ function VimanaIsFun(obj)
 
 function VimanaList()
 {
-  this.list = []
+  this.items = []
   this.env = null
-}
-
-VimanaList.prototype.push = function(obj)
-{
-  this.list.push(obj)
 }
 
 function VimanaIsList(obj)
@@ -54,13 +49,13 @@ function VimanaInterp()
   this.globalEnv = {}
   this.stack = []
   this.callstack = []
-  this.contextIndex = -1
+  this.callstackIndex = -1
   this.currentContext = null;
   this.contextSwitch = true
   this.speed = 0 //50 // ms delay in eval loop
 }
 
-VimanaInterp.prototype.evalSymbol = function(obj, env)
+VimanaInterp.prototype.evalSymbol = function(obj)
 {
   // If not string don't evaluate it
   if (typeof obj !== "string")
@@ -87,24 +82,20 @@ VimanaInterp.prototype.evalGlobalSymbol = function(obj)
     return obj
 }
 
-// Eval a list (evalList).
+// Eval a list
 VimanaInterp.prototype.eval = function(code)
 {
   // Push root context
   this.pushContext(code, {})
 
   // Eval loop
-  while (this.contextIndex > -1)
+  while (this.callstackIndex > -1)
   {
-    //console.log("contextIndex: " + this.contextIndex)
-    this.doOneStep()
+    this.evalNext()
   }
-  //console.log("EXIT")
-  //this.printStack()
-  //console.log(this.globalEnv)
 }
 
-// Eval with timer that drives the loop.
+// Eval driven by a timer, which is slower but more resource friendly
 VimanaInterp.prototype.timerEval = function(code)
 {
   // Push root context
@@ -117,9 +108,14 @@ VimanaInterp.prototype.timerEval = function(code)
 
   function runTimer()
   {
-    vimana.doOneStep()
+    // Run 20 loops one each timer call.
+    for (let i = 0; i < 20; ++i)
+    {
+      if (vimana.callstackIndex > -1)
+        vimana.evalNext()
+    }
 
-    if (vimana.contextIndex > -1)
+    if (vimana.callstackIndex > -1)
       setTimeout(runTimer, vimana.speed)
     else
     {
@@ -129,22 +125,22 @@ VimanaInterp.prototype.timerEval = function(code)
   }
 }
 
-VimanaInterp.prototype.doOneStep = function()
+VimanaInterp.prototype.evalNext = function()
 {
   let context = this.currentContext
 
   ++ context.codePointer
   
-  if (context.codePointer >= context.code.list.length)
+  if (context.codePointer >= context.code.items.length)
   {
-    // Inline of popContext:
-    -- this.contextIndex
+    // Inline of popContext
+    -- this.callstackIndex
     this.callstack.pop()
-    this.currentContext = this.callstack[this.contextIndex]
+    this.currentContext = this.callstack[this.callstackIndex]
     return
   }
 
-  let obj = context.code.list[context.codePointer]
+  let obj = context.code.items[context.codePointer]
   
   if (typeof obj === "string")
   {
@@ -169,7 +165,7 @@ VimanaInterp.prototype.doOneStep = function()
     return
   }
 
-  // If not a symbol, push it.
+  // If not a symbol, push it onto the stack
   this.stack.push(obj)
 }
 
@@ -182,28 +178,29 @@ VimanaInterp.prototype.addPrimFun = function(name, fun)
 
 VimanaInterp.prototype.pushContext = function(code, env = null)
 {
-  // Set env
+  // Set environment
   if (null === env)
   {
     env = (null !== code.env) ? code.env : this.currentContext.env
   }
 
-  // Check tail call
+  // Check tail call (note that currentContext is 
+  // undefined on the first call to pushContext)
   let context = this.currentContext
-  if (context && (context.codePointer + 1 >= context.code.list.length))
+  if (context && (context.codePointer + 1 >= context.code.items.length))
   {
     // Reuse current context
     context.codePointer = -1
     context.code = code
     context.env = env
-    //this.print("TAILCALL: " + this.contextIndex)
+    //this.print("TAILCALL: " + this.callstackIndex)
   }
   else
   {
     // Push new context
     this.currentContext = new VimanaContext(code, env)
     this.callstack.push(this.currentContext)
-    ++ this.contextIndex
+    ++ this.callstackIndex
   }
 
   //this.printContext(this.currentContext)
@@ -211,30 +208,10 @@ VimanaInterp.prototype.pushContext = function(code, env = null)
 
 VimanaInterp.prototype.popContext = function()
 {
-  -- this.contextIndex
+  -- this.callstackIndex
   this.callstack.pop()
-  this.currentContext = this.callstack[this.contextIndex]
+  this.currentContext = this.callstack[this.callstackIndex]
 }
-
-/*
-VimanaInterp.prototype.pop = function()
-{
-  return this.stack.pop()
-}
-  
-VimanaInterp.prototype.push = function(obj)
-{
-  this.stack.push(obj)
-  //this.printStack();
-}
-*/
-/*
-VimanaInterp.prototype.bindIfUnbound = function(list, env)
-{
-  if (null === list.env)
-    list.env = env
-}
-*/
 
 VimanaInterp.prototype.checkList = function(list, errorMessage)
 {
@@ -289,6 +266,6 @@ function VimanaParseTokens(tokens)
       next = next * 1 // Convert string to number
     }
     
-    list.push(next)
+    list.items.push(next)
   }
 }

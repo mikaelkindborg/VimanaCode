@@ -45,7 +45,17 @@ h2
   background-color: white;
 }
 
-output, code, stack, callstack, textarea
+.vimana-frame-output, 
+.vimana-frame-output textarea
+{
+  background-color: rgb(0,85,173);
+}
+.vimana-frame-output textarea
+{
+  color: white;
+}
+
+textarea
 {
   display: block;
   unicode-bidi: embed;

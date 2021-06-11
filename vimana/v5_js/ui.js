@@ -1,8 +1,7 @@
 
 VimanaInterp.prototype.print = function(s)
 {
-  let output = document.getElementsByTagName("output")[0]
-  output.insertAdjacentHTML("beforeend", s + "<br>")
+  VimanaPrint(s)
 }
 
 VimanaInterp.prototype.error = function(s)

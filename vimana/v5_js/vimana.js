@@ -1,19 +1,54 @@
 
-let vimana = new VimanaInterp()
-VimanaAddPrimFuns(vimana)
+window.VimanaCode = new VimanaInterp()
+VimanaAddPrimFuns(window.VimanaCode)
 
-function VimanaEval()
+// Evaluate a string.
+function VimanaEval(string)
 {
-  //let code = "(HELLO PRINT) EVAL  21 X SETGLOBAL  X PRINT  X 4 + 5 6 + + PRINT"
-  let code = document.getElementsByTagName("textarea")[0].value
-  //console.log("EVAL: " + code)
-  let list = VimanaParse(code)
-  //console.log("LIST: " + code)
-  //vimana.eval(list)
-  vimana.timerEval(list)
+  let list = VimanaParse(string)
+  window.VimanaCode.timerEval(list)
+  // This is faster, but is less resource friendly and 
+  // can slow down the browser
+  //window.VimanaCode.eval(list)
 }
 
-function VimanaBenchmark()
+// This function is used to call back from JS to Vimana
+function VimanaCallFun(funName, params = [])
+{
+  // Push params on stack (note the order)
+  for (let i = params.length - 1; i > -1; --i)
+  {
+    window.VimanaCode.stack.push(params[i])
+  }
+
+  // Lookup function in globalEnv
+  let fun = window.VimanaCode.globalEnv[funName]
+
+  // Call function
+  window.VimanaCode.pushContext(fun.code, {})
+}
+
+// UI commands, TODO: move to another file (workbench.js - rename ui.js)
+function VimanaDoEval()
+{
+  try
+  {
+    let code = document.getElementsByTagName("textarea")[0].value
+    VimanaEval(code)
+  }
+  catch (exception)
+  {
+    VimanaPrint(exception)
+  }
+}
+
+function VimanaPrint(obj)
+{
+  let output = document.getElementsByTagName("textarea")[1]
+  output.insertAdjacentHTML("beforeend", obj.toString() + "\n")
+}
+
+function VimanaDoBenchmark()
 {
 
   let code = `
@@ -23,9 +58,9 @@ function VimanaBenchmark()
   `
   let t0 = performance.now()
   let list = VimanaParse(code)
-  vimana.eval(list)
+  window.VimanaCode.eval(list)
   let t1 = performance.now()
-  vimana.print("VIMANA TIME: " + ((t1 - t0) / 1000) + "s")
+  window.VimanaCode.print("VIMANA TIME: " + ((t1 - t0) / 1000) + "s")
 
 /*
   let code = "(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF"
@@ -90,9 +125,12 @@ function VimanaBenchmark()
   // 0.9401600000001054s
   // I am very happy with this performance given the  
   // nature of the implementation of the interpreter
+
+  // 210611
+  // 0.9123999999985098s
 }
 
-function VimanaNativeBenchmark()
+function VimanaDoNativeBenchmark()
 {
   function fact(n)
   {

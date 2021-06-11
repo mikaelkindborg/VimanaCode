@@ -13,11 +13,28 @@
 
 <body>
 
+<script>
+function VimanaEval(code)
+{
+  console.log(code)
+}
+</script>
+
+<script src="hello.vimana"></script>
+
+  <script>
+    console.log("Hello")
+    
+  </script>
+
   <h1>WELCOME TO THE WONDERFUL WORLD OF VIMANA</h1>
 
-  <h2>PROGRAM</h2>
   <div class="vimana-frame vimana-frame-code">
-    <textarea style="height:200px;">HELLO-WORLD PRINT 
+<textarea style="height:200px;">VIMANA-USE-UPPERCASE
+(This is a comment. Comments are written inside a list that ends with doc. 
+Write code in this panel and press EVAL to run.) DOC
+
+HELLO-WORLD PRINT 
 
 (N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
 (L N REPEAT) (0 N ISBIGGER (L EVAL L N 1 - REPEAT) IFTRUE) DEF
@@ -34,8 +51,8 @@ FUBAR PRINT
 ) DEF
 
 (FOO) (
-  1 (N) =>
-  [N PRINT N 1 + (N) =>]
+  1 (N) SET
+  [N PRINT N 1 + (N) SET]
 ) DEF
 FOO (BLOCK) =>
 BLOCK EVAL
@@ -103,13 +120,31 @@ FOO
 ) DEF
 
 (FOO) (
-  20 (N) =>
+  20 (N) SET
   [N 0 ISSMALLER] [
     N PRINT
-    N 1 - (N) =>
+    N 1 - (N) SET
   ]
   WHILE
 ) DEF
+
+(Foo) (
+  20 (n) Set
+  [n 0 IsSmaller] [
+    n Print
+    n 1 - (n) Set
+  ]
+  While
+) Def
+
+(foo) (
+  20 (n) set
+  [n 0 isSmaller] [
+    n print
+    n 1 - (n) set
+  ]
+  while
+) def
 
 FOO
 
@@ -126,8 +161,23 @@ SPRITE 'X
 SET
 
 SPRITE (X)
-  SPRITE (X) GET 10 +
-SET
+  SPRITE (X) GETP 10 +
+SETP
+
+sprite(x)
+  sprite(x)getp 10 +
+setp
+
+sprite 10 20 (moveto) do
+sprite(show)do
+sprite(hide)do
+
+sprite 10 20 :moveto do
+
+
+sprite : x
+  sprite : x getp 10 +
+setp
 
 SPRITE X
   SPRITE X GET 10 +
@@ -149,29 +199,19 @@ DROP
 </textarea>
   </div>
 
-  <a class="vimana-button" onclick="VimanaEval()" href="javascript:void(0)">EVAL</a>
-  <a class="vimana-button" onclick="VimanaBenchmark()" href="javascript:void(0)">BENCHMARK</a>
-  <a class="vimana-button" onclick="VimanaNativeBenchmark()" href="javascript:void(0)">NATIVE BENCHMARK</a>
+  <a class="vimana-button" onclick="VimanaDoEval()" href="javascript:void(0)">EVAL</a>
+  <a class="vimana-button" onclick="VimanaDoBenchmark()" href="javascript:void(0)">BENCHMARK</a>
+  <a class="vimana-button" onclick="VimanaDoNativeBenchmark()" href="javascript:void(0)">NATIVE BENCHMARK</a>
 
-  <h2>OUTPUT</h2>
-  <div class="vimana-frame">
-    <output></output>
-  </div>
-
-  <h2>CALLSTACK</h2>
-  <div class="vimana-frame">
-    <callstack></callstack>
-  </div>
-
-  <h2>STACK</h2>
-  <div class="vimana-frame">
-    <stack></stack>
+  <div class="vimana-frame vimana-frame-output">
+    <textarea style="height:200px;"></textarea>
   </div>
 
   <script src="interp.js"></script>
   <script src="primfuns.js"></script>
   <script src="ui.js"></script>
   <script src="vimana.js"></script>
+  <!-- TODO: Load Vimana code for workbench, rename this file to workbench.js -->
 
 </body>
 
