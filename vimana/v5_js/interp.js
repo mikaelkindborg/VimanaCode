@@ -53,6 +53,7 @@ function VimanaInterp()
   this.currentContext = null;
   this.contextSwitch = true
   this.speed = 0 //50 // ms delay in eval loop
+  this.symbolCase = "upper-case"
 }
 
 VimanaInterp.prototype.evalSymbol = function(obj)
@@ -108,20 +109,16 @@ VimanaInterp.prototype.timerEval = function(code)
 
   function runTimer()
   {
-    // Run 20 loops one each timer call.
+    // Run 20 loops one each timer call
     for (let i = 0; i < 20; ++i)
     {
-      if (vimana.callstackIndex > -1)
-        vimana.evalNext()
+      if (vimana.callstackIndex < 0)
+        break
+      vimana.evalNext()
     }
 
     if (vimana.callstackIndex > -1)
       setTimeout(runTimer, vimana.speed)
-    else
-    {
-      //console.log("EXIT")
-      //vimana.printStack()
-    }
   }
 }
 
@@ -141,7 +138,6 @@ VimanaInterp.prototype.evalNext = function()
   }
 
   let obj = context.code.items[context.codePointer]
-  
   if (typeof obj === "string")
   {
     let primFun = this.primFuns[obj]
@@ -167,13 +163,6 @@ VimanaInterp.prototype.evalNext = function()
 
   // If not a symbol, push it onto the stack
   this.stack.push(obj)
-}
-
-VimanaInterp.prototype.addPrimFun = function(name, fun)
-{
-  // TODO: Specify case in interpreter settings.
-  name = name.toUpperCase()
-  this.primFuns[name] = fun
 }
 
 VimanaInterp.prototype.pushContext = function(code, env = null)
@@ -213,15 +202,25 @@ VimanaInterp.prototype.popContext = function()
   this.currentContext = this.callstack[this.callstackIndex]
 }
 
-VimanaInterp.prototype.checkList = function(list, errorMessage)
+VimanaInterp.prototype.mustBeList = function(list, errorMessage)
 {
   if (!VimanaIsList(list))
     this.error(errorMessage)
 }
 
+VimanaInterp.prototype.addPrimFun = function(name, fun)
+{
+  if (this.symbolCase === "upper-case")
+    name = name.toUpperCase()
+  else
+  if (this.symbolCase === "lower-case")
+    name = name.toLowerCase()
+  this.primFuns[name] = fun
+}
+
 // PARSER -------------------------------------------------
 
-// Parse (tokenize) a string and return a list.
+// Parse (tokenize) a string and return a list
 function VimanaParse(code)
 {
   code = code.replaceAll("(", " ( ")
@@ -238,7 +237,7 @@ function VimanaParse(code)
   return list
 }
 
-// Recursively create the list tree structure.
+// Recursively create the list tree structure
 function VimanaParseTokens(tokens)
 {
   let list = new VimanaList()
@@ -268,4 +267,64 @@ function VimanaParseTokens(tokens)
     
     list.items.push(next)
   }
+}
+
+// EVAL FUNCTIONS -----------------------------------------
+
+function VimanaInit()
+{
+  window.VimanaCode = new VimanaInterp()
+  VimanaAddPrimFuns(window.VimanaCode)
+}
+
+// Evaluate a string
+function VimanaEval(string)
+{
+  let list = VimanaParse(string)
+  window.VimanaCode.timerEval(list)
+  // eval  is faster than timerEval, but is less resource 
+  // friendly and can slow down the browser:
+  //window.VimanaCode.eval(list)
+}
+
+// This function is used to call back from JS to Vimana
+function VimanaCallFun(funName, params = [])
+{
+  // Push params on stack (note the order)
+  for (let i = params.length - 1; i > -1; --i)
+  {
+    window.VimanaCode.stack.push(params[i])
+  }
+
+  // Lookup function in globalEnv
+  let fun = window.VimanaCode.globalEnv[funName]
+
+  // Call function
+  window.VimanaCode.pushContext(fun.code, {})
+}
+
+// PRINT --------------------------------------------------
+
+// The idea is that you redefine this function for your UI
+VimanaInterp.prototype.print = function(s)
+{
+  console.log(s)
+}
+
+// ERROR HANDLING -----------------------------------------
+
+// Error handling is simple - an error aborts execution
+VimanaInterp.prototype.error = function(s)
+{
+  let guruMeditation = "Software Failure. Guru Meditation: " + s
+  this.print(guruMeditation)
+  let context = this.callstack[this.contextIndex]
+  let index = context.codePointer
+  let list = Array.from(context.code.list)
+  list.splice(index, 0, ">>>>")
+  this.print(JSON.stringify(list))
+  this.print(JSON.stringify(context))
+  //context = this.callstack[this.contextIndex - 1]
+  //this.print(JSON.stringify(context))
+  throw guruMeditation
 }

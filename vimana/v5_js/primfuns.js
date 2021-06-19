@@ -3,7 +3,7 @@ function VimanaAddPrimFuns(interp)
   interp.addPrimFun("eval", function(interp)
   {
     let list = interp.stack.pop()
-    interp.checkList(list, "eval: got non-list")
+    interp.mustBeList(list, "eval: got non-list")
     interp.pushContext(list)
   })
 
@@ -17,10 +17,6 @@ function VimanaAddPrimFuns(interp)
     interp.stack.pop()
   })
 
-  interp.addPrimFun("VIMANA-USE-UPPERCASE", function(interp)
-  {
-  })
-
   // Get value of a symbol
   interp.addPrimFun("value", function(interp)
   {  
@@ -28,10 +24,43 @@ function VimanaAddPrimFuns(interp)
     interp.stack.push(interp.evalSymbol(element))
   })
 
+  // Push next item in the code list without evaluating it
+  interp.addPrimFun("quote", function(interp)
+  {  
+    let context = interp.currentContext
+    let items = context.code.items
+    let codePointer = context.codePointer + 1
+    if (codePointer < items.length)
+    {
+      interp.stack.push(items[codePointer])
+      context.codePointer = codePointer
+    }
+    else
+      interp.error("quote: end of code list")
+  })
+
+  // Push next item in the parent context code list without evaluating it
+  interp.addPrimFun("nextParentItem", function(interp)
+  {
+    let index = interp.callstackIndex
+    if (index < 1)
+      interp.error("nextParentItem: no parent context")
+    let context = this.callstack[index - 1]
+    let items = context.code.items
+    let codePointer = context.codePointer + 1
+    if (codePointer < items.length)
+    {
+      interp.stack.push(items[codePointer])
+      context.codePointer = codePointer
+    }
+    else
+      interp.error("nextParentItem: end of code list")
+  })
+
   interp.addPrimFun("call", function(interp)
   {
     let list = interp.stack.pop()
-    interp.checkList(list, "call: got non-list")
+    interp.mustBeList(list, "call: got non-list")
     interp.pushContext(list, {})
   })
 
@@ -39,7 +68,7 @@ function VimanaAddPrimFuns(interp)
   interp.addPrimFun("bind", function(interp)
   {
     let list = interp.stack.pop()
-    interp.checkList(list, "bind: got non-list")
+    interp.mustBeList(list, "bind: got non-list")
     // Copy list
     let block = new VimanaList()
     //interp.print("BIND LIST: " + JSON.stringify(list))
@@ -50,11 +79,11 @@ function VimanaAddPrimFuns(interp)
   })
   
   // Set global variable
-  interp.addPrimFun("setglobal", function(interp)
+  interp.addPrimFun("setGlobal", function(interp)
   {
     //interp.print("STACK: " + JSON.stringify(interp.stack));
     let name = interp.stack.pop()
-    interp.checkList(name, "setglobal: name must be in a list")
+    interp.mustBeList(name, "setGlobal: name must be in a list")
     let value = interp.stack.pop()
     //interp.print("SETGLOBAL: " + name);
     interp.globalEnv[name.items[0]] = value
@@ -65,7 +94,7 @@ function VimanaAddPrimFuns(interp)
   interp.addPrimFun("first", function(interp)
   {
     let obj = interp.stack.pop()
-    interp.checkList(list, "first: got non-list")
+    interp.mustBeList(list, "first: got non-list")
     interp.stack.push(obj.items[0])
     //interp.printStack()
   })
@@ -74,7 +103,7 @@ function VimanaAddPrimFuns(interp)
   {
     // Get function definition
     let list = interp.stack.pop()
-    interp.checkList(list, "funify: got non-list")
+    interp.mustBeList(list, "funify: got non-list")
     // Create and push function object
     let fun = new VimanaFun(list)
     interp.stack.push(fun)
@@ -122,7 +151,7 @@ function VimanaAddPrimFuns(interp)
 
     // Get parameter list (includes function name as last element)
     let params = interp.stack.pop()
-    interp.checkList(params, "=> Got non-list")
+    interp.mustBeList(params, "setLocal: got non-list")
 
     // Pop and bind parameters
     for (let i = params.items.length - 1; i > -1; --i)
@@ -142,8 +171,8 @@ function VimanaAddPrimFuns(interp)
     let branch2 = interp.stack.pop()
     let branch1 = interp.stack.pop()
     let truth = interp.stack.pop()
-    //interp.checkList(branch1, "ifElse: branch1 is non-list")
-    //interp.checkList(branch1, "ifElse: branch2 is non-list")
+    interp.mustBeList(branch1, "ifElse: branch1 is non-list")
+    interp.mustBeList(branch2, "ifElse: branch2 is non-list")
     if (truth)
       interp.pushContext(branch1)
     else
@@ -154,7 +183,7 @@ function VimanaAddPrimFuns(interp)
   {
     let branch = interp.stack.pop()
     let truth = interp.stack.pop()
-    interp.checkList(branch, "ifTrue: branch is non-list")
+    interp.mustBeList(branch, "ifTrue: branch is non-list")
     if (truth)
       interp.pushContext(branch)
   })
@@ -219,5 +248,10 @@ function VimanaAddPrimFuns(interp)
   {
     let obj = interp.stack.pop()
     interp.print(JSON.stringify(obj))
+  })
+
+  interp.addPrimFun("printStack", function(interp)
+  {
+    interp.print(JSON.stringify(interp.stack))
   })
 }

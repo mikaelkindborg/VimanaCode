@@ -13,24 +13,79 @@
 
 <body>
 
-<script>
-function VimanaEval(code)
-{
-  console.log(code)
-}
-</script>
-
-<script src="hello.vimana"></script>
-
-  <script>
-    console.log("Hello")
-    
-  </script>
-
   <h1>WELCOME TO THE WONDERFUL WORLD OF VIMANA</h1>
 
+  <select class="vimana-workspace-menu" onchange="VimanaUISelectWorkspace(event)">
+    <option value="vimana-workspace-introduction">Introduction</option>
+    <option value="vimana-workspace-functions">Functions</option>
+    <option value="vimana-workspace-examples">Examples</option>
+    <option value="vimana-workspace-1">Workspace 1</option>
+    <option value="vimana-workspace-2">Workspace 2</option>
+    <option value="vimana-workspace-3">Workspace 3</option>
+    <option value="vimana-workspace-4">Workspace 4</option>
+    <option value="vimana-workspace-5">Workspace 5</option>
+  </select>
+
   <div class="vimana-frame vimana-frame-code">
-<textarea style="height:200px;">VIMANA-USE-UPPERCASE
+    <textarea style="height:250px;"></textarea>
+  </div>
+
+  <a class="vimana-button" onclick="VimanaUIEval()" href="javascript:void(0)">EVAL</a>
+  <a class="vimana-button" onclick="VimanaUIRunBenchmark()" href="javascript:void(0)">BENCHMARK</a>
+  <a class="vimana-button" onclick="VimanaUIRunNativeBenchmark()" href="javascript:void(0)">NATIVE BENCHMARK</a>
+
+  <div class="vimana-frame vimana-frame-output">
+    <textarea style="height:200px;"></textarea>
+  </div>
+
+  <script src="interp.js"></script>
+  <script src="primfuns.js"></script>
+  <script src="workbench.js"></script>
+
+<div class="vimana-workspace vimana-workspace-introduction">(THIS IS A COMMENT) DOC
+HELLO-WORLD PRINT
+(PRINT THIS LIST) PRINT
+(ADD SOME NUMBERS AND PRINT THE RESULT) DOC
+1 2 3 + + PRINT
+</div>
+
+<div class="vimana-workspace vimana-workspace-functions">(HERE IS HOW TO DEFINE FUNCTIONS) DOC
+
+(SAY-HELLO) (HELLO-WORLD PRINT) DEF
+SAY-HELLO <--THIS_CALLS_THE_FUNCTION DOC
+
+(N DOUBLE) (N N +) DEF
+54 DOUBLE 4 * PRINT
+
+(TRIPLE) ((N) => N 3 *) DEF <--ALTERNATIVE-STYLE DOC
+1111 TRIPLE PRINT
+</div>
+
+<div class="vimana-workspace vimana-workspace-examples">(RECURSIVE FACTORIAL) DOC
+(N FACT)
+  (N 0 EQ 
+    (1) 
+    (N 1 - FACT N *)
+  IFELSE) DEF
+20 FACT PRINT
+</div>
+
+<div class="vimana-workspace vimana-workspace-1">(WORKSPACE 1) DOC
+</div>
+
+<div class="vimana-workspace vimana-workspace-2">(WORKSPACE 2) DOC
+</div>
+
+<div class="vimana-workspace vimana-workspace-3">(WORKSPACE 3) DOC
+</div>
+
+<div class="vimana-workspace vimana-workspace-4">(WORKSPACE 4) DOC
+</div>
+
+<div class="vimana-workspace vimana-workspace-5">(WORKSPACE 5) DOC
+</div>
+
+<!--
 (This is a comment. Comments are written inside a list that ends with doc. 
 Write code in this panel and press EVAL to run.) DOC
 
@@ -170,7 +225,7 @@ setp
 
 sprite 10 20 (moveto) do
 sprite(show)do
-sprite(hide)do
+sprite (hide) do
 
 sprite 10 20 :moveto do
 
@@ -196,23 +251,15 @@ OBJ NAME GET:
 )
 DROP
 
-</textarea>
-  </div>
+<script>
+function VimanaEval(code)
+{
+  console.log(code)
+}
+</script>
+<script src="hello.vimana"></script>
 
-  <a class="vimana-button" onclick="VimanaDoEval()" href="javascript:void(0)">EVAL</a>
-  <a class="vimana-button" onclick="VimanaDoBenchmark()" href="javascript:void(0)">BENCHMARK</a>
-  <a class="vimana-button" onclick="VimanaDoNativeBenchmark()" href="javascript:void(0)">NATIVE BENCHMARK</a>
-
-  <div class="vimana-frame vimana-frame-output">
-    <textarea style="height:200px;"></textarea>
-  </div>
-
-  <script src="interp.js"></script>
-  <script src="primfuns.js"></script>
-  <script src="ui.js"></script>
-  <script src="vimana.js"></script>
-  <!-- TODO: Load Vimana code for workbench, rename this file to workbench.js -->
+-->
 
 </body>
-
 </html>

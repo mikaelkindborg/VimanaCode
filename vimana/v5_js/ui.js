@@ -1,23 +1,5 @@
 
-VimanaInterp.prototype.print = function(s)
-{
-  VimanaPrint(s)
-}
-
-VimanaInterp.prototype.error = function(s)
-{
-  let guruMeditation = "Software Failure. Guru Meditation: " + s
-  this.print(guruMeditation)
-  let context = this.callstack[this.contextIndex]
-  let index = context.codePointer
-  let list = Array.from(context.code.list)
-  list.splice(index, 0, ">>>>")
-  this.print(JSON.stringify(list))
-  this.print(JSON.stringify(context))
-  //context = this.callstack[this.contextIndex - 1]
-  //this.print(JSON.stringify(context))
-  throw guruMeditation
-}
+// THIS FILE IS NOT USED
 
 VimanaInterp.prototype.printTrace = function(s)
 {
