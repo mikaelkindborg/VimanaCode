@@ -37,7 +37,7 @@ h2
 .vimana-frame
 {
   padding: 6px;
-  border: 4px solid rgb(255,138,0);
+  border: 3px solid rgb(255,138,0);
 }
 
 .vimana-frame-code
@@ -72,10 +72,10 @@ textarea
   /*display: flex;*/
   display: inline-block;
   width: 100%;
-  max-width: 250px;
+  max-width: 240px;
   margin: 10px 0px;
-  padding: 10px;
-  border: 4px solid white;
+  padding: 5px;
+  border: 3px solid white;
   unicode-bidi: embed;
   font-family: monospace;
   white-space: pre;
@@ -102,8 +102,9 @@ textarea
 {
   margin: 0 0 5px 0;
   padding: 2px 10px;
+  font-family: monospace;
   font-size: 22px;
-  border: 4px solid white;
+  border: 3px solid white;
   background-color: rgb(0,85,173);
   color: white;
 }

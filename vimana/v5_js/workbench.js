@@ -1,17 +1,35 @@
 
+VimanaUIInit()
+
+function VimanaUIInit()
+{
+  VimanaInit()
+  VimanaInterp.prototype.print = VimanaUIPrint
+  VimanaUISelectWorkspace({ 
+    target: { value: "vimana-workspace-introduction" } 
+  })
+}
 
 function VimanaUISelectWorkspace(event)
 {
-    VimanaPrint(event.target.value)
-    let code = document.querySelector("." + event.target.value) 
-    let codeArea = document.getElementsByTagName("textarea")[0]
-    codeArea.value = code.textContent
+    window.VimanaUIWorkspace = event.target.value
+    VimanaUIPrint(VimanaUIWorkspace)
 
-    //localStorage.setItem('myCat', 'Gulliver');
-    //cat = localStorage.getItem('myCat');
+    let storedWorkspaceCode = localStorage.getItem(VimanaUIWorkspace)
+    let codeArea = document.getElementsByTagName("textarea")[0]
+    if (storedWorkspaceCode)
+      codeArea.value = storedWorkspaceCode 
+    else
+      codeArea.value = document.querySelector("." + VimanaUIWorkspace).textContent
 }
-// UI commands, TODO: move to another file (workbench.js - rename ui.js)
-function VimanaUIEval()
+
+function VimanaUISaveWorkspace()
+{
+  let codeArea = document.getElementsByTagName("textarea")[0]
+  localStorage.setItem(VimanaUIWorkspace, codeArea.value)
+}
+
+function VimanaUIEvalWorkspace()
 {
   try
   {
@@ -20,11 +38,26 @@ function VimanaUIEval()
   }
   catch (exception)
   {
-    VimanaPrint(exception)
+    VimanaUIPrint(exception)
   }
 }
 
-function VimanaPrint(obj)
+function VimanaUIEvalSelection()
+{
+  try
+  {
+    let textArea = document.getElementsByTagName("textarea")[0]
+    let code = textArea.value.substring(textArea.selectionStart, textArea.selectionEnd)
+    VimanaUIPrint(code)
+    VimanaEval(code)
+  }
+  catch (exception)
+  {
+    VimanaUIPrint(exception)
+  }
+}
+
+function VimanaUIPrint(obj)
 {
   let output = document.getElementsByTagName("textarea")[1]
   if (output.value.length > 0)
@@ -45,7 +78,7 @@ function VimanaUIRunBenchmark()
   let list = VimanaParse(code)
   window.VimanaCode.eval(list)
   let t1 = performance.now()
-  window.VimanaCode.print("VIMANA TIME (100,000 ITERATIONS): " + ((t1 - t0) / 1000) + "s")
+  VimanaUIPrint("VIMANA TIME (100,000 ITERATIONS): " + ((t1 - t0) / 1000) + "s")
 
 /*
   let code = "(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF"
@@ -130,7 +163,7 @@ function VimanaUIRunNativeBenchmark()
     fact(20)
   }
   let t2 = performance.now()
-  vimana.print("NATIVE TIME (10,000,000 ITERATIONS): " + ((t2 - t1) / 1000) + "s")
+  VimanaUIPrint("NATIVE TIME (10,000,000 ITERATIONS): " + ((t2 - t1) / 1000) + "s")
   //TIME: 0.04589500000292901s 100000 iterations
   //TIME: 2.1241850000005797s  10000000 iterations
 }

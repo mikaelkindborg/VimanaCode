@@ -7,7 +7,7 @@
   <meta name="copyright" content="(c) 2021 Mikael Kindborg. All Rights Reserved" />
   <title>VimanaCode</title>
   <style>
-    @import "vimana.css";
+    @import "workbench.css";
   </style>
 </head>
 
@@ -30,17 +30,15 @@
     <textarea style="height:250px;"></textarea>
   </div>
 
-  <a class="vimana-button" onclick="VimanaUIEval()" href="javascript:void(0)">EVAL</a>
+  <a class="vimana-button" onclick="VimanaUIEvalWorkspace()" href="javascript:void(0)">EVAL WORKSPACE</a>
+  <a class="vimana-button" onclick="VimanaUIEvalSelection()" href="javascript:void(0)">EVAL SELECTION</a>
+  <a class="vimana-button" onclick="VimanaUISaveWorkspace()" href="javascript:void(0)">SAVE WORKSPACE</a>
   <a class="vimana-button" onclick="VimanaUIRunBenchmark()" href="javascript:void(0)">BENCHMARK</a>
   <a class="vimana-button" onclick="VimanaUIRunNativeBenchmark()" href="javascript:void(0)">NATIVE BENCHMARK</a>
 
   <div class="vimana-frame vimana-frame-output">
     <textarea style="height:200px;"></textarea>
   </div>
-
-  <script src="interp.js"></script>
-  <script src="primfuns.js"></script>
-  <script src="workbench.js"></script>
 
 <div class="vimana-workspace vimana-workspace-introduction">(THIS IS A COMMENT) DOC
 HELLO-WORLD PRINT
@@ -84,6 +82,13 @@ SAY-HELLO <--THIS_CALLS_THE_FUNCTION DOC
 
 <div class="vimana-workspace vimana-workspace-5">(WORKSPACE 5) DOC
 </div>
+
+  <script src="interp.js"></script>
+  <script src="primfuns.js"></script>
+  <script src="workbench.js"></script>
+
+  </body>
+</html>
 
 <!--
 (This is a comment. Comments are written inside a list that ends with doc. 
@@ -260,6 +265,3 @@ function VimanaEval(code)
 <script src="hello.vimana"></script>
 
 -->
-
-</body>
-</html>
