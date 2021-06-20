@@ -1,13 +1,14 @@
 # Vimana
 
-DIY interpreter for a dynamic language influenced by Lisp and Forth.
+DIY interpreter for a dynamic language influenced by Forth and Lisp.
 
-Current implementation exists in two versions, written in PHP and in C.
-(There are three versions of the PHP implementation.)
+There are three different implementations of the interpreter, written in PHP, C, and JavaScript.
 
-The PHP version or JS version are by far the most friendly ones to get started with.
+The JavaScript version is the most complete recent one, and the most friendly to get started with. It runs in the browser and has a web UI with a coding workbench featuring Amiga-inspired colors.
 
-The JavaScript implementation is very basic, but it runs the factorial benchmark. I also started doing a simple coding workbench with Amiga-inspired colors.
+Kindly note that the JS version has many improvements and differs from the C and PHP version in syntax and evaluation order. My plan is to update the C version to match the JS version, and the the PHP version.
+
+The syntax documented below will therefore change. To view the recent syntax, use at the JS version.
 
 ## A Dynamic Language Playground 
 
@@ -46,9 +47,9 @@ Or:
 
 ## JS-version
 
-A version of JavaScript is now implemented, download and open this file in a web browser:
+Download the code and open this file in a web browser:
 
-    [vimana/v5_js/vimana.html](vimana/v5_js/vimana.html)
+    [vimana/v5_js/workbench.html](vimana/v5_js/workbench.html)
 
 ## PHP-version
 
@@ -96,11 +97,13 @@ The following are the performance test results for the interpreter and native co
 I have used factorial(20) with 10,000,000 iterations for the benchmark test.
 
     C:            0.84s (no compiler optimization)
-    JS:           2.12s
-    PHP:          6.14s
-    Python:      21.38s
+    JS:           2.12s (V8 running in Vivaldi browser, this is insanely fast)
+    PHP:          6.14s 
+    Python:      20.33s
+    Python3:     31.47s
     Vimana PHP: 433.00s (optimized version)
     Vimana JS:  425.00s (first version)
+    Vimana JS:   90.00s (latest version)
     Vimana C:   254.00s (first version)
     Vimana C:    26.61s (optimized version v4_c)
     Vimana C:    17.79s (optimized version v7_c branch performance)
@@ -108,6 +111,8 @@ I have used factorial(20) with 10,000,000 iterations for the benchmark test.
     Vimana C:    19.60s (optimized version v7_c with ref counting GC)
     Vimana C:    13.17s (same benchmark using Forth-style operations)
     Vimana C:    13.72s (Forth-style with ref counting GC)
+    Vimana C:    13.58s (Latest version with variables)
+    Vimana C:     9.94s (Latest version with Forth-style operations)
 
 My goal has been to be as fast as the Python benchmark, and the latest version is faster than that.
 
