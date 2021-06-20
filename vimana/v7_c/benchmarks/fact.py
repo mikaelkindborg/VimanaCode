@@ -17,6 +17,7 @@ def fact_iter(n):
   return res
 
 # python fact.py  20.33s user 0.04s system 99% cpu 20.400 total
+# python3 fact.py  31.47s user 0.06s system 97% cpu 32.201 total
 def test_fact_1():
   i = 0
   while i < 10000000:
@@ -47,7 +48,7 @@ def test_fact_iter():
     i = i + 1
   return res
 
-print(test_fact_iter())
+print(test_fact_1())
 
 #print(fact(500))
 
