@@ -1,0 +1,461 @@
+// WARNING: UNSTRUCTURED NOTES IN THIS DOCUMENT 
+
+<!--
+(This is a comment. Comments are written inside a list that ends with doc. 
+Write code in this panel and press EVAL to run.) DOC
+
+HELLO-WORLD PRINT 
+
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+(L N REPEAT) (0 N ISBIGGER (L EVAL L N 1 - REPEAT) IFTRUE) DEF
+(20 FACT PRINT) 3 REPEAT
+
+(
+22 (FUBAR) =>
+FUBAR PRINT 
+
+(FOO2) (
+  1 (N) =>
+  [N PRINT N 1 + (N) =>] (BAR) =>
+  BAR
+) DEF
+
+(FOO) (
+  1 (N) SET
+  [N PRINT N 1 + (N) SET]
+) DEF
+FOO (BLOCK) =>
+BLOCK EVAL
+BLOCK EVAL
+      
+(FOO) (
+  1 (N) =>
+  [N PRINT N 1 + (N) =>] (BAR) =>
+  BAR
+) DEF
+FOO EVAL
+
+) DROP
+
+(
+
+
+(L N REPEAT) (
+  0 N ISBIGGER
+    (L EVAL L N 1 - REPEAT)  
+  IFTRUE
+) DEF
+
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+(
+(6 FACT PRINT) 3 REPEAT
+(HELLO2 PRINT) BIND 3 REPEAT
+)
+DROP
+
+(FOO) (
+  (MYF) (N) =>
+  N PRINT
+    [N PRINT] 3 REPEAT
+) DEF
+
+FOO
+
+) DROP
+
+
+
+(
+
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+3 FACT PRINT
+
+) DROP
+
+(
+
+(WHILE) (
+  (COND BODY) =>
+  COND EVAL (
+    BODY EVAL
+    COND BODY WHILE) IFTRUE
+) DEF
+
+(FOO) (
+  10 (N) =>
+  (N 0 ISSMALLER) BIND
+    (N PRINT
+     N 1 - (N) =>) BIND
+  WHILE
+) DEF
+
+(FOO) (
+  20 (N) SET
+  [N 0 ISSMALLER] [
+    N PRINT
+    N 1 - (N) SET
+  ]
+  WHILE
+) DEF
+
+(Foo) (
+  20 (n) Set
+  [n 0 IsSmaller] [
+    n Print
+    n 1 - (n) Set
+  ]
+  While
+) Def
+
+(foo) (
+  20 (n) set
+  [n 0 isSmaller] [
+    n print
+    n 1 - (n) set
+  ]
+  while
+) def
+
+FOO
+
+) DROP
+
+(
+
+SPRITE :X
+  SPRITE :X GET 10 +
+SET
+
+SPRITE 'X
+  SPRITE 'X GET 10 +
+SET
+
+SPRITE (X)
+  SPRITE (X) GETP 10 +
+SETP
+
+sprite(x)
+  sprite(x)getp 10 +
+setp
+
+sprite 10 20 (moveto) do
+sprite(show)do
+sprite (hide) do
+
+sprite 10 20 :moveto do
+
+
+sprite : x
+  sprite : x getp 10 +
+setp
+
+SPRITE X
+  SPRITE X GET 10 +
+SET
+
+OBJ NAME LISA SET
+OBJ NAME GET:
+
+(HELLO PRINT) FUNIFY (FOO) FIRST SETGLOBAL FOO
+(HELLO PRINT) FUNIFY (FOO) SETGLOBAL FOO
+(FOO) (HELLO2 PRINT) DEF FOO
+(N DOUBLE) (N N +) DEF
+21 DOUBLE PRINT
+(FACT) ((N) => N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+6 FACT PRINT
+)
+DROP
+
+<script>
+function VimanaEval(code)
+{
+  console.log(code)
+}
+</script>
+<script src="hello.vimana"></script>
+
+-->
+
+// BENCHMARKS
+
+function VimanaUIEvalBenchmark()
+{
+  let code =
+    `(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+    (L N REPEAT) (0 N ISBIGGER (L EVAL L N 1 - REPEAT) IFTRUE) DEF
+    [20 FACT DROP] 100000 REPEAT`
+  let t0 = performance.now()
+  let list = VimanaParse(code)
+  window.VimanaCode.eval(list)
+  let t1 = performance.now()
+  VimanaUIPrint("VIMANA TIME (100,000 ITERATIONS): " + ((t1 - t0) / 1000) + "s")
+
+/*
+  let code = "(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF"
+  let list = VimanaParse(code)
+  vimana.eval(list)
+  code = "20 FACT DROP"
+  list = VimanaParse(code)
+  let t0 = performance.now()
+  for (let i = 0; i < 100000; i++)
+  {
+    //console.log("LOOP")
+    vimana.eval(list)
+  }
+  let t1 = performance.now()
+  vimana.print("VIMANA TIME: " + ((t1 - t0) / 1000) + "s")
+  vimana.print("STACKSIZE: " + vimana.stack.length)
+*/
+  // Version 1 in Vivaldi 
+  // VIMANA TIME: 4.252065000000584s
+
+  // Version 2 in Vivaldi 
+  // VIMANA TIME: 2.0683400000016263s
+
+  // Version 2 in Safari 
+  // VIMANA TIME: 5.48s
+
+  // With DEF called only once in benchmark
+  // VIMANA TIME: 1.9142899999969814s
+
+  // 210606 (branch js2)
+  // Version 3 in Vivaldi:
+  // 1.1230649999997695s
+
+  // With VimanaNum object:
+  // 1.2570550000000367s
+
+  // Without number object:
+  // 1.187684999999874s
+
+  // Some inlining in interp.evalSymbol:
+  // 1.1437999999998283s
+
+  // Optimized context referencing in interpreter loop:
+  // 1.0306600000003527s
+
+  // Using JS booleans:
+  // 0.9029350000000704s
+  // 0.8519100000012259s
+
+  // 210608 (branch js2)
+  // Tailcall version:
+  // 0.8155650000007881s
+
+  // Some further cleanup:
+  // 0.7900100000006205s
+
+  // Removal of redundant evalSymbol:
+  // 0.7702100000005885s
+
+  // 210608 
+  // New benchmark using REPEAT:
+  // 0.9401600000001054s
+  // I am very happy with this performance given the  
+  // nature of the implementation of the interpreter
+
+  // 210611
+  // 0.9123999999985098s
+}
+
+function VimanaUIRunNativeBenchmark()
+{
+  function fact(n)
+  {
+    if (n === 0)
+      return 1
+    else 
+      return n * fact(n - 1)
+  }
+  let t1 = performance.now()
+  for (let i = 0; i < 10000000; i++)
+  {
+    fact(20)
+  }
+  let t2 = performance.now()
+  VimanaUIPrint("NATIVE TIME (10,000,000 ITERATIONS): " + ((t2 - t1) / 1000) + "s")
+  //TIME: 0.04589500000292901s 100000 iterations
+  //TIME: 2.1241850000005797s  10000000 iterations
+}
+
+// THIS FILE IS NOT USED
+
+VimanaInterp.prototype.printTrace = function(s)
+{
+  let stack = document.getElementsByTagName("stack")[0]
+  stack.insertAdjacentHTML("beforeend", s + "<br>")
+}
+
+VimanaInterp.prototype.printStack = function()
+{
+  let s = JSON.stringify(this.stack)
+  this.printTrace(s)
+}
+
+VimanaInterp.prototype.printFunCall = function(name)
+{
+  let s = "CALLING: " + name
+  this.printTrace(s)
+}
+
+VimanaInterp.prototype.printContext = function(context)
+{
+  let callstack = document.getElementsByTagName("callstack")[0]
+  let s = JSON.stringify(context)
+  //callstack.innerHTML = s
+  callstack.insertAdjacentHTML("beforeend", s + "<br>")
+}
+
+// OLD INTERPETER CODE
+
+/*
+function clone(obj)
+{
+  this.foo = obj.foo;
+  this.bar = obj.bar;
+}
+var obj2 = new clone(obj);
+*/
+
+let interp = InterpCreate()
+InterpAddPrimFuns(interp)
+
+function doEval()
+{
+  //let code = "(HELLO PRINT) DO  21 X SET  X PRINT  X 4 + 5 6 + + PRINT"
+  let code = document.getElementsByTagName("textarea")[0].value
+  console.log("EVAL: " + code)
+  let list = interp.parse(code)
+  console.log("LIST: " + code)
+  interp.eval(list)
+}
+
+/*
+let code = "((N) (N 0 EQ (1) (N 1 - FACT N *) IFELSE)) FUN FACT SET 20 FACT"
+let list = interp.parse(code)
+let t0 = performance.now()
+for (let i = 0; i < 100000; i++)
+{
+  interp.eval(list)
+}
+let t1 = performance.now()
+console.log("TIME: " + ((t1 - t0) / 1000) + "s")
+//TIME: 4.252065000000584s
+*/
+
+/*
+function fact(n)
+{
+  if (n === 0)
+    return 1
+  else 
+    return n * fact(n - 1)
+}
+let t0 = performance.now()
+for (let i = 0; i < 10000000; i++)
+{
+  fact(20)
+}
+let t1 = performance.now()
+console.log("TIME: " + ((t1 - t0) / 1000) + "s")
+//TIME: 0.04589500000292901s 100000 iterations
+//TIME: 2.1241850000005797s  10000000 iterations
+*/
+
+/*****************************************************/
+/*
+Eval without timer.
+  function Eval(code)
+  {
+    // Push root context
+    PushContext(CreateContext(code))
+
+    while (interp.contextIndex > -1)
+    {
+
+      let context = GetContext(interp.contextIndex)
+
+      context.codePointer ++
+      
+      if (context.codePointer >= context.code.length)
+      {
+        PopContext()
+        continue
+      }
+      
+      PrintStack()
+      
+      let x = context.code[context.codePointer]
+      
+      let primFun = interp.primFuns[x]
+      if (primFun)
+      {
+        PrintFunCall(x)
+        primFun(interp)
+        continue
+      }
+      
+      let value = EvalSymbol(x)
+      if (IsFun(value))
+      {
+        PrintFunCall(x)
+        EvalFun(interp, value)
+        continue
+      }
+      
+      Push(x)
+    }
+  }
+*/
+
+
+/*
+OLD VERSION
+  function EvalListWithTimer(list)
+  {
+    let codePointer = -1
+
+    function RunTimer()
+    {
+      Run()
+      if (codePointer < list.length)
+        setTimeout(RunTimer, 1000)
+    }
+
+    function Run()
+    {
+      codePointer ++
+      
+      if (codePointer >= list.length)
+        return
+      
+      let x = list[codePointer]
+      
+      let primFun = interp.primFuns[x]
+      if (primFun)
+      {
+        PrintFunCall(x)
+        primFun(interp)
+        PrintTrace("PRIMFUN")
+        PrintStack()
+        return
+      }
+      
+      let value = EvalSymbol(x)
+      if (IsFun(value))
+      {
+        PrintFunCall(x)
+        EvalFun(interp, value)
+        PrintTrace("FUN")
+        PrintStack()
+        return
+      }
+      
+      Push(x)
+      PrintTrace("PUSH")
+      PrintStack()
+    }
+
+    RunTimer()
+  }
+*/

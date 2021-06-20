@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0, shrink-to-fit=no" />
+  <meta name="copyright" content="(c) 2021 Mikael Kindborg. All Rights Reserved" />
+  <title>VimanaCode</title>
+  <style>
+    @import "workbench.css";
+  </style>
+</head>
+
+<body>
+
+  <h1>Welcome to the Wonderful World of Vimana</h1>
+
+  <div>
+    <select class="vimana-dropdown-menu vimana-workspace-menu" onchange="VimanaUISelectWorkspace(event)">
+      <option value="vimana-workspace-introduction">Introduction</option>
+      <option value="vimana-workspace-functions">Functions</option>
+      <option value="vimana-workspace-examples">Examples</option>
+      <option value="vimana-benchmark">Benchmark</option>
+      <option value="vimana-workspace-1">Workspace 1</option>
+      <option value="vimana-workspace-2">Workspace 2</option>
+      <option value="vimana-workspace-3">Workspace 3</option>
+      <option value="vimana-workspace-4">Workspace 4</option>
+    </select>
+
+    <select class="vimana-dropdown-menu vimana-command-menu" onchange="VimanaUIDoMenuCommand(event)">
+      <option value="vimana-menu">Commands</option>
+      <option value="vimana-save-workspace">Save Workspace</option>
+      <option value="vimana-list-primfuns">List PrimFuns</option>
+      <option value="vimana-eval-benchmark">Eval Benchmark</option>
+      <option value="vimana-reset-workspace">Reset Workspace</option>
+      <option value="vimana-open-github">Open GitHub</option>
+      <option value="vimana-about">About</option>
+    </select>
+  </div>
+
+  <div class="vimana-frame vimana-frame-code">
+    <textarea></textarea>
+  </div>
+
+  <div class="vimana-button-bar">
+    <a class="vimana-button" onclick="VimanaUIEvalWorkspace()" href="javascript:void(0)">EVAL WORKSPACE</a>
+    <a class="vimana-button" onclick="VimanaUIEvalSelection()" href="javascript:void(0)">EVAL SELECTION</a>
+    <a class="vimana-button" onclick="VimanaUIPrintStack()" href="javascript:void(0)">PRINT STACK</a>
+    <a class="vimana-button" onclick="VimanaUIClearOutput()" href="javascript:void(0)">CLEAR OUTPUT</a>
+    <a class="vimana-button" onclick="VimanaUIDisplayMantra()" href="javascript:void(0)">DISPLAY MANTRA</a>
+    <!--<a class="vimana-button" onclick="VimanaUISaveWorkspace()" href="javascript:void(0)">SAVE WORKSPACE</a>
+    <a class="vimana-button" onclick="VimanaUIEvalBenchmark()" href="javascript:void(0)">EVAL BENCHMARK</a>
+    <a class="vimana-button" onclick="VimanaUIRunNativeBenchmark()" href="javascript:void(0)">JS BENCHMARK</a>-->
+  </div>
+
+  <div class="vimana-frame vimana-frame-output">
+    <textarea></textarea>
+  </div>
+
+<div class="vimana-workspace vimana-workspace-introduction">(This is a comment) DOC
+This-is-also-a-comment DOC
+(But it is safer to put comments inside a list, like this.) DOC
+(DOC is a function that pops the previous item off the data stack. We could have left it out, but then the data stack would be filled with lists like this one.) DOC
+
+( Introduction to Vimana
+--------------------------
+
+Welcome to the Wonderful World of Vimana. I hope that you will enjoy this experimental DIY-oriented programming language as much as I do.
+
+Vimana is like Forth in that it uses a data stack for evaluating the program. 
+
+Everything in the program (symbols, numbers and lists) are pushed onto the data stack, until a function symbol is found. When a function is found, it is called, and it can pop data from the stack and push back data to the stack. 
+
+A function always appears after the parameters. This is called "Reverse Polish Notation", or "Postfix Notation". 
+
+Vimana is also inspired by Lisp. Vimana has symbols and lists, like Lisp. But unlike both Vimana and Forth, Lisp uses prefix notation. One could say that Vimana is the reverse of Lisp. For example, in Lisp, lists are evaluated by default, but in Vimana, lists are quoted by default.
+
+Vimana exists for the joy of programming. It is a hobby project. It is not meant to replace Forth, Lisp, or any other language. Rather, it is meant to be fun, creative, possibly challenging, and a bit mind-bending.
+
+The roots of Vimana is MacLisp, an early dialect of Lisp created in 1966 by Richard D. Greenblatt. When I first launched the MacLisp system on a time-sharing computer in the fall of 1983, it greeted you with: "Welcome to the Wonderful World of MacLisp". And a wonderful world it was.
+
+MacLisp, as many other early programming languages used UPPER CASE SYMBOLS. Vimana is case sensitive, and you can use any case you prefer. The primitive built-in functions in Vimana, can be configured to be mixedCase, lower case, or UPPER CASE. In this workbench UPPER CASE is used. Because of the retro feeling.
+
+Amiga is another source of inspiration. BASIC on the Amiga used UPPER CASE as well. The Workbench UI on this web page has Amiga-inspired colours, white, black, blue and orange. It looks tacky and old-school, and bring back memories from a less complex time.
+
+Vimana is meant to be a small language. The interpreter and primitive functions are around 600 lines of JavaScript code. And most importantly, it is meant to be a DIY-language, a Do-It-Yourself programming language, meaning that you can modify the interpreter and the primitives and experimented with your own variations of the language. Goto GitHub to get the source code (see "Commands" menu).
+) DOC
+
+(Press the "EVAL WORKSPACE" button to run the following code examples.) DOC
+
+(PRINT THIS LIST) PRINT
+1 2 3 + + PRINT
+80 2 / 2 + PRINT
+</div>
+
+<div class="vimana-workspace vimana-workspace-functions">(Here is how you define and call functions. Note that there are two styles for function parameter definitions. The first style uses a list with the parameters in the order they appear on the stack followed by the function name. The second style uses a parameter list and an arrow function in the function body. The arrow function binds the parameters on the stack to the local variables in the list.) DOC
+
+(SAY-HELLO) (HELLO-WORLD PRINT) DEF
+SAY-HELLO <--This-calls-the-function DOC
+
+(N DOUBLE) (N N +) DEF
+54 DOUBLE 4 * PRINT
+
+(TRIPLE) ((N) => N 3 *) DEF <--Alternative-style-for-binding-local-variables DOC
+1111 TRIPLE PRINT
+
+(A Vimana program is a list. A function is also a list. A list can contain symbols, nu,bers and child lists. 
+
+When program is evaluated, the items in the list are pushed onto the data stack.  If a variable is found (a symbol bound to a value), the value of the symbol is pushed onto the stack. If the symbol is not bound, the symbol itself is pushed onto the stack. If a list is found, it is pushed onto the stack, without being evaluated.
+
+If a function symbol is found, the list that contains the code of the function is evaluated.
+
+Those are the basic rules of how Vimana code works. 
+
+Now, lets look at an example:
+
+(1) Select these three numbers: 11 22 33 (just as you would select text in a text editor), and press the button "EVAL SELECTION" followed by "PRINT STACK"
+(2) Now select: + (just the + sign), and press "EVAL SELECTION" followed by "PRINT STACK"
+(3) Select and evaluate + one more time, and print the stack
+(4) Finally select: PRINT (the word PRINT), evaluate it and print the stack (the stack should now be empty)
+
+Here is how it works. The + function pops two items off the stack and pushes back the sum. The PRINT function pops one item off the stack and prints it, but it does not push anything back.
+
+The above gives a glimpse of how stack-oriented languages work.) DOC
+</div>
+
+<div class="vimana-workspace vimana-workspace-examples">(Recursive factorial function) DOC
+(N FACT)
+  (N 0 EQ 
+    (1) 
+    (N 1 - FACT N *)
+  IFELSE) DEF
+10 FACT PRINT
+
+(Here is some kind of closure) DOC
+(MAKE-COUNTER) (0 (N) SET [N 1 + (N) SET N PRINT]) DEF
+MAKE-COUNTER (MYCOUNTER) SETGLOBAL
+MYCOUNTER EVAL
+MYCOUNTER EVAL
+MYCOUNTER EVAL
+
+(Now select MYCOUNTER EVAL and press "EVAL SELECTION", and see what happens.) DOC
+
+(You can also select and evaluate MYCOUNTER PRINT to print the code for the closure. (MAKE-COUNTER) FIRST VALUE PRINT is perhaps a bit more mind-boggling and lengthy, but it illustrates how to quote a function and get its value.) DOC
+
+(SET and SETGLOBAL pops the topmost item off the stack and binds it to a variable. Note that the variable name is within parens, like this: (N). That quotes the variable, that is, prevents it from being evaluated. 
+
+The square brackets [] creates a form of "closure", a list that is associated with the current environment for variable bindings. When you call EVAL to evaluate this list, it remembers its local variables. You could also use the BIND function to create a closure. [FOO] is the same as (FOO) BIND.
+) DOC
+</div>
+
+<!-- N PRINT (N is unbound in the top-level environment and therefore evaluates to itself) DOC -->
+
+<div class="vimana-workspace vimana-benchmark">(DO NOT PRESS THE EVAL BUTTON for this example. 
+
+This is a benchmark for Vimana that would take a very long time to run using the EVAL button. Instead, select "Eval Benchmark" from the Commands menu to run this code. This command runs the code in the current workspace at the fastest possible speed (blocking the browser UI). 
+
+The time will be displayed in the output frame. On my machine, this benchmark runs at around 4.5 seconds in the Vivaldi browser (V8 JS engine). To compare, Python3 is around 1.5 seconds for the same benchmark.
+) DOC
+
+(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
+(L N REPEAT) (0 N ISBIGGER (L EVAL L N 1 - REPEAT) IFTRUE) DEF
+[20 FACT DROP] 500000 REPEAT
+</div>
+
+<div class="vimana-workspace vimana-workspace-1">(Workspace 1 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
+</div>
+
+<div class="vimana-workspace vimana-workspace-2">(Workspace 2 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
+</div>
+
+<div class="vimana-workspace vimana-workspace-3">(Workspace 3 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
+</div>
+
+<div class="vimana-workspace vimana-workspace-4">(Workspace 4 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
+</div>
+
+  <script src="interp.js"></script>
+  <script src="primfuns.js"></script>
+  <script src="workbench.js"></script>
+
+  </body>
+</html>
