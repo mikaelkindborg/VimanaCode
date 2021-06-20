@@ -1,3 +1,9 @@
+//
+// File: workbench.js
+// Vimana workbench UI
+// Copyright (c) 2021 Mikael Kindborg
+// mikael@kindborg.com
+//
 
 VimanaUIInit()
 
@@ -5,28 +11,90 @@ function VimanaUIInit()
 {
   VimanaInit()
   VimanaInterp.prototype.print = VimanaUIPrint
-  VimanaUISelectWorkspace({ 
-    target: { value: "vimana-workspace-introduction" } 
-  })
+  VimanaUISelectWorkspace({ target: { value: "vimana-workspace-introduction" } })
+}
+
+function VimanaUIDoMenuCommand(event)
+{
+  let command = event.target.value
+  if ("vimana-list-primfuns" === command)
+    VimanaUIListPrimFuns()
+  else
+  if ("vimana-save-workspace" === command)
+    VimanaUISaveWorkspace()
+  else
+  if ("vimana-eval-benchmark" === command)
+    VimanaUIEvalBenchmark()
+  else
+  if ("vimana-reset-workspace" === command)
+    VimanaUIResetWorkspace()
+  else
+  if ("vimana-open-github" === command)
+    VimanaUIOpenGitHub()
+  else
+  if ("vimana-display-mantra" === command)
+    VimanaUIDisplayMantra()
+  else
+  if ("vimana-about" === command)
+    VimanaUIAbout()
+  let menu = document.querySelector(".vimana-command-menu")
+  menu.selectedIndex = 0
 }
 
 function VimanaUISelectWorkspace(event)
 {
-    window.VimanaUIWorkspace = event.target.value
-    VimanaUIPrint(VimanaUIWorkspace)
-
-    let storedWorkspaceCode = localStorage.getItem(VimanaUIWorkspace)
-    let codeArea = document.getElementsByTagName("textarea")[0]
-    if (storedWorkspaceCode)
-      codeArea.value = storedWorkspaceCode 
-    else
-      codeArea.value = document.querySelector("." + VimanaUIWorkspace).textContent
+  window.VimanaUIWorkspace = event.target.value
+  let storedWorkspaceCode = localStorage.getItem(VimanaUIWorkspace)
+  let codeArea = document.getElementsByTagName("textarea")[0]
+  if (storedWorkspaceCode)
+    codeArea.value = storedWorkspaceCode 
+  else
+    codeArea.value = document.querySelector("." + VimanaUIWorkspace).textContent
+  codeArea.scrollTop = 0
 }
 
 function VimanaUISaveWorkspace()
 {
   let codeArea = document.getElementsByTagName("textarea")[0]
   localStorage.setItem(VimanaUIWorkspace, codeArea.value)
+}
+
+function VimanaUIResetWorkspace()
+{
+  let yes = window.confirm("This will cause any edits you have made in this workspace to be lost. Do you wish to proceed?")
+  if (yes) 
+  {
+    localStorage.removeItem(VimanaUIWorkspace)
+    VimanaUISelectWorkspace({ target: { value: VimanaUIWorkspace } })
+  }
+}
+
+function VimanaUIClearOutput()
+{
+  document.getElementsByTagName("textarea")[1].value = ""
+}
+
+function VimanaUIListPrimFuns()
+{
+  VimanaUIPrint("Listing Built-in Functions (some of these are very experimental):")
+  let primFuns = window.VimanaCode.primFuns
+  for (let key in primFuns)
+    VimanaUIPrint(key)
+}
+
+function VimanaUIOpenGitHub()
+{
+  window.location.href = "https://github.com/mikaelkindborg/VimanaCode"
+}
+
+function VimanaUIDisplayMantra()
+{
+  VimanaEval("(I am present) TOSTRING PRINT")
+}
+
+function VimanaUIAbout()
+{
+  VimanaEval("(My name is Mikael Kindborg. I created Vimana as a hobby project. I have programmed computers for more than 35 years in 35 different programming languages, but this is is the first time I have created my own language.) TOSTRING PRINT")
 }
 
 function VimanaUIEvalWorkspace()
@@ -38,7 +106,8 @@ function VimanaUIEvalWorkspace()
   }
   catch (exception)
   {
-    VimanaUIPrint(exception)
+    VimanaUIPrintException(exception)
+    throw execption
   }
 }
 
@@ -48,12 +117,12 @@ function VimanaUIEvalSelection()
   {
     let textArea = document.getElementsByTagName("textarea")[0]
     let code = textArea.value.substring(textArea.selectionStart, textArea.selectionEnd)
-    VimanaUIPrint(code)
     VimanaEval(code)
   }
   catch (exception)
   {
-    VimanaUIPrint(exception)
+    VimanaUIPrintException(exception)
+    throw exception
   }
 }
 
@@ -61,15 +130,50 @@ function VimanaUIPrint(obj)
 {
   let output = document.getElementsByTagName("textarea")[1]
   if (output.value.length > 0)
-    output.value = output.value + "\n" + obj.toString()
+    output.value = output.value + "\n" + VimanaPrettyPrint(obj) //obj.toString()
   else
-    output.value = obj.toString()
+    output.value = VimanaPrettyPrint(obj) //obj.toString()
   //output.insertAdjacentHTML("beforeend", obj.toString() + "\n")
   output.scrollTop = output.scrollHeight;
 }
 
-function VimanaUIRunBenchmark()
+function VimanaUIPrintStack()
 {
+  VimanaUIPrint("STACK: " + VimanaPrettyPrint(window.VimanaCode.stack)) //JSON.stringify(window.VimanaCode.stack))
+}
+
+function VimanaUIPrintException(exception)
+{
+  VimanaUIPrint(exception)
+  let interp = VimanaCode
+  let context = interp.callstack[interp.callstackIndex]
+  let index = context.codePointer
+  let list = Array.from(context.code.items)
+  list.splice(index, 0, "ERROR HERE >>>>")
+  VimanaUIPrint("CODE: " + JSON.stringify(list))
+  VimanaUIPrint("CONTEXT: " + JSON.stringify(context))
+}
+
+function VimanaUIEvalBenchmark()
+{
+  VimanaUIPrint("PLEASE WAIT...")
+  setTimeout(function() {
+    try
+    {
+      let code = document.getElementsByTagName("textarea")[0].value
+      let t0 = performance.now()
+      VimanaEvalFast(code)
+      let t1 = performance.now()
+      VimanaUIPrint("TIME: " + ((t1 - t0) / 1000) + "s")
+    }
+    catch (exception)
+    {
+      VimanaUIPrintException(exception)
+      throw exception
+    }
+  }, 100)
+
+/*
   let code =
     `(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF
     (L N REPEAT) (0 N ISBIGGER (L EVAL L N 1 - REPEAT) IFTRUE) DEF
@@ -80,7 +184,6 @@ function VimanaUIRunBenchmark()
   let t1 = performance.now()
   VimanaUIPrint("VIMANA TIME (100,000 ITERATIONS): " + ((t1 - t0) / 1000) + "s")
 
-/*
   let code = "(N FACT) (N 0 EQ (1) (N 1 - FACT N *) IFELSE) DEF"
   let list = VimanaParse(code)
   vimana.eval(list)
@@ -143,9 +246,10 @@ function VimanaUIRunBenchmark()
   // 0.9401600000001054s
   // I am very happy with this performance given the  
   // nature of the implementation of the interpreter
-
   // 210611
   // 0.9123999999985098s
+  // 210620
+  // 0.9001000000005588s
 }
 
 function VimanaUIRunNativeBenchmark()

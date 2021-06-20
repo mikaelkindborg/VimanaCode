@@ -1,26 +1,33 @@
+//
+// File: primfuns.js
+// Vimana interpreter primitive functions
+// Copyright (c) 2021 Mikael Kindborg
+// mikael@kindborg.com
+//
+
 function VimanaAddPrimFuns(interp)
 {
   interp.addPrimFun("eval", function(interp)
   {
-    let list = interp.stack.pop()
+    let list = interp.popStack()
     interp.mustBeList(list, "eval: got non-list")
     interp.pushContext(list)
   })
 
   interp.addPrimFun("drop", function(interp)
   {
-    interp.stack.pop()
+    interp.popStack()
   })
 
   interp.addPrimFun("doc", function(interp)
   {
-    interp.stack.pop()
+    interp.popStack()
   })
 
   // Get value of a symbol
   interp.addPrimFun("value", function(interp)
   {  
-    let element = interp.stack.pop()
+    let element = interp.popStack()
     interp.stack.push(interp.evalSymbol(element))
   })
 
@@ -59,7 +66,7 @@ function VimanaAddPrimFuns(interp)
 
   interp.addPrimFun("call", function(interp)
   {
-    let list = interp.stack.pop()
+    let list = interp.popStack()
     interp.mustBeList(list, "call: got non-list")
     interp.pushContext(list, {})
   })
@@ -67,7 +74,7 @@ function VimanaAddPrimFuns(interp)
   // Push a shallow copy bound to current env
   interp.addPrimFun("bind", function(interp)
   {
-    let list = interp.stack.pop()
+    let list = interp.popStack()
     interp.mustBeList(list, "bind: got non-list")
     // Copy list
     let block = new VimanaList()
@@ -82,9 +89,9 @@ function VimanaAddPrimFuns(interp)
   interp.addPrimFun("setGlobal", function(interp)
   {
     //interp.print("STACK: " + JSON.stringify(interp.stack));
-    let name = interp.stack.pop()
+    let name = interp.popStack()
     interp.mustBeList(name, "setGlobal: name must be in a list")
-    let value = interp.stack.pop()
+    let value = interp.popStack()
     //interp.print("SETGLOBAL: " + name);
     interp.globalEnv[name.items[0]] = value
     //interp.print("GLOBALENV: " + JSON.stringify(interp.globalEnv));
@@ -93,16 +100,16 @@ function VimanaAddPrimFuns(interp)
   // Get value of element quoted by a list
   interp.addPrimFun("first", function(interp)
   {
-    let obj = interp.stack.pop()
+    let list = interp.popStack()
     interp.mustBeList(list, "first: got non-list")
-    interp.stack.push(obj.items[0])
+    interp.stack.push(list.items[0])
     //interp.printStack()
   })
 
   interp.addPrimFun("funify", function(interp)
   {
     // Get function definition
-    let list = interp.stack.pop()
+    let list = interp.popStack()
     interp.mustBeList(list, "funify: got non-list")
     // Create and push function object
     let fun = new VimanaFun(list)
@@ -115,13 +122,13 @@ function VimanaAddPrimFuns(interp)
   interp.addPrimFun("def", function(interp)
   {
     // Get function body
-    let body = interp.stack.pop()
-    if (!VimanaIsList(body) && body.items.length < 1)
+    let body = interp.popStack()
+    if (!VimanaObjectIsList(body) && body.items.length < 1)
       interp.error("def: non-list or empty body")
     
     // Get function header
-    let header = interp.stack.pop()
-    if (!VimanaIsList(header) && header.items.length < 1)
+    let header = interp.popStack()
+    if (!VimanaObjectIsList(header) && header.items.length < 1)
       interp.error("def: non-list or empty header")
 
     let funName
@@ -150,14 +157,14 @@ function VimanaAddPrimFuns(interp)
     let env = context.env
 
     // Get parameter list (includes function name as last element)
-    let params = interp.stack.pop()
+    let params = interp.popStack()
     interp.mustBeList(params, "setLocal: got non-list")
 
     // Pop and bind parameters
     for (let i = params.items.length - 1; i > -1; --i)
     {
       let param = params.items[i]
-      let value = interp.stack.pop()
+      let value = interp.popStack()
       env[param] = value
       //interp.print("ENV: " + JSON.stringify(env))
     }
@@ -168,9 +175,9 @@ function VimanaAddPrimFuns(interp)
 
   interp.addPrimFun("ifElse", function(interp)
   {
-    let branch2 = interp.stack.pop()
-    let branch1 = interp.stack.pop()
-    let truth = interp.stack.pop()
+    let branch2 = interp.popStack()
+    let branch1 = interp.popStack()
+    let truth = interp.popStack()
     interp.mustBeList(branch1, "ifElse: branch1 is non-list")
     interp.mustBeList(branch2, "ifElse: branch2 is non-list")
     if (truth)
@@ -181,8 +188,8 @@ function VimanaAddPrimFuns(interp)
 
   interp.addPrimFun("ifTrue", function(interp)
   {
-    let branch = interp.stack.pop()
-    let truth = interp.stack.pop()
+    let branch = interp.popStack()
+    let truth = interp.popStack()
     interp.mustBeList(branch, "ifTrue: branch is non-list")
     if (truth)
       interp.pushContext(branch)
@@ -190,68 +197,76 @@ function VimanaAddPrimFuns(interp)
 
   interp.addPrimFun("eq", function(interp)
   {
-    let b = interp.stack.pop()
-    let a = interp.stack.pop()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a === b)
   })
 
   interp.addPrimFun("not", function(interp)
   {
-    let a = interp.stack.pop()
+    let a = interp.popStack()
     interp.stack.push(!a)
   })
 
   interp.addPrimFun("isSmaller", function(interp)
   {
-    let b = interp.stack.pop()
-    let a = interp.stack.pop()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a > b)
   })
 
   interp.addPrimFun("isBigger", function(interp)
   {
-    let b = interp.stack.pop()
-    let a = interp.stack.pop()
+    let b = interp.popStack()
+    let a = interp.popStack()
     //interp.print("ISBIGGER " + a + " " + b)
     interp.stack.push(a < b)
   })
 
   interp.addPrimFun("+", function(interp)
   {
-    let b = interp.stack.pop()
-    let a = interp.stack.pop()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a + b)
   })
 
   interp.addPrimFun("-", function(interp)
   {
-    let b = interp.stack.pop()
-    let a = interp.stack.pop()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a - b)
   })
 
   interp.addPrimFun("*", function(interp)
   {
-    let b = interp.stack.pop()
-    let a = interp.stack.pop()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a * b)
   })
 
   interp.addPrimFun("/", function(interp)
   {
-    let b = interp.stack.pop()
-    let a = interp.stack.pop()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a / b)
   })
 
   interp.addPrimFun("print", function(interp)
   {
-    let obj = interp.stack.pop()
-    interp.print(JSON.stringify(obj))
+    let obj = interp.popStack()
+    interp.print(obj)
   })
 
   interp.addPrimFun("printStack", function(interp)
   {
-    interp.print(JSON.stringify(interp.stack))
+    interp.print(interp.stack)
+  })
+
+  interp.addPrimFun("toString", function(interp)
+  {
+    let list = interp.popStack()
+    interp.mustBeList(list, "toString: object is non-list")
+    let string = list.items.join(" ")
+    interp.stack.push(string)
   })
 }

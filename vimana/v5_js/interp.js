@@ -1,3 +1,9 @@
+//
+// File: interp.js
+// Vimana interpreter
+// Copyright (c) 2021 Mikael Kindborg
+// mikael@kindborg.com
+//
 
 // FUNCTION OBJECT ----------------------------------------
 
@@ -7,7 +13,7 @@ function VimanaFun(code)
   this.code = code
 }
 
-function VimanaIsFun(obj)
+function VimanaObjectIsFun(obj)
 {
   return (obj instanceof VimanaFun)
 }
@@ -20,7 +26,7 @@ function VimanaList()
   this.env = null
 }
 
-function VimanaIsList(obj)
+function VimanaObjectIsList(obj)
 {
   return (obj instanceof VimanaList)
 }
@@ -36,7 +42,7 @@ function VimanaContext(code, env)
   this.codePointer = -1
 }
 
-function VimanaIsContext(obj)
+function VimanaObjectIsContext(obj)
 {
   return (obj instanceof VimanaContext)
 }
@@ -149,7 +155,7 @@ VimanaInterp.prototype.evalNext = function()
     }
     
     let value = this.evalSymbol(obj)
-    if (VimanaIsFun(value))
+    if (VimanaObjectIsFun(value))
     {
       //vimana.printFunCall(obj)
       this.pushContext(value.code, {})
@@ -202,9 +208,16 @@ VimanaInterp.prototype.popContext = function()
   this.currentContext = this.callstack[this.callstackIndex]
 }
 
+VimanaInterp.prototype.popStack = function()
+{
+  if (0 === this.stack.length)
+    this.error("STACK IS EMPTY")
+  return this.stack.pop()
+}
+
 VimanaInterp.prototype.mustBeList = function(list, errorMessage)
 {
-  if (!VimanaIsList(list))
+  if (!VimanaObjectIsList(list))
     this.error(errorMessage)
 }
 
@@ -269,7 +282,52 @@ function VimanaParseTokens(tokens)
   }
 }
 
-// EVAL FUNCTIONS -----------------------------------------
+// PRINT --------------------------------------------------
+
+// The idea is that you redefine this function if
+// you want to output the result in your UI
+VimanaInterp.prototype.print = function(s)
+{
+  console.log(s)
+}
+
+function VimanaPrettyPrint(obj)
+{
+  if (Array.isArray(obj))
+    return VimanaPrettyPrintList(obj)
+  else
+  if (VimanaObjectIsList(obj))
+    return VimanaPrettyPrintList(obj.items)
+  else
+  if (VimanaObjectIsFun(obj))
+    return VimanaPrettyPrintList(obj.code.items)
+  else
+    return obj.toString()
+}
+
+// list is a JS list
+function VimanaPrettyPrintList(list)
+{
+  let string = "("
+  for (let i = 0; i < list.length; ++i)
+  {
+    string = string + VimanaPrettyPrint(list[i])
+    if (i < list.length - 1)
+      string = string + " "
+  }
+  return string + ")"
+}
+
+// ERROR HANDLING -----------------------------------------
+
+// Error handling is simple - an error aborts execution
+VimanaInterp.prototype.error = function(s)
+{
+  let guruMeditation = "Software Failure. Guru Meditation: " + s
+  throw guruMeditation
+}
+
+// API FUNCTIONS ------------------------------------------
 
 function VimanaInit()
 {
@@ -277,14 +335,18 @@ function VimanaInit()
   VimanaAddPrimFuns(window.VimanaCode)
 }
 
-// Evaluate a string
 function VimanaEval(string)
 {
   let list = VimanaParse(string)
   window.VimanaCode.timerEval(list)
-  // eval  is faster than timerEval, but is less resource 
-  // friendly and can slow down the browser:
-  //window.VimanaCode.eval(list)
+}
+
+function VimanaEvalFast(string)
+{
+  let list = VimanaParse(string)
+  // eval is much faster than timerEval, but is less resource 
+  // friendly and can slow down the browser
+  window.VimanaCode.eval(list)
 }
 
 // This function is used to call back from JS to Vimana
@@ -301,30 +363,4 @@ function VimanaCallFun(funName, params = [])
 
   // Call function
   window.VimanaCode.pushContext(fun.code, {})
-}
-
-// PRINT --------------------------------------------------
-
-// The idea is that you redefine this function for your UI
-VimanaInterp.prototype.print = function(s)
-{
-  console.log(s)
-}
-
-// ERROR HANDLING -----------------------------------------
-
-// Error handling is simple - an error aborts execution
-VimanaInterp.prototype.error = function(s)
-{
-  let guruMeditation = "Software Failure. Guru Meditation: " + s
-  this.print(guruMeditation)
-  let context = this.callstack[this.contextIndex]
-  let index = context.codePointer
-  let list = Array.from(context.code.list)
-  list.splice(index, 0, ">>>>")
-  this.print(JSON.stringify(list))
-  this.print(JSON.stringify(context))
-  //context = this.callstack[this.contextIndex - 1]
-  //this.print(JSON.stringify(context))
-  throw guruMeditation
 }
