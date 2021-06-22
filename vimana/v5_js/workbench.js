@@ -89,7 +89,20 @@ function VimanaUIOpenGitHub()
 
 function VimanaUIDisplayMantra()
 {
-  VimanaEval("(I am present) TOSTRING PRINT")
+  VimanaEval(`
+    ((I am conscious) 
+     (I am present) 
+     (I exist here and now)
+     (I sense the air that surrounds me)
+     (I follow my breath)
+     (I feel my feet in contact with the ground)
+     (I sense the gravity of the Earth)
+     (I am aware of where I am and what time it is))
+    (MANTRA-LIST) SET 
+    MANTRA-LIST LENGTH RANDOM
+      MANTRA-LIST GETAT 
+        TOSTRING PRINT
+  `)
 }
 
 function VimanaUIAbout()

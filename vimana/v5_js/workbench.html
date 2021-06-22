@@ -169,10 +169,55 @@ The time will be displayed in the output frame. On my machine, this benchmark ru
 <div class="vimana-workspace vimana-workspace-2">(Workspace 2 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
 </div>
 
-<div class="vimana-workspace vimana-workspace-3">(Workspace 3 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
+<div class="vimana-workspace vimana-workspace-3">
+((I am conscious) 
+  (I am present) 
+  (I exist here and now)
+  (I sense the air that surrounds me)
+  (I follow my breath)
+  (I feel my feet in contact with the ground)
+  (I sense the gravity of the Earth)
+  (I am aware of where I am and what time it is))
+(MANTRA-LIST) SET 
+MANTRA-LIST LENGTH RANDOM
+  MANTRA-LIST GETAT 
+    TOSTRING PRINT
 </div>
 
-<div class="vimana-workspace vimana-workspace-4">(Workspace 4 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
+<div class="vimana-workspace vimana-workspace-4">
+(CreateMantraGenerator) (
+  (Local block that creates a list with mantras) DOC
+  (((I am conscious) 
+    (I am present) 
+    (I exist here and now)
+    (I sense the air that surrounds me)
+    (I follow my breath)
+    (I feel my feet in contact with the ground)
+    (I sense the gravity of the Earth)
+    (I am aware of where I am and what time it is))
+   ) (CreateMantraList) SET
+
+  (Create the initial mantra list) DOC
+  CreateMantraList EVAL (MantraList) SET
+
+  (Closure block that returns a random mantra and avoids duplicates) DOC
+  [
+    (Recreate the mantra list if it is empty) DOC
+    MantraList LENGTH 0 EQ 
+      (CreateMantraList EVAL (MantraList) SET) 
+    IFTRUE
+    MantraList LENGTH RANDOM (Index) SET
+    Index MantraList GETAT (Mantra) SET
+    Index MantraList REMOVEAT
+    Mantra
+  ]
+) DEF
+
+CreateMantraGenerator (GetMantra) SETGLOBAL
+
+GetMantra EVAL PRINT
+GetMantra EVAL PRINT
+GetMantra EVAL PRINT
 </div>
 
   <script src="interp.js"></script>
