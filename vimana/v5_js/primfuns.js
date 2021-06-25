@@ -244,13 +244,24 @@ function VimanaAddPrimFuns(interp)
     interp.stack.push(list.items[index])
   })
 
+  // Create mutable list
+  interp.addPrimFun("makeList", function(interp)
+  {
+    let list = interp.popStack()
+    interp.mustBeList(list, "makeList: got non-list")
+    let newList = new VimanaList()
+    newList.immutable = false
+    newList.items = Array.from(list.items)
+    interp.stack.push(newList)
+  })
+
   // Set list element at index
   interp.addPrimFun("setAt", function(interp)
   {
     let list = interp.popStack()
     let obj = interp.popStack()
     let index = interp.popStack()
-    interp.mustBeList(list, "getAt: got non-list")
+    interp.mustBeMutableList(list, "getAt: got non-mutable-list")
     list.items[index] = obj
   })
 
@@ -259,8 +270,8 @@ function VimanaAddPrimFuns(interp)
   {
     let list = interp.popStack()
     let index = interp.popStack()
-    interp.mustBeList(list, "getAt: got non-list")
-    list.item.splice(index, 1)
+    interp.mustBeMutableList(list, "deleteAt: got non-mutable-list")
+    list.items.splice(index, 1)
   })
 
   interp.addPrimFun("print", function(interp)
