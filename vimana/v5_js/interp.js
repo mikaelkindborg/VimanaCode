@@ -24,6 +24,7 @@ function VimanaList()
 {
   this.items = []
   this.env = null
+  this.immutable = true
 }
 
 function VimanaObjectIsList(obj)
@@ -90,7 +91,7 @@ VimanaInterp.prototype.evalGlobalSymbol = function(obj)
 }
 
 // Eval a list
-VimanaInterp.prototype.eval = function(code)
+VimanaInterp.prototype.eval = function(code, doneFun = null)
 {
   // Push root context
   this.pushContext(code, {})
@@ -100,10 +101,12 @@ VimanaInterp.prototype.eval = function(code)
   {
     this.evalNext()
   }
+
+  if (doneFun) doneFun()
 }
 
 // Eval driven by a timer, which is slower but more resource friendly
-VimanaInterp.prototype.timerEval = function(code)
+VimanaInterp.prototype.timerEval = function(code, doneFun = null)
 {
   // Push root context
   this.pushContext(code, {})
@@ -124,7 +127,13 @@ VimanaInterp.prototype.timerEval = function(code)
     }
 
     if (vimana.callstackIndex > -1)
+    {
       setTimeout(runTimer, vimana.speed)
+    }
+    else
+    {
+      if (doneFun) doneFun()
+    }
   }
 }
 
@@ -146,6 +155,7 @@ VimanaInterp.prototype.evalNext = function()
   let obj = context.code.items[context.codePointer]
   if (typeof obj === "string")
   {
+    // Lookup primitive function
     let primFun = this.primFuns[obj]
     if (primFun)
     {
@@ -154,6 +164,7 @@ VimanaInterp.prototype.evalNext = function()
       return
     }
     
+    // Check if function
     let value = this.evalSymbol(obj)
     if (VimanaObjectIsFun(value))
     {
@@ -162,7 +173,7 @@ VimanaInterp.prototype.evalNext = function()
       return
     }
 
-    // Push symbol
+    // Otherwise, push symbol
     this.stack.push(value)
     return
   }
@@ -213,12 +224,6 @@ VimanaInterp.prototype.popStack = function()
   if (0 === this.stack.length)
     this.error("STACK IS EMPTY")
   return this.stack.pop()
-}
-
-VimanaInterp.prototype.mustBeList = function(list, errorMessage)
-{
-  if (!VimanaObjectIsList(list))
-    this.error(errorMessage)
 }
 
 VimanaInterp.prototype.addPrimFun = function(name, fun)
@@ -327,6 +332,18 @@ VimanaInterp.prototype.error = function(s)
   throw guruMeditation
 }
 
+VimanaInterp.prototype.mustBeList = function(list, errorMessage)
+{
+  if (!VimanaObjectIsList(list))
+    this.error(errorMessage)
+}
+
+VimanaInterp.prototype.mustBeMutableList = function(list, errorMessage)
+{
+  if (!VimanaObjectIsList(list) || list.immutable)
+    this.error(errorMessage)
+}
+
 // API FUNCTIONS ------------------------------------------
 
 function VimanaInit()
@@ -335,18 +352,18 @@ function VimanaInit()
   VimanaAddPrimFuns(window.VimanaCode)
 }
 
-function VimanaEval(string)
+function VimanaEval(string, doneFun = null)
 {
   let list = VimanaParse(string)
-  window.VimanaCode.timerEval(list)
+  window.VimanaCode.timerEval(list, doneFun)
 }
 
-function VimanaEvalFast(string)
+function VimanaEvalFast(string, doneFun = null)
 {
   let list = VimanaParse(string)
   // eval is much faster than timerEval, but is less resource 
   // friendly and can slow down the browser
-  window.VimanaCode.eval(list)
+  window.VimanaCode.eval(list, doneFun)
 }
 
 // This function is used to call back from JS to Vimana

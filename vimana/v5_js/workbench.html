@@ -15,7 +15,7 @@
 
   <h1>Welcome to the Wonderful World of Vimana</h1>
 
-  <div>
+  <div class="vimana-button-bar">
     <select class="vimana-dropdown-menu vimana-workspace-menu" onchange="VimanaUISelectWorkspace(event)">
       <option value="vimana-workspace-introduction">Introduction</option>
       <option value="vimana-workspace-functions">Functions</option>
@@ -27,9 +27,12 @@
       <option value="vimana-workspace-4">Workspace 4</option>
     </select>
 
+    <a class="vimana-button" onclick="VimanaUISaveWorkspace()" href="javascript:void(0)">SAVE WORKSPACE</a>
+
+    <a class="vimana-button" onclick="VimanaUIDisplayMantra()" href="javascript:void(0)">DISPLAY MANTRA</a>
+
     <select class="vimana-dropdown-menu vimana-command-menu" onchange="VimanaUIDoMenuCommand(event)">
       <option value="vimana-menu">Commands</option>
-      <option value="vimana-save-workspace">Save Workspace</option>
       <option value="vimana-list-primfuns">List PrimFuns</option>
       <option value="vimana-eval-benchmark">Eval Benchmark</option>
       <option value="vimana-reset-workspace">Reset Workspace</option>
@@ -46,8 +49,8 @@
     <a class="vimana-button" onclick="VimanaUIEvalWorkspace()" href="javascript:void(0)">EVAL WORKSPACE</a>
     <a class="vimana-button" onclick="VimanaUIEvalSelection()" href="javascript:void(0)">EVAL SELECTION</a>
     <a class="vimana-button" onclick="VimanaUIPrintStack()" href="javascript:void(0)">PRINT STACK</a>
+    <a class="vimana-button" onclick="VimanaUIClearStack()" href="javascript:void(0)">CLEAR STACK</a>
     <a class="vimana-button" onclick="VimanaUIClearOutput()" href="javascript:void(0)">CLEAR OUTPUT</a>
-    <a class="vimana-button" onclick="VimanaUIDisplayMantra()" href="javascript:void(0)">DISPLAY MANTRA</a>
     <!--<a class="vimana-button" onclick="VimanaUISaveWorkspace()" href="javascript:void(0)">SAVE WORKSPACE</a>
     <a class="vimana-button" onclick="VimanaUIEvalBenchmark()" href="javascript:void(0)">EVAL BENCHMARK</a>
     <a class="vimana-button" onclick="VimanaUIRunNativeBenchmark()" href="javascript:void(0)">JS BENCHMARK</a>-->
@@ -114,10 +117,10 @@ Those are the basic rules of how Vimana code works.
 
 Now, lets look at an example:
 
-(1) Select these three numbers: 11 22 33 (just as you would select text in a text editor), and press the button "EVAL SELECTION" followed by "PRINT STACK"
-(2) Now select: + (just the + sign), and press "EVAL SELECTION" followed by "PRINT STACK"
-(3) Select and evaluate + one more time, and print the stack
-(4) Finally select: PRINT (the word PRINT), evaluate it and print the stack (the stack should now be empty)
+(1) Select these three numbers: 11 22 33 (just as you would select text in a text editor), and press the button "EVAL SELECTION" (this will print the data stack)
+(2) Now select: + (just the + sign), and press "EVAL SELECTION" (notice how the stack changes)
+(3) Select and evaluate + one more time, and inspect the stack
+(4) Finally select: PRINT (the word PRINT), evaluate it (the stack should now be empty)
 
 Here is how it works. The + function pops two items off the stack and pushes back the sum. The PRINT function pops one item off the stack and prints it, but it does not push anything back.
 
@@ -169,10 +172,57 @@ The time will be displayed in the output frame. On my machine, this benchmark ru
 <div class="vimana-workspace vimana-workspace-2">(Workspace 2 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
 </div>
 
-<div class="vimana-workspace vimana-workspace-3">(Workspace 3 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
+<div class="vimana-workspace vimana-workspace-3">
+((I am conscious) 
+  (I am present) 
+  (I exist here and now)
+  (I sense the air that surrounds me)
+  (I follow my breath)
+  (I feel my feet in contact with the ground)
+  (I sense the gravity of the Earth)
+  (I am aware of where I am and what time it is))
+(MANTRA-LIST) SET 
+MANTRA-LIST LENGTH RANDOM
+  MANTRA-LIST GETAT 
+    TOSTRING PRINT
 </div>
 
-<div class="vimana-workspace vimana-workspace-4">(Workspace 4 - a place for your own code. Select Commands/Save Workspace to save your code in the localStorage of the web browser.) DOC
+<div class="vimana-workspace vimana-workspace-4">
+(CreateMantraGenerator) (
+  (Create a list with mantras) DOC
+  ( 
+    ((I am conscious) 
+     (I am present) 
+     (I exist here and now)
+     (I sense the air that surrounds me)
+     (I follow my breath)
+     (I feel my feet in contact with the ground)
+     (I sense the gravity of the Earth)
+     (I am aware of where I am and what time it is)) MAKELIST
+  ) 
+  (CreateMantraList) SET
+
+  (Create the initial mantra list) DOC
+  CreateMantraList EVAL (MantraList) SET
+
+  (Closure block that returns a random mantra and avoids duplicates) DOC
+  [
+    (Recreate the mantra list if it is empty) DOC
+    MantraList LENGTH 0 EQ 
+      (CreateMantraList EVAL (MantraList) SET) 
+    IFTRUE
+    MantraList LENGTH RANDOM (Index) SET
+    Index MantraList GETAT (Mantra) SET
+    Index MantraList REMOVEAT
+    Mantra
+  ]
+) DEF
+
+CreateMantraGenerator (GetMantra) SETGLOBAL
+
+GetMantra EVAL PRINT
+GetMantra EVAL PRINT
+GetMantra EVAL PRINT
 </div>
 
   <script src="interp.js"></script>

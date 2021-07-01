@@ -57,6 +57,7 @@ function VimanaUISaveWorkspace()
 {
   let codeArea = document.getElementsByTagName("textarea")[0]
   localStorage.setItem(VimanaUIWorkspace, codeArea.value)
+  VimanaUIPrint("Workspace Saved")
 }
 
 function VimanaUIResetWorkspace()
@@ -67,6 +68,12 @@ function VimanaUIResetWorkspace()
     localStorage.removeItem(VimanaUIWorkspace)
     VimanaUISelectWorkspace({ target: { value: VimanaUIWorkspace } })
   }
+}
+
+function VimanaUIClearStack()
+{
+  window.VimanaCode.stack = []
+  VimanaUIPrintStack()
 }
 
 function VimanaUIClearOutput()
@@ -89,12 +96,25 @@ function VimanaUIOpenGitHub()
 
 function VimanaUIDisplayMantra()
 {
-  VimanaEval("(I am present) TOSTRING PRINT")
+  VimanaEval(`
+    ((I am conscious) 
+     (I am present) 
+     (I exist here and now)
+     (I sense the air that surrounds me)
+     (I follow my breath)
+     (I feel my feet in contact with the ground)
+     (I sense the gravity of the Earth)
+     (I am aware of where I am and what time it is))
+    (MANTRA-LIST) SET 
+    MANTRA-LIST LENGTH RANDOM
+      MANTRA-LIST GETAT 
+        TOSTRING PRINT
+  `)
 }
 
 function VimanaUIAbout()
 {
-  VimanaEval("(My name is Mikael Kindborg. I created Vimana as a hobby project. I have programmed computers for more than 35 years in 35 different programming languages, but this is is the first time I have created my own language.) TOSTRING PRINT")
+  VimanaEval("(My name is Mikael Kindborg. I created Vimana as a hobby project. I have programmed computers for more than 35 years in 35 different programming languages. Vimana encapsulates the essense of several things I like: dynamic typing, code and data have the same format, interactive development, simplicity, few basic constructs, and an easy-to-implement intrepreter.) TOSTRING PRINT")
 }
 
 function VimanaUIEvalWorkspace()
@@ -117,7 +137,7 @@ function VimanaUIEvalSelection()
   {
     let textArea = document.getElementsByTagName("textarea")[0]
     let code = textArea.value.substring(textArea.selectionStart, textArea.selectionEnd)
-    VimanaEval(code)
+    VimanaEval(code, VimanaUIPrintStack)
   }
   catch (exception)
   {
@@ -145,13 +165,16 @@ function VimanaUIPrintStack()
 function VimanaUIPrintException(exception)
 {
   VimanaUIPrint(exception)
-  let interp = VimanaCode
+  let interp = window.VimanaCode
   let context = interp.callstack[interp.callstackIndex]
-  let index = context.codePointer
-  let list = Array.from(context.code.items)
-  list.splice(index, 0, "ERROR HERE >>>>")
-  VimanaUIPrint("CODE: " + JSON.stringify(list))
-  VimanaUIPrint("CONTEXT: " + JSON.stringify(context))
+  if (context && context.codePointer)
+  {
+    let index = context.codePointer
+    let array = Array.from(context.code.items)
+    array.splice(index, 0, "ERROR HERE >>>>")
+    VimanaUIPrint("CODE: " + JSON.stringify(array))
+    VimanaUIPrint("CONTEXT: " + JSON.stringify(context))
+  }
 }
 
 function VimanaUIEvalBenchmark()

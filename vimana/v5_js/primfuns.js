@@ -31,39 +31,6 @@ function VimanaAddPrimFuns(interp)
     interp.stack.push(interp.evalSymbol(element))
   })
 
-  // Push next item in the code list without evaluating it
-  interp.addPrimFun("quote", function(interp)
-  {  
-    let context = interp.currentContext
-    let items = context.code.items
-    let codePointer = context.codePointer + 1
-    if (codePointer < items.length)
-    {
-      interp.stack.push(items[codePointer])
-      context.codePointer = codePointer
-    }
-    else
-      interp.error("quote: end of code list")
-  })
-
-  // Push next item in the parent context code list without evaluating it
-  interp.addPrimFun("nextParentItem", function(interp)
-  {
-    let index = interp.callstackIndex
-    if (index < 1)
-      interp.error("nextParentItem: no parent context")
-    let context = this.callstack[index - 1]
-    let items = context.code.items
-    let codePointer = context.codePointer + 1
-    if (codePointer < items.length)
-    {
-      interp.stack.push(items[codePointer])
-      context.codePointer = codePointer
-    }
-    else
-      interp.error("nextParentItem: end of code list")
-  })
-
   interp.addPrimFun("call", function(interp)
   {
     let list = interp.popStack()
@@ -95,15 +62,6 @@ function VimanaAddPrimFuns(interp)
     //interp.print("SETGLOBAL: " + name);
     interp.globalEnv[name.items[0]] = value
     //interp.print("GLOBALENV: " + JSON.stringify(interp.globalEnv));
-  })
-
-  // Get value of element quoted by a list
-  interp.addPrimFun("first", function(interp)
-  {
-    let list = interp.popStack()
-    interp.mustBeList(list, "first: got non-list")
-    interp.stack.push(list.items[0])
-    //interp.printStack()
   })
 
   interp.addPrimFun("funify", function(interp)
@@ -251,6 +209,71 @@ function VimanaAddPrimFuns(interp)
     interp.stack.push(a / b)
   })
 
+  // Get random number integer between 0 and max 1 -
+  interp.addPrimFun("random", function(interp)
+  {
+    let max = interp.popStack()
+    interp.stack.push(Math.floor(Math.random() * max))
+    //interp.printStack()
+  })
+
+  // Get length of a list
+  interp.addPrimFun("length", function(interp)
+  {
+    let list = interp.popStack()
+    interp.mustBeList(list, "first: got non-list")
+    interp.stack.push(list.items.length)
+    //interp.printStack()
+  })
+
+  // Get first element of a list
+  interp.addPrimFun("first", function(interp)
+  {
+    let list = interp.popStack()
+    interp.mustBeList(list, "first: got non-list")
+    interp.stack.push(list.items[0])
+    //interp.printStack()
+  })
+
+  // Get list element at index
+  interp.addPrimFun("getAt", function(interp)
+  {
+    let list = interp.popStack()
+    let index = interp.popStack()
+    interp.mustBeList(list, "getAt: got non-list")
+    interp.stack.push(list.items[index])
+  })
+
+  // Create mutable list
+  interp.addPrimFun("makeList", function(interp)
+  {
+    let list = interp.popStack()
+    interp.mustBeList(list, "makeList: got non-list")
+    let newList = new VimanaList()
+    newList.immutable = false
+    newList.items = Array.from(list.items)
+    interp.stack.push(newList)
+  })
+
+  // Set list element at index
+  interp.addPrimFun("setAt", function(interp)
+  {
+    let list = interp.popStack()
+    let obj = interp.popStack()
+    let index = interp.popStack()
+    interp.mustBeMutableList(list, "getAt: got non-mutable-list")
+    list.items[index] = obj
+  })
+
+  // Delete list element at index
+  interp.addPrimFun("deleteAt", function(interp)
+  {
+    let list = interp.popStack()
+    let index = interp.popStack()
+    interp.mustBeMutableList(list, "deleteAt: got non-mutable-list")
+    list.items.splice(index, 1)
+  })
+
   interp.addPrimFun("print", function(interp)
   {
     let obj = interp.popStack()
@@ -269,4 +292,41 @@ function VimanaAddPrimFuns(interp)
     let string = list.items.join(" ")
     interp.stack.push(string)
   })
+
+/*
+  // Experimental
+  // Push next item in the code list without evaluating it
+  interp.addPrimFun("quote", function(interp)
+  {  
+    let context = interp.currentContext
+    let items = context.code.items
+    let codePointer = context.codePointer + 1
+    if (codePointer < items.length)
+    {
+      interp.stack.push(items[codePointer])
+      context.codePointer = codePointer
+    }
+    else
+      interp.error("quote: end of code list")
+  })
+
+  // Experimental
+  // Push next item in the parent context code list without evaluating it
+  interp.addPrimFun("nextParentItem", function(interp)
+  {
+    let index = interp.callstackIndex
+    if (index < 1)
+      interp.error("nextParentItem: no parent context")
+    let context = this.callstack[index - 1]
+    let items = context.code.items
+    let codePointer = context.codePointer + 1
+    if (codePointer < items.length)
+    {
+      interp.stack.push(items[codePointer])
+      context.codePointer = codePointer
+    }
+    else
+      interp.error("nextParentItem: end of code list")
+  })
+*/
 }
