@@ -25,8 +25,6 @@ void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
     if (!IsSymbol(name)) \
       ErrorExit("PrimEval_SetLocal: Got a non-symbol (1)"); \
     Context* context = (interp)->currentContext; \
-    while (context && (!context->hasEnv)) \
-      context = context->prevContext; \
     ListAssocSetGet(context->env, (name).value.symbol, &(item)); \
   } while (0)
 #else
@@ -36,18 +34,13 @@ void PrimEval_SetLocal(Interp* interp, Item name, Item value)
   if (!IsSymbol(name))
     ErrorExit("PrimEval_SetLocal: Got a non-symbol (2)");
 
-  // Get first context that has an environment.
+  // Get environment of current context.
   Context* context = interp->currentContext;
-  while (context && (!context->hasEnv))
-  {
-    PrintDebug("Lookup prev context");
-    context = context->prevContext;
-  }
 
   // Error checking.
   if (!context)
     ErrorExit("PrimEval_SetLocal: Context not found");
-  if (!context->hasEnv)
+  if (!context->env)
     ErrorExit("PrimEval_SetLocal: Context has no environment");
 
   // Set symbol value.
@@ -63,24 +56,21 @@ Item PrimEval_EvalSymbol(Interp* interp, Item item)
 {
 #ifndef OPTIMIZE
   // Non-symbols evaluates to themselves.
-  // This check is made by the caller.
+  // This check is made by the caller so it is not done in
+  // optimized mode.
   if (!IsSymbol(item))
     return item;
 #endif
 
-  // Search contexts for the symbol.
+  // Look for symbol in current context.
   Context* context = interp->currentContext;
-  while (context)
+  if (context && context->env)
   {
-    if (context && context->hasEnv)
-    {
-      //PrintDebug("PrimEval_EvalSymbol: ENV");
-      //ListPrint(context->env, interp);
-      Item* value = ListAssocSetGet(context->env, item.value.symbol, NULL);
-      if (value)
-        return *value;
-    }
-    context = context->prevContext;
+    //PrintDebug("PrimEval_EvalSymbol: ENV");
+    //ListPrint(context->env, interp);
+    Item* value = ListAssocSetGet(context->env, item.value.symbol, NULL);
+    if (value)
+      return *value;
   }
 
   // Lookup global symbol.

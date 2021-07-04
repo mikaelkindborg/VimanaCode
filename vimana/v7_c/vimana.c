@@ -23,6 +23,14 @@ int main()
   //List* list = ParseCode(interp, "(ENTER-OPTIMIZED-MODE HELLO PRINT) OPTIMIZE EVAL");
   //List* list = ParseCode(interp, "HELLO PRINT");
 
+  List* list = ParseCode(interp, 
+    "HELLOWORLD PRINT 1 2 + PRINT "
+    "(FACT) (N => N ISZERO (1) (N 1 - FACT N *) IFELSE) DEFINE "
+    "(TIMESDO) ((L N) => L PRINT N PRINT  N ISZERO (L EVAL L N 1 - TIMESDO) IFFALSE) DEFINE "
+    //"10 FACT PRINT "
+    "(20 FACT PRINT) 10 TIMESDO "
+    );
+
   // Recursve FACT and TIMESDO with variables
   List* list0 = ParseCode(interp, 
     //"HELLOWORLD PRINT "
@@ -236,14 +244,14 @@ int main()
   // ./vimana  11.22s user 0.01s system 99% cpu 11.240 total
 
   // Recursive FACT using ISZERO Iterative TIMESDO
-  List* list = ParseCode(interp,
+  List* list8 = ParseCode(interp,
     "(SWAP DUP EVAL SWAP 1 - DUP 0 GOTOIFNOTZERO DROP DROP) (TIMESDO) DEF "
     "(DUP ISZERO (DROP 1) (DUP 1 - FACT *) IFELSE) (FACT) DEF "
-    //"(20 FACT DROP) 10000000 TIMESDO "
+    "(20 FACT DROP) 10000000 TIMESDO "
     //"(TIMESDO) LISTFIRST VALUE OPTIMIZE (TIMESDO) LISTFIRST SET "
     //"(FACT) LISTFIRST VALUE OPTIMIZE (FACT) LISTFIRST SET "
     //"(20 FACT DROP) OPTIMIZE 10000000 TIMESDO "
-    "(ENTER-OPTIMIZED-MODE (20 FACT DROP) 10000000 TIMESDO) OPTIMIZE EVAL" 
+    //"(ENTER-OPTIMIZED-MODE (20 FACT DROP) 10000000 TIMESDO) OPTIMIZE EVAL" 
     );
   // Test 210527
   // ./vimana  10.88s user 0.01s system 89% cpu 12.155 total

@@ -9,12 +9,12 @@ int GReallocCounter = 0;
 
 typedef struct MyList
 {
-  int refCount;
-  // TODO: int last; ???
-  int   length;     // Current number of items
-  int   maxLength;  // Max number of items
-  Item* items;      // Array of items
-  // ?? int   listType;
+  //int   listType;
+  int   refCount;     // Reference counter for GC
+  int   length;       // Current number of items; TODO: last ???
+  int   maxLength;    // Max number of items
+  Item* items;        // Array of items
+  struct MyList* env; // Local environment for closures
 }
 List;
 
@@ -35,6 +35,7 @@ List* ListCreate()
   list->refCount = 0;
   list->length = 0;
   list->maxLength = size;
+  list->env = NULL;
 
   // Alloc list array.
   size_t arraySize = size * sizeof(Item);
@@ -53,6 +54,7 @@ List* ListCreate()
 void ListFree(List* list, int whatToFree)
 {
   free(list->items);
+  if (list->env) free(list->env);
   free(list);
 }
 

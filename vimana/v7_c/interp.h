@@ -21,7 +21,8 @@ Item PrimEval_EvalSymbol(Interp* interp, Item item);
 typedef struct MyContext
 {
   List* env;
-  Bool  hasEnv;
+  List* ownEnv;
+  //Bool  hasEnv;
   List* code;
   Index codePointer;
   struct MyContext* nextContext;
@@ -32,8 +33,8 @@ Context;
 Context* ContextCreate()
 {
   Context* context = malloc(sizeof(Context));
-  context->env = ListCreate();
-  context->hasEnv = TRUE;
+  context->ownEnv = ListCreate();
+  context->env = NULL;
   context->code = NULL;
   context->codePointer = -1;
   context->nextContext = NULL;
@@ -59,7 +60,7 @@ typedef struct MyInterp
   int      callstackIndex;    // Index of current frame
   Bool     run;               // Run flag
   int      symbolCase;        // Casing for primitive functions
-  Bool     contextSwitch;
+  Bool     contextSwitch;     // Context switching flag
 }
 Interp;
 
@@ -209,10 +210,13 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
   Context* currentContext;
   Context* nextContext;
 
+  interp->contextSwitch = TRUE;
+
   // Obtain current context.
   currentContext = interp->currentContext;
 
 #ifndef OPTIMIZE
+  // Check for NULL context.
   if (!currentContext)
     ErrorExit("InterpEnterCallContext: currentContext is NULL");
 #endif
@@ -220,44 +224,63 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
   // Check for possible tailcall.
   if (currentContext->codePointer + 1 >= ListLength(currentContext->code))
   {
+    // We can do a tailcall and reuse the current context.
     PrintDebug("TAILCALL AT INDEX: %i", interp->callstackIndex);
-    interp->contextSwitch = TRUE;
-    currentContext->code = code;
-    currentContext->codePointer = -1;
-    // Note that we don't reset the env here, it is reused.
-    return;
-  }
-
-#ifndef OPTIMIZE
-  // Increment callstack index.
-  ++ interp->callstackIndex;
-#endif
-
-  // Create new stackframe or reuse existing frame.
-  if (NULL == currentContext->nextContext)
-  {
-    PrintDebug("NEW CONTEXT AT INDEX: %i", interp->callstackIndex);
-    nextContext = ContextCreate();
-    nextContext->prevContext = currentContext; 
-    currentContext->nextContext = nextContext;
+    nextContext = currentContext;
+    //currentContext->code = code;
+    //currentContext->codePointer = -1;
+    //return;
   }
   else
   {
-    PrintDebug("REUSE CONTEXT AT INDEX: %i", interp->callstackIndex);
-    nextContext = currentContext->nextContext;
+#ifndef OPTIMIZE
+    // Increment callstack index.
+    ++ interp->callstackIndex;
+#endif
+
+    // Create new context or reuse existing context.
+    if (NULL == currentContext->nextContext)
+    {
+      PrintDebug("NEW CONTEXT AT INDEX: %i", interp->callstackIndex);
+      nextContext = ContextCreate();
+      nextContext->prevContext = currentContext; 
+      currentContext->nextContext = nextContext;
+    }
+    else
+    {
+      PrintDebug("REUSE CONTEXT AT INDEX: %i", interp->callstackIndex);
+      nextContext = currentContext->nextContext;
+    }
   }
 
-  // Set context.
-  interp->currentContext = nextContext;
-  interp->contextSwitch = TRUE;
-  nextContext->code = code; // TODO: What about GC decr and GC?
+  // Set context data.
+  nextContext->code = code; // TODO: What about GC?
   nextContext->codePointer = -1;
-  nextContext->hasEnv = isFunCall;
-  if (isFunCall) nextContext->env->length = 0;
+
+  // Set environment.
+  if (isFunCall)
+  {
+    // Use fresh environment.
+    nextContext->env = nextContext->ownEnv;
+    nextContext->env->length = 0;
+  }
+  else if (code->env)
+  {
+    // Use closure environment.
+    nextContext->env = code->env;
+  }
+  else
+  {
+    // Use environment of previous context.
+    nextContext->env = currentContext->env;
+  }
+
+  interp->currentContext = nextContext;
 }
 
 // MAIN INTERPRETER LOOP ---------------------------------------
 
+/*
 // Evaluate optimized list.
 void InterpRunOptimized(
   Interp*    interp, 
@@ -323,6 +346,7 @@ exit:
 
   PrintDebug("EXIT OPTIMIZED MODE");
 }
+*/
 
 // Evaluate list.
 void InterpRun(Interp* interp, List* list)
@@ -371,7 +395,7 @@ void InterpRun(Interp* interp, List* list)
 
     // Get next element.
     Item element = ListGet(code, codePointer);
-
+/*
     if (IsString(element) && 
         StringEquals(element.value.string, "ENTER-OPTIMIZED-MODE"))
     {
@@ -383,7 +407,7 @@ void InterpRun(Interp* interp, List* list)
         codeLength);
       goto exit;
     }
-
+*/
     if (IsSymbol(element))
     {
       item = ListGet(interp->globalValueTable, element.value.symbol);
@@ -414,7 +438,7 @@ exit:
   } // while
 }
 
-/*
+/* WHAT VERSION IS THIS?
 // Evaluate list.
 void InterpRun(Interp* interp, List* list)
 {
