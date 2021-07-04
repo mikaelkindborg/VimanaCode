@@ -44,7 +44,7 @@ Context* ContextCreate()
 
 void ContextFree(Context* context)
 {
-  ListFree(context->env, ListFreeShallow);
+  ListFree(context->ownEnv, ListFreeShallow);
   free(context);
 }
 
@@ -95,8 +95,10 @@ void InterpFree(Interp* interp)
 
 // Pop an item from the data stack and set variable to it.
 #define InterpPopInto(interp, item) ListPopInto((interp)->stack, item)
+#define InterpPopEvalInto(interp, item) ListPopInto((interp)->stack, item)
 
 // Pop and evaluate an item from the stack and set variable to it.
+/*
 #define InterpPopEvalInto(interp, item) \
   do { \
     ListPopInto((interp)->stack, item); \
@@ -104,6 +106,7 @@ void InterpFree(Interp* interp)
       PrimEval_EvalSymbol(interp, item) : \
       item; \
   } while (0)
+*/
 
 // SYMBOL TABLE ------------------------------------------------
 
@@ -421,6 +424,10 @@ void InterpRun(Interp* interp, List* list)
         InterpEnterCallContext(interp, item.value.list, TRUE);
         goto exit;
       }
+
+      item = PrimEval_EvalSymbol(interp, element);
+      ListPush(interp->stack, item);
+      goto exit;
     }
 
     ListPush(interp->stack, element);

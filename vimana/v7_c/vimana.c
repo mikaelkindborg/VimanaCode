@@ -24,11 +24,11 @@ int main()
   //List* list = ParseCode(interp, "HELLO PRINT");
 
   List* list = ParseCode(interp, 
-    "HELLOWORLD PRINT 1 2 + PRINT "
+    //"HELLOWORLD PRINT 1 2 + PRINT "
     "(FACT) (N => N ISZERO (1) (N 1 - FACT N *) IFELSE) DEFINE "
-    "(TIMESDO) ((L N) => L PRINT N PRINT  N ISZERO (L EVAL L N 1 - TIMESDO) IFFALSE) DEFINE "
+    "(TIMESDO) ((L N) => N ISZERO (L EVAL L N 1 - TIMESDO) IFFALSE) DEFINE "
     //"10 FACT PRINT "
-    "(20 FACT PRINT) 10 TIMESDO "
+    "(20 FACT DROP) 10000000 TIMESDO "
     );
 
   // Recursve FACT and TIMESDO with variables

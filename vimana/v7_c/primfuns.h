@@ -30,7 +30,7 @@ void PrimEval_SetGlobal(Interp* interp, Item value, Item name)
 #else
 void PrimEval_SetLocal(Interp* interp, Item name, Item value)
 {
-    PrintDebug("PrimEval_SetLocal");
+  PrintDebug("PrimEval_SetLocal");
   if (!IsSymbol(name))
     ErrorExit("PrimEval_SetLocal: Got a non-symbol (2)");
 
@@ -54,13 +54,9 @@ void PrimEval_SetLocal(Interp* interp, Item name, Item value)
 
 Item PrimEval_EvalSymbol(Interp* interp, Item item)
 {
-#ifndef OPTIMIZE
   // Non-symbols evaluates to themselves.
-  // This check is made by the caller so it is not done in
-  // optimized mode.
   if (!IsSymbol(item))
     return item;
-#endif
 
   // Look for symbol in current context.
   Context* context = interp->currentContext;
