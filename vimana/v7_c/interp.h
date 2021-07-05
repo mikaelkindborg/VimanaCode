@@ -70,12 +70,7 @@ Interp* InterpCreate()
   interp->globalSymbolTable = ListCreate();
   interp->globalValueTable = ListCreate();
   interp->stack = ListCreate();
-  interp->callstack = ContextCreate();
-  interp->currentContext = interp->callstack;
-  interp->callstackIndex = 0;
-  interp->run = TRUE;
   interp->symbolCase = SymbolUpperCase;
-  interp->contextSwitch = FALSE;
   return interp;
 }
 
@@ -142,26 +137,15 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
 {
   // Lookup the symbol.
   Index index = InterpLookupSymbolIndex(interp, symbolString);
-
-  if (StringEquals(symbolString, "ENTER-OPTIMIZED-MODE"))
-  {
-    // TODO: Free this string.
-    return ItemWithString(symbolString);
-  }
-
   if (index > -1)
   {
-/*
 #ifdef OPTIMIZE
     // Special case for primfuns. We return the primfun item
     // for faster lookup in eval.
     Item value = ListGet(interp->globalValueTable, index);
     if (IsPrimFun(value))
-    {
       return value;
-    }
 #endif
-*/
     // Symbol is already added, return an item for it.
     Item item = ItemWithSymbol(index);
     return item;
@@ -230,9 +214,6 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
     // We can do a tailcall and reuse the current context.
     PrintDebug("TAILCALL AT INDEX: %i", interp->callstackIndex);
     nextContext = currentContext;
-    //currentContext->code = code;
-    //currentContext->codePointer = -1;
-    //return;
   }
   else
   {
@@ -281,76 +262,6 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
   interp->currentContext = nextContext;
 }
 
-// MAIN INTERPRETER LOOP ---------------------------------------
-
-/*
-// Evaluate optimized list.
-void InterpRunOptimized(
-  Interp*    interp, 
-  Context*   currentContext,
-  List*      code,
-  int        codePointer,
-  int        codeLength)
-{
-  Item       element;
-
-  PrintDebug("ENTER OPTIMIZED MODE");
-
-  while (TRUE)
-  {
-    // Check context switch.
-    if (interp->contextSwitch)
-    {
-      interp->contextSwitch = FALSE;
-      currentContext = interp->currentContext;
-      code = currentContext->code;
-      codeLength = ListLength(code);
-    }
-
-    // Increment code pointer.
-    codePointer = ++ currentContext->codePointer;
-
-    // Exit the frame if the code in the current context has finished executing.
-    if (codePointer >= codeLength)
-    {
-      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-      interp->currentContext = interp->currentContext->prevContext;
-      interp->contextSwitch = TRUE;
-#ifndef OPTIMIZE
-      -- interp->callstackIndex;
-#endif
-      goto exit;
-    }
-
-    // Get next element.
-    Item element = ListGet(code, codePointer);
-
-    if (IsPrimFun(element))
-    {
-      element.value.primFun(interp);
-      goto exit;
-    }
-
-    if (IsFun(element))
-    {
-      InterpEnterCallContext(interp, element.value.list, TRUE);
-      goto exit;
-    }
-
-    ListPush(interp->stack, element);
-
-exit:
-    // Was this the last stackframe?
-    if (NULL == interp->currentContext)
-    {
-      break;
-    }
-  } // while
-
-  PrintDebug("EXIT OPTIMIZED MODE");
-}
-*/
-
 // Evaluate list.
 void InterpRun(Interp* interp, List* list)
 {
@@ -361,7 +272,11 @@ void InterpRun(Interp* interp, List* list)
   Item       element;
   Item       item;
 
-  // Initialize local root context.
+  // Create root context.
+  interp->callstack = ContextCreate();
+  interp->currentContext = interp->callstack;
+  interp->callstackIndex = 0;
+  interp->run = TRUE;
   interp->currentContext->code = list;
   interp->contextSwitch = TRUE;
 
@@ -398,38 +313,53 @@ void InterpRun(Interp* interp, List* list)
 
     // Get next element.
     Item element = ListGet(code, codePointer);
-/*
-    if (IsString(element) && 
-        StringEquals(element.value.string, "ENTER-OPTIMIZED-MODE"))
+
+#ifdef OPTIMIZE
+    // Optimized primfun calls
+    if (IsPrimFun(element))
     {
-      InterpRunOptimized(
-        interp, 
-        currentContext,
-        code,
-        codePointer,
-        codeLength);
+      element.value.primFun(interp);
       goto exit;
     }
-*/
+#endif
+
     if (IsSymbol(element))
     {
+/*
+#ifndef OPTIMIZE
+      // Non-optimized primfun calls.
+      // Lookup global value of symbol and check if it is a primfun.
       item = ListGet(interp->globalValueTable, element.value.symbol);
       if (IsPrimFun(item))
       {
         item.value.primFun(interp);
         goto exit;
       }
+#endif
+*/
+      // Evaluate symbol (search local and global env).
+      item = PrimEval_EvalSymbol(interp, element);
+      
+#ifndef OPTIMIZE      
+      if (IsPrimFun(item))
+      {
+        item.value.primFun(interp);
+        goto exit;
+      }
+#endif
+      // If it is a function call it.
       if (IsFun(item))
       {
         InterpEnterCallContext(interp, item.value.list, TRUE);
         goto exit;
       }
 
-      item = PrimEval_EvalSymbol(interp, element);
+      // If not a function, evaluate symbol and push the value.
       ListPush(interp->stack, item);
       goto exit;
     }
 
+    // If none of the above, push the element.
     ListPush(interp->stack, element);
 
 exit:
@@ -439,139 +369,7 @@ exit:
     {
       PrintDebug("EXIT InterpRun callstackIndex: %i", interp->callstackIndex);
       //interp->run = FALSE;
-
       break;
     }
   } // while
 }
-
-/* WHAT VERSION IS THIS?
-// Evaluate list.
-void InterpRun(Interp* interp, List* list)
-{
-  Context* currentContext;
-  List* code;
-  int codePointer;
-  int codeLength;
-  Item item;
-
-  // Initialize local root context.
-  interp->currentContext->code = list;
-  interp->contextSwitch = TRUE;
-
-  while (interp->run)
-  {
-    // Get current context.
-    if (interp->contextSwitch)
-    {
-      interp->contextSwitch = FALSE;
-      currentContext = interp->currentContext;
-      code = currentContext->code;
-      codeLength = ListLength(code);
-    }
-
-    // Increment code pointer.
-    codePointer = ++ currentContext->codePointer;
-
-    // Exit the frame if the code in the current context has finished executing.
-    if (codePointer >= codeLength)
-    {
-      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-      interp->currentContext = interp->currentContext->prevContext;
-      interp->contextSwitch = TRUE;
-#ifndef xOPTIMIZE
-      -- interp->callstackIndex;
-#endif
-#ifndef OPTIMIZE
-      if (interp->currentContext)
-      {
-        ContextFree(interp->currentContext->nextContext);
-        interp->currentContext->nextContext = NULL;
-      }
-#endif
-      goto exit;
-    }
-
-    // Get the next element.
-    Item element = ListGet(code, codePointer);
-    PrintDebug("InterpRun: element type: %lu", element.type);
-
-#ifdef OPTIMIZE
-    // If the elements points directly to a primfun we call it.
-    if (IsPrimFun(element))
-    {
-      element.value.primFun(interp);
-      goto exit;
-    }
-    else
-    if (IsIntNum(element))
-    {
-      ListPush(interp->stack, element);
-      goto exit;
-    }
-    else
-    //if (IsOptimizedFun(element))
-    if (IsFun(element))
-    {
-      InterpEnterCallContext(interp, element.value.list, TRUE);
-      goto exit;
-    }
-#endif
-
-    // If symbol we check if the global value is primfun or fun.
-    // This means that functions defined with DEFINE will take 
-    // precedence over local variables with the same name. 
-    // Furthermore, local functions need to be called with CALL.
-    if (IsSymbol(element))
-    {
-      item = ListGet(interp->globalValueTable, element.value.symbol);
-      
-      // Call primitive.
-      if (IsPrimFun(item))
-      {
-        item.value.primFun(interp);
-        goto exit;
-      }
-
-      // Call function.
-      if (IsFun(item))
-      {
-#ifdef xOPTIMIZE // Not used was slower
-        // Inline of tailcall.
-        if (codePointer + 1 >= codeLength)
-        {
-          PrintDebug("KNOWN TAIL FUNCALL AT INDEX: %i", interp->callstackIndex);
-          code = item.value.list;
-          codeLength = ListLength(code);
-          currentContext->code = code;
-          currentContext->codePointer = -1;
-          currentContext->hasEnv = TRUE;
-        }
-        else
-        {
-          InterpEnterCallContext(interp, item.value.list, TRUE);
-        }
-#else
-        InterpEnterCallContext(interp, item.value.list, TRUE);
-#endif
-        goto exit;
-      }
-    }
-
-    // If not primfun or function we push the element onto the data stack.
-    ListPush(interp->stack, element);
-
-exit:
-    // Was this the last stackframe?
-#ifdef xOPTIMIZE
-    if (NULL == interp->currentContext)
-#else
-    if (interp->callstackIndex < 0)
-#endif
-    {
-      //PrintDebug("EXIT InterpRun");
-      interp->run = FALSE;
-    }
-  } // while
-}
-*/

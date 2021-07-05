@@ -2,11 +2,11 @@
 // DECLARTIONS -------------------------------------------------
 
 char* InterpGetSymbolString(Interp* interp, Index index);
-void  ListPrintToStream(Stream* stream, List* list, Bool useNewLine, Interp* interp);
+void  ListPrintToStream(FileStream* stream, List* list, Bool useNewLine, Interp* interp);
 
 // PRINT ITEMS -------------------------------------------------
 
-void ItemPrintToStream(Stream* stream, Item item, Interp* interp)
+void ItemPrintToStream(FileStream* stream, Item item, Interp* interp)
 {
   if (IsIntNum(item))
   {
@@ -76,7 +76,7 @@ char* ItemToString(Item item, Interp* interp)
 {
   char* buffer;
   size_t size;
-  Stream* stream = open_memstream(&buffer, &size);
+  FileStream* stream = open_memstream(&buffer, &size);
   ItemPrintToStream(stream, item, interp);
   fclose(stream);
   return buffer;
@@ -91,7 +91,7 @@ void ItemPrint(Item item, Interp* interp)
 
 // PRINT LISTS -------------------------------------------------
 
-void ListPrintWorker(Stream* stream, List* list, Bool useNewLine, Interp* interp)
+void ListPrintWorker(FileStream* stream, List* list, Bool useNewLine, Interp* interp)
 {
   for (int i = 0; i < ListLength(list); i++)
   {
@@ -118,7 +118,7 @@ void ListPrintWorker(Stream* stream, List* list, Bool useNewLine, Interp* interp
   }
 }
 
-void ListPrintToStream(Stream* stream, List* list, Bool useNewLine, Interp* interp)
+void ListPrintToStream(FileStream* stream, List* list, Bool useNewLine, Interp* interp)
 {
   PrintToStream(stream, "(");
   ListPrintWorker(stream, list, useNewLine, interp);
@@ -129,7 +129,7 @@ void ListPrintHelper(List* list, Bool useNewLine, Interp* interp)
 {
   char* buffer;
   size_t size;
-  Stream* stream = open_memstream(&buffer, &size);
+  FileStream* stream = open_memstream(&buffer, &size);
   ListPrintToStream(stream, list, useNewLine, interp);
   fclose(stream);
   puts(buffer);
