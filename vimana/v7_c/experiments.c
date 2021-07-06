@@ -477,3 +477,222 @@ Rewrite also of TIMESDO with DUP and SWAP:
 ./vimana  14.90s user 0.02s system 98% cpu 15.155 total
 ./vimana  14.56s user 0.03s system 97% cpu 14.919 total
 */
+
+
+// UNUSED CODE FROM primfuns.h
+// -------------------------------------------------------------
+
+/*
+  //InterpAddPrimFun("Optimize", Prim_OPTIMIZE, interp);
+  //InterpAddPrimFun("Define", Prim_DEFINE, interp);
+  //InterpAddPrimFun("GotoIfTrue", Prim_GOTOIFTRUE, interp);
+  //InterpAddPrimFun("GotoIfFalse", Prim_GOTOIFFALSE, interp);
+  //InterpAddPrimFun("GotoIfNotZero", Prim_GOTOIFNOTZERO, interp);
+*/
+
+/*
+void PrimEval_EvalList(Interp* interp, List* list)
+{
+  // Enter new context with current env.
+  InterpEnterContext(interp, list);
+}
+*/
+
+/*
+void PrimEval_EvalFun(Interp* interp, List* fun)
+{
+  // Just push it on the callstack, binding is done by primitives
+  TODO: InterpEnterContext(interp, fun, ContextNewEnv);
+}
+*/
+
+/*
+// NUM NUM MINUS -> NUM
+void Prim_MINUS(Interp* interp)
+{
+  Item a, b;
+
+  InterpPopInto(interp, b);
+  InterpPopInto(interp, a);
+
+  if (IsIntNum(a) && IsIntNum(b))
+  {
+    a.type = TypeIntNum;
+    a.value.intNum = a.value.intNum - b.value.intNum;
+  }
+  InterpPush(interp, a);
+}
+
+// NUM NUM TIMES -> NUM
+void Prim_TIMES(Interp* interp)
+{
+  Item a, b, res;
+
+  InterpPopInto(interp, b);
+  InterpPopInto(interp, a);
+
+  if (IsIntNum(a) && IsIntNum(b))
+  {
+    a.type = TypeIntNum;
+    a.value.intNum = a.value.intNum * b.value.intNum;
+  }
+  InterpPush(interp, a);
+}
+*/
+
+/*
+// This creates a circular list structure for recursive functions,
+// and therefore protection against this is added to ListPrint()
+// in the form of a new type flag: TypeOptimizedFun
+void Prim_Optimize_Worker(Interp* interp, List* list, List* optimizedFuns)
+{
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    Item element = ListGet(list, i);
+    if (IsSymbol(element))
+    {
+      // Lookup symbol value
+      Item item = ListGet(interp->globalValueTable, element.value.symbol);
+      if (IsFun(item))
+      {
+        // Optimize function
+        if ( ! ListContainsSymbol(optimizedFuns, element) )
+        {
+          // Mark function as optimized
+          ListPush(optimizedFuns, element);
+          Prim_Optimize_Worker(interp, ItemList(item), optimizedFuns);
+        }
+
+        // Replace symbol with function
+        item.type = item.type | TypeOptimizedList;
+        ListSet(list, i, item);
+      }
+      else
+      if (IsPrimFun(item))
+      {
+        // Replace symbol with primfun
+        ListSet(list, i, item);
+      }
+    }
+    else
+    if (IsList(element))
+    {
+      Prim_Optimize_Worker(interp, ItemList(element), optimizedFuns);
+    }
+  }
+}
+
+// Optimize simplu replaces function svymbols with actual
+// function objects, to eliminate symbol lookup.
+// Note that this creates a circular list structure for 
+// recursive functions.
+// LIST OPTIMIZE -> LIST
+void Prim_OPTIMIZE(Interp* interp)
+{
+  // Replace function symbols with list items.
+  Item item;
+  InterpPopInto(interp, item);
+  if (!IsList(item))
+    ErrorExit("Prim_OPTIMIZE: Got a non-list!");
+
+  // Update the list in place.
+  List* optimizedFuns = ListCreate();
+  Prim_Optimize_Worker(interp, ItemList(item), optimizedFuns);
+  ListFree(optimizedFuns, ListFreeShallow);
+
+  InterpPush(interp, item);
+
+  // Direct call branch added in InterpRunOptimized()
+
+  // TODO
+  // Do non-destructive version (do this in the target language):
+  // Reintroduce VALUE
+  // (FOO) (...) DEFINE
+  // (FOO) LISTFIRST VALUE OPTIMIZE (FOO) LISTFIRST SET
+}
+*/
+
+/*
+// Order is BODY NAME
+// (FUNBODY) (FUNNAME) DEF ->
+void Prim_DEF(Interp* interp)
+{
+  // (SWAP FUN SWAP FIRST SET) FUN (DEF) LISTFIRST SET
+  Prim_SWAP(interp);
+  Prim_FUN(interp);
+  Prim_SWAP(interp);
+  Prim_LISTFIRST(interp);
+  Prim_SET(interp);
+}
+
+// Note that order is NAME BODY
+// (FUNNAME) (FUNBODY) DEFINE ->
+void Prim_DEFINE(Interp* interp)
+{
+  // (FUN SWAP FIRST SET) FUN (DEFINE) LISTFIRST SET
+  Prim_FUN(interp);
+  Prim_SWAP(interp);
+  Prim_LISTFIRST(interp);
+  Prim_SET(interp);
+}
+*/
+
+/*
+
+void Prim_GOTOIFTRUE(Interp* interp)
+{
+  Item codePointer, boolVal;
+
+  InterpPopInto(interp, codePointer);
+  InterpPopInto(interp, boolVal);
+
+  if (!IsIntNum(codePointer))
+    ErrorExit("Prim_GOTOIFTRUE: Expected TypeIntNum");
+  if (!IsBool(boolVal))
+    ErrorExit("Prim_GOTOIFTRUE: Expected TypeBool");
+
+  if (boolVal.value.truth)
+  {
+    PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
+    interp->currentContext->codePointer = codePointer.value.intNum - 1;
+  }
+}
+
+void Prim_GOTOIFFALSE(Interp* interp)
+{
+  Item codePointer, boolVal;
+
+  InterpPopInto(interp, codePointer);
+  InterpPopInto(interp, boolVal);
+
+  if (!IsIntNum(codePointer))
+    ErrorExit("Prim_GOTOIFFALSE: Expected TypeIntNum");
+  if (!IsBool(boolVal))
+    ErrorExit("Prim_GOTOIFFALSE: Expected TypeBool");
+
+  if (!boolVal.value.truth)
+  {
+    PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
+    interp->currentContext->codePointer = codePointer.value.intNum - 1;
+  }
+}
+
+void Prim_GOTOIFNOTZERO(Interp* interp)
+{
+  Item codePointer, intVal;
+
+  InterpPopInto(interp, codePointer);
+  InterpPopInto(interp, intVal);
+
+  if (!IsIntNum(codePointer))
+    ErrorExit("Prim_GOTOIFNOTZERO: Expected TypeIntNum (1)");
+  if (!IsIntNum(intVal))
+    ErrorExit("Prim_GOTOIFNOTZERO: Expected TypeIntNum (2)");
+
+  if (0 != intVal.value.intNum)
+  {
+    PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
+    interp->currentContext->codePointer = codePointer.value.intNum - 1;
+  }
+}
+*/
