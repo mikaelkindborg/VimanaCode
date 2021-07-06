@@ -31,6 +31,7 @@ echo "NUMBER OF LINES: ".$numlines."\n";
 210514: 1773 lines
 210520: 1581 lines
 210521: 1641 lines
+210706: 1993 lines (more primitives)
 
 ***/
 
