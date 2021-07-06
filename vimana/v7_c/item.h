@@ -93,14 +93,6 @@ Item ItemWithList(List* list)
   return item;
 }
 
-Item ItemWithContext(Context* context)
-{
-  Item item;
-  item.type = TypeContext;
-  item.value.context = context;
-  return item;
-}
-
 // Uninitialized value
 Item ItemWithVirgin()
 {

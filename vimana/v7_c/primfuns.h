@@ -19,6 +19,7 @@ void Prim_LISTFIRST(Interp* interp);
 // ITEM (SYMBOL) SETGLOBAL ->
 void Prim_SETGLOBAL(Interp* interp)
 {
+  PrintDebug("Prim_SETGLOBAL");
   // Get name and value.
   Item name, value;
   InterpPopInto(interp, name);
@@ -471,13 +472,12 @@ void Prim_EQ(Interp* interp)
 // ITEM PRINT ->
 void Prim_PRINT(Interp* interp)
 {
-  //PrintDebug("HELLO PRINT");
+  PrintDebug("Prim_PRINT");
   Item item;
   InterpPopInto(interp, item);
   char* buf = ItemToString(item, interp);
   puts(buf);
   free(buf);
-  ItemRefCountDecr(item);
   ItemGC(item);
 }
 
@@ -528,31 +528,32 @@ void Prim_LISTLAST(Interp* interp)
 // LIST LISTPOP -> ITEM
 void Prim_LISTPOP(Interp* interp)
 {
-  Item item;
-  InterpPopInto(interp, item);
-  if (!IsList(item))
+  Item list, item;
+  InterpPopInto(interp, list);
+  if (!IsList(list))
     ErrorExit("Prim_LISTPOP: Got non-list");
-  item = ListPop(ItemList(item));
+  ListPopInto(ItemList(list), item);
   InterpPush(interp, item); // Push element
 }
 
-// LIST ITEM LISTPUSH ->
+// ITEM LIST LISTPUSH ->
 void Prim_LISTPUSH(Interp* interp)
 {
+  PrintDebug("Prim_LISTPUSH");
   Item item, list;
-  InterpPopInto(interp, item);
   InterpPopInto(interp, list);
-  if (!IsList(item))
+  InterpPopInto(interp, item);
+  if (!IsList(list))
     ErrorExit("Prim_LISTPUSH: Got non-list");
   ListPush(ItemList(list), item);
 }
 
-// LIST INDEX LISTGET -> ITEM
+// INDEX LIST LISTGET -> ITEM
 void Prim_LISTGET(Interp* interp)
 {
   Item index, list, item;
-  InterpPopInto(interp, index);
   InterpPopInto(interp, list);
+  InterpPopInto(interp, index);
   if (!IsIntNum(index))
     ErrorExit("Prim_LISTGET: Got non-integer index");
   if (!IsList(list))
@@ -561,13 +562,13 @@ void Prim_LISTGET(Interp* interp)
   InterpPush(interp, item); // Push element
 }
 
-// LIST INDEX ITEM LISTSET ->
+// INDEX ITEM LIST LISTSET ->
 void Prim_LISTSET(Interp* interp)
 {
   Item index, list, item;
+  InterpPopInto(interp, list);
   InterpPopInto(interp, item);
   InterpPopInto(interp, index);
-  InterpPopInto(interp, list);
   if (!IsIntNum(index))
     ErrorExit("Prim_LISTSET: Got non-integer index");
   if (!IsList(list))

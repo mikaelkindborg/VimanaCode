@@ -6,7 +6,7 @@
 
 #define OPTIMIZE
 #define OPTIMIZE_PRIMFUNS
-//#define USE_GC
+#define USE_GC
 //#define DEBUG
 
 typedef unsigned char Byte;

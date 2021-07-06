@@ -2,7 +2,7 @@ BENCHMARK RESULTS
 =================
 
 210705:
-time ./vimana benchmark.vimana
+miki@mikis-Air v7_c % time ./vimana benchmark.vimana
 ./vimana benchmark.vimana  14.42s user 0.01s system 96% cpu 14.924 total
 After local functions (possibly a little slower):
 ./vimana benchmark.vimana  14.56s user 0.02s system 99% cpu 14.696 total
@@ -11,3 +11,14 @@ After local functions (possibly a little slower):
 210706:
 miki@mikis-Air v7_c % time ./vimana benchmark.vimana 
 ./vimana benchmark.vimana  14.17s user 0.01s system 99% cpu 14.186 total
+./vimana benchmark.vimana  14.11s user 0.01s system 85% cpu 16.539 total
+WITHOUT OPTIMIZE_PRIMFUNS:
+./vimana benchmark.vimana  15.54s user 0.01s system 85% cpu 18.132 total
+
+Testing GC 210706:
+WITHOUT REFERENCE COUNTING:
+./vimana benchmark.vimana  14.57s user 0.01s system 98% cpu 14.805 total
+WITH REFERENCE COUNTING:
+./vimana benchmark.vimana  16.44s user 0.01s system 98% cpu 16.738 total
+WITH MACROS FOR REFERENCE COUNTING:
+./vimana benchmark.vimana  14.79s user 0.01s system 97% cpu 15.234 total

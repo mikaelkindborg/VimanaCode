@@ -696,3 +696,17 @@ void Prim_GOTOIFNOTZERO(Interp* interp)
   }
 }
 */
+
+
+/* TODO: Remove.
+#ifndef OPTIMIZE_PRIMFUNS
+      // Non-optimized primfun calls.
+      // Lookup global value of symbol and check if it is a primfun.
+      item = ListGet(interp->globalValueTable, element.value.symbol);
+      if (IsPrimFun(item))
+      {
+        item.value.primFun(interp);
+        goto exit;
+      }
+#endif
+*/

@@ -61,12 +61,37 @@ void ListFree(List* list, int whatToFree)
 // GARBAGE COLLECTION ------------------------------------------
 
 #ifdef USE_GC
+
+#ifdef OPTIMIZE
+
+#define ItemRefCountIncr(item) \
+do { \
+  if (IsDynAlloc(item)) \
+    ++ ((item).value.list->refCount); \
+} while(0)
+
+#define ItemRefCountDecr(item) \
+do { \
+  if (IsDynAlloc(item)) \
+    -- ((item).value.list->refCount); \
+} while(0)
+
+#define ItemGC(item) \
+do { \
+  if (IsDynAlloc(item)) \
+    if (0 >= (item).value.list->refCount) \
+      ListFree((item).value.list, ListFreeShallow); \
+} while(0)
+
+#else
+
 void ItemRefCountIncr(Item item)
 {
   if (IsDynAlloc(item))
   {
     PrintDebug("ItemRefCountIncr");
     ++ (item.value.list->refCount);
+    PrintDebug("  refCount: %i", item.value.list->refCount);
   }
 }
 
@@ -76,6 +101,7 @@ void ItemRefCountDecr(Item item)
   {
     PrintDebug("ItemRefCountDecr");
     -- (item.value.list->refCount);
+    PrintDebug("  refCount: %i", item.value.list->refCount);
   }
 }
 
@@ -86,14 +112,20 @@ void ItemGC(Item item)
     if (0 >= item.value.list->refCount)
     {
       PrintDebug("ItemGC: ListFree");
+      PrintDebug("  refCount: %i", item.value.list->refCount);
       ListFree(item.value.list, ListFreeShallow);
     }
   }
 }
+
+#endif
+
 #else
+
 #define ItemRefCountIncr(item)
 #define ItemRefCountDecr(item)
 #define ItemGC(item)
+
 #endif
 
 // LIST FUNCTIONS ----------------------------------------------
@@ -163,6 +195,7 @@ void ListPush(List* list, Item item)
     ItemRefCountDecr(item); \
   } while(0)
 
+/* UNUSED
 Item ListPop(List* list)
 {
   if (list->length < 1)
@@ -172,6 +205,7 @@ Item ListPop(List* list)
   ItemRefCountDecr(item);
   return item;
 }
+*/
 
 #ifdef OPTIMIZE
 // TODO: Test which style is faster.
@@ -248,6 +282,7 @@ Item ListGet(List* list, int index)
 #else
 void ListSet(List* list, int index, Item item)
 {
+  PrintDebug("ListSet");
   // Grow list if needed.
   if (index >= list->maxLength)
     ListGrow(list, index + ListGrowIncrement);
@@ -261,7 +296,7 @@ void ListSet(List* list, int index, Item item)
   list->items[index] = item;
 }
 #endif
- 
+
 #ifdef OPTIMIZE
 #define ListDup(list, index) \
   do { \
@@ -312,6 +347,8 @@ Item* ListGetItemPtr(List* list, int index)
 // Associative list set or get. Assumes symbol and value in pairs.
 Item* ListAssocSetGet(List* list, Index symbol, Item* value)
 {
+  PrintDebug("ListAssocSetGet");
+
   int    length = list->length;
   size_t itemSize = sizeof(Item);
   Item*  item = list->items;
@@ -365,6 +402,8 @@ Bool ListContainsSymbol(List* list, Item item)
 }
 
 /*
+// UNUSED 
+// TODO: Make macros for these?
 // Associative list lookup.
 Item* ListAssocGet(List* list, Index symbolIndex)
 {

@@ -69,6 +69,7 @@ Interp* InterpCreate()
   return interp;
 }
 
+// TODO: Improve.
 void InterpFree(Interp* interp)
 {
   ListFree(interp->globalSymbolTable, ListFreeDeep);
@@ -244,6 +245,9 @@ Item Interp_EvalSymbol(Interp* interp, Item item)
 #define InterpEnterContext(interp, code) \
   InterpEnterCallContext(interp, code, FALSE)
 
+#define InterpEnterFunCallContext(interp, code) \
+  InterpEnterCallContext(interp, code, TRUE)
+
 void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
 {
   Context* currentContext;
@@ -377,18 +381,6 @@ void InterpRun(Interp* interp, List* list)
 
     if (IsSymbol(element))
     {
-/* TODO: Remove.
-#ifndef OPTIMIZE_PRIMFUNS
-      // Non-optimized primfun calls.
-      // Lookup global value of symbol and check if it is a primfun.
-      item = ListGet(interp->globalValueTable, element.value.symbol);
-      if (IsPrimFun(item))
-      {
-        item.value.primFun(interp);
-        goto exit;
-      }
-#endif
-*/
       // Evaluate symbol (search local and global env).
       item = Interp_EvalSymbol(interp, element);
       
@@ -402,7 +394,7 @@ void InterpRun(Interp* interp, List* list)
       // If it is a function call it.
       if (IsFun(item))
       {
-        InterpEnterCallContext(interp, item.value.list, TRUE);
+        InterpEnterFunCallContext(interp, item.value.list);
         goto exit;
       }
 
