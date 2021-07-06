@@ -20,8 +20,8 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeList          16
 #define TypePrimFun       32
 #define TypeFun           64
-#define TypeOptimizedList 128  
-#define TypeLocalVar      256 
+//#define TypeOptimizedList 128  
+//#define TypeLocalVar      256 
 #define TypeString        512
 #define TypeContext       1024
 #define TypeDynAlloc      2048
@@ -35,14 +35,13 @@ typedef void   (*PrimFun)(Interp*);
 #define IsList(item)        ((item).type & TypeList)
 #define IsPrimFun(item)     ((item).type & TypePrimFun)
 #define IsFun(item)         ((item).type & TypeFun)
-#define IsOptimizedList(item) ((item).type & TypeOptimizedList)
-#define IsLocalVar(item)    ((item).type & TypeLocalVar)
+//#define IsOptimizedList(item) ((item).type & TypeOptimizedList)
+//#define IsLocalVar(item)    ((item).type & TypeLocalVar)
 #define IsString(item)      ((item).type & TypeString)
 #define IsContext(item)     ((item).type & TypeContext)
 #define IsDynAlloc(item)    ((item).type & TypeDynAlloc)
 
-#define TypePushable (TypeIntNum | TypeDecNum | TypeBool | TypeList)
-
+//??? #define TypePushable (TypeIntNum | TypeDecNum | TypeBool | TypeList)
 
 // STRUCTS -----------------------------------------------------
 

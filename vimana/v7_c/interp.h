@@ -6,11 +6,6 @@
 #define SymbolLowerCase     2
 #define SymbolMixedCase     3
 
-// Declarations.
-//void PrimEval_EvalList(Interp* interp, List* list);
-//void PrimEval_EvalFun(Interp* interp, List* fun);
-Item PrimEval_EvalSymbol(Interp* interp, Item item);
-
 // Octo: That was new
 
 // With freedom comes responsibilities (for the programmer).
@@ -90,18 +85,6 @@ void InterpFree(Interp* interp)
 
 // Pop an item from the data stack and set variable to it.
 #define InterpPopInto(interp, item) ListPopInto((interp)->stack, item)
-#define InterpPopEvalInto(interp, item) ListPopInto((interp)->stack, item)
-
-// Pop and evaluate an item from the stack and set variable to it.
-/*
-#define InterpPopEvalInto(interp, item) \
-  do { \
-    ListPopInto((interp)->stack, item); \
-    (item) = IsSymbol(item) ? \
-      PrimEval_EvalSymbol(interp, item) : \
-      item; \
-  } while (0)
-*/
 
 // SYMBOL TABLE ------------------------------------------------
 
@@ -139,7 +122,7 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
   Index index = InterpLookupSymbolIndex(interp, symbolString);
   if (index > -1)
   {
-#ifdef OPTIMIZE
+#ifdef OPTIMIZE_PRIMFUNS
     // Special case for primfuns. We return the primfun item
     // for faster lookup in eval.
     Item value = ListGet(interp->globalValueTable, index);
@@ -185,6 +168,75 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
   item.type = TypePrimFun;
   item.value.primFun = fun;
   ListPush(interp->globalValueTable, item);
+}
+
+// VARIABLES ---------------------------------------------------
+
+void Interp_SetGlobal(Interp* interp, Item value, Item name)
+{
+  if (IsSymbol(name))
+    InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
+  else
+    ErrorExit("Interp_SetGlobal: Got a non-symbol");
+}
+
+#ifdef OPTIMIZE
+#define Interp_SetLocal(interp, name, item) \
+  do { \
+    if (!IsSymbol(name)) \
+      ErrorExit("Interp_SetLocal: Got a non-symbol (1)"); \
+    Context* context = (interp)->currentContext; \
+    ListAssocSetGet(context->env, (name).value.symbol, &(item)); \
+  } while (0)
+#else
+void Interp_SetLocal(Interp* interp, Item name, Item value)
+{
+  PrintDebug("Interp_SetLocal");
+  if (!IsSymbol(name))
+    ErrorExit("Interp_SetLocal: Got a non-symbol (2)");
+
+  // Get environment of current context.
+  Context* context = interp->currentContext;
+
+  // Error checking.
+  if (!context)
+    ErrorExit("Interp_SetLocal: Context not found");
+  if (!context->env)
+    ErrorExit("Interp_SetLocal: Context has no environment");
+
+  // Set symbol value.
+  //ListAssocSet(context->env, name.value.symbol, &value);
+  ListAssocSetGet(context->env, name.value.symbol, &value);
+
+  //PrintDebug("Interp_SetLocal: PRINTING ENV");
+  //ListPrint(context->env, interp);
+}
+#endif
+
+Item Interp_EvalSymbol(Interp* interp, Item item)
+{
+  // Non-symbols evaluates to themselves.
+  if (!IsSymbol(item))
+    return item;
+
+  // Look for symbol in current context.
+  Context* context = interp->currentContext;
+  if (context && context->env)
+  {
+    //PrintDebug("Interp_EvalSymbol: ENV");
+    //ListPrint(context->env, interp);
+    Item* value = ListAssocSetGet(context->env, item.value.symbol, NULL);
+    if (value)
+      return *value;
+  }
+
+  // Lookup global symbol.
+  Item value = ListGet(interp->globalValueTable, item.value.symbol);
+  if (TypeVirgin != value.type) 
+    return value;
+
+  // Symbol is unbound and evaluates to itself.
+  return item;
 }
 
 // CALLSTACK ---------------------------------------------------
@@ -314,7 +366,7 @@ void InterpRun(Interp* interp, List* list)
     // Get next element.
     Item element = ListGet(code, codePointer);
 
-#ifdef OPTIMIZE
+#ifdef OPTIMIZE_PRIMFUNS
     // Optimized primfun calls
     if (IsPrimFun(element))
     {
@@ -325,8 +377,8 @@ void InterpRun(Interp* interp, List* list)
 
     if (IsSymbol(element))
     {
-/*
-#ifndef OPTIMIZE
+/* TODO: Remove.
+#ifndef OPTIMIZE_PRIMFUNS
       // Non-optimized primfun calls.
       // Lookup global value of symbol and check if it is a primfun.
       item = ListGet(interp->globalValueTable, element.value.symbol);
@@ -338,9 +390,9 @@ void InterpRun(Interp* interp, List* list)
 #endif
 */
       // Evaluate symbol (search local and global env).
-      item = PrimEval_EvalSymbol(interp, element);
+      item = Interp_EvalSymbol(interp, element);
       
-#ifndef OPTIMIZE      
+#ifndef OPTIMIZE_PRIMFUNS      
       if (IsPrimFun(item))
       {
         item.value.primFun(interp);

@@ -20,10 +20,10 @@ void ItemPrintToStream(FileStream* stream, Item item, Interp* interp)
   {
     PrintToStream(stream, "[PRIMFUN]");
   }
-  else if (IsOptimizedList(item))
-  {
-    PrintToStream(stream, "[OPTIMIZEDLIST]");
-  }
+  //else if (IsOptimizedList(item))
+  //{
+  //  PrintToStream(stream, "[OPTIMIZEDLIST]");
+  //}
   else if (IsList(item))
   {
     //ListPrint(item.value.list, interp);
@@ -50,10 +50,10 @@ void ItemPrintToStream(FileStream* stream, Item item, Interp* interp)
     }
     PrintToStream(stream, "%s", str);
   }
-  else if (IsLocalVar(item))
-  {
-    PrintToStream(stream, "[VAR %li]", (long)item.value.symbol);
-  }
+  //else if (IsLocalVar(item))
+  //{
+  //  PrintToStream(stream, "[VAR %li]", (long)item.value.symbol);
+  //}
   else if (IsVirgin(item))
   {
     PrintToStream(stream, "[VIRGIN]");
@@ -101,7 +101,8 @@ void ListPrintWorker(FileStream* stream, List* list, Bool useNewLine, Interp* in
     }
     
     Item item = ListGet(list, i);
-    if (IsList(item) && !IsOptimizedList(item))
+    //if (IsList(item) && !IsOptimizedList(item))
+    if (IsList(item))
     {
       //ListPrintToStream(stream, item.value.list, useNewLine, interp);
       ListPrintToStream(stream, item.value.list, FALSE, interp);

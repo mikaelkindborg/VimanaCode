@@ -8,3 +8,6 @@ After local functions (possibly a little slower):
 ./vimana benchmark.vimana  14.56s user 0.02s system 99% cpu 14.696 total
 ./vimana benchmark.vimana  14.41s user 0.03s system 98% cpu 14.719 total
 
+210706:
+miki@mikis-Air v7_c % time ./vimana benchmark.vimana 
+./vimana benchmark.vimana  14.17s user 0.01s system 99% cpu 14.186 total

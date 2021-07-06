@@ -68,17 +68,3 @@ int main(int numargs, char* args[])
   //PrintDebug("SYMBOL TABLE:\n");
   //ListPrintItems(interp->globalSymbolTable, interp);
 
-  //PrintDebug("PARSED LIST:");
-  //ListPrint(list, interp);
-  
-  //List* list = ParseCode(interp, "(ENTER-OPTIMIZED-MODE HELLO PRINT) OPTIMIZE EVAL");
-  //List* list = ParseCode(interp, "HELLO PRINT");
-
-  /*List* list = ParseCode(interp, 
-    //"HELLOWORLD PRINT 1 2 + PRINT "
-    "(FACT) (N => N ISZERO (1) (N 1 - FACT N *) IFELSE) DEFINE "
-    "(TIMESDO) ((L N) => N ISZERO (L EVAL L N 1 - TIMESDO) IFFALSE) DEFINE "
-    "10 FACT PRINT "
-     //"(20 FACT DROP) 10000000 TIMESDO "
-    );
-  */
