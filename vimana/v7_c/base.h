@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#define OPTIMIZE
+//#define OPTIMIZE
 #define OPTIMIZE_PRIMFUNS
 #define USE_GC
-//#define DEBUG
+#define DEBUG
 
 typedef unsigned char Byte;
 typedef int           Bool;

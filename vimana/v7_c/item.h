@@ -56,6 +56,7 @@ typedef struct MyItem
     DecNum    decNum;
     IntNum    intNum;
     List*     list;
+    void*     ptr;
     Context*  context;
     char*     string; // TODO: Make custom string object
     Bool      truth;

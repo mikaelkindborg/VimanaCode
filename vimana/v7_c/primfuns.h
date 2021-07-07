@@ -484,7 +484,7 @@ void Prim_PRINT(Interp* interp)
 // LISTNEW -> LIST
 void Prim_LISTNEW(Interp* interp)
 {
-  //PrintDebug("HELLO LISTNEW");
+  //PrintDebug("Prim_LISTNEW");
   Item list;
   list.type = TypeList | TypeDynAlloc;
   list.value.list = ListCreate();
@@ -528,6 +528,7 @@ void Prim_LISTLAST(Interp* interp)
 // LIST LISTPOP -> ITEM
 void Prim_LISTPOP(Interp* interp)
 {
+  // TODO: DynAlloc only!
   Item list, item;
   InterpPopInto(interp, list);
   if (!IsList(list))
@@ -539,6 +540,7 @@ void Prim_LISTPOP(Interp* interp)
 // ITEM LIST LISTPUSH ->
 void Prim_LISTPUSH(Interp* interp)
 {
+  // TODO: DynAlloc only!
   PrintDebug("Prim_LISTPUSH");
   Item item, list;
   InterpPopInto(interp, list);
@@ -565,6 +567,7 @@ void Prim_LISTGET(Interp* interp)
 // INDEX ITEM LIST LISTSET ->
 void Prim_LISTSET(Interp* interp)
 {
+  // TODO: DynAlloc only!
   Item index, list, item;
   InterpPopInto(interp, list);
   InterpPopInto(interp, item);
@@ -579,6 +582,7 @@ void Prim_LISTSET(Interp* interp)
 // LIST LISTDUP -> 
 void Prim_LISTDUP(Interp* interp)
 {
+  // TODO: DynAlloc only!
   Item list;
   InterpPopInto(interp, list);
   if (!IsList(list))
@@ -589,6 +593,7 @@ void Prim_LISTDUP(Interp* interp)
 // LIST LISTSWAP -> 
 void Prim_LISTSWAP(Interp* interp)
 {
+  // TODO: DynAlloc only!
   Item list;
   InterpPopInto(interp, list);
   if (!IsList(list))
@@ -599,6 +604,7 @@ void Prim_LISTSWAP(Interp* interp)
 // LIST LISTDROP -> 
 void Prim_LISTDROP(Interp* interp)
 {
+  // TODO: DynAlloc only!
   Item list;
   InterpPopInto(interp, list);
   if (!IsList(list))
@@ -636,13 +642,13 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("eq", Prim_EQ, interp);
   InterpAddPrimFun("print", Prim_PRINT, interp);
   InterpAddPrimFun("listNew", Prim_LISTNEW, interp);
-  InterpAddPrimFun("listLength", Prim_LISTLENGTH, interp);
-  InterpAddPrimFun("listFirst", Prim_LISTFIRST, interp);
-  InterpAddPrimFun("listLast", Prim_LISTLAST, interp);
-  InterpAddPrimFun("listPop", Prim_LISTPOP, interp);
-  InterpAddPrimFun("listPush", Prim_LISTPUSH, interp);
-  InterpAddPrimFun("listGet", Prim_LISTGET, interp);
-  InterpAddPrimFun("listSet", Prim_LISTSET, interp);
+  InterpAddPrimFun("length", Prim_LISTLENGTH, interp);
+  InterpAddPrimFun("first", Prim_LISTFIRST, interp);
+  InterpAddPrimFun("last", Prim_LISTLAST, interp);
+  InterpAddPrimFun("pop", Prim_LISTPOP, interp);
+  InterpAddPrimFun("push", Prim_LISTPUSH, interp);
+  InterpAddPrimFun("getAt", Prim_LISTGET, interp);
+  InterpAddPrimFun("setAt", Prim_LISTSET, interp);
   InterpAddPrimFun("listDup", Prim_LISTDUP, interp);
   InterpAddPrimFun("listSwap", Prim_LISTSWAP, interp);
   InterpAddPrimFun("listDrop", Prim_LISTDROP, interp);

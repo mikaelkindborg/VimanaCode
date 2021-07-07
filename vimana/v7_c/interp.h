@@ -17,7 +17,7 @@ typedef struct MyContext
 {
   List* env;
   List* ownEnv;
-  //Bool  hasEnv;
+  Bool  gcEnv;
   List* code;
   Index codePointer;
   struct MyContext* nextContext;
@@ -30,6 +30,7 @@ Context* ContextCreate()
   Context* context = malloc(sizeof(Context));
   context->ownEnv = ListCreate();
   context->env = NULL;
+  context->gcEnv = FALSE;
   context->code = NULL;
   context->codePointer = -1;
   context->nextContext = NULL;
@@ -39,7 +40,7 @@ Context* ContextCreate()
 
 void ContextFree(Context* context)
 {
-  ListFree(context->ownEnv, ListFreeShallow);
+  ListFree(context->ownEnv);
   free(context);
 }
 
@@ -69,12 +70,12 @@ Interp* InterpCreate()
   return interp;
 }
 
-// TODO: Improve.
+// TODO: Improve deallocation.
 void InterpFree(Interp* interp)
 {
-  ListFree(interp->globalSymbolTable, ListFreeDeep);
-  ListFree(interp->globalValueTable, ListFreeShallow);
-  ListFree(interp->stack, ListFreeShallow);
+  ListFree(interp->globalSymbolTable);
+  ListFree(interp->globalValueTable);
+  ListFree(interp->stack);
   //TODO Free contexts //ListFree(interp->callstack, ListFreeDeep);
   free(interp);
 }
@@ -294,7 +295,7 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
   }
 
   // Set context data.
-  nextContext->code = code; // TODO: What about GC?
+  nextContext->code = code;
   nextContext->codePointer = -1;
 
   // Set environment.
@@ -303,6 +304,7 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
     // Use fresh environment.
     nextContext->env = nextContext->ownEnv;
     nextContext->env->length = 0;
+    nextContext->gcEnv = TRUE;
   }
   else if (code->env)
   {
@@ -329,12 +331,13 @@ void InterpRun(Interp* interp, List* list)
   Item       item;
 
   // Create root context.
+  interp->contextSwitch = TRUE;
   interp->callstack = ContextCreate();
   interp->currentContext = interp->callstack;
   interp->callstackIndex = 0;
   interp->run = TRUE;
   interp->currentContext->code = list;
-  interp->contextSwitch = TRUE;
+  interp->currentContext->gcEnv = TRUE;
 
   while (TRUE) //interp->run
   {
@@ -350,12 +353,34 @@ void InterpRun(Interp* interp, List* list)
     // Increment code pointer.
     codePointer = ++ currentContext->codePointer;
 
-    // Exit the frame if the code in the current context has finished executing.
+    // Exit stackframe if the code in the current context has finished executing.
     if (codePointer >= codeLength)
     {
       PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-      interp->currentContext = interp->currentContext->prevContext;
       interp->contextSwitch = TRUE;
+
+#ifdef USE_GC
+      // GC local env on exit context, unless a closure is refering to it.
+      if (currentContext->gcEnv)
+      {
+        currentContext->gcEnv = FALSE;
+
+        PrintDebug("EXIT CONTEXT REFCOUNT: %i", currentContext->env->refCount);
+
+        if (currentContext->env->refCount < 1)
+        {
+          ListEmpty(currentContext->env);
+        }
+        else
+        {
+          ListFree(currentContext->ownEnv);
+          currentContext->ownEnv = ListCreate();
+        }
+      }
+#endif
+      // Switch to parent context.
+      interp->currentContext = currentContext->prevContext;
+      
 #ifndef OPTIMIZE
       -- interp->callstackIndex;
       if (interp->currentContext)

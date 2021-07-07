@@ -18,6 +18,7 @@ WITHOUT OPTIMIZE_PRIMFUNS:
 Testing GC 210706:
 WITHOUT REFERENCE COUNTING:
 ./vimana benchmark.vimana  14.57s user 0.01s system 98% cpu 14.805 total
+./vimana benchmark.vimana  13.66s user 0.01s system 96% cpu 14.188 total (cold machine)
 WITH REFERENCE COUNTING:
 ./vimana benchmark.vimana  16.44s user 0.01s system 98% cpu 16.738 total
 WITH MACROS FOR REFERENCE COUNTING:

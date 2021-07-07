@@ -1,0 +1,13 @@
+(Test of reference counting with local variables) print
+
+(CreateLocalList) (
+  listNew (mylist) set
+  HELLO_WORLD mylist push
+  123456 mylist push
+  (KILROY WAS HERE) mylist push
+  mylist print
+) def
+
+CreateLocalList
+
+(End of test) print

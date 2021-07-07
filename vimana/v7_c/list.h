@@ -1,15 +1,15 @@
-int GMallocCounter = 0;
-int GReallocCounter = 0;
+// For debugging.
+//int GMallocCounter = 0;
+//int GReallocCounter = 0;
 
 // LISTS -------------------------------------------------------
 
-#define ListFreeShallow 1
-#define ListFreeDeep    2
-#define ListFreeDeeper  3
+#ifdef USE_GC
+void ListFreeChildrenGC(List* list, List* traversed);
+#endif
 
 typedef struct MyList
 {
-  //int   listType;
   int   refCount;     // Reference counter for GC
   int   length;       // Current number of items; TODO: last ???
   int   maxLength;    // Max number of items
@@ -29,7 +29,7 @@ List* ListCreate()
   size_t size = ListGrowIncrement;
 
   //GMallocCounter ++;
-  //printf("MALLOC CONUTER: %i\n", GMallocCounter);
+  //printf("MALLOC COUNTER: %i\n", GMallocCounter);
 
   List* list = malloc(sizeof(List));
   list->refCount = 0;
@@ -49,16 +49,49 @@ List* ListCreate()
   return list;
 }
 
-// TODO: whatToFree is how deep to free.
-// But proper GC should be used instead.
-void ListFree(List* list, int whatToFree)
+void ListFree(List* list)
 {
+  PrintDebug("ListFree");
+
+#ifdef USE_GC
+  // GC children.
+  ListFreeChildrenGC(list, NULL);
+#endif
+
+  // Free item array.
   free(list->items);
-  if (list->env) free(list->env);
+
+  // Free environment list.
+  if (list->env) 
+  {
+    ListFree(list->env);
+  }
+
+  // Free list object.
   free(list);
 }
 
+void ListEmpty(List* list)
+{
+#ifdef USE_GC
+  // GC children.
+  ListFreeChildrenGC(list, NULL);
+#endif
+
+  // Empty list.
+  list->length = 0;
+}
+
 // GARBAGE COLLECTION ------------------------------------------
+
+// Vilka fall finns?
+// Deallocate list that is non-dynalloc, but may contain dynalloc list
+// Deallocate listitem that is dynalloc
+// Empty/clean list (enviroment)
+// Deallocate list hard and all childlists (regardless of refcount)
+
+// Dealloc children hard, without respect to refcount
+// Dealloc children using refcount (decrement children's refcount and dealloc if zero)
 
 #ifdef USE_GC
 
@@ -66,54 +99,54 @@ void ListFree(List* list, int whatToFree)
 
 #define ItemRefCountIncr(item) \
 do { \
-  if (IsDynAlloc(item)) \
-    ++ ((item).value.list->refCount); \
+  if (IsList(item) && IsDynAlloc(item)) \
+    ++ (ItemList(item)->refCount); \
 } while(0)
 
 #define ItemRefCountDecr(item) \
 do { \
-  if (IsDynAlloc(item)) \
-    -- ((item).value.list->refCount); \
+  if (IsList(item) && IsDynAlloc(item)) \
+    -- (ItemList(item)->refCount); \
 } while(0)
 
 #define ItemGC(item) \
 do { \
-  if (IsDynAlloc(item)) \
-    if (0 >= (item).value.list->refCount) \
-      ListFree((item).value.list, ListFreeShallow); \
+  if (IsList(item) && IsDynAlloc(item)) \
+    if ((ItemList(item)->refCount) < 1) \
+      ListFree(ItemList(item)); \
 } while(0)
 
 #else
 
 void ItemRefCountIncr(Item item)
 {
-  if (IsDynAlloc(item))
+  if (IsList(item) && IsDynAlloc(item))
   {
     PrintDebug("ItemRefCountIncr");
-    ++ (item.value.list->refCount);
+    ++ (ItemList(item)->refCount);
     PrintDebug("  refCount: %i", item.value.list->refCount);
   }
 }
 
 void ItemRefCountDecr(Item item)
 {
-  if (IsDynAlloc(item))
+  if (IsList(item) && IsDynAlloc(item))
   {
     PrintDebug("ItemRefCountDecr");
-    -- (item.value.list->refCount);
+    -- (ItemList(item)->refCount);
     PrintDebug("  refCount: %i", item.value.list->refCount);
   }
 }
 
 void ItemGC(Item item)
 {
-  if (IsDynAlloc(item))
+  if (IsList(item) && IsDynAlloc(item))
   {
-    if (0 >= item.value.list->refCount)
+    if ((ItemList(item)->refCount) < 1)
     {
       PrintDebug("ItemGC: ListFree");
       PrintDebug("  refCount: %i", item.value.list->refCount);
-      ListFree(item.value.list, ListFreeShallow);
+      ListFree(ItemList(item));
     }
   }
 }
@@ -145,7 +178,7 @@ void ListGrow(List* list, size_t newSize)
   //Item* newArray = reallocarray(list->items, sizeof(Item), newSize);
 
   //GReallocCounter ++;
-  //printf("REALLOC CONUTER: %i\n", GReallocCounter);
+  //printf("REALLOC COUNTER: %i\n", GReallocCounter);
   
   // Make space for more items.
   size_t newArraySize = newSize * sizeof(Item);
@@ -392,7 +425,7 @@ Bool ListContainsSymbol(List* list, Item item)
   for (int i = 0; i < length; ++i)
   {
     Item current = ListGet(list, i);
-    if (current.type == item.type && current.value.symbol == item.value.symbol)
+    if (IsSymbol(current) && (current.value.symbol == item.value.symbol))
     {
       return TRUE;
     }
@@ -400,6 +433,60 @@ Bool ListContainsSymbol(List* list, Item item)
 
   return FALSE;
 }
+
+Bool ListContainsPtr(List* list, void* ptr)
+{
+  int length = list->length;
+
+  for (int i = 0; i < length; ++i)
+  {
+    Item current = ListGet(list, i);
+    if (current.value.ptr == ptr)
+    {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+
+#ifdef USE_GC
+
+// GC children by traversing the list tree
+// if their refcount is < 1.
+void ListFreeChildrenGC(List* list, List* traversed)
+{ 
+  if (ListLength(list) < 1) return; // Nothing to free.
+
+  Bool freeTraversed = (NULL == traversed);
+
+  if (NULL == traversed) traversed = ListCreate();
+
+  PrintDebug("ListFreeChildrenGC: %d  %d", ListLength(list), ListLength(traversed));
+
+  for (int i = 0; i < list->length; ++i)
+  {
+    Item item = ListGet(list, i);
+    if (IsDynAlloc(item) && (! ListContainsPtr(traversed, item.value.ptr)))
+    {
+      Item traversedItem;
+      traversedItem.type = 0;
+      traversedItem.value.ptr = ItemList(item);
+      ListPush(traversed, traversedItem);
+      ItemRefCountDecr(item);
+      if (ItemList(item)->refCount < 1)
+      {
+        ListFreeChildrenGC(ItemList(item), traversed);
+        ListFree(ItemList(item));
+      }
+    }
+  }
+
+  if (freeTraversed) ListFree(traversed);
+}
+
+#endif
 
 /*
 // UNUSED 
@@ -414,5 +501,28 @@ Item* ListAssocGet(List* list, Index symbolIndex)
 void ListAssocSet(List* list, Index symbolIndex, Item* value)
 {
   ListAssocSetGet(list, symbolIndex, value);
+}
+*/
+
+/*
+// Free children by traversing the list tree.
+void ListFreeChildren(List* list, List* traversed)
+{
+  Bool freeTraversed = (NULL == traversed);
+
+  if (NULL == traversed) traversed = ListCreate();
+
+  for (int i = 0; i < list->length; ++i)
+  {
+    Item item = ListGet(list, i);
+    if (IsList(item) && (! ListContainsList(traversed, item)))
+    {
+      ListPush(traversed, item);
+      ListFreeChildren(ItemList(item), traversed);
+      ListFree(ItemList(item));
+    }
+  }
+
+  if (freeTraversed) ListFree(traversed);
 }
 */

@@ -5,11 +5,57 @@
 // Run as REPL or eval file.
 int main(int numargs, char* args[])
 {
+  Bool runREPL = FALSE;
+  char* fileName = NULL;
+
   Interp* interp = InterpCreate();
+
+  if (numargs > 4)
+  {
+    PrintLine("Too many parameters given");
+  }
+
+  for (int i = 1; i < numargs; ++i)
+  {
+    if (StringEquals(args[i], "--mixedcase"))
+    {
+      interp->symbolCase = SymbolMixedCase;
+    }
+    else
+    if (StringEquals(args[i], "--repl"))
+    {
+      runREPL = TRUE;
+    }
+    else
+    {
+      fileName = args[i];
+    }
+  }
+
   DefinePrimFuns(interp);
+
+  // Eval file
+  if (fileName)
+  {
+    char buf[100000]; // Host, host.
+    char* p = buf;
+    int c;
+    FILE* file = fopen(fileName, "r");
+    if (file) 
+    {
+      while ((c = getc(file)) != EOF)
+      {
+        *p++ = c;
+      }
+      *p = 0;
+      fclose(file);
+      List* list = ParseCode(interp, buf);
+      InterpRun(interp, list);
+    }
+  }
   
   // REPL
-  if (1 == numargs)
+  if (runREPL)
   {
     char input[100];
 
@@ -32,30 +78,6 @@ int main(int numargs, char* args[])
       printf("STACK: ");
       ListPrint(interp->stack, interp);
     }
-  }
-  else
-  // Eval file
-  if (2 == numargs)
-  {
-    char buf[100000];
-    char* p = buf;
-    int c;
-    FILE* file = fopen(args[1], "r");
-    if (file) 
-    {
-      while ((c = getc(file)) != EOF)
-      {
-        *p++ = c;
-      }
-      *p = 0;
-      fclose(file);
-      List* list = ParseCode(interp, buf);
-      InterpRun(interp, list);
-    }
-  }
-  else
-  {
-    PrintLine("Too many parameters given");
   }
 
   InterpFree(interp);
