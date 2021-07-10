@@ -40,6 +40,7 @@ Context* ContextCreate()
 
 void ContextFree(Context* context)
 {
+  PrintDebug("ContextFree ownEnv: %ul", (unsigned int)(context->ownEnv));
   ListFree(context->ownEnv);
   free(context);
 }
@@ -48,6 +49,7 @@ void ContextFree(Context* context)
 
 typedef struct MyInterp
 {
+  // TODO: Free strings in globalSymbolTable.
   List*    globalSymbolTable; // List of symbols
   List*    globalValueTable;  // List of global values (primfuns, funs, etc)
   List*    stack;             // The data stack
@@ -76,7 +78,7 @@ void InterpFree(Interp* interp)
   ListFree(interp->globalSymbolTable);
   ListFree(interp->globalValueTable);
   ListFree(interp->stack);
-  //TODO Free contexts //ListFree(interp->callstack, ListFreeDeep);
+  // TODO: Free interp->callstack
   free(interp);
 }
 
@@ -150,7 +152,6 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
 
 void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
 {
-  // TODO: Free these strings in InterpFree().
   char* name = malloc(strlen(str) + 1);
   strcpy(name, str);
 
@@ -170,6 +171,8 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
   item.type = TypePrimFun;
   item.value.primFun = fun;
   ListPush(interp->globalValueTable, item);
+
+  free(name);
 }
 
 // VARIABLES ---------------------------------------------------
@@ -320,6 +323,8 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
   interp->currentContext = nextContext;
 }
 
+// Check this out: https://eli.thegreenplace.net/2012/07/12/computed-goto-for-efficient-dispatch-tables/
+// dispatch: primfun, function, push
 // Evaluate list.
 void InterpRun(Interp* interp, List* list)
 {
@@ -330,12 +335,12 @@ void InterpRun(Interp* interp, List* list)
   Item       element;
   Item       item;
 
-  // Create root context.
+  // Initialize interpreter state and create root context.
+  interp->run = TRUE;
   interp->contextSwitch = TRUE;
+  interp->callstackIndex = 0;
   interp->callstack = ContextCreate();
   interp->currentContext = interp->callstack;
-  interp->callstackIndex = 0;
-  interp->run = TRUE;
   interp->currentContext->code = list;
   interp->currentContext->gcEnv = TRUE;
 
@@ -363,17 +368,19 @@ void InterpRun(Interp* interp, List* list)
       // GC local env on exit context, unless a closure is refering to it.
       if (currentContext->gcEnv)
       {
-        currentContext->gcEnv = FALSE;
-
         PrintDebug("EXIT CONTEXT REFCOUNT: %i", currentContext->env->refCount);
 
-        if (currentContext->env->refCount < 1)
+        currentContext->gcEnv = FALSE;
+
+        if (currentContext->ownEnv->refCount < 1)
         {
-          ListEmpty(currentContext->env);
+          // No closure uses the context, empty it.
+          ListEmpty(currentContext->ownEnv);
         }
         else
         {
-          ListFree(currentContext->ownEnv);
+          // A closure uses the context.
+          //ListFree(currentContext->ownEnv);
           currentContext->ownEnv = ListCreate();
         }
       }

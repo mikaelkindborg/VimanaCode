@@ -1,7 +1,7 @@
 
 // C TYPES -----------------------------------------------------
 
-typedef unsigned long    Type;
+typedef unsigned int     Type;
 typedef long             Index;
 typedef long             IntNum;
 typedef double           DecNum;
@@ -20,11 +20,9 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeList          16
 #define TypePrimFun       32
 #define TypeFun           64
-//#define TypeOptimizedList 128  
-//#define TypeLocalVar      256 
-#define TypeString        512
-#define TypeContext       1024
-#define TypeDynAlloc      2048
+#define TypeString        128
+#define TypeContext       256
+#define TypeDynAlloc      512
 #define TypeVirgin        0 // Represents unbound symbol/uninitialized item
 
 #define IsVirgin(item)      ((item).type == TypeVirgin)
@@ -50,6 +48,7 @@ typedef void   (*PrimFun)(Interp*);
 typedef struct MyItem
 {
   Type type;
+  Type opCode;
   union
   {
     Index     symbol; // Index in symbol table or local environment table

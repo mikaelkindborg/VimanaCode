@@ -5,12 +5,29 @@
 // LISTS -------------------------------------------------------
 
 #ifdef USE_GC
-void ListFreeChildrenGC(List* list, List* traversed);
+
+// Incremented marker used to track traversed lists during GC.
+// For each GC this global marker is incremented, which 
+// allows us to not have to reset the marker list field.
+unsigned long GCMarker = 0;
+
+#define PrepareGC() (++ GCMarker)
+
+void ListFreeGC(List* list);
+void ListFreeChildrenGC(List* list);
+
+#else // #ifndef USE_GC
+
+#define ItemRefCountIncr(item)
+#define ItemRefCountDecr(item)
+#define ItemGC(item)
+
 #endif
 
 typedef struct MyList
 {
   int   refCount;     // Reference counter for GC
+  int   gcMarker;     // Mark flag for GC
   int   length;       // Current number of items; TODO: last ???
   int   maxLength;    // Max number of items
   Item* items;        // Array of items
@@ -33,6 +50,7 @@ List* ListCreate()
 
   List* list = malloc(sizeof(List));
   list->refCount = 0;
+  list->gcMarker = 0;
   list->length = 0;
   list->maxLength = size;
   list->env = NULL;
@@ -53,20 +71,15 @@ void ListFree(List* list)
 {
   PrintDebug("ListFree");
 
-#ifdef USE_GC
-  // GC children.
-  ListFreeChildrenGC(list, NULL);
-#endif
-
   // Free item array.
   free(list->items);
-
+/*
   // Free environment list.
   if (list->env) 
   {
     ListFree(list->env);
   }
-
+*/
   // Free list object.
   free(list);
 }
@@ -75,7 +88,8 @@ void ListEmpty(List* list)
 {
 #ifdef USE_GC
   // GC children.
-  ListFreeChildrenGC(list, NULL);
+  PrepareGC();
+  ListFreeChildrenGC(list);
 #endif
 
   // Empty list.
@@ -94,7 +108,6 @@ void ListEmpty(List* list)
 // Dealloc children using refcount (decrement children's refcount and dealloc if zero)
 
 #ifdef USE_GC
-
 #ifdef OPTIMIZE
 
 #define ItemRefCountIncr(item) \
@@ -113,10 +126,13 @@ do { \
 do { \
   if (IsList(item) && IsDynAlloc(item)) \
     if ((ItemList(item)->refCount) < 1) \
+    { \
+      PrepareGC(); \
       ListFree(ItemList(item)); \
+    } \
 } while(0)
 
-#else
+#else // ! OPTIMIZE
 
 void ItemRefCountIncr(Item item)
 {
@@ -146,20 +162,14 @@ void ItemGC(Item item)
     {
       PrintDebug("ItemGC: ListFree");
       PrintDebug("  refCount: %i", item.value.list->refCount);
-      ListFree(ItemList(item));
+      PrepareGC();
+      ListFreeGC(ItemList(item));
     }
   }
 }
 
-#endif
-
-#else
-
-#define ItemRefCountIncr(item)
-#define ItemRefCountDecr(item)
-#define ItemGC(item)
-
-#endif
+#endif // ! OPTIMIZE
+#endif // USE_GC
 
 // LIST FUNCTIONS ----------------------------------------------
 
@@ -241,6 +251,7 @@ Item ListPop(List* list)
 */
 
 #ifdef OPTIMIZE
+
 // TODO: Test which style is faster.
 /*
 // ./vimana  11.53s user 0.01s system 96% cpu 11.898 total
@@ -312,7 +323,9 @@ Item ListGet(List* list, int index)
     ItemRefCountIncr(item); \
     (list)->items[index] = (item); \
   } while (0)
+
 #else
+
 void ListSet(List* list, int index, Item item)
 {
   PrintDebug("ListSet");
@@ -328,6 +341,7 @@ void ListSet(List* list, int index, Item item)
   // Set new item.
   list->items[index] = item;
 }
+
 #endif
 
 #ifdef OPTIMIZE
@@ -418,6 +432,47 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
   return NULL;
 }
 
+#ifdef USE_GC
+
+
+void ListFreeGC(List* list)
+{ 
+  if (list->refCount < 1)
+  {
+    ListFreeChildrenGC(list);
+    ListFree(list);
+  }
+}
+
+// GC children by traversing the list tree.
+void ListFreeChildrenGC(List* list)
+{ 
+  PrintDebug("ListFreeChildrenGC: %d %lu", ListLength(list), (unsigned long)list);
+
+  if (ListLength(list) < 1) return; // No children to free.
+
+  if (list->gcMarker == GCMarker) return; // Already traversed.
+
+  // Mark list as traversed.
+  list->gcMarker = GCMarker;
+  
+  for (int i = 0; i < list->length; ++i)
+  {
+    Item item = ListGet(list, i);
+    if (IsList(item) && IsDynAlloc(item))
+    {
+      ItemRefCountDecr(item);
+      if (ItemList(item)->refCount < 1)
+      {
+        ListFreeGC(ItemList(item));
+      }
+    }
+  }
+}
+
+#endif
+
+/*
 Bool ListContainsSymbol(List* list, Item item)
 {
   int length = list->length;
@@ -433,60 +488,7 @@ Bool ListContainsSymbol(List* list, Item item)
 
   return FALSE;
 }
-
-Bool ListContainsPtr(List* list, void* ptr)
-{
-  int length = list->length;
-
-  for (int i = 0; i < length; ++i)
-  {
-    Item current = ListGet(list, i);
-    if (current.value.ptr == ptr)
-    {
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
-
-#ifdef USE_GC
-
-// GC children by traversing the list tree
-// if their refcount is < 1.
-void ListFreeChildrenGC(List* list, List* traversed)
-{ 
-  if (ListLength(list) < 1) return; // Nothing to free.
-
-  Bool freeTraversed = (NULL == traversed);
-
-  if (NULL == traversed) traversed = ListCreate();
-
-  PrintDebug("ListFreeChildrenGC: %d  %d", ListLength(list), ListLength(traversed));
-
-  for (int i = 0; i < list->length; ++i)
-  {
-    Item item = ListGet(list, i);
-    if (IsDynAlloc(item) && (! ListContainsPtr(traversed, item.value.ptr)))
-    {
-      Item traversedItem;
-      traversedItem.type = 0;
-      traversedItem.value.ptr = ItemList(item);
-      ListPush(traversed, traversedItem);
-      ItemRefCountDecr(item);
-      if (ItemList(item)->refCount < 1)
-      {
-        ListFreeChildrenGC(ItemList(item), traversed);
-        ListFree(ItemList(item));
-      }
-    }
-  }
-
-  if (freeTraversed) ListFree(traversed);
-}
-
-#endif
+*/
 
 /*
 // UNUSED 
@@ -501,28 +503,5 @@ Item* ListAssocGet(List* list, Index symbolIndex)
 void ListAssocSet(List* list, Index symbolIndex, Item* value)
 {
   ListAssocSetGet(list, symbolIndex, value);
-}
-*/
-
-/*
-// Free children by traversing the list tree.
-void ListFreeChildren(List* list, List* traversed)
-{
-  Bool freeTraversed = (NULL == traversed);
-
-  if (NULL == traversed) traversed = ListCreate();
-
-  for (int i = 0; i < list->length; ++i)
-  {
-    Item item = ListGet(list, i);
-    if (IsList(item) && (! ListContainsList(traversed, item)))
-    {
-      ListPush(traversed, item);
-      ListFreeChildren(ItemList(item), traversed);
-      ListFree(ItemList(item));
-    }
-  }
-
-  if (freeTraversed) ListFree(traversed);
 }
 */
