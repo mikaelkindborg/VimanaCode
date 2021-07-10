@@ -156,8 +156,10 @@ void ItemRefCountDecr(Item item)
 
 void ItemGC(Item item)
 {
+  PrintLine("ItemGC");
   if (IsList(item) && IsDynAlloc(item))
   {
+    PrintLine("ItemGC refcnt: %d len: %d", ItemList(item)->refCount, ItemList(item)->length);
     if ((ItemList(item)->refCount) < 1)
     {
       PrintDebug("ItemGC: ListFree");
@@ -437,8 +439,10 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
 
 void ListFreeGC(List* list)
 { 
+  PrintLine("ListFreeGC refcnt: %d len: %d", list->refCount, ListLength(list));
   if (list->refCount < 1)
   {
+    PrintLine("ListFreeGC %d", ListLength(list));
     ListFreeChildrenGC(list);
     ListFree(list);
   }

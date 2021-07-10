@@ -1,0 +1,22 @@
+(Test GC for large lists) print
+
+(timesdo) ((block n) =>
+  n isZero (
+    block eval
+    block n 1 - timesdo) 
+  ifFalse
+) def
+
+(fillList) ((list n) =>
+  n isZero 
+    (list)
+    (n list push
+    list n 1 - fillList) 
+  ifElse
+) def
+
+listNew 100 fillList print
+
+((hi-world print) 10 timesdo) doc
+
+(End of test) print

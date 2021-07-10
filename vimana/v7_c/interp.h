@@ -384,8 +384,8 @@ void InterpRun(Interp* interp, List* list)
         }
       }
 #endif
-      PrintDebug("currentContext : %i", (NULL == currentContext));
-      PrintDebug("currentContext->prevContext : %i", (NULL == currentContext->prevContext));
+      PrintDebug("currentContext : %i", (NULL != currentContext));
+      PrintDebug("currentContext->prevContext : %i", (NULL != currentContext->prevContext));
 
       // Switch to parent context.
       interp->currentContext = currentContext->prevContext;
