@@ -29,7 +29,7 @@ Context* ContextCreate()
 {
   Context* context = malloc(sizeof(Context));
   context->ownEnv = ListCreate();
-  context->env = NULL;
+  context->env = context->ownEnv;
   context->gcEnv = FALSE;
   context->code = NULL;
   context->codePointer = -1;
@@ -379,16 +379,18 @@ void InterpRun(Interp* interp, List* list)
         }
         else
         {
-          // A closure uses the context.
-          //ListFree(currentContext->ownEnv);
+          // A closure (or more) uses the context.
           currentContext->ownEnv = ListCreate();
         }
       }
 #endif
+      PrintDebug("currentContext : %i", (NULL == currentContext));
+      PrintDebug("currentContext->prevContext : %i", (NULL == currentContext->prevContext));
+
       // Switch to parent context.
       interp->currentContext = currentContext->prevContext;
-      
-#ifndef OPTIMIZE
+
+#ifndef OPTIMIZE // ! OPTIMIZE
       -- interp->callstackIndex;
       if (interp->currentContext)
       {
