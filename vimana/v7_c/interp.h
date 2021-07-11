@@ -57,6 +57,7 @@ typedef struct MyInterp
   int      symbolCase;        // Casing for primitive functions
   Bool     contextSwitch;     // Context switching flag
 #ifdef USE_GC
+  List*    globalVarIndexes;
   GarbageCollector* gc;
 #endif
 }
@@ -70,6 +71,7 @@ Interp* InterpCreate()
   interp->stack = ListCreate();
   interp->symbolCase = SymbolUpperCase;
 #ifdef USE_GC
+  interp->globalVarIndexes = ListCreate();
   interp->gc = GCCreate();
 #endif
   return interp;
@@ -82,6 +84,10 @@ void InterpFree(Interp* interp)
   ListFree(interp->globalValueTable);
   ListFree(interp->stack);
   // TODO: Free interp->callstack
+#ifdef USE_GC
+  ListFree(interp->globalVarIndexes);
+  GCFree(interp->gc);
+#endif
   free(interp);
 }
 
@@ -90,11 +96,31 @@ void InterpFree(Interp* interp)
 void InterpGC(Interp* interp)
 {
   GCPrintEntries(interp->gc);
+
   GCPrepare();
+
+  // Mark items on the stack.
   GCMarkChildren(interp->stack);
-  GCMarkChildren(interp->globalValueTable);
+
+  // Mark global variables.
+  //GCMarkChildren(interp->globalValueTable);
+  for (int i = 0; i < ListLength(interp->globalVarIndexes); ++i)
+  {
+    Item name = ListGet(interp->globalVarIndexes, i);
+    Item value = ListGet(interp->globalValueTable, name.value.symbol);
+    if (IsDynAlloc(value))
+    {
+      GCMarkChildren(ItemList(value));
+    }
+  }
+
+  // Mark local variables.
   // TODO: Mark context/env
+
+  // Free unreachable objects.
+      PrintLine("*********************");
   GCSweep(interp->gc);
+
   GCPrintEntries(interp->gc);
 }
 
@@ -107,11 +133,6 @@ void InterpGC(Interp* interp)
 #define InterpPopInto(interp, item) ListPopInto((interp)->stack, item)
 
 // SYMBOL TABLE ------------------------------------------------
-
-void InterpSetGlobalSymbolValue(Interp* interp, Index index, Item value)
-{
-  ListSet(interp->globalValueTable, index, value);
-}
 
 char* InterpGetSymbolString(Interp* interp, Index symbolIndex)
 {
@@ -193,47 +214,59 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
 
 // VARIABLES ---------------------------------------------------
 
-void Interp_SetGlobal(Interp* interp, Item value, Item name)
+void InterpSetGlobal(Interp* interp, Item name, Item value)
 {
   if (IsSymbol(name))
-    InterpSetGlobalSymbolValue(interp, name.value.symbol, value);
+  {
+#ifdef USE_GC
+  // Add symbol to global variable table for use with GC.
+  // This is so that we don't have to map over the entire
+  // symbol value table on gc.
+  Item value = ListGet(interp->globalValueTable, name.value.symbol);
+  if (IsVirgin(value))
+    ListPush(interp->globalVarIndexes, name);
+#endif
+    ListSet(interp->globalValueTable, name.value.symbol, value);
+  }
   else
-    ErrorExit("Interp_SetGlobal: Got a non-symbol");
+  {
+    ErrorExit("InterpSetGlobal: Got a non-symbol");
+  }
 }
 
 #ifdef OPTIMIZE
-#define Interp_SetLocal(interp, name, item) \
+#define InterpSetLocal(interp, name, item) \
   do { \
     if (!IsSymbol(name)) \
-      ErrorExit("Interp_SetLocal: Got a non-symbol (1)"); \
+      ErrorExit("InterpSetLocal: Got a non-symbol (1)"); \
     Context* context = (interp)->currentContext; \
     ListAssocSet(context->env, (name).value.symbol, &(item)); \
   } while (0)
 #else
-void Interp_SetLocal(Interp* interp, Item name, Item value)
+void InterpSetLocal(Interp* interp, Item name, Item value)
 {
   if (!IsSymbol(name))
-    ErrorExit("Interp_SetLocal: Got a non-symbol (2)");
+    ErrorExit("InterpSetLocal: Got a non-symbol (2)");
 
   // Get environment of current context.
   Context* context = interp->currentContext;
 
   // Error checking.
   if (!context)
-    ErrorExit("Interp_SetLocal: Context not found");
+    ErrorExit("InterpSetLocal: Context not found");
   if (!context->env)
-    ErrorExit("Interp_SetLocal: Context has no environment");
+    ErrorExit("InterpSetLocal: Context has no environment");
 
   // Set symbol value.
   //ListAssocSet(context->env, name.value.symbol, &value);
   ListAssocSet(context->env, name.value.symbol, &value);
 
-  //PrintDebug("Interp_SetLocal: PRINTING ENV");
+  //PrintDebug("InterpSetLocal: PRINTING ENV");
   //ListPrint(context->env, interp);
 }
 #endif
 
-Item Interp_EvalSymbol(Interp* interp, Item item)
+Item InterpEvalSymbol(Interp* interp, Item item)
 {
   // Non-symbols evaluates to themselves.
   if (!IsSymbol(item))
@@ -243,7 +276,7 @@ Item Interp_EvalSymbol(Interp* interp, Item item)
   Context* context = interp->currentContext;
   if (context && context->env)
   {
-    //PrintDebug("Interp_EvalSymbol: ENV");
+    //PrintDebug("InterpEvalSymbol: ENV");
     //ListPrint(context->env, interp);
     Item* value = ListAssocGet(context->env, item.value.symbol);
     if (value)
@@ -252,7 +285,7 @@ Item Interp_EvalSymbol(Interp* interp, Item item)
 
   // Lookup global symbol.
   Item value = ListGet(interp->globalValueTable, item.value.symbol);
-  if (TypeVirgin != value.type) 
+  if (!IsVirgin(value)) 
     return value;
 
   // Symbol is unbound and evaluates to itself.
@@ -429,7 +462,7 @@ void InterpRun(Interp* interp, List* list)
     if (IsSymbol(element))
     {
       // Evaluate symbol (search local and global env).
-      item = Interp_EvalSymbol(interp, element);
+      item = InterpEvalSymbol(interp, element);
       
 #ifndef OPTIMIZE_PRIMFUNS      
       if (IsPrimFun(item))

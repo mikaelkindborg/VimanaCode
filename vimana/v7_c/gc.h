@@ -105,3 +105,51 @@ void GCPrintEntries(GarbageCollector* gc)
     entry = &((*entry)->next);
   }
 }
+
+void GCFree(GarbageCollector* gc) 
+{
+  GCPrepare();
+  GCSweep(gc);
+  free(gc);
+}
+
+/*
+
+UNUSED!
+
+// DYNAMIC ARRAY -----------------------------------------------
+
+#define DynArraySize 10
+#define DynArrayType int
+
+typedef struct MyDynArray
+{
+  int size;
+  int maxSize;
+  DynArrayType* values; // Array of values
+}
+DynArray;
+
+DynArray* DynArrayCreate()
+{
+  // Allocate array object.
+  DynArray* array = malloc(sizeof(DynArray));
+
+  // Allocate array entries.
+  size_t arraySize = DynArraySize * sizeof(DynArrayType);
+  array->values = = malloc(arraySize);
+
+  // Init entries.
+  memset(array->values, 0, arraySize);
+
+  // Return array object.
+  return array;
+}
+
+DynArray* DynArrayFree(DynArray* array)
+{
+  free(array->values);
+  free(array);
+}
+
+*/

@@ -34,7 +34,6 @@ typedef void   (*PrimFun)(Interp*);
 #define IsPrimFun(item)     ((item).type & TypePrimFun)
 #define IsFun(item)         ((item).type & TypeFun)
 //#define IsOptimizedList(item) ((item).type & TypeOptimizedList)
-//#define IsLocalVar(item)    ((item).type & TypeLocalVar)
 #define IsString(item)      ((item).type & TypeString)
 #define IsContext(item)     ((item).type & TypeContext)
 #define IsDynAlloc(item)    ((item).type & TypeDynAlloc)
@@ -51,11 +50,10 @@ typedef struct MyItem
   Type opCode;
   union
   {
-    Index     symbol; // Index in symbol table or local environment table
+    Index     symbol; // Index in global symbol table
     DecNum    decNum;
     IntNum    intNum;
     List*     list;
-    void*     ptr;
     Context*  context;
     char*     string; // TODO: Make custom string object
     Bool      truth;

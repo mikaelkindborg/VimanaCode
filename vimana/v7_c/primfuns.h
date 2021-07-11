@@ -32,7 +32,7 @@ void Prim_SETGLOBAL(Interp* interp)
     ErrorExit("Prim_SETGLOBAL: name is not a symbol");
   InterpPopInto(interp, value);
   //PrintDebug("  VALUE TYPE: %lu", value.type);
-  Interp_SetGlobal(interp, value, name);
+  InterpSetGlobal(interp, name, value);
 }
 
 // ITEM DROP ->
@@ -80,7 +80,7 @@ void Prim_SETLOCAL(Interp* interp)
   if (IsSymbol(varnames))
   {
     InterpPopInto(interp, value);
-    Interp_SetLocal(interp, varnames, value);
+    InterpSetLocal(interp, varnames, value);
   }
   else
   if (IsList(varnames))
@@ -91,7 +91,7 @@ void Prim_SETLOCAL(Interp* interp)
     {
       Item name = ListGet(list, i);
       InterpPopInto(interp, value);
-      Interp_SetLocal(interp, name, value);
+      InterpSetLocal(interp, name, value);
     }
   }
   else
@@ -136,7 +136,7 @@ void Prim_VALUE(Interp* interp)
   InterpPopInto(interp, item);
   if (IsSymbol(item))
   {
-    item = Interp_EvalSymbol(interp, item);
+    item = InterpEvalSymbol(interp, item);
   }
   InterpPush(interp, item); // Push value
 }
@@ -711,6 +711,6 @@ void Prim_LABEL(Interp* interp)
   IntNum codePointer = context->codePointer + 1;
   item.type = TypeIntNum;
   item.value.intNum = codePointer;
-  Interp_SetLocal(interp, symbol, item);
+  InterpSetLocal(interp, symbol, item);
 }
 */
