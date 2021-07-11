@@ -8,9 +8,6 @@
 
 // Octo: That was new
 
-// With freedom comes responsibilities (for the programmer).
-// Dynamic languages in action.
-
 // CONTEXT -----------------------------------------------------
 
 typedef struct MyContext
@@ -40,7 +37,7 @@ Context* ContextCreate()
 
 void ContextFree(Context* context)
 {
-  PrintDebug("ContextFree ownEnv: %ul", (unsigned int)(context->ownEnv));
+  PrintDebug("ContextFree ownEnv: %lu", (unsigned long)(context->ownEnv));
   ListFree(context->ownEnv);
   free(context);
 }
@@ -59,6 +56,9 @@ typedef struct MyInterp
   Bool     run;               // Run flag
   int      symbolCase;        // Casing for primitive functions
   Bool     contextSwitch;     // Context switching flag
+#ifdef USE_GC
+  GarbageCollector* gc;
+#endif
 }
 Interp;
 
@@ -69,6 +69,9 @@ Interp* InterpCreate()
   interp->globalValueTable = ListCreate();
   interp->stack = ListCreate();
   interp->symbolCase = SymbolUpperCase;
+#ifdef USE_GC
+  interp->gc = GCCreate();
+#endif
   return interp;
 }
 
@@ -80,6 +83,19 @@ void InterpFree(Interp* interp)
   ListFree(interp->stack);
   // TODO: Free interp->callstack
   free(interp);
+}
+
+// GARBAGE COLLECTION ------------------------------------------
+
+void InterpGC(Interp* interp)
+{
+  GCPrintEntries(interp->gc);
+  GCPrepare();
+  GCMarkChildren(interp->stack);
+  GCMarkChildren(interp->globalValueTable);
+  // TODO: Mark context/env
+  GCSweep(interp->gc);
+  GCPrintEntries(interp->gc);
 }
 
 // DATA STACK --------------------------------------------------
@@ -191,12 +207,11 @@ void Interp_SetGlobal(Interp* interp, Item value, Item name)
     if (!IsSymbol(name)) \
       ErrorExit("Interp_SetLocal: Got a non-symbol (1)"); \
     Context* context = (interp)->currentContext; \
-    ListAssocSetGet(context->env, (name).value.symbol, &(item)); \
+    ListAssocSet(context->env, (name).value.symbol, &(item)); \
   } while (0)
 #else
 void Interp_SetLocal(Interp* interp, Item name, Item value)
 {
-  PrintDebug("Interp_SetLocal");
   if (!IsSymbol(name))
     ErrorExit("Interp_SetLocal: Got a non-symbol (2)");
 
@@ -211,7 +226,7 @@ void Interp_SetLocal(Interp* interp, Item name, Item value)
 
   // Set symbol value.
   //ListAssocSet(context->env, name.value.symbol, &value);
-  ListAssocSetGet(context->env, name.value.symbol, &value);
+  ListAssocSet(context->env, name.value.symbol, &value);
 
   //PrintDebug("Interp_SetLocal: PRINTING ENV");
   //ListPrint(context->env, interp);
@@ -230,7 +245,7 @@ Item Interp_EvalSymbol(Interp* interp, Item item)
   {
     //PrintDebug("Interp_EvalSymbol: ENV");
     //ListPrint(context->env, interp);
-    Item* value = ListAssocSetGet(context->env, item.value.symbol, NULL);
+    Item* value = ListAssocGet(context->env, item.value.symbol);
     if (value)
       return *value;
   }
@@ -272,7 +287,7 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
   if (currentContext->codePointer + 1 >= ListLength(currentContext->code))
   {
     // We can do a tailcall and reuse the current context.
-    PrintDebug("TAILCALL AT INDEX: %i", interp->callstackIndex);
+    //PrintDebug("TAILCALL AT INDEX: %i", interp->callstackIndex);
     nextContext = currentContext;
   }
   else
@@ -363,7 +378,7 @@ void InterpRun(Interp* interp, List* list)
     {
       PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
       interp->contextSwitch = TRUE;
-
+/*
 #ifdef USE_GC
       // GC local env on exit context, unless a closure is refering to it.
       if (currentContext->gcEnv)
@@ -384,9 +399,7 @@ void InterpRun(Interp* interp, List* list)
         }
       }
 #endif
-      PrintDebug("currentContext : %i", (NULL != currentContext));
-      PrintDebug("currentContext->prevContext : %i", (NULL != currentContext->prevContext));
-
+*/
       // Switch to parent context.
       interp->currentContext = currentContext->prevContext;
 

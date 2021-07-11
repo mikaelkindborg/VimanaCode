@@ -13,6 +13,7 @@ $numlines =
   countlines("item.h") +
   countlines("list.h") +
   countlines("print.h") +
+  countlines("gc.h") +
   countlines("interp.h") +
   countlines("primfuns.h") +
   countlines("parser.h") +

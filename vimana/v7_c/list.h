@@ -4,30 +4,10 @@
 
 // LISTS -------------------------------------------------------
 
-#ifdef USE_GC
-
-// Incremented marker used to track traversed lists during GC.
-// For each GC this global marker is incremented, which 
-// allows us to not have to reset the marker list field.
-unsigned long GCMarker = 0;
-
-#define PrepareGC() (++ GCMarker)
-
-void ListFreeGC(List* list);
-void ListFreeChildrenGC(List* list);
-
-#else // #ifndef USE_GC
-
-#define ItemRefCountIncr(item)
-#define ItemRefCountDecr(item)
-#define ItemGC(item)
-
-#endif
-
 typedef struct MyList
 {
-  int   refCount;     // Reference counter for GC
   int   gcMarker;     // Mark flag for GC
+  int   printMarker;  // Mark flag for print and other list traversal
   int   length;       // Current number of items; TODO: last ???
   int   maxLength;    // Max number of items
   Item* items;        // Array of items
@@ -49,8 +29,8 @@ List* ListCreate()
   //printf("MALLOC COUNTER: %i\n", GMallocCounter);
 
   List* list = malloc(sizeof(List));
-  list->refCount = 0;
   list->gcMarker = 0;
+  list->printMarker = 0;
   list->length = 0;
   list->maxLength = size;
   list->env = NULL;
@@ -69,7 +49,7 @@ List* ListCreate()
 
 void ListFree(List* list)
 {
-  PrintDebug("ListFree");
+  PrintDebug("ListFree: %lu", (unsigned long)list);
 
   // Free item array.
   free(list->items);
@@ -84,94 +64,12 @@ void ListFree(List* list)
   free(list);
 }
 
+// TODO: Make macro
 void ListEmpty(List* list)
 {
-#ifdef USE_GC
-  // GC children.
-  PrepareGC();
-  ListFreeChildrenGC(list);
-#endif
-
   // Empty list.
   list->length = 0;
 }
-
-// GARBAGE COLLECTION ------------------------------------------
-
-// Vilka fall finns?
-// Deallocate list that is non-dynalloc, but may contain dynalloc list
-// Deallocate listitem that is dynalloc
-// Empty/clean list (enviroment)
-// Deallocate list hard and all childlists (regardless of refcount)
-
-// Dealloc children hard, without respect to refcount
-// Dealloc children using refcount (decrement children's refcount and dealloc if zero)
-
-#ifdef USE_GC
-#ifdef OPTIMIZE
-
-#define ItemRefCountIncr(item) \
-do { \
-  if (IsList(item) && IsDynAlloc(item)) \
-    ++ (ItemList(item)->refCount); \
-} while(0)
-
-#define ItemRefCountDecr(item) \
-do { \
-  if (IsList(item) && IsDynAlloc(item)) \
-    -- (ItemList(item)->refCount); \
-} while(0)
-
-#define ItemGC(item) \
-do { \
-  if (IsList(item) && IsDynAlloc(item)) \
-    if ((ItemList(item)->refCount) < 1) \
-    { \
-      PrepareGC(); \
-      ListFree(ItemList(item)); \
-    } \
-} while(0)
-
-#else // ! OPTIMIZE
-
-void ItemRefCountIncr(Item item)
-{
-  if (IsDynAlloc(item))
-  {
-    PrintDebug("ItemRefCountIncr");
-    ++ (ItemList(item)->refCount);
-    PrintDebug("  refCount: %i", item.value.list->refCount);
-  }
-}
-
-void ItemRefCountDecr(Item item)
-{
-  if (IsDynAlloc(item))
-  {
-    PrintDebug("ItemRefCountDecr");
-    -- (ItemList(item)->refCount);
-    PrintDebug("  refCount: %i", item.value.list->refCount);
-  }
-}
-
-void ItemGC(Item item)
-{
-  PrintLine("ItemGC");
-  if (IsDynAlloc(item))
-  {
-    PrintLine("ItemGC refcnt: %d len: %d", ItemList(item)->refCount, ItemList(item)->length);
-    if ((ItemList(item)->refCount) < 1)
-    {
-      PrintDebug("ItemGC: ListFree");
-      PrintDebug("  refCount: %i", item.value.list->refCount);
-      PrepareGC();
-      ListFreeGC(ItemList(item));
-    }
-  }
-}
-
-#endif // ! OPTIMIZE
-#endif // USE_GC
 
 // LIST FUNCTIONS ----------------------------------------------
 
@@ -217,7 +115,6 @@ do { \
     ListGrow(list, (list)->length + ListGrowIncrement); \
   (list)->items[(list)->length] = (item); \
   (list)->length++; \
-  ItemRefCountIncr(item); \
 } while (0)
 #else
 void ListPush(List* list, Item item)
@@ -227,7 +124,6 @@ void ListPush(List* list, Item item)
     ListGrow(list, list->length + ListGrowIncrement);
   list->items[list->length] = item;
   list->length++;
-  ItemRefCountIncr(item);
 }
 #endif
 
@@ -237,7 +133,6 @@ void ListPush(List* list, Item item)
       ErrorExit("ListPopInto: Cannot pop list of length < 0"); \
     (list)->length --; \
     (item) = (list)->items[list->length]; \
-    ItemRefCountDecr(item); \
   } while(0)
 
 /* UNUSED
@@ -247,39 +142,11 @@ Item ListPop(List* list)
     ErrorExit("ListPop: Cannot pop list of length: %i", list->length);
   -- list->length;
   Item item = list->items[list->length];
-  ItemRefCountDecr(item);
   return item;
 }
 */
 
 #ifdef OPTIMIZE
-
-// TODO: Test which style is faster.
-/*
-// ./vimana  11.53s user 0.01s system 96% cpu 11.898 total
-#define ListDrop(list) \
-  do { \
-    Index length = (list)->length; \
-    -- length; \
-    if (length < 0)  \
-      ErrorExit("ListDrop: Cannot drop from list length < 0"); \
-    ItemRefCountDecr((list)->items[length]); \
-    ItemGC((list)->items[length]); \
-    (list)->length = length; \
-  } while (0)
-*/
-/*
-// ./vimana  11.32s user 0.01s system 96% cpu 11.722 total
-#define ListDrop(list) \
-  do { \
-    if (list->length < 1) \
-      ErrorExit("ListDrop: Cannot drop from list of length: %i", list->length); \
-    -- list->length; \
-    Item item = list->items[list->length]; \
-    ItemRefCountDecr(item); \
-    ItemGC(item); \
-  } while (0)
-*/
 
 // ./vimana  11.27s user 0.01s system 96% cpu 11.668 total
 #define ListDrop(list) \
@@ -287,8 +154,6 @@ Item ListPop(List* list)
     if (list->length < 1) \
       ErrorExit("ListDrop: Cannot drop from list of length < 0"); \
     -- list->length; \
-    ItemRefCountDecr(list->items[list->length]); \
-    ItemGC(list->items[list->length]); \
   } while (0)
 #else
 void ListDrop(List* list)
@@ -297,8 +162,6 @@ void ListDrop(List* list)
     ErrorExit("ListDrop: Cannot drop from list of length: %i", list->length);
   -- list->length;
   Item item = list->items[list->length];
-  ItemRefCountDecr(item);
-  ItemGC(item);
 }
 #endif
 
@@ -320,9 +183,6 @@ Item ListGet(List* list, int index)
       ListGrow((list), (index) + ListGrowIncrement); \
     if ((index) >= (list)->length) \
       (list)->length = (index) + 1; \
-    ItemRefCountDecr((list)->items[index]); \
-    ItemGC((list)->items[index]); \
-    ItemRefCountIncr(item); \
     (list)->items[index] = (item); \
   } while (0)
 
@@ -330,16 +190,11 @@ Item ListGet(List* list, int index)
 
 void ListSet(List* list, int index, Item item)
 {
-  PrintDebug("ListSet");
   // Grow list if needed.
   if (index >= list->maxLength)
     ListGrow(list, index + ListGrowIncrement);
   if (index >= list->length)
     list->length = index + 1;
-  // GC
-  ItemRefCountDecr(list->items[index]);
-  ItemGC(list->items[index]);
-  ItemRefCountIncr(item);
   // Set new item.
   list->items[index] = item;
 }
@@ -396,8 +251,6 @@ Item* ListGetItemPtr(List* list, int index)
 // Associative list set or get. Assumes symbol and value in pairs.
 Item* ListAssocSetGet(List* list, Index symbol, Item* value)
 {
-  PrintDebug("ListAssocSetGet");
-
   int    length = list->length;
   size_t itemSize = sizeof(Item);
   Item*  item = list->items;
@@ -411,9 +264,6 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
       Item* p = item + 1;
       if (value)
       {
-        ItemRefCountDecr(*p);
-        ItemGC(*p);
-        ItemRefCountIncr(*value);
         *p = *value;
       }
       return p;
@@ -434,78 +284,8 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
   return NULL;
 }
 
-#ifdef USE_GC
+#define ListAssocGet(list, symbolIndex) \
+  ListAssocSetGet(list, symbolIndex, NULL)
 
-
-void ListFreeGC(List* list)
-{ 
-  PrintLine("ListFreeGC refcnt: %d len: %d", list->refCount, ListLength(list));
-  if (list->refCount < 1)
-  {
-    PrintLine("ListFreeGC %d", ListLength(list));
-    ListFreeChildrenGC(list);
-    ListFree(list);
-  }
-}
-
-// GC children by traversing the list tree.
-void ListFreeChildrenGC(List* list)
-{ 
-  PrintDebug("ListFreeChildrenGC: %d %lu", ListLength(list), (unsigned long)list);
-
-  if (ListLength(list) < 1) return; // No children to free.
-
-  if (list->gcMarker == GCMarker) return; // Already traversed.
-
-  // Mark list as traversed.
-  list->gcMarker = GCMarker;
-  
-  for (int i = 0; i < list->length; ++i)
-  {
-    Item item = ListGet(list, i);
-    if (IsList(item) && IsDynAlloc(item))
-    {
-      ItemRefCountDecr(item);
-      if (ItemList(item)->refCount < 1)
-      {
-        ListFreeGC(ItemList(item));
-      }
-    }
-  }
-}
-
-#endif
-
-/*
-Bool ListContainsSymbol(List* list, Item item)
-{
-  int length = list->length;
-
-  for (int i = 0; i < length; ++i)
-  {
-    Item current = ListGet(list, i);
-    if (IsSymbol(current) && (current.value.symbol == item.value.symbol))
-    {
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-*/
-
-/*
-// UNUSED 
-// TODO: Make macros for these?
-// Associative list lookup.
-Item* ListAssocGet(List* list, Index symbolIndex)
-{
-  return ListAssocSetGet(list, symbolIndex, NULL);
-}
-
-// Associative list set.
-void ListAssocSet(List* list, Index symbolIndex, Item* value)
-{
-  ListAssocSetGet(list, symbolIndex, value);
-}
-*/
+#define ListAssocSet(list, symbolIndex, value) \
+  ListAssocSetGet(list, symbolIndex, value)

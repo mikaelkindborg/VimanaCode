@@ -710,3 +710,45 @@ void Prim_GOTOIFNOTZERO(Interp* interp)
       }
 #endif
 */
+
+
+// TODO: Test which style is faster.
+/*
+// ./vimana  11.53s user 0.01s system 96% cpu 11.898 total
+#define ListDrop(list) \
+  do { \
+    Index length = (list)->length; \
+    -- length; \
+    if (length < 0)  \
+      ErrorExit("ListDrop: Cannot drop from list length < 0"); \
+    (list)->length = length; \
+  } while (0)
+*/
+/*
+// ./vimana  11.32s user 0.01s system 96% cpu 11.722 total
+#define ListDrop(list) \
+  do { \
+    if (list->length < 1) \
+      ErrorExit("ListDrop: Cannot drop from list of length: %i", list->length); \
+    -- list->length; \
+    Item item = list->items[list->length]; \
+  } while (0)
+*/
+
+/* UNUSED
+Bool ListContainsSymbol(List* list, Item item)
+{
+  int length = list->length;
+
+  for (int i = 0; i < length; ++i)
+  {
+    Item current = ListGet(list, i);
+    if (IsSymbol(current) && (current.value.symbol == item.value.symbol))
+    {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+*/

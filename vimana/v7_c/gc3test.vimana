@@ -17,6 +17,8 @@
 
 listNew 100 fillList print
 
+gc
+
 ((hi-world print) 10 timesdo) doc
 
 (End of test) print

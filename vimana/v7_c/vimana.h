@@ -4,6 +4,9 @@
 #include "item.h"
 #include "list.h"
 #include "print.h"
+#ifdef USE_GC
+#include "gc.h"
+#endif
 #include "interp.h"
 #include "primfuns.h"
 #include "parser.h"

@@ -19,7 +19,6 @@ void Prim_LISTFIRST(Interp* interp);
 // ITEM (SYMBOL) SETGLOBAL ->
 void Prim_SETGLOBAL(Interp* interp)
 {
-  PrintDebug("Prim_SETGLOBAL");
   // Get name and value.
   Item name, value;
   InterpPopInto(interp, name);
@@ -472,13 +471,12 @@ void Prim_EQ(Interp* interp)
 // ITEM PRINT ->
 void Prim_PRINT(Interp* interp)
 {
-  PrintDebug("Prim_PRINT");
+  //PrintDebug("Prim_PRINT");
   Item item;
   InterpPopInto(interp, item);
   char* buf = ItemToString(item, interp);
   puts(buf);
   free(buf);
-  ItemGC(item);
 }
 
 // LISTNEW -> LIST
@@ -487,7 +485,11 @@ void Prim_LISTNEW(Interp* interp)
   //PrintDebug("Prim_LISTNEW");
   Item list;
   list.type = TypeList | TypeDynAlloc;
+#ifdef USE_GC
+  list.value.list = GCListCreate(interp->gc);
+#else
   list.value.list = ListCreate();
+#endif
   InterpPush(interp, list);
 }
 
@@ -540,7 +542,7 @@ void Prim_LISTPOP(Interp* interp)
 // ITEM LIST LISTPUSH ->
 void Prim_LISTPUSH(Interp* interp)
 {
-  PrintDebug("Prim_LISTPUSH");
+  //PrintDebug("Prim_LISTPUSH");
   Item item, list;
   InterpPopInto(interp, list);
   InterpPopInto(interp, item);
@@ -607,6 +609,12 @@ void Prim_LISTDROP(Interp* interp)
   ListDrop(ItemList(list));
 }
 
+// GC -> 
+void Prim_GC(Interp* interp)
+{
+  InterpGC(interp);
+}
+
 void DefinePrimFuns(Interp* interp)
 {
   InterpAddPrimFun("setGlobal", Prim_SETGLOBAL, interp);
@@ -647,6 +655,7 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("listDup", Prim_LISTDUP, interp);
   InterpAddPrimFun("listSwap", Prim_LISTSWAP, interp);
   InterpAddPrimFun("listDrop", Prim_LISTDROP, interp);
+  InterpAddPrimFun("gc", Prim_GC, interp);
   //InterpAddPrimFun("Recur", Prim_RECUR, interp);
   //InterpAddPrimFun("Quote", Prim_QUOTE, interp);
   //InterpAddPrimFun(":", Prim_QUOTE, interp);
