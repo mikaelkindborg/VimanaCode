@@ -540,13 +540,12 @@ void Prim_LISTPOP(Interp* interp)
 // ITEM LIST LISTPUSH ->
 void Prim_LISTPUSH(Interp* interp)
 {
-  // TODO: DynAlloc only!
   PrintDebug("Prim_LISTPUSH");
   Item item, list;
   InterpPopInto(interp, list);
   InterpPopInto(interp, item);
-  if (!IsList(list))
-    ErrorExit("Prim_LISTPUSH: Got non-list");
+  if (!IsDynAlloc(list))
+    ErrorExit("Prim_LISTPUSH: Got non-dynalloc item");
   ListPush(ItemList(list), item);
 }
 
@@ -567,48 +566,44 @@ void Prim_LISTGET(Interp* interp)
 // INDEX ITEM LIST LISTSET ->
 void Prim_LISTSET(Interp* interp)
 {
-  // TODO: DynAlloc only!
   Item index, list, item;
   InterpPopInto(interp, list);
   InterpPopInto(interp, item);
   InterpPopInto(interp, index);
   if (!IsIntNum(index))
     ErrorExit("Prim_LISTSET: Got non-integer index");
-  if (!IsList(list))
-    ErrorExit("Prim_LISTSET: Got non-list");
+  if (!IsDynAlloc(list))
+    ErrorExit("Prim_LISTSET: Got non-dynalloc item");
   ListSet(ItemList(list), index.value.intNum, item);
 }
 
 // LIST LISTDUP -> 
 void Prim_LISTDUP(Interp* interp)
 {
-  // TODO: DynAlloc only!
   Item list;
   InterpPopInto(interp, list);
-  if (!IsList(list))
-    ErrorExit("Prim_LISTDUP: Got non-list");
+  if (!IsDynAlloc(list))
+    ErrorExit("Prim_LISTDUP: Got non-dynalloc item");
   ListDup(ItemList(list), ListLength(ItemList(list)) - 1);
 }
 
 // LIST LISTSWAP -> 
 void Prim_LISTSWAP(Interp* interp)
 {
-  // TODO: DynAlloc only!
   Item list;
   InterpPopInto(interp, list);
-  if (!IsList(list))
-    ErrorExit("Prim_LISTSWAP: Got non-list");
+  if (!IsDynAlloc(list))
+    ErrorExit("Prim_LISTSWAP: Got non-dynalloc item");
   ListSwap(ItemList(list));
 }
 
 // LIST LISTDROP -> 
 void Prim_LISTDROP(Interp* interp)
 {
-  // TODO: DynAlloc only!
   Item list;
   InterpPopInto(interp, list);
-  if (!IsList(list))
-    ErrorExit("Prim_LISTDROP: Got non-list");
+  if (!IsDynAlloc(list))
+    ErrorExit("Prim_LISTDROP: Got non-dynalloc item");
   ListDrop(ItemList(list));
 }
 

@@ -136,7 +136,7 @@ do { \
 
 void ItemRefCountIncr(Item item)
 {
-  if (IsList(item) && IsDynAlloc(item))
+  if (IsDynAlloc(item))
   {
     PrintDebug("ItemRefCountIncr");
     ++ (ItemList(item)->refCount);
@@ -146,7 +146,7 @@ void ItemRefCountIncr(Item item)
 
 void ItemRefCountDecr(Item item)
 {
-  if (IsList(item) && IsDynAlloc(item))
+  if (IsDynAlloc(item))
   {
     PrintDebug("ItemRefCountDecr");
     -- (ItemList(item)->refCount);
@@ -157,7 +157,7 @@ void ItemRefCountDecr(Item item)
 void ItemGC(Item item)
 {
   PrintLine("ItemGC");
-  if (IsList(item) && IsDynAlloc(item))
+  if (IsDynAlloc(item))
   {
     PrintLine("ItemGC refcnt: %d len: %d", ItemList(item)->refCount, ItemList(item)->length);
     if ((ItemList(item)->refCount) < 1)
