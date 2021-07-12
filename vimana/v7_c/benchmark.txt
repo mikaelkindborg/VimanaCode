@@ -65,6 +65,13 @@ USE_NO_GOTOS_IN_LOOP:
 ./vimana benchmark.vimana  8.47s user 0.01s system 99% cpu 8.495 total (Low FAN)
 ./vimana benchmark.vimana  7.55s user 0.01s system 99% cpu 7.573 total (High FAN)
 ./vimana benchmark.vimana  7.23s user 0.01s system 99% cpu 7.248 total (High FAN)
+Changed order in loop - exit stackframe in else clause:
+./vimana benchmark.vimana  6.96s user 0.01s system 92% cpu 7.527 total (High FAN)
+./vimana benchmark.vimana  7.08s user 0.01s system 99% cpu 7.099 total (High FAN)
+./vimana benchmark.vimana  6.82s user 0.01s system 99% cpu 6.847 total (High FAN)
+With check for currentContext->releaseEnv, surprisigly fast (committing this version):
+./vimana benchmark.vimana  6.77s user 0.01s system 94% cpu 7.204 total (High FAN)
+./vimana benchmark.vimana  6.76s user 0.01s system 99% cpu 6.776 total (High FAN)
 
 USE_COMPUTED_GOTOS:
 ./vimana benchmark.vimana  7.79s user 0.01s system 87% cpu 8.925 total (High FAN)

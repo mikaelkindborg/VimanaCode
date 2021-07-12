@@ -338,7 +338,20 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
       nextContext = currentContext->nextContext;
     }
   }
-
+/*
+  // Should we release the context env (flag set when used by closure).
+  if (nextContext->releaseEnv)
+  {
+    // Closure uses the environment, create new env for context.
+#ifdef USE_GC
+    nextContext->ownEnv = GCListCreate(interp->gc);
+#else
+    // Causes memory leak, you should use GC with closures.
+    nextContext->ownEnv = ListCreate();
+#endif
+    nextContext->releaseEnv = FALSE;
+  }
+*/
   // Set context data.
   nextContext->code = code;
   nextContext->codePointer = -1;
@@ -366,8 +379,8 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
 
 // INTERPRETER LOOP --------------------------------------------
 
-#define USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
-//#define USE_NO_GOTOS_IN_LOOP
+//#define USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
+#define USE_NO_GOTOS_IN_LOOP
 //#define USE_COMPUTED_GOTOS
 
 #ifdef USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
@@ -411,15 +424,20 @@ DoNextInstr:
     {
       PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
       interp->contextSwitch = TRUE;
-/*
+
       // Release the context env (flag set when used by closure).
       if (currentContext->releaseEnv)
       {
         // Closure uses the environment, create new env for context.
-        //currentContext->ownEnv = ListCreate();
-        //currentContext->releaseEnv = FALSE;
+#ifdef USE_GC
+        currentContext->ownEnv = GCListCreate(interp->gc);
+#else
+        // Causes memory leak, you should use GC with closures.
+        currentContext->ownEnv = ListCreate();
+#endif
+        currentContext->releaseEnv = FALSE;
       }
-*/
+
       // Switch to parent context.
       interp->currentContext = currentContext->prevContext;
 
@@ -528,33 +546,7 @@ void InterpRun(Interp* interp, List* list)
     // BEGIN EXIT STACKFRAME
     // Exit stackframe if the code in the current context 
     // has finished executing.
-    if (codePointer >= codeLength)
-    {
-      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-      interp->contextSwitch = TRUE;
-/*
-      // Release the context env (flag set when used by closure).
-      if (currentContext->releaseEnv)
-      {
-        // Closure uses the environment, create new env for context.
-        //currentContext->ownEnv = ListCreate();
-        //currentContext->releaseEnv = FALSE;
-      }
-*/
-      // Switch to parent context.
-      interp->currentContext = currentContext->prevContext;
-
-#ifndef OPTIMIZE // ! OPTIMIZE
-      -- interp->callstackIndex;
-      if (interp->currentContext)
-      {
-        ContextFree(interp->currentContext->nextContext);
-        interp->currentContext->nextContext = NULL;
-      }
-#endif
-    }
-    // END EXIT STACKFRAME
-    else
+    if (codePointer < codeLength)
     {
       // Get next element.
       element = ListGet(code, codePointer);
@@ -595,6 +587,32 @@ void InterpRun(Interp* interp, List* list)
         ListPush(interp->stack, element);
       }
     }
+    else
+    {
+      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+      interp->contextSwitch = TRUE;
+/*
+      // Release the context env (flag set when used by closure).
+      if (currentContext->releaseEnv)
+      {
+        // Closure uses the environment, create new env for context.
+        currentContext->ownEnv = ListCreate();
+        currentContext->releaseEnv = FALSE;
+      }
+*/
+      // Switch to parent context.
+      interp->currentContext = currentContext->prevContext;
+
+#ifndef OPTIMIZE // ! OPTIMIZE
+      -- interp->callstackIndex;
+      if (interp->currentContext)
+      {
+        ContextFree(interp->currentContext->nextContext);
+        interp->currentContext->nextContext = NULL;
+      }
+#endif
+    }
+    // END EXIT STACKFRAME
 
     // Was this the last stackframe?
     if (NULL == interp->currentContext)
