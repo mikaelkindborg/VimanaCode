@@ -1,14 +1,19 @@
 BENCHMARK RESULTS
 =================
 
-210705:
+Using -O3 with cc:
+cc vimana.c -o vimana -O3 
+
+Test 210705:
+
 miki@mikis-Air v7_c % time ./vimana benchmark.vimana
 ./vimana benchmark.vimana  14.42s user 0.01s system 96% cpu 14.924 total
 After local functions (possibly a little slower):
 ./vimana benchmark.vimana  14.56s user 0.02s system 99% cpu 14.696 total
 ./vimana benchmark.vimana  14.41s user 0.03s system 98% cpu 14.719 total
 
-210706:
+Test 210706:
+
 miki@mikis-Air v7_c % time ./vimana benchmark.vimana 
 ./vimana benchmark.vimana  14.17s user 0.01s system 99% cpu 14.186 total
 ./vimana benchmark.vimana  14.11s user 0.01s system 85% cpu 16.539 total
@@ -16,6 +21,7 @@ WITHOUT OPTIMIZE_PRIMFUNS:
 ./vimana benchmark.vimana  15.54s user 0.01s system 85% cpu 18.132 total
 
 Testing GC 210706:
+
 WITHOUT REFERENCE COUNTING:
 ./vimana benchmark.vimana  14.57s user 0.01s system 98% cpu 14.805 total
 ./vimana benchmark.vimana  13.66s user 0.01s system 96% cpu 14.188 total (cold machine)
@@ -23,3 +29,33 @@ WITH REFERENCE COUNTING:
 ./vimana benchmark.vimana  16.44s user 0.01s system 98% cpu 16.738 total
 WITH MACROS FOR REFERENCE COUNTING:
 ./vimana benchmark.vimana  14.79s user 0.01s system 97% cpu 15.234 total
+
+Interpreter loop tests 210712:
+
+With empty if-statement in exit stackframe
+./vimana benchmark.vimana  14.75s user 0.01s system 97% cpu 15.192 total
+Without the if-statement:
+./vimana benchmark.vimana  14.16s user 0.01s system 98% cpu 14.424 total
+
+Tests with 5000000 loops 20 fact:
+
+USE_COMPUTED_GOTOS:
+With goto DoNextInstr:
+./vimana benchmark.vimana  7.23s user 0.01s system 94% cpu 7.641 total
+./vimana benchmark.vimana  7.18s user 0.01s system 99% cpu 7.203 total
+./vimana benchmark.vimana  7.90s user 0.01s system 94% cpu 8.326 total
+Without goto DoNextInstr:
+./vimana benchmark.vimana  7.21s user 0.01s system 92% cpu 7.813 total
+./vimana benchmark.vimana  7.44s user 0.01s system 99% cpu 7.454 total
+./vimana benchmark.vimana  7.66s user 0.01s system 99% cpu 7.689 total
+
+USE_NO_GOTOS_IN_LOOP:
+./vimana benchmark.vimana  8.00s user 0.01s system 99% cpu 8.019 total
+./vimana benchmark.vimana  8.47s user 0.01s system 99% cpu 8.495 total (Low FAN)
+./vimana benchmark.vimana  7.55s user 0.01s system 99% cpu 7.573 total (High FAN)
+./vimana benchmark.vimana  7.23s user 0.01s system 99% cpu 7.248 total (High FAN)
+
+USE_COMPUTED_GOTOS:
+./vimana benchmark.vimana  7.79s user 0.01s system 87% cpu 8.925 total (High FAN)
+./vimana benchmark.vimana  7.84s user 0.01s system 99% cpu 7.854 total (High FAN)
+./vimana benchmark.vimana  7.95s user 0.01s system 99% cpu 7.965 total (High FAN)
