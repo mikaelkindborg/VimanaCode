@@ -51,6 +51,7 @@ int main(int numargs, char* args[])
       fclose(file);
       List* list = ParseCode(interp, buf);
       InterpRun(interp, list);
+      ListFreeDeep(list);
     }
   }
   
@@ -77,10 +78,14 @@ int main(int numargs, char* args[])
       InterpRun(interp, list);
       printf("STACK: ");
       ListPrint(interp->stack, interp);
+      // We should free all parsed lists from the session,
+      // but that will have to wait (a long time).
     }
   }
 
   InterpFree(interp);
+
+  PrintMemStat();
 }
 
   //PrintLine("PRIMFUNS:");

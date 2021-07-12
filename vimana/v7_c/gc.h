@@ -29,7 +29,7 @@ GarbageCollector;
 
 GarbageCollector* GCCreate() 
 {
-  GarbageCollector* gc = malloc(sizeof(GarbageCollector));
+  GarbageCollector* gc = MemAlloc(sizeof(GarbageCollector));
   gc->firstEntry = NULL;
   return gc;
 }
@@ -37,7 +37,7 @@ GarbageCollector* GCCreate()
 void GCPushObject(GarbageCollector* gc, List* object)
 {
   PrintDebug("GCPushObject: %lu", (unsigned long)object);
-  GCEntry* entry = malloc(sizeof(GCEntry));
+  GCEntry* entry = MemAlloc(sizeof(GCEntry));
   entry->object = object;
   entry->next = gc->firstEntry;
   gc->firstEntry = entry;
@@ -96,7 +96,7 @@ void GCSweep(GarbageCollector* gc)
       GCEntry* unreachableEntry = *entry;
       *entry = (*entry)->next;
       ListFree(unreachableEntry->object);
-      free(unreachableEntry);
+      MemFree(unreachableEntry);
     }
     else
     {
@@ -118,11 +118,12 @@ void GCPrintEntries(GarbageCollector* gc)
   }
 }
 
+// Free allocated objects.
 void GCFree(GarbageCollector* gc) 
 {
   GCPrepare();
   GCSweep(gc);
-  free(gc);
+  MemFree(gc);
 }
 
 /*

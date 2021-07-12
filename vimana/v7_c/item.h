@@ -83,7 +83,7 @@ Item ItemWithString(char* string)
   Item item;
   item.type = TypeString;
   item.opCode = OpCodePushItem;
-  char* stringbuf = malloc(strlen(string) + 1);
+  char* stringbuf = MemAlloc(strlen(string) + 1);
   strcpy(stringbuf, string);
   item.value.string = stringbuf;
   return item;

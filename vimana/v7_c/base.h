@@ -6,7 +6,7 @@
 
 #define OPTIMIZE
 #define OPTIMIZE_PRIMFUNS
-//#define USE_GC
+#define USE_GC
 //#define DEBUG
 
 typedef unsigned char Byte;
@@ -47,4 +47,22 @@ void StringToLower(char* s)
     *p = tolower((unsigned char) *p);
     ++ p;
   }
+}
+
+
+int GMemAllocCounter = 0;
+int GMemFreeCounter = 0;
+//int GMemReallocCounter = 0;
+int GListCreateCounter = 0;
+int GListFreeCounter = 0;
+
+#define MemAlloc(size) malloc(size); ++ GMemAllocCounter
+#define MemFree(obj) free(obj); ++ GMemFreeCounter
+
+void PrintMemStat()
+{
+  PrintLine("MemAlloc:   %d", GMemAllocCounter);
+  PrintLine("MemFree:    %d", GMemFreeCounter);
+  PrintLine("ListCreate: %d", GListCreateCounter);
+  PrintLine("ListFree:   %d", GListFreeCounter);
 }

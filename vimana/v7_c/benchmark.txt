@@ -77,3 +77,12 @@ USE_COMPUTED_GOTOS:
 ./vimana benchmark.vimana  7.79s user 0.01s system 87% cpu 8.925 total (High FAN)
 ./vimana benchmark.vimana  7.84s user 0.01s system 99% cpu 7.854 total (High FAN)
 ./vimana benchmark.vimana  7.95s user 0.01s system 99% cpu 7.965 total (High FAN)
+
+Testing memory allocation 210712:
+
+NO GC:
+miki@mikis-Air v7_c % ./vimana test.vimana
+MemAlloc: 189 MemFree: 165
+WITH GC:
+miki@mikis-Air v7_c % ./vimana test.vimana
+MemAlloc: 213 MemFree: 189

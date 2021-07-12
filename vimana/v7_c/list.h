@@ -1,6 +1,3 @@
-// For debugging.
-//int GMallocCounter = 0;
-//int GReallocCounter = 0;
 
 // LISTS -------------------------------------------------------
 
@@ -29,13 +26,15 @@ List;
 
 List* ListCreate()
 {
+  ++ GListCreateCounter;
+
   // Alloc list object.
   size_t size = ListGrowIncrement;
 
   //GMallocCounter ++;
   //printf("MALLOC COUNTER: %i\n", GMallocCounter);
 
-  List* list = malloc(sizeof(List));
+  List* list = MemAlloc(sizeof(List));
   list->gcMarker = 0;
   list->printMarker = 0;
   list->length = 0;
@@ -44,7 +43,7 @@ List* ListCreate()
 
   // Alloc list array.
   size_t arraySize = size * sizeof(Item);
-  Item* itemArray = malloc(arraySize);
+  Item* itemArray = MemAlloc(arraySize);
   list->items = itemArray;
 
   // Init list array.
@@ -56,16 +55,18 @@ List* ListCreate()
 
 void ListFree(List* list)
 {
+  ++ GListFreeCounter;
+
   PrintDebug("ListFree: %lu", (unsigned long)list);
 
   // Free item array.
-  free(list->items);
+  MemFree(list->items);
 
   // Environment (list->env) is deallocated by GC.
   // Using closures without GC will leak memory.
 
   // Free list object.
-  free(list);
+  MemFree(list);
 }
 
 #ifdef OPTIMIZE
@@ -307,4 +308,17 @@ Index ListLookupStringIndex(List* list, char* symbolString)
       return i; // Found it.
   }
   return -1; // Not found.
+}
+
+void ListFreeDeep(List* list)
+{
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    Item item = ListGet(list, i);
+    if (IsList(item) && !IsDynAlloc(item))
+    {
+      ListFreeDeep(ItemList(item));
+    }
+  }
+  ListFree(list);
 }

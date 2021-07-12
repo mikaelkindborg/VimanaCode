@@ -56,7 +56,7 @@ Interp;
 
 Context* ContextCreate(Interp* interp)
 {
-  Context* context = malloc(sizeof(Context));
+  Context* context = MemAlloc(sizeof(Context));
 #ifdef USE_GC
   // Environments may be shared by closures,
   // so we allocate it using the GC.
@@ -76,15 +76,15 @@ Context* ContextCreate(Interp* interp)
 void ContextFree(Context* context)
 {
   PrintDebug("ContextFree ownEnv: %lu", (unsigned long)(context->ownEnv));
-#ifndef USE_GC
+#ifndef USE_GC // ! USE_GC
   ListFree(context->ownEnv);
 #endif
-  free(context);
+  MemFree(context);
 }
 
 Interp* InterpCreate()
 {
-  Interp* interp = malloc(sizeof(Interp));
+  Interp* interp = MemAlloc(sizeof(Interp));
   interp->symbolTable = ListCreate();
   interp->gvarTable = ListCreate();
   interp->stack = ListCreate();
@@ -96,18 +96,36 @@ Interp* InterpCreate()
   return interp;
 }
 
-// TODO: Improve deallocation.
 void InterpFree(Interp* interp)
 {
-  // TODO: Free strings in symbolTable.
+  // Free strings in symbolTable.
+  for (int i = 0; i < ListLength(interp->symbolTable); ++i)
+  {
+    Item item = ListGet(interp->symbolTable, i);
+    MemFree(item.value.string);
+  }
+
+  // Free global tables and data stack.
   ListFree(interp->symbolTable);
   ListFree(interp->gvarTable);
   ListFree(interp->stack);
-  // TODO: Free interp->callstack
+
+  // Free callstack.
+  Context* context = interp->callstack;
+  while (context)
+  {
+    Context* freeMe = context;
+    context = context->nextContext;
+    ContextFree(freeMe);
+  }
+
 #ifdef USE_GC
+  // Free garbage collector (frees allocated objects).
   GCFree(interp->gc);
 #endif
-  free(interp);
+
+  // Free interpreter struct.
+  MemFree(interp);
 }
 
 // GARBAGE COLLECTION ------------------------------------------
@@ -193,7 +211,7 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
   ++ interp->numberOfPrimFuns;
 
   // Name for primfun, case may be converted.
-  char* name = malloc(strlen(str) + 1);
+  char* name = MemAlloc(strlen(str) + 1);
   strcpy(name, str);
 
   // Symbols for primitives are in mixed case.
@@ -215,7 +233,7 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
   ListPush(interp->gvarTable, item);
 
   // Free name.
-  free(name);
+  MemFree(name);
 }
 
 // VARIABLES ---------------------------------------------------
@@ -505,6 +523,7 @@ DoExit:
       break;
     }
   } // while
+
 }
 #endif
 
