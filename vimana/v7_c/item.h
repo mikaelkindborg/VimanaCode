@@ -41,8 +41,8 @@ typedef void   (*PrimFun)(Interp*);
 
 #define OpCodeNone        0
 #define OpCodePushItem    1
-#define OpCodeCallPrimFun 2 
-#define OpCodeEvalSymbol  3
+#define OpCodeEvalSymbol  2
+#define OpCodeCallPrimFun 3 
 
 // STRUCTS -----------------------------------------------------
 
