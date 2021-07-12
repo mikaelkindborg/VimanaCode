@@ -366,9 +366,9 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
 
 // INTERPRETER LOOP --------------------------------------------
 
-//#define USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
+#define USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
 //#define USE_NO_GOTOS_IN_LOOP
-#define USE_COMPUTED_GOTOS
+//#define USE_COMPUTED_GOTOS
 
 #ifdef USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
 // Evaluate list.
@@ -469,12 +469,13 @@ DoNextInstr:
 
       // If not a function, push the symbol value.
       ListPush(interp->stack, item);
+      //goto DoNextInstr; // Slows down a lot!
       goto DoExit;
     }
 
     // If none of the above, push the element.
     ListPush(interp->stack, element);
-    goto DoNextInstr;
+    //goto DoNextInstr; // Slows down somewhat.
 
 DoExit:
     // Was this the last stackframe?
@@ -639,8 +640,6 @@ void InterpRun(Interp* interp, List* list)
   interp->currentContext = interp->callstack;
   interp->currentContext->code = list;
 
-  while (TRUE) //interp->run
-  {
 DoLoop:
     // Check context switch.
     if (interp->contextSwitch)
@@ -729,14 +728,12 @@ DoPushItem:
     goto DoNextInstr;
 
 DoExit:
-    // Was this the last stackframe?
-    if (NULL == interp->currentContext)
-    //if (interp->callstackIndex < 0)
+    // Do we have a stackframe?
+    if (NULL != interp->currentContext)
     {
-      PrintDebug("EXIT InterpRun callstackIndex: %i", interp->callstackIndex);
-      //interp->run = FALSE;
-      break;
+      goto DoLoop;
     }
-  } // while
+
+    PrintDebug("EXIT InterpRun callstackIndex: %i", interp->callstackIndex);
 }
 #endif

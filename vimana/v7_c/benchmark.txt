@@ -39,15 +39,26 @@ Without the if-statement:
 
 Tests with 5000000 loops 20 fact:
 
-USE_COMPUTED_GOTOS:
-With goto DoNextInstr:
+USE_ORIGINAL_LOOP_WITH_SOME_GOTOS:
+WITH ONE goto DoNextInstr:
 ./vimana benchmark.vimana  7.23s user 0.01s system 94% cpu 7.641 total
 ./vimana benchmark.vimana  7.18s user 0.01s system 99% cpu 7.203 total
+./vimana benchmark.vimana  6.98s user 0.01s system 94% cpu 7.406 total (High FAN)
+./vimana benchmark.vimana  7.06s user 0.01s system 99% cpu 7.068 total (High FAN)
+WITH TWO goto DoNextInstr:
 ./vimana benchmark.vimana  7.90s user 0.01s system 94% cpu 8.326 total
-Without goto DoNextInstr:
+./vimana benchmark.vimana  8.20s user 0.01s system 93% cpu 8.769 total (High FAN)
+./vimana benchmark.vimana  8.19s user 0.01s system 99% cpu 8.213 total (High FAN)
+./vimana benchmark.vimana  8.14s user 0.01s system 95% cpu 8.541 total (High FAN)
+WITHOUT goto DoNextInstr (but many goto DoExit):
 ./vimana benchmark.vimana  7.21s user 0.01s system 92% cpu 7.813 total
 ./vimana benchmark.vimana  7.44s user 0.01s system 99% cpu 7.454 total
 ./vimana benchmark.vimana  7.66s user 0.01s system 99% cpu 7.689 total
+./vimana benchmark.vimana  6.80s user 0.01s system 75% cpu 9.014 total (High FAN)
+./vimana benchmark.vimana  6.75s user 0.01s system 99% cpu 6.766 total (High FAN)
+./vimana benchmark.vimana  6.78s user 0.01s system 94% cpu 7.177 total (High FAN)
+
+Looks like certain use of goto ruins performance!
 
 USE_NO_GOTOS_IN_LOOP:
 ./vimana benchmark.vimana  8.00s user 0.01s system 99% cpu 8.019 total
