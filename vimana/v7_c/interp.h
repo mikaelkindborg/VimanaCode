@@ -12,22 +12,60 @@
 
 typedef struct MyContext
 {
-  List* env;
-  List* ownEnv;
-  Bool  gcEnv;
-  List* code;
-  Index codePointer;
+  List* code;        // Code list
+  Index codePointer; // Pointer in code list
+  List* env;         // Environment used by the context
+  List* ownEnv;      // Environment owned and reused by the context
+  Bool  releaseEnv;  // Release ownEnv on stackframe exit
   struct MyContext* nextContext;
   struct MyContext* prevContext;
 }
 Context;
 
-Context* ContextCreate()
+// INTERPRETER -------------------------------------------------
+
+// The symbol table and the global var table have the same
+// length. This wastes some memory since not all symbols
+// have global values. It also slows down GC a bit, because
+// the entire gvar table is traversed on GC (except for primfuns,
+// which appear first in the table, and can be skipped).
+//
+// There are speed benefits to this setup and dirent lookup
+// by index can be used for global vars. This scheme is intended
+// to be a simplistic and straightforward solution.
+
+typedef struct MyInterp
+{
+  List*    symbolTable;       // List of symbols
+  List*    gvarTable;         // List of global variable values
+  List*    stack;             // The data stack
+  Context* callstack;         // Callstack with context frames
+  Context* currentContext;    // Currently executing context
+  int      callstackIndex;    // Index of current frame
+  Bool     run;               // Run flag
+  int      symbolCase;        // Casing for primitive functions
+  Bool     contextSwitch;     // Context switching flag
+  int      numberOfPrimFuns;  // First entries in symbol table
+#ifdef USE_GC
+  GarbageCollector* gc;
+#endif
+}
+Interp;
+
+// CREATE/FREE FUNCTIONS ---------------------------------------
+
+Context* ContextCreate(Interp* interp)
 {
   Context* context = malloc(sizeof(Context));
+#ifdef USE_GC
+  // Environments may be shared by closures,
+  // so we allocate it using the GC.
+  context->ownEnv = GCListCreate(interp->gc);
+#else
   context->ownEnv = ListCreate();
+#endif
   context->env = context->ownEnv;
-  context->gcEnv = FALSE;
+  context->releaseEnv = FALSE;
   context->code = NULL;
   context->codePointer = -1;
   context->nextContext = NULL;
@@ -38,40 +76,21 @@ Context* ContextCreate()
 void ContextFree(Context* context)
 {
   PrintDebug("ContextFree ownEnv: %lu", (unsigned long)(context->ownEnv));
+#ifndef USE_GC
   ListFree(context->ownEnv);
+#endif
   free(context);
 }
-
-// INTERPRETER -------------------------------------------------
-
-typedef struct MyInterp
-{
-  // TODO: Free strings in globalSymbolTable.
-  List*    globalSymbolTable; // List of symbols
-  List*    globalValueTable;  // List of global values (primfuns, funs, etc)
-  List*    stack;             // The data stack
-  Context* callstack;         // Callstack with context frames
-  Context* currentContext;    // Currently executing context
-  int      callstackIndex;    // Index of current frame
-  Bool     run;               // Run flag
-  int      symbolCase;        // Casing for primitive functions
-  Bool     contextSwitch;     // Context switching flag
-#ifdef USE_GC
-  List*    globalVarIndexes;
-  GarbageCollector* gc;
-#endif
-}
-Interp;
 
 Interp* InterpCreate()
 {
   Interp* interp = malloc(sizeof(Interp));
-  interp->globalSymbolTable = ListCreate();
-  interp->globalValueTable = ListCreate();
+  interp->symbolTable = ListCreate();
+  interp->gvarTable = ListCreate();
   interp->stack = ListCreate();
-  interp->symbolCase = SymbolUpperCase;
+  interp->symbolCase = SymbolUpperCase; // Default
+  interp->numberOfPrimFuns = 0;
 #ifdef USE_GC
-  interp->globalVarIndexes = ListCreate();
   interp->gc = GCCreate();
 #endif
   return interp;
@@ -80,12 +99,12 @@ Interp* InterpCreate()
 // TODO: Improve deallocation.
 void InterpFree(Interp* interp)
 {
-  ListFree(interp->globalSymbolTable);
-  ListFree(interp->globalValueTable);
+  // TODO: Free strings in symbolTable.
+  ListFree(interp->symbolTable);
+  ListFree(interp->gvarTable);
   ListFree(interp->stack);
   // TODO: Free interp->callstack
 #ifdef USE_GC
-  ListFree(interp->globalVarIndexes);
   GCFree(interp->gc);
 #endif
   free(interp);
@@ -93,6 +112,7 @@ void InterpFree(Interp* interp)
 
 // GARBAGE COLLECTION ------------------------------------------
 
+#ifdef USE_GC
 void InterpGC(Interp* interp)
 {
   GCPrintEntries(interp->gc);
@@ -100,29 +120,25 @@ void InterpGC(Interp* interp)
   GCPrepare();
 
   // Mark items on the stack.
-  GCMarkChildren(interp->stack);
+  GCMarkChildren(interp->stack, 0);
 
-  // Mark global variables.
-  //GCMarkChildren(interp->globalValueTable);
-  for (int i = 0; i < ListLength(interp->globalVarIndexes); ++i)
+  // Mark global variables (skipping primfun entries).
+  GCMarkChildren(interp->gvarTable, interp->numberOfPrimFuns);
+
+  // Mark objects in local callstack environments.
+  Context* context = interp->callstack;
+  while (context)
   {
-    Item name = ListGet(interp->globalVarIndexes, i);
-    Item value = ListGet(interp->globalValueTable, name.value.symbol);
-    if (IsDynAlloc(value))
-    {
-      GCMarkChildren(ItemList(value));
-    }
+    GCMarkList(context->ownEnv);
+    context = context->nextContext;
   }
 
-  // Mark local variables.
-  // TODO: Mark context/env
-
   // Free unreachable objects.
-      PrintLine("*********************");
   GCSweep(interp->gc);
 
   GCPrintEntries(interp->gc);
 }
+#endif
 
 // DATA STACK --------------------------------------------------
 
@@ -136,38 +152,23 @@ void InterpGC(Interp* interp)
 
 char* InterpGetSymbolString(Interp* interp, Index symbolIndex)
 {
-  Item item = ListGet(interp->globalSymbolTable, symbolIndex);
+  Item item = ListGet(interp->symbolTable, symbolIndex);
   return item.value.string;
-}
-
-// Lookup a string in the global symbol table and return
-// the index if it is found.
-Index InterpLookupSymbolIndex(Interp* interp, char* symbolString)
-{
-  List* symbolTable = interp->globalSymbolTable;
-  for (int i = 0; i < ListLength(symbolTable); ++ i)
-  {
-    Item item = ListGet(symbolTable, i);
-    char* string = item.value.string;
-    if (StringEquals(string, symbolString))
-      return i; // Found it.
-  }
-  return -1; // Not found.
 }
 
 // Add a symbol to the symbol table and return an
 // item with the entry. Used by the parser.
 Item InterpAddSymbol(Interp* interp, char* symbolString)
 {
-  // Lookup the symbol.
-  Index index = InterpLookupSymbolIndex(interp, symbolString);
+  // Lookup primfun symbol.
+  Index index = ListLookupStringIndex(interp->symbolTable, symbolString);
   if (index > -1)
   {
 #ifdef OPTIMIZE_PRIMFUNS
     // Special case for primfuns. We return the primfun item
     // for faster lookup in eval.
-    Item value = ListGet(interp->globalValueTable, index);
-    if (IsPrimFun(value))
+    Item value = ListGet(interp->gvarTable, index);
+    if (IsPrimFun(value)) 
       return value;
 #endif
     // Symbol is already added, return an item for it.
@@ -178,9 +179,9 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
   {
     // Symbol does not exist, create it.
     Item newItem = ItemWithString(symbolString);
-    ListPush(interp->globalSymbolTable, newItem);
-    ListPush(interp->globalValueTable, ItemWithVirgin());
-    Index newIndex = ListLength(interp->globalSymbolTable) - 1;
+    ListPush(interp->symbolTable, newItem);
+    ListPush(interp->gvarTable, ItemWithVirgin());
+    Index newIndex = ListLength(interp->symbolTable) - 1;
     // Make a symbol item and return it.
     Item item = ItemWithSymbol(newIndex);
     return item;
@@ -189,6 +190,9 @@ Item InterpAddSymbol(Interp* interp, char* symbolString)
 
 void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
 {
+  ++ interp->numberOfPrimFuns;
+
+  // Name for primfun, case may be converted.
   char* name = malloc(strlen(str) + 1);
   strcpy(name, str);
 
@@ -201,14 +205,15 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
     StringToLower(name);
 
   // Add name to symbol table.
-  ListPush(interp->globalSymbolTable, ItemWithString(name));
+  ListPush(interp->symbolTable, ItemWithString(name));
   
   // Add function to value table.
   Item item;
   item.type = TypePrimFun;
   item.value.primFun = fun;
-  ListPush(interp->globalValueTable, item);
+  ListPush(interp->gvarTable, item);
 
+  // Free name.
   free(name);
 }
 
@@ -217,28 +222,16 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
 void InterpSetGlobal(Interp* interp, Item name, Item value)
 {
   if (IsSymbol(name))
-  {
-#ifdef USE_GC
-  // Add symbol to global variable table for use with GC.
-  // This is so that we don't have to map over the entire
-  // symbol value table on gc.
-  Item value = ListGet(interp->globalValueTable, name.value.symbol);
-  if (IsVirgin(value))
-    ListPush(interp->globalVarIndexes, name);
-#endif
-    ListSet(interp->globalValueTable, name.value.symbol, value);
-  }
+    ListSet(interp->gvarTable, name.value.symbol, value);
   else
-  {
     ErrorExit("InterpSetGlobal: Got a non-symbol");
-  }
 }
 
 #ifdef OPTIMIZE
 #define InterpSetLocal(interp, name, item) \
   do { \
     if (!IsSymbol(name)) \
-      ErrorExit("InterpSetLocal: Got a non-symbol (1)"); \
+      ErrorExit("InterpSetLocal: Got a non-symbol in macro"); \
     Context* context = (interp)->currentContext; \
     ListAssocSet(context->env, (name).value.symbol, &(item)); \
   } while (0)
@@ -246,7 +239,7 @@ void InterpSetGlobal(Interp* interp, Item name, Item value)
 void InterpSetLocal(Interp* interp, Item name, Item value)
 {
   if (!IsSymbol(name))
-    ErrorExit("InterpSetLocal: Got a non-symbol (2)");
+    ErrorExit("InterpSetLocal: Got a non-symbol in function");
 
   // Get environment of current context.
   Context* context = interp->currentContext;
@@ -284,7 +277,7 @@ Item InterpEvalSymbol(Interp* interp, Item item)
   }
 
   // Lookup global symbol.
-  Item value = ListGet(interp->globalValueTable, item.value.symbol);
+  Item value = ListGet(interp->gvarTable, item.value.symbol);
   if (!IsVirgin(value)) 
     return value;
 
@@ -334,7 +327,7 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
     if (NULL == currentContext->nextContext)
     {
       PrintDebug("NEW CONTEXT AT INDEX: %i", interp->callstackIndex);
-      nextContext = ContextCreate();
+      nextContext = ContextCreate(interp);
       nextContext->prevContext = currentContext; 
       currentContext->nextContext = nextContext;
     }
@@ -352,10 +345,9 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
   // Set environment.
   if (isFunCall)
   {
-    // Use fresh environment.
+    // Use fresh (empty) environment.
     nextContext->env = nextContext->ownEnv;
-    nextContext->env->length = 0;
-    nextContext->gcEnv = TRUE;
+    ListEmpty(nextContext->env);
   }
   else if (code->env)
   {
@@ -387,10 +379,9 @@ void InterpRun(Interp* interp, List* list)
   interp->run = TRUE;
   interp->contextSwitch = TRUE;
   interp->callstackIndex = 0;
-  interp->callstack = ContextCreate();
+  interp->callstack = ContextCreate(interp);
   interp->currentContext = interp->callstack;
   interp->currentContext->code = list;
-  interp->currentContext->gcEnv = TRUE;
 
   while (TRUE) //interp->run
   {
@@ -406,32 +397,21 @@ void InterpRun(Interp* interp, List* list)
     // Increment code pointer.
     codePointer = ++ currentContext->codePointer;
 
+    // BEGIN EXIT STACKFRAME
     // Exit stackframe if the code in the current context has finished executing.
     if (codePointer >= codeLength)
     {
       PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
       interp->contextSwitch = TRUE;
 /*
-#ifdef USE_GC
-      // GC local env on exit context, unless a closure is refering to it.
-      if (currentContext->gcEnv)
+      // Release the context env (flag set when used by closure).
+      if (currentContext->releaseEnv)
       {
-        PrintDebug("EXIT CONTEXT REFCOUNT: %i", currentContext->env->refCount);
-
-        currentContext->gcEnv = FALSE;
-
-        if (currentContext->ownEnv->refCount < 1)
-        {
-          // No closure uses the context, empty it.
-          ListEmpty(currentContext->ownEnv);
-        }
-        else
-        {
-          // A closure (or more) uses the context.
-          currentContext->ownEnv = ListCreate();
-        }
+        printf("FOO\n");
+        // Closure uses the environment, create new env for context.
+        //currentContext->ownEnv = ListCreate();
+        //currentContext->releaseEnv = FALSE;
       }
-#endif
 */
       // Switch to parent context.
       interp->currentContext = currentContext->prevContext;
@@ -446,9 +426,10 @@ void InterpRun(Interp* interp, List* list)
 #endif
       goto exit;
     }
+    // END EXIT STACKFRAME
 
     // Get next element.
-    Item element = ListGet(code, codePointer);
+    element = ListGet(code, codePointer);
 
 #ifdef OPTIMIZE_PRIMFUNS
     // Optimized primfun calls
@@ -464,7 +445,7 @@ void InterpRun(Interp* interp, List* list)
       // Evaluate symbol (search local and global env).
       item = InterpEvalSymbol(interp, element);
       
-#ifndef OPTIMIZE_PRIMFUNS      
+#ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
       if (IsPrimFun(item))
       {
         item.value.primFun(interp);

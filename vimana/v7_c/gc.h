@@ -2,7 +2,7 @@
 
 // DECLARATIONS ------------------------------------------------
 
-void GCMarkChildren(List* list);
+void GCMarkChildren(List* list, Index startIndex);
 
 // Incremented marker used to track traversed lists during GC.
 // For each GC this global marker is incremented, which 
@@ -57,15 +57,22 @@ void GCMarkList(List* list)
   // Mark list as traversed.
   list->gcMarker = GCMarker;
   
-  GCMarkChildren(list);
+  // Traverse list.
+  GCMarkChildren(list, 0);
+
+  // Traverse environment of closure list.
+  if (NULL != list->env)
+  {
+    GCMarkChildren(list->env, 0);
+  }
 }
 
 // GC children by traversing the list tree.
-void GCMarkChildren(List* list)
+void GCMarkChildren(List* list, Index startIndex)
 { 
   PrintDebug("GCMarkChildren: %d %lu", ListLength(list), (unsigned long)list);
 
-  for (int i = 0; i < list->length; ++i)
+  for (int i = startIndex; i < list->length; ++i)
   {
     Item item = ListGet(list, i);
     if (IsDynAlloc(item))
@@ -77,22 +84,27 @@ void GCMarkChildren(List* list)
 
 void GCSweep(GarbageCollector* gc)
 { 
+  PrintLine("GCSweep BEGIN");
+  int i = 1;
   GCEntry** entry = &(gc->firstEntry);
   while (*entry)
   {
+    PrintLine("GCSweep ENTRY %i", i++);
     if ((*entry)->object->gcMarker != GCMarker)
     {
-      PrintLine("GCSweep removing: %lu",(unsigned long)((*entry)->object));
-      GCEntry* remove = *entry;
+      PrintLine("GCSweep DEALLOC: %lu",(unsigned long)((*entry)->object));
+      GCEntry* unreachableEntry = *entry;
       *entry = (*entry)->next;
-      ListFree(remove->object);
-      free(entry);
+      ListFree(unreachableEntry->object);
+      free(unreachableEntry);
     }
     else
     {
+      PrintLine("GCSweep NEXT");
       entry = &((*entry)->next);
     }
   }
+  PrintLine("GCSweep END");
 }
 
 void GCPrintEntries(GarbageCollector* gc)

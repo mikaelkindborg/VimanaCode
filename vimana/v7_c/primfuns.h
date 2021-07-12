@@ -612,7 +612,9 @@ void Prim_LISTDROP(Interp* interp)
 // GC -> 
 void Prim_GC(Interp* interp)
 {
+#ifdef USE_GC
   InterpGC(interp);
+#endif
 }
 
 void DefinePrimFuns(Interp* interp)

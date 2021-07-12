@@ -25,20 +25,24 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeDynAlloc      512
 #define TypeVirgin        0 // Represents unbound symbol/uninitialized item
 
-#define IsVirgin(item)      ((item).type == TypeVirgin)
-#define IsSymbol(item)      ((item).type & TypeSymbol)
-#define IsIntNum(item)      ((item).type & TypeIntNum)
-#define IsDecNum(item)      ((item).type & TypeDecNum)
-#define IsBool(item)        ((item).type & TypeBool)
-#define IsList(item)        ((item).type & TypeList)
-#define IsPrimFun(item)     ((item).type & TypePrimFun)
-#define IsFun(item)         ((item).type & TypeFun)
-//#define IsOptimizedList(item) ((item).type & TypeOptimizedList)
-#define IsString(item)      ((item).type & TypeString)
-#define IsContext(item)     ((item).type & TypeContext)
-#define IsDynAlloc(item)    ((item).type & TypeDynAlloc)
+#define IsVirgin(item)    ((item).type == TypeVirgin)
+#define IsSymbol(item)    ((item).type & TypeSymbol)
+#define IsIntNum(item)    ((item).type & TypeIntNum)
+#define IsDecNum(item)    ((item).type & TypeDecNum)
+#define IsBool(item)      ((item).type & TypeBool)
+#define IsList(item)      ((item).type & TypeList)
+#define IsPrimFun(item)   ((item).type & TypePrimFun)
+#define IsFun(item)       ((item).type & TypeFun)
+#define IsString(item)    ((item).type & TypeString)
+#define IsContext(item)   ((item).type & TypeContext)
+#define IsDynAlloc(item)  ((item).type & TypeDynAlloc)
 
-//??? #define TypePushable (TypeIntNum | TypeDecNum | TypeBool | TypeList)
+// OP CODES USED BY INTERPRETER
+
+#define OpCodeNone        0
+#define OpCodePushItem    1
+#define OpCodeCallPrimFun 2 
+#define OpCodeEvalSymbol  3
 
 // STRUCTS -----------------------------------------------------
 
@@ -69,6 +73,7 @@ Item ItemWithSymbol(Index symbolIndex)
 {
   Item item;
   item.type = TypeSymbol;
+  item.opCode = OpCodeEvalSymbol;
   item.value.symbol = symbolIndex;
   return item;
 }
@@ -77,6 +82,7 @@ Item ItemWithString(char* string)
 {
   Item item;
   item.type = TypeString;
+  item.opCode = OpCodePushItem;
   char* stringbuf = malloc(strlen(string) + 1);
   strcpy(stringbuf, string);
   item.value.string = stringbuf;
@@ -87,6 +93,7 @@ Item ItemWithList(List* list)
 {
   Item item;
   item.type = TypeList;
+  item.opCode = OpCodePushItem;
   item.value.list = list;
   return item;
 }
@@ -96,6 +103,7 @@ Item ItemWithVirgin()
 {
   Item item;
   item.type = TypeVirgin;
+  item.opCode = OpCodeNone;
   item.value.list = 0; // Sets value to zero.
   return item;
 }

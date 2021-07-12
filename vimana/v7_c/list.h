@@ -4,6 +4,13 @@
 
 // LISTS -------------------------------------------------------
 
+// Lists can be used to hold data and/or code (as in Lisp).
+//
+// Lists can also be used as closures using the BIND primitive.
+// When using BIND one should also use GG (garbage collection),
+// since the current implementation does not count references
+// to shared environments.
+
 typedef struct MyList
 {
   int   gcMarker;     // Mark flag for GC
@@ -53,23 +60,23 @@ void ListFree(List* list)
 
   // Free item array.
   free(list->items);
-/*
-  // Free environment list.
-  if (list->env) 
-  {
-    ListFree(list->env);
-  }
-*/
+
+  // Environment (list->env) is deallocated by GC.
+  // Using closures without GC will leak memory.
+
   // Free list object.
   free(list);
 }
 
-// TODO: Make macro
+#ifdef OPTIMIZE
+#define ListEmpty(list) (list)->length = 0
+#else
 void ListEmpty(List* list)
 {
   // Empty list.
   list->length = 0;
 }
+#endif
 
 // LIST FUNCTIONS ----------------------------------------------
 
@@ -130,7 +137,7 @@ void ListPush(List* list, Item item)
 #define ListPopInto(list, item) \
   do { \
     if ((list)->length < 1) \
-      ErrorExit("ListPopInto: Cannot pop list of length < 0"); \
+      ErrorExit("ListPopInto: Cannot pop empty list"); \
     (list)->length --; \
     (item) = (list)->items[list->length]; \
   } while(0)
@@ -139,7 +146,7 @@ void ListPush(List* list, Item item)
 Item ListPop(List* list)
 {
   if (list->length < 1)
-    ErrorExit("ListPop: Cannot pop list of length: %i", list->length);
+    ErrorExit("ListPop: Cannot pop empty list");
   -- list->length;
   Item item = list->items[list->length];
   return item;
@@ -171,7 +178,7 @@ void ListDrop(List* list)
 Item ListGet(List* list, int index)
 {
   if (index >= list->length)
-    ErrorExit("ListGet: Index out of bounds: %i\n", index);
+    ErrorExit("ListGet: Index out of bounds: %i", index);
   return list->items[index];
 }
 #endif
@@ -185,9 +192,7 @@ Item ListGet(List* list, int index)
       (list)->length = (index) + 1; \
     (list)->items[index] = (item); \
   } while (0)
-
 #else
-
 void ListSet(List* list, int index, Item item)
 {
   // Grow list if needed.
@@ -198,7 +203,6 @@ void ListSet(List* list, int index, Item item)
   // Set new item.
   list->items[index] = item;
 }
-
 #endif
 
 #ifdef OPTIMIZE
@@ -235,6 +239,7 @@ void ListSwap(List* list)
 }
 #endif
 
+/*
 // Experimental. Useful for updating item values "in place" 
 // without having to copy and write back the item.
 #ifdef OPTIMIZE
@@ -247,6 +252,7 @@ Item* ListGetItemPtr(List* list, int index)
   return &(list->items[index]);
 }
 #endif
+*/
 
 // Associative list set or get. Assumes symbol and value in pairs.
 Item* ListAssocSetGet(List* list, Index symbol, Item* value)
@@ -289,3 +295,16 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
 
 #define ListAssocSet(list, symbolIndex, value) \
   ListAssocSetGet(list, symbolIndex, value)
+
+// Lookup a string and return the index if it is found.
+Index ListLookupStringIndex(List* list, char* symbolString)
+{
+  for (int i = 0; i < ListLength(list); ++ i)
+  {
+    Item item = ListGet(list, i);
+    char* string = item.value.string;
+    if (StringEquals(string, symbolString))
+      return i; // Found it.
+  }
+  return -1; // Not found.
+}

@@ -44,6 +44,7 @@ void ParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
     long number = strtol(token, NULL, 10);
     //PrintDebug("TOKEN INTNUM: %s %li\n", token, num);
     item.type = TypeIntNum;
+    item.opCode = OpCodePushItem;
     item.value.intNum = number;
   }
   else if (TypeDecNum == type)
@@ -51,6 +52,7 @@ void ParserAddSymbolOrNumber(Interp* interp, char* token, List* list)
     double number = strtod(token, NULL);
     //PrintDebug("TOKEN DECNUM: %s %f\n", token, num);
     item.type = TypeDecNum;
+    item.opCode = OpCodePushItem;
     item.value.decNum = number;
   }
   else
@@ -103,7 +105,7 @@ int ParserWorker(Interp* interp, char* code, int i, int length, List* list)
       ParserEndToken();
       return i + 1;
     }
-    
+
     // Copy tokens separated by whitespace.
     // Whitespace separates tokens.
     if (code[i] == ' '  || code[i] == '\t' ||  
