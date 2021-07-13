@@ -121,9 +121,10 @@ void ListGrow(List* list, size_t newSize)
 #ifdef OPTIMIZE
 #define ListPush(list, item) \
 do { \
-  if ((list)->length + 1 > (list)->maxLength) \
-    ListGrow(list, (list)->length + ListGrowIncrement); \
-  (list)->items[(list)->length] = (item); \
+  int length = (list)->length; \
+  if (length + 1 > (list)->maxLength) \
+    ListGrow(list, length + ListGrowIncrement); \
+  (list)->items[length] = (item); \
   (list)->length++; \
 } while (0)
 #else
@@ -143,7 +144,7 @@ void ListPush(List* list, Item item)
       ErrorExit("ListPopInto: Cannot pop empty list"); \
     (list)->length --; \
     (item) = (list)->items[list->length]; \
-  } while(0)
+  } while (0)
 
 /* UNUSED
 Item ListPop(List* list)
@@ -157,8 +158,6 @@ Item ListPop(List* list)
 */
 
 #ifdef OPTIMIZE
-
-// ./vimana  11.27s user 0.01s system 96% cpu 11.668 total
 #define ListDrop(list) \
   do { \
     if (list->length < 1) \
@@ -210,10 +209,7 @@ void ListSet(List* list, int index, Item item)
 
 #ifdef OPTIMIZE
 #define ListDup(list, index) \
-  do { \
-    Item item = ListGet(list, index); \
-    ListPush(list, item); \
-  } while (0)
+  ListPush(list, ListGet(list, index))
 #else
 void ListDup(List* list, Index index)
 {
@@ -226,7 +222,7 @@ void ListDup(List* list, Index index)
 #define ListSwap(list) \
   do { \
     Index index1 = ListLength(list) - 1; \
-    Index index2 = ListLength(list) - 2; \
+    Index index2 = index1 - 1; \
     Item item1 = (list)->items[index1]; \
     (list)->items[index1] = (list)->items[index2]; \
     (list)->items[index2] = item1; \

@@ -250,8 +250,6 @@ void InterpSetGlobal(Interp* interp, Item name, Item value)
 #ifdef OPTIMIZE
 #define InterpSetLocal(interp, name, item) \
   do { \
-    if (!IsSymbol(name)) \
-      ErrorExit("InterpSetLocal: Got a non-symbol in macro"); \
     Context* context = (interp)->currentContext; \
     ListAssocSet(context->env, (name).value.symbol, &(item)); \
   } while (0)
@@ -279,10 +277,11 @@ void InterpSetLocal(Interp* interp, Item name, Item value)
 }
 #endif
 
+/*
 #define InterpEvalSymbolSetResult(interp, item, result) \
 do { \
   Context* context = interp->currentContext;  \
-  if (context && context->env) \
+  if (context && context->env && (context->env->length > 0)) \
   { \
     Item* value = ListAssocGet(context->env, item.value.symbol); \
     if (value) \
@@ -300,12 +299,13 @@ do { \
   result = item; \
 } \
 while (0)
+*/
 
 Item InterpEvalSymbol(Interp* interp, Item item)
 {
   // Look for symbol in current context.
   Context* context = interp->currentContext;
-  if (context && context->env)
+  if (context && context->env && (context->env->length > 0))
   {
     //PrintLine("InterpEvalSymbol: ENV");
     //ListPrint(context->env, interp);
@@ -401,12 +401,6 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
 
 // INTERPRETER LOOP --------------------------------------------
 
-#define USE_BASIC_LOOP
-//#define USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
-//#define USE_NO_GOTOS_IN_LOOP
-//#define USE_COMPUTED_GOTOS
-
-#ifdef USE_BASIC_LOOP
 // Evaluate list.
 void InterpRun(register Interp* interp, List* list)
 {
@@ -513,381 +507,3 @@ Next:;
   } // while
 Exit:;
 }
-#endif
-
-// ALTERNATIVE VERSIONS ----------------------------------------
-
-#ifdef USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
-// Evaluate list.
-void InterpRun(Interp* interp, List* list)
-{
-  Context*   currentContext;
-  List*      code;
-  int        codePointer;
-  int        codeLength;
-  Item       element;
-  Item       item;
-
-  // Initialize interpreter state and create root context.
-  interp->run = TRUE;
-  interp->contextSwitch = TRUE;
-  interp->callstackIndex = 0;
-  interp->callstack = ContextCreate(interp);
-  interp->currentContext = interp->callstack;
-  interp->currentContext->code = list;
-
-  while (TRUE) //interp->run
-  {
-    // Check context switch.
-    if (interp->contextSwitch)
-    {
-      interp->contextSwitch = FALSE;
-      currentContext = interp->currentContext;
-      code = currentContext->code;
-      codeLength = ListLength(code);
-    }
-
-//DoNextInstr:
-    // Increment code pointer.
-    codePointer = ++ currentContext->codePointer;
-
-    // BEGIN EXIT STACKFRAME
-    // Exit stackframe if the code in the current context 
-    // has finished executing.
-    if (codePointer >= codeLength)
-    {
-      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-      interp->contextSwitch = TRUE;
-
-      // Release the context env (flag set when used by closure).
-/* TODO: Move to BIND
-      if (currentContext->releaseEnv)
-      {
-        // Closure uses the environment, create new env for context.
-#ifdef USE_GC
-        currentContext->ownEnv = GCListCreate(interp->gc);
-#else
-        // Causes memory leak, you should use GC with closures.
-        currentContext->ownEnv = ListCreate();
-#endif
-        currentContext->releaseEnv = FALSE;
-      }
-*/
-      // Switch to parent context.
-      interp->currentContext = currentContext->prevContext;
-
-#ifndef OPTIMIZE // ! OPTIMIZE
-      -- interp->callstackIndex;
-      if (interp->currentContext)
-      {
-        ContextFree(interp->currentContext->nextContext);
-        interp->currentContext->nextContext = NULL;
-      }
-#endif
-      goto DoExit;
-    }
-    // END EXIT STACKFRAME
-
-    // Get next element.
-    element = ListGet(code, codePointer);
-
-#ifdef OPTIMIZE_PRIMFUNS
-    // Optimized primfun calls
-    if (IsPrimFun(element))
-    {
-      element.value.primFun(interp);
-      goto DoExit;
-    }
-#endif
-
-    if (IsSymbol(element))
-    {
-      // Evaluate symbol (search local and global env).
-      // Symbols evaluate to themselves if unbound.
-      item = InterpEvalSymbol(interp, element);
-      
-#ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
-      if (IsPrimFun(item))
-      {
-        item.value.primFun(interp);
-        goto DoExit;
-      }
-#endif
-      // If it is a function call it.
-      if (IsFun(item))
-      {
-        InterpEnterFunCallContext(interp, item.value.list);
-        goto DoExit;
-      }
-
-      // If not a function, push the symbol value.
-      ListPush(interp->stack, item);
-      //goto DoNextInstr; // Slows down a lot!
-      goto DoExit;
-    }
-
-    // If none of the above, push the element.
-    ListPush(interp->stack, element);
-    //goto DoNextInstr; // Slows down somewhat.
-
-DoExit:
-    // Was this the last stackframe?
-    if (NULL == interp->currentContext)
-    //if (interp->callstackIndex < 0)
-    {
-      PrintDebug("EXIT InterpRun callstackIndex: %i", interp->callstackIndex);
-      //interp->run = FALSE;
-      break;
-    }
-  } // while
-
-}
-#endif
-
-// INTERPRETER LOOP WITH NO GOTOS ------------------------------
-
-#ifdef USE_NO_GOTOS_IN_LOOP 
-// Evaluate list.
-void InterpRun(Interp* interp, List* list)
-{
-  Context*   currentContext;
-  List*      code;
-  int        codePointer;
-  int        codeLength;
-  Item       element;
-  Item       item;
-
-  // Initialize interpreter state and create root context.
-  interp->run = TRUE;
-  interp->contextSwitch = TRUE;
-  interp->callstackIndex = 0;
-  interp->callstack = ContextCreate(interp);
-  interp->currentContext = interp->callstack;
-  interp->currentContext->code = list;
-
-  while (TRUE) //interp->run
-  {
-    // Check context switch.
-    if (interp->contextSwitch)
-    {
-      interp->contextSwitch = FALSE;
-      currentContext = interp->currentContext;
-      code = currentContext->code;
-      codeLength = ListLength(code);
-    }
-
-    // Increment code pointer.
-    codePointer = ++ currentContext->codePointer;
-
-    // BEGIN EXIT STACKFRAME
-    // Exit stackframe if the code in the current context 
-    // has finished executing.
-    if (codePointer < codeLength)
-    {
-      // Get next element.
-      element = ListGet(code, codePointer);
-  #ifdef OPTIMIZE_PRIMFUNS
-      // Optimized primfun calls
-      if (IsPrimFun(element))
-      {
-        element.value.primFun(interp);
-      }
-      else
-  #endif
-      if (IsSymbol(element))
-      {
-        // Evaluate symbol (search local and global env).
-        // Symbols evaluate to themselves if unbound.
-        item = InterpEvalSymbol(interp, element);
-  #ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
-        if (IsPrimFun(item))
-        {
-          item.value.primFun(interp);
-        }
-        else
-  #endif
-        // If it is a function call it.
-        if (IsFun(item))
-        {
-          InterpEnterFunCallContext(interp, item.value.list);
-        }
-        else
-        {
-          // If not a function, push the symbol value.
-          ListPush(interp->stack, item);
-        }
-      }
-      else
-      {
-        // If none of the above, push the element.
-        ListPush(interp->stack, element);
-      }
-    }
-    else
-    {
-      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-      interp->contextSwitch = TRUE;
-/*
-      // Release the context env (flag set when used by closure).
-      if (currentContext->releaseEnv)
-      {
-        // Closure uses the environment, create new env for context.
-        currentContext->ownEnv = ListCreate();
-        currentContext->releaseEnv = FALSE;
-      }
-*/
-      // Switch to parent context.
-      interp->currentContext = currentContext->prevContext;
-
-#ifndef OPTIMIZE // ! OPTIMIZE
-      -- interp->callstackIndex;
-      if (interp->currentContext)
-      {
-        ContextFree(interp->currentContext->nextContext);
-        interp->currentContext->nextContext = NULL;
-      }
-#endif
-    }
-    // END EXIT STACKFRAME
-
-    // Was this the last stackframe?
-    if (NULL == interp->currentContext)
-    //if (interp->callstackIndex < 0)
-    {
-      PrintDebug("EXIT InterpRun callstackIndex: %i", interp->callstackIndex);
-      //interp->run = FALSE;
-      break;
-    }
-  } // while
-}
-#endif
-
-// INTERPRETER LOOP WITH COMPUTED GOTOS ------------------------
-
-#ifdef USE_COMPUTED_GOTOS
-// Check this out: https://eli.thegreenplace.net/2012/07/12/computed-goto-for-efficient-dispatch-tables/
-// Evaluate list.
-void InterpRun(Interp* interp, List* list)
-{
-  Context*   currentContext;
-  List*      code;
-  int        codePointer;
-  int        codeLength;
-  Item       element;
-  Item       item;
-
-  static void* dispatchTable[] = 
-  { 
-    &&DoExit // OpCodeNone
-    , &&DoPushItem
-    , &&DoEvalSymbol
-#ifdef OPTIMIZE_PRIMFUNS
-    , &&DoCallPrimFun
-#endif
-  };
-
-  // Initialize interpreter state and create root context.
-  interp->run = TRUE;
-  interp->contextSwitch = TRUE;
-  interp->callstackIndex = 0;
-  interp->callstack = ContextCreate(interp);
-  interp->currentContext = interp->callstack;
-  interp->currentContext->code = list;
-
-DoLoop:
-    // Check context switch.
-    if (interp->contextSwitch)
-    {
-      interp->contextSwitch = FALSE;
-      currentContext = interp->currentContext;
-      code = currentContext->code;
-      codeLength = ListLength(code);
-    }
-
-DoNextInstr:
-    // Increment code pointer.
-    codePointer = ++ currentContext->codePointer;
-
-    // BEGIN EXIT STACKFRAME
-    // Exit stackframe if the code in the current context 
-    // has finished executing.
-    if (codePointer >= codeLength)
-    {
-      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-      interp->contextSwitch = TRUE;
-/*
-      // Release the context env (flag set when used by closure).
-      if (currentContext->releaseEnv)
-      {
-        // Closure uses the environment, create new env for context.
-        //currentContext->ownEnv = ListCreate();
-        //currentContext->releaseEnv = FALSE;
-      }
-*/
-      // Switch to parent context.
-      interp->currentContext = currentContext->prevContext;
-
-#ifndef OPTIMIZE // ! OPTIMIZE
-      -- interp->callstackIndex;
-      if (interp->currentContext)
-      {
-        ContextFree(interp->currentContext->nextContext);
-        interp->currentContext->nextContext = NULL;
-      }
-#endif
-      goto DoExit;
-    }
-    // END EXIT STACKFRAME
-
-    // Get next element.
-    element = ListGet(code, codePointer);
-
-    // Dispatch on item opcode.
-    //PrintDebug("DISPATCH OPCODE: %d", element.opCode);
-    goto *dispatchTable[element.opCode];
-
-#ifdef OPTIMIZE_PRIMFUNS
-DoCallPrimFun:
-    // Optimized primfun calls
-    element.value.primFun(interp);
-    goto DoLoop;
-#endif
-
-DoEvalSymbol:
-    // Evaluate symbol (search local and global env).
-    // Symbols evaluate to themselves if unbound.
-    item = InterpEvalSymbol(interp, element);
-      
-#ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
-    if (IsPrimFun(item))
-    {
-      item.value.primFun(interp);
-      goto DoLoop;
-    }
-#endif
-    // If it is a function call it.
-    if (IsFun(item))
-    {
-      InterpEnterFunCallContext(interp, item.value.list);
-      goto DoLoop;
-    }
-
-    // If not a function, push the symbol value.
-    ListPush(interp->stack, item);
-    goto DoLoop;
-
-DoPushItem:
-    // If none of the above, push the element.
-    ListPush(interp->stack, element);
-    goto DoNextInstr;
-
-DoExit:
-    // Do we have a stackframe?
-    if (NULL != interp->currentContext)
-    {
-      goto DoLoop;
-    }
-
-    PrintDebug("EXIT InterpRun callstackIndex: %i", interp->callstackIndex);
-}
-#endif
