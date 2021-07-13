@@ -93,8 +93,17 @@ USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
 without context env closure check
 using cold machine and full fan 
 
+10000000 loops 20 fact
 miki@mikis-Air v7_c % time ./vimana benchmark.vimana
 ./vimana benchmark.vimana  13.49s user 0.02s system 99% cpu 13.537 total
-
 miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
 ./vimana stackbenchmark.vimana  10.13s user 0.01s system 99% cpu 10.164 total
+
+5000000 loops 20 fact
+miki@mikis-Air v7_c % cc vimana.c -o vimana -O3
+miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
+./vimana stackbenchmark.vimana  5.04s user 0.00s system 92% cpu 5.430 total
+miki@mikis-Air v7_c % time ./vimana benchmark.vimana 
+./vimana benchmark.vimana  6.79s user 0.01s system 99% cpu 6.804 total
+
+

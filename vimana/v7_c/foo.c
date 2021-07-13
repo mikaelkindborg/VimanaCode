@@ -21,7 +21,7 @@ typedef struct MyItem
     double  decNum;
     long    intNum;
     void*   list;
-    char*   string; // TODO: Make custom string object
+    char*   string;
   }
   value;
 }
@@ -238,6 +238,11 @@ int main()
   size = sizeof(PrimFun);
   printf("Size of PrimFun: %i\n", size);
   
+do {
+  printf("*** FOO\n");
+  break;
+  printf("*** BAR\n");
+} while(0);
 
   // RESULTS HAVE BEEN INCONSISTENT!
 

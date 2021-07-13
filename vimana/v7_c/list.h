@@ -314,7 +314,6 @@ Index ListLookupStringIndex(List* list, char* symbolString)
 
 void ListFreeDeep(List* list)
 {
-//#ifdef TRACK_MEMORY_USAGE
   for (int i = 0; i < ListLength(list); ++i)
   {
     Item item = ListGet(list, i);
@@ -324,5 +323,4 @@ void ListFreeDeep(List* list)
     }
   }
   ListFree(list);
-//#endif
 }

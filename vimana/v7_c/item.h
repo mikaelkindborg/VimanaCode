@@ -24,6 +24,7 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeContext       256
 #define TypeDynAlloc      512
 #define TypeVirgin        0 // Represents unbound symbol/uninitialized item
+#define TypePushable (TypeIntNum | TypeDecNum | TypeBool | TypeList)
 
 #define IsVirgin(item)    ((item).type == TypeVirgin)
 #define IsSymbol(item)    ((item).type & TypeSymbol)
@@ -36,13 +37,17 @@ typedef void   (*PrimFun)(Interp*);
 #define IsString(item)    ((item).type & TypeString)
 #define IsContext(item)   ((item).type & TypeContext)
 #define IsDynAlloc(item)  ((item).type & TypeDynAlloc)
+#define IsPushable(item)  ((item).type & TypePushable)
 
+/*
 // OP CODES USED BY INTERPRETER
 
 #define OpCodeNone        0
 #define OpCodePushItem    1
 #define OpCodeEvalSymbol  2
 #define OpCodeCallPrimFun 3 
+*/
+
 
 // STRUCTS -----------------------------------------------------
 
@@ -51,7 +56,7 @@ typedef void   (*PrimFun)(Interp*);
 typedef struct MyItem
 {
   Type type;
-  Type opCode;
+  //Type opCode;
   union
   {
     Index     symbol; // Index in global symbol table
@@ -73,7 +78,7 @@ Item ItemWithSymbol(Index symbolIndex)
 {
   Item item;
   item.type = TypeSymbol;
-  item.opCode = OpCodeEvalSymbol;
+  //item.opCode = OpCodeEvalSymbol;
   item.value.symbol = symbolIndex;
   return item;
 }
@@ -82,7 +87,7 @@ Item ItemWithString(char* string)
 {
   Item item;
   item.type = TypeString;
-  item.opCode = OpCodePushItem;
+  //item.opCode = OpCodePushItem;
   char* stringbuf = MemAlloc(strlen(string) + 1);
   strcpy(stringbuf, string);
   item.value.string = stringbuf;
@@ -93,7 +98,7 @@ Item ItemWithList(List* list)
 {
   Item item;
   item.type = TypeList;
-  item.opCode = OpCodePushItem;
+  //item.opCode = OpCodePushItem;
   item.value.list = list;
   return item;
 }
@@ -103,7 +108,7 @@ Item ItemWithVirgin()
 {
   Item item;
   item.type = TypeVirgin;
-  item.opCode = OpCodeNone;
+  //item.opCode = OpCodeNone;
   item.value.list = 0; // Sets value to zero.
   return item;
 }

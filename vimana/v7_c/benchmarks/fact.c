@@ -58,12 +58,12 @@ int main()
   
   // Test 210713
   //int n = read_int(); fact_test(n);
-  //miki@mikis-Air benchmarks % cc fact.c -O3
-  //miki@mikis-Air benchmarks % time ./a.out 
-  //./a.out  0.08s user 0.00s system 19% cpu 0.423 total
   //miki@mikis-Air benchmarks % cc fact.c
   //miki@mikis-Air benchmarks % time ./a.out 
   //./a.out  0.78s user 0.00s system 69% cpu 1.127 total
+  //miki@mikis-Air benchmarks % cc fact.c -O3
+  //miki@mikis-Air benchmarks % time ./a.out 
+  //./a.out  0.08s user 0.00s system 19% cpu 0.423 total
 
   return 0;
 }

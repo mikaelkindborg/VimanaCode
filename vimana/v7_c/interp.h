@@ -228,7 +228,7 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
   // Add function to value table.
   Item item;
   item.type = TypePrimFun;
-  item.opCode = OpCodeCallPrimFun;
+  //item.opCode = OpCodeCallPrimFun;
   item.value.primFun = fun;
   ListPush(interp->gvarTable, item);
 
@@ -278,27 +278,43 @@ void InterpSetLocal(Interp* interp, Item name, Item value)
 }
 #endif
 
+#define InterpEvalSymbolSetResult(interp, item, result) \
+do { \
+  Context* context = interp->currentContext;  \
+  if (context && context->env) \
+  { \
+    Item* value = ListAssocGet(context->env, item.value.symbol); \
+    if (value) \
+    { \
+      result = *value; \
+      break; \
+    } \
+  } \
+  Item value = ListGet(interp->gvarTable, item.value.symbol); \
+  if (!IsVirgin(value)) \
+  { \
+    result = value; \
+    break; \
+  } \
+  result = item; \
+} \
+while (0)
+
 Item InterpEvalSymbol(Interp* interp, Item item)
 {
-  // Non-symbols evaluates to themselves.
-  if (!IsSymbol(item))
-    return item;
-
   // Look for symbol in current context.
   Context* context = interp->currentContext;
   if (context && context->env)
   {
-    //PrintDebug("InterpEvalSymbol: ENV");
+    //PrintLine("InterpEvalSymbol: ENV");
     //ListPrint(context->env, interp);
     Item* value = ListAssocGet(context->env, item.value.symbol);
-    if (value)
-      return *value;
+    if (value) return *value;
   }
 
   // Lookup global symbol.
   Item value = ListGet(interp->gvarTable, item.value.symbol);
-  if (!IsVirgin(value)) 
-    return value;
+  if (!IsVirgin(value)) return value;
 
   // Symbol is unbound and evaluates to itself.
   return item;
@@ -356,20 +372,7 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
       nextContext = currentContext->nextContext;
     }
   }
-/*
-  // Should we release the context env (flag set when used by closure).
-  if (nextContext->releaseEnv)
-  {
-    // Closure uses the environment, create new env for context.
-#ifdef USE_GC
-    nextContext->ownEnv = GCListCreate(interp->gc);
-#else
-    // Causes memory leak, you should use GC with closures.
-    nextContext->ownEnv = ListCreate();
-#endif
-    nextContext->releaseEnv = FALSE;
-  }
-*/
+
   // Set context data.
   nextContext->code = code;
   nextContext->codePointer = -1;
@@ -397,9 +400,121 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
 
 // INTERPRETER LOOP --------------------------------------------
 
-#define USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
+#define USE_BASIC_LOOP
+//#define USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
 //#define USE_NO_GOTOS_IN_LOOP
 //#define USE_COMPUTED_GOTOS
+
+#ifdef USE_BASIC_LOOP
+// Evaluate list.
+void InterpRun(register Interp* interp, List* list)
+{
+  register Context*   currentContext;
+  register List*      code;
+  register int        codePointer;
+  register int        codeLength;
+  register Item       element;
+  register Item       evalResult;
+
+  // Initialize interpreter state and create root context.
+  interp->run = TRUE;
+  interp->contextSwitch = TRUE;
+  interp->callstackIndex = 0;
+  interp->callstack = ContextCreate(interp);
+  interp->currentContext = interp->callstack;
+  interp->currentContext->code = list;
+
+  while (TRUE)
+  {
+    // Check context switch.
+    if (interp->contextSwitch)
+    {
+      interp->contextSwitch = FALSE;
+      currentContext = interp->currentContext;
+      code = currentContext->code;
+      codeLength = ListLength(code);
+    }
+
+    // Increment code pointer.
+    codePointer = ++ currentContext->codePointer;
+
+    // BEGIN EXIT STACKFRAME
+    // Exit stackframe if the code in the current context 
+    // has finished executing.
+    if (codePointer >= codeLength)
+    {
+      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+
+      //interp->contextSwitch = TRUE;
+
+      // Switch to parent context.
+      currentContext = interp->currentContext = currentContext->prevContext;
+
+      // Exit if this was the last stackframe
+      if (!currentContext) goto Exit;
+      
+      code = currentContext->code;
+      codeLength = ListLength(code);
+
+#ifndef OPTIMIZE // ! OPTIMIZE
+      -- interp->callstackIndex;
+      if (interp->currentContext)
+      {
+        ContextFree(interp->currentContext->nextContext);
+        interp->currentContext->nextContext = NULL;
+      }
+#endif
+      continue;
+    }
+    // END EXIT STACKFRAME
+
+    // Get next element.
+    element = ListGet(code, codePointer);
+
+#ifdef OPTIMIZE_PRIMFUNS
+    // Optimized primfun calls
+    if (IsPrimFun(element))
+    {
+      element.value.primFun(interp);
+      continue;
+    }
+#endif
+
+    if (IsSymbol(element))
+    {
+      // Evaluate symbol (search local and global env).
+      // Symbols evaluate to themselves if unbound.
+      // InterpEvalSymbolSetResult is slower!
+      //InterpEvalSymbolSetResult(interp, element, evalResult);
+      evalResult = InterpEvalSymbol(interp, element);
+      
+#ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
+      if (IsPrimFun(item))
+      {
+        evalResult.value.primFun(interp);
+        continue;
+      }
+#endif
+      // If it is a function call it.
+      if (IsFun(evalResult))
+      {
+        InterpEnterFunCallContext(interp, evalResult.value.list);
+        continue;
+      }
+
+      // If not a function, push the symbol value.
+      ListPush(interp->stack, evalResult);
+      continue;
+    }
+
+    // If none of the above, push the element.
+    ListPush(interp->stack, element);
+  } // while
+Exit:;
+}
+#endif
+
+// ALTERNATIVE VERSIONS ----------------------------------------
 
 #ifdef USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
 // Evaluate list.
@@ -444,7 +559,7 @@ void InterpRun(Interp* interp, List* list)
       interp->contextSwitch = TRUE;
 
       // Release the context env (flag set when used by closure).
-/*
+/* TODO: Move to BIND
       if (currentContext->releaseEnv)
       {
         // Closure uses the environment, create new env for context.

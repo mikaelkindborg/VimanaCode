@@ -133,12 +133,14 @@ void Prim_EVAL(Interp* interp)
 void Prim_VALUE(Interp* interp)
 {
   Item item;
+  Item evalResult;
   InterpPopInto(interp, item);
   if (IsSymbol(item))
   {
-    item = InterpEvalSymbol(interp, item);
+    evalResult = InterpEvalSymbol(interp, item);
+    //InterpEvalSymbolSetResult(interp, item, evalResult);
   }
-  InterpPush(interp, item); // Push value
+  InterpPush(interp, evalResult); // Push value
 }
 
 // 21 ((X) => X X +) CALL
