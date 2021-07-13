@@ -51,7 +51,9 @@ int main(int numargs, char* args[])
       fclose(file);
       List* list = ParseCode(interp, buf);
       InterpRun(interp, list);
+#ifndef USE_GC // ! USE_GC
       ListFreeDeep(list);
+#endif
     }
   }
   
@@ -80,6 +82,10 @@ int main(int numargs, char* args[])
       ListPrint(interp->stack, interp);
       // We should free all parsed lists from the session,
       // but that will have to wait (a long time).
+      // TODO: Alloc lists using the GC in parser.
+      //#ifdef USE_GC
+      // InterpGC(interp);
+      //#endif
     }
   }
 

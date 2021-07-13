@@ -6,8 +6,9 @@
 
 #define OPTIMIZE
 #define OPTIMIZE_PRIMFUNS
-#define USE_GC
+//#define USE_GC
 //#define DEBUG
+//#define TRACK_MEMORY_USAGE
 
 typedef unsigned char Byte;
 typedef int           Bool;
@@ -49,6 +50,7 @@ void StringToLower(char* s)
   }
 }
 
+#ifdef TRACK_MEMORY_USAGE
 
 int GMemAllocCounter = 0;
 int GMemFreeCounter = 0;
@@ -66,3 +68,11 @@ void PrintMemStat()
   PrintLine("ListCreate: %d", GListCreateCounter);
   PrintLine("ListFree:   %d", GListFreeCounter);
 }
+
+#else
+
+#define MemAlloc(size) malloc(size)
+#define MemFree(obj) free(obj)
+#define PrintMemStat()
+
+#endif

@@ -86,3 +86,15 @@ MemAlloc: 189 MemFree: 165
 WITH GC:
 miki@mikis-Air v7_c % ./vimana test.vimana
 MemAlloc: 213 MemFree: 189
+
+Benchmarks 210713:
+
+USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
+without context env closure check
+using cold machine and full fan 
+
+miki@mikis-Air v7_c % time ./vimana benchmark.vimana
+./vimana benchmark.vimana  13.49s user 0.02s system 99% cpu 13.537 total
+
+miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
+./vimana stackbenchmark.vimana  10.13s user 0.01s system 99% cpu 10.164 total

@@ -26,8 +26,9 @@ List;
 
 List* ListCreate()
 {
+#ifdef TRACK_MEMORY_USAGE
   ++ GListCreateCounter;
-
+#endif
   // Alloc list object.
   size_t size = ListGrowIncrement;
 
@@ -55,8 +56,9 @@ List* ListCreate()
 
 void ListFree(List* list)
 {
+#ifdef TRACK_MEMORY_USAGE
   ++ GListFreeCounter;
-
+#endif
   PrintDebug("ListFree: %lu", (unsigned long)list);
 
   // Free item array.
@@ -312,6 +314,7 @@ Index ListLookupStringIndex(List* list, char* symbolString)
 
 void ListFreeDeep(List* list)
 {
+//#ifdef TRACK_MEMORY_USAGE
   for (int i = 0; i < ListLength(list); ++i)
   {
     Item item = ListGet(list, i);
@@ -321,4 +324,5 @@ void ListFreeDeep(List* list)
     }
   }
   ListFree(list);
+//#endif
 }

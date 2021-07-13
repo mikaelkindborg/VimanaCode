@@ -397,8 +397,8 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
 
 // INTERPRETER LOOP --------------------------------------------
 
-//#define USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
-#define USE_NO_GOTOS_IN_LOOP
+#define USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
+//#define USE_NO_GOTOS_IN_LOOP
 //#define USE_COMPUTED_GOTOS
 
 #ifdef USE_ORIGINAL_LOOP_WITH_SOME_GOTOS
@@ -431,7 +431,7 @@ void InterpRun(Interp* interp, List* list)
       codeLength = ListLength(code);
     }
 
-DoNextInstr:
+//DoNextInstr:
     // Increment code pointer.
     codePointer = ++ currentContext->codePointer;
 
@@ -444,6 +444,7 @@ DoNextInstr:
       interp->contextSwitch = TRUE;
 
       // Release the context env (flag set when used by closure).
+/*
       if (currentContext->releaseEnv)
       {
         // Closure uses the environment, create new env for context.
@@ -455,7 +456,7 @@ DoNextInstr:
 #endif
         currentContext->releaseEnv = FALSE;
       }
-
+*/
       // Switch to parent context.
       interp->currentContext = currentContext->prevContext;
 
