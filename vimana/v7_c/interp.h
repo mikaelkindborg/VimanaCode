@@ -88,6 +88,7 @@ Interp* InterpCreate()
   interp->symbolTable = ListCreate();
   interp->gvarTable = ListCreate();
   interp->stack = ListCreate();
+  interp->callstack = ContextCreate(interp);
   interp->symbolCase = SymbolUpperCase; // Default
   interp->numberOfPrimFuns = 0;
 #ifdef USE_GC
@@ -420,7 +421,6 @@ void InterpRun(register Interp* interp, List* list)
   interp->run = TRUE;
   interp->contextSwitch = TRUE;
   interp->callstackIndex = 0;
-  interp->callstack = ContextCreate(interp);
   interp->currentContext = interp->callstack;
   interp->currentContext->code = list;
 
@@ -464,7 +464,7 @@ void InterpRun(register Interp* interp, List* list)
         interp->currentContext->nextContext = NULL;
       }
 #endif
-      continue;
+      goto Next; //continue;
     }
     // END EXIT STACKFRAME
 
@@ -476,7 +476,7 @@ void InterpRun(register Interp* interp, List* list)
     if (IsPrimFun(element))
     {
       element.value.primFun(interp);
-      continue;
+      goto Next; //continue;
     }
 #endif
 
@@ -492,23 +492,24 @@ void InterpRun(register Interp* interp, List* list)
       if (IsPrimFun(item))
       {
         evalResult.value.primFun(interp);
-        continue;
+        goto Next; //continue;
       }
 #endif
       // If it is a function call it.
       if (IsFun(evalResult))
       {
         InterpEnterFunCallContext(interp, evalResult.value.list);
-        continue;
+        goto Next; //continue;
       }
 
       // If not a function, push the symbol value.
       ListPush(interp->stack, evalResult);
-      continue;
+      goto Next; //continue;
     }
 
     // If none of the above, push the element.
     ListPush(interp->stack, element);
+Next:;
   } // while
 Exit:;
 }

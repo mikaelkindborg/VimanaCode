@@ -27,6 +27,8 @@ typedef struct MyItem
 }
 Item;
 
+typedef void (*PrimFun)(void*);
+
 Item add(Item item1, Item item2)
 {
   Item res;
@@ -162,7 +164,6 @@ void addItems4B()
   printf("Result: %li\n", item1.value.intNum);
 }
 
-
 void addItems5()
 {
   Item item[2];
@@ -205,7 +206,30 @@ void addItems6()
   printf("Result: %li\n", item1.value.intNum);
 }
 
-typedef void (*PrimFun)(void*);
+void TestVariableAccess()
+{
+  long sum = 0;
+  for (long i = 0; i < 500000000; i++)
+  {
+    sum = sum + rand() % 2;
+  }
+  printf("TestVariableAccess sum: %lu\n", sum);
+}
+
+typedef struct {
+  long sum;
+} SumVal;
+
+void TestStructAccess()
+{
+  SumVal* val = malloc(sizeof(SumVal));
+  val->sum = 0;
+  for (long i = 0; i < 500000000; i++)
+  {
+    val->sum =val->sum + rand() % 2;
+  }
+  printf("TestStructAccess sum: %lu\n", val->sum);
+}
 
 int main()
 {
@@ -238,11 +262,11 @@ int main()
   size = sizeof(PrimFun);
   printf("Size of PrimFun: %i\n", size);
   
-do {
-  printf("*** FOO\n");
-  break;
-  printf("*** BAR\n");
-} while(0);
+  do {
+    printf("*** FOO\n");
+    break;
+    printf("*** BAR\n");
+  } while(0);
 
   // RESULTS HAVE BEEN INCONSISTENT!
 
@@ -255,6 +279,9 @@ do {
   //addItems4B(); // 1.28s (pointers alternative syntax)
   //addItems5(); // 0.78s (array indexes)
   //addItems6(); // 1.08s (1 copy of Item), 1.30s (2 copies of Item)
+
+  //TestVariableAccess();
+  TestStructAccess();
 
   return 0;
 }
