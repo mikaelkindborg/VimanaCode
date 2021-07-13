@@ -63,7 +63,7 @@ function test_fact_iter()
 }
 
 // .php fact.php  6.34s user 0.16s system 99% cpu 6.552 total
-//print(test_fact()."\n");
+print(test_fact()."\n");
 
 // php fact.php  4.12s user 0.02s system 99% cpu 4.141 total
-print(test_fact_iter()."\n");
+//print(test_fact_iter()."\n");
