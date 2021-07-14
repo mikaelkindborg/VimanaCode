@@ -277,31 +277,6 @@ void InterpSetLocal(Interp* interp, Item name, Item value)
 }
 #endif
 
-/*
-#define InterpEvalSymbolSetResult(interp, item, result) \
-do { \
-  Context* context = interp->currentContext;  \
-  if (context && context->env && (context->env->length > 0)) \
-  { \
-    Item* value = ListAssocGet(context->env, item.value.symbol); \
-    if (value) \
-    { \
-      result = *value; \
-      goto ExitSymbolEval; \
-    } \
-  } \
-  Item value = ListGet(interp->gvarTable, item.value.symbol); \
-  if (!IsVirgin(value)) \
-  { \
-    result = value; \
-    goto ExitSymbolEval; \
-  } \
-  result = item; \
-ExitSymbolEval:; \
-} \
-while (0)
-*/
-
 Item InterpEvalSymbol(Interp* interp, Item item)
 {
   // Look for symbol in current context.
@@ -479,9 +454,7 @@ void InterpRun(register Interp* interp, List* list)
     {
       // Evaluate symbol (search local and global env).
       // Symbols evaluate to themselves if unbound.
-      // InterpEvalSymbolSetResult is slower!
-      InterpEvalSymbolSetResult(interp, element, evalResult);
-      //evalResult = InterpEvalSymbol(interp, element);
+      evalResult = InterpEvalSymbol(interp, element);
       
 #ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
       if (IsPrimFun(item))
