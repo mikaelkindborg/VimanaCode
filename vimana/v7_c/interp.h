@@ -287,16 +287,17 @@ do { \
     if (value) \
     { \
       result = *value; \
-      break; \
+      goto ExitSymbolEval; \
     } \
   } \
   Item value = ListGet(interp->gvarTable, item.value.symbol); \
   if (!IsVirgin(value)) \
   { \
     result = value; \
-    break; \
+    goto ExitSymbolEval; \
   } \
   result = item; \
+ExitSymbolEval:; \
 } \
 while (0)
 */
@@ -479,8 +480,8 @@ void InterpRun(register Interp* interp, List* list)
       // Evaluate symbol (search local and global env).
       // Symbols evaluate to themselves if unbound.
       // InterpEvalSymbolSetResult is slower!
-      //InterpEvalSymbolSetResult(interp, element, evalResult);
-      evalResult = InterpEvalSymbol(interp, element);
+      InterpEvalSymbolSetResult(interp, element, evalResult);
+      //evalResult = InterpEvalSymbol(interp, element);
       
 #ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
       if (IsPrimFun(item))
