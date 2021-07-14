@@ -21,5 +21,4 @@ listNew 100 fillList print
 
 gc
 
-
 (End of test) print

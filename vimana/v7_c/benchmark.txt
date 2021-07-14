@@ -106,7 +106,6 @@ miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
 miki@mikis-Air v7_c % time ./vimana benchmark.vimana 
 ./vimana benchmark.vimana  6.79s user 0.01s system 99% cpu 6.804 total
 
-
 Benchmarks 210714:
 
 Commit: a3b509f30e1fc931f168a7cc80fb7c6fd263a8fd "Even more tuning"
@@ -124,9 +123,15 @@ miki@mikis-Air v7_c % time ./vimana benchmark.vimana
 ./vimana benchmark.vimana  13.74s user 0.01s system 99% cpu 13.753 total
 
 Using the inlined InterpEvalSymbolSetResult is slower than InterpEvalSymbol:
-
 miki@mikis-Air v7_c % time ./vimana benchmark.vimana     
 ./vimana benchmark.vimana  14.04s user 0.01s system 97% cpu 14.394 total
 miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
 ./vimana stackbenchmark.vimana  10.29s user 0.01s system 99% cpu 10.300 total
 
+With -Ofast compiler option:
+
+miki@mikis-Air v7_c % cc vimana.c -o vimana -Ofast
+miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
+./vimana stackbenchmark.vimana  9.93s user 0.01s system 94% cpu 10.511 total
+miki@mikis-Air v7_c % time ./vimana benchmark.vimana 
+./vimana benchmark.vimana  13.73s user 0.01s system 99% cpu 13.757 total

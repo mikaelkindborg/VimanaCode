@@ -1,4 +1,4 @@
-(Test of reference counting with local variables) print
+(Test of GC counting with local variables) print
 
 (CreateLocalList) (
   listNew (mylist) set
@@ -9,5 +9,7 @@
 ) def
 
 CreateLocalList
+
+gc
 
 (End of test) print

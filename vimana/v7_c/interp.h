@@ -30,9 +30,9 @@ Context;
 // the entire gvar table is traversed on GC (except for primfuns,
 // which appear first in the table, and can be skipped).
 //
-// There are speed benefits to this setup and dirent lookup
+// There are speed benefits to this setup since direct lookup
 // by index can be used for global vars. This scheme is intended
-// to be a simplistic and straightforward solution.
+// as a simplistic and straightforward implementation.
 
 typedef struct MyInterp
 {
@@ -144,12 +144,12 @@ void InterpGC(Interp* interp)
   // Mark global variables (skipping primfun entries).
   GCMarkChildren(interp->gvarTable, interp->numberOfPrimFuns);
 
-  // Mark objects in local callstack environments.
-  Context* context = interp->callstack;
+  // Mark objects in active callstack contexts.
+  Context* context = interp->currentContext;
   while (context)
   {
     GCMarkList(context->ownEnv);
-    context = context->nextContext;
+    context = context->prevContext;
   }
 
   // Free unreachable objects.
@@ -229,7 +229,6 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
   // Add function to value table.
   Item item;
   item.type = TypePrimFun;
-  //item.opCode = OpCodeCallPrimFun;
   item.value.primFun = fun;
   ListPush(interp->gvarTable, item);
 
