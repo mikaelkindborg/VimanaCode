@@ -77,12 +77,14 @@ void Prim_SETLOCAL(Interp* interp)
   //PrintDebug("HELLO SETLOCAL");
   Item varnames, value;
   InterpPopInto(interp, varnames);
+/*
   if (IsSymbol(varnames))
   {
     InterpPopInto(interp, value);
     InterpSetLocal(interp, varnames, value);
   }
   else
+*/
   if (IsList(varnames))
   {
     List* list = ItemList(varnames);
@@ -147,7 +149,7 @@ void Prim_VALUE(Interp* interp)
 // ((X) => X X +) DOUBLE SET  21 DOUBLE CALL
 void Prim_CALL(Interp* interp)
 {
-  // Enter new context with empty env.
+  // TODO: Enter new context with empty env.
 }
 
 // BOOL LIST IFTRUE ->
@@ -384,6 +386,54 @@ void Prim_MODULO(Interp* interp)
   InterpPush(interp, res);
 }
 
+// NUM ADD1 -> NUM
+void Prim_ADD1(Interp* interp)
+{
+  Item a, res;
+
+  InterpPopInto(interp, a);
+
+  if (IsIntNum(a))
+  {
+    res.type = TypeIntNum;
+    res.value.intNum = a.value.intNum + 1;
+  }
+  else
+  if (IsDecNum(a))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum + 1;
+  }
+  else
+    ErrorExit("Prim_ADD1: Unsupported types");
+
+  InterpPush(interp, res);
+}
+
+// NUM SUB1 -> NUM
+void Prim_SUB1(Interp* interp)
+{
+  Item a, res;
+
+  InterpPopInto(interp, a);
+
+  if (IsIntNum(a))
+  {
+    res.type = TypeIntNum;
+    res.value.intNum = a.value.intNum - 1;
+  }
+  else
+  if (IsDecNum(a))
+  {
+    res.type = TypeDecNum;
+    res.value.decNum = a.value.decNum - 1;
+  }
+  else
+    ErrorExit("Prim_SUB1: Unsupported types");
+
+  InterpPush(interp, res);
+}
+
 // TRUE -> TRUE
 void Prim_TRUE(Interp* interp)
 { 
@@ -414,7 +464,7 @@ void Prim_NOT(Interp* interp)
   InterpPush(interp, item);
 }
 
-// ITEM ITEM EQ -> BOOL
+// ITEM 0 EQ -> BOOL
 void Prim_ISZERO(Interp* interp)
 {
   Item item;
@@ -428,6 +478,46 @@ void Prim_ISZERO(Interp* interp)
     item.value.truth = (0 == item.value.decNum);
   else
     ErrorExit("Prim_ISZERO: Item is not a number");
+
+  item.type = TypeBool;
+
+  InterpPush(interp, item);
+}
+
+// ITEM 0 > -> BOOL
+void Prim_GTZERO(Interp* interp)
+{
+  Item item;
+
+  InterpPopInto(interp, item);
+
+  if (IsIntNum(item))
+    item.value.truth = (0 < item.value.intNum);
+  else
+  if (IsDecNum(item))
+    item.value.truth = (0 < item.value.decNum);
+  else
+    ErrorExit("Prim_GTZERO: Item is not a number");
+
+  item.type = TypeBool;
+
+  InterpPush(interp, item);
+}
+
+// ITEM 0 < -> BOOL
+void Prim_LTZERO(Interp* interp)
+{
+  Item item;
+
+  InterpPopInto(interp, item);
+
+  if (IsIntNum(item))
+    item.value.truth = (0 > item.value.intNum);
+  else
+  if (IsDecNum(item))
+    item.value.truth = (0 > item.value.decNum);
+  else
+    ErrorExit("Prim_LTZERO: Item is not a number");
 
   item.type = TypeBool;
 
@@ -466,6 +556,60 @@ void Prim_EQ(Interp* interp)
     res.value.truth = StringEquals(a.value.string, b.value.string);
   else
     ErrorExit("Prim_EQ: Cannot compare items");
+
+  InterpPush(interp, res);
+}
+
+// ITEM ITEM > -> BOOL
+void Prim_GREATERTHAN(Interp* interp)
+{
+  Item a, b, res;
+
+  InterpPopInto(interp, b);
+  InterpPopInto(interp, a);
+
+  res.type = TypeBool;
+
+  if (IsIntNum(a) && IsIntNum(b))
+    res.value.truth = a.value.intNum > b.value.intNum;
+  else
+  if (IsIntNum(a) && IsDecNum(b))
+    res.value.truth = a.value.intNum > b.value.decNum;
+  else
+  if (IsDecNum(a) && IsIntNum(b))
+    res.value.truth = a.value.decNum > b.value.intNum;
+  else
+  if (IsDecNum(a) && IsDecNum(b))
+    res.value.truth = a.value.decNum > b.value.decNum;
+  else
+    ErrorExit("Prim_GREATERTHAN: Cannot compare items");
+
+  InterpPush(interp, res);
+}
+
+// ITEM ITEM < -> BOOL
+void Prim_LESSTHAN(Interp* interp)
+{
+  Item a, b, res;
+
+  InterpPopInto(interp, b);
+  InterpPopInto(interp, a);
+
+  res.type = TypeBool;
+
+  if (IsIntNum(a) && IsIntNum(b))
+    res.value.truth = a.value.intNum < b.value.intNum;
+  else
+  if (IsIntNum(a) && IsDecNum(b))
+    res.value.truth = a.value.intNum < b.value.decNum;
+  else
+  if (IsDecNum(a) && IsIntNum(b))
+    res.value.truth = a.value.decNum < b.value.intNum;
+  else
+  if (IsDecNum(a) && IsDecNum(b))
+    res.value.truth = a.value.decNum < b.value.decNum;
+  else
+    ErrorExit("Prim_LESSTHAN: Cannot compare items");
 
   InterpPush(interp, res);
 }
@@ -619,6 +763,44 @@ void Prim_GC(Interp* interp)
 #endif
 }
 
+void Prim_GOTOIFTRUE(Interp* interp)
+{
+  Item codePointer, boolVal;
+
+  InterpPopInto(interp, codePointer);
+  InterpPopInto(interp, boolVal);
+
+  if (!IsIntNum(codePointer))
+    ErrorExit("Prim_GOTOIFTRUE: Expected TypeIntNum");
+  if (!IsBool(boolVal))
+    ErrorExit("Prim_GOTOIFTRUE: Expected TypeBool");
+
+  if (boolVal.value.truth)
+  {
+    //PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
+    interp->currentContext->codePointer = codePointer.value.intNum - 1;
+  }
+}
+
+void Prim_GOTOIFFALSE(Interp* interp)
+{
+  Item codePointer, boolVal;
+
+  InterpPopInto(interp, codePointer);
+  InterpPopInto(interp, boolVal);
+
+  if (!IsIntNum(codePointer))
+    ErrorExit("Prim_GOTOIFFALSE: Expected TypeIntNum");
+  if (!IsBool(boolVal))
+    ErrorExit("Prim_GOTOIFFALSE: Expected TypeBool");
+
+  if (!boolVal.value.truth)
+  {
+    //PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
+    interp->currentContext->codePointer = codePointer.value.intNum - 1;
+  }
+}
+
 void DefinePrimFuns(Interp* interp)
 {
   InterpAddPrimFun("setGlobal", Prim_SETGLOBAL, interp);
@@ -641,12 +823,18 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("-", Prim_MINUS, interp);
   InterpAddPrimFun("*", Prim_TIMES, interp);
   InterpAddPrimFun("/", Prim_DIV, interp);
-  InterpAddPrimFun("Modulo", Prim_MODULO, interp);
+  InterpAddPrimFun("modulo", Prim_MODULO, interp);
+  InterpAddPrimFun("add1", Prim_ADD1, interp);
+  InterpAddPrimFun("sub1", Prim_SUB1, interp);
   InterpAddPrimFun("true", Prim_TRUE, interp);
   InterpAddPrimFun("false", Prim_FALSE, interp);
   InterpAddPrimFun("not", Prim_NOT, interp);
   InterpAddPrimFun("isZero", Prim_ISZERO, interp);
+  InterpAddPrimFun("gtZero", Prim_GTZERO, interp);
+  InterpAddPrimFun("ltZero", Prim_LTZERO, interp);
   InterpAddPrimFun("eq", Prim_EQ, interp);
+  InterpAddPrimFun(">", Prim_GREATERTHAN, interp);
+  InterpAddPrimFun("<", Prim_LESSTHAN, interp);
   InterpAddPrimFun("print", Prim_PRINT, interp);
   InterpAddPrimFun("listNew", Prim_LISTNEW, interp);
   InterpAddPrimFun("length", Prim_LISTLENGTH, interp);
@@ -660,6 +848,8 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("listSwap", Prim_LISTSWAP, interp);
   InterpAddPrimFun("listDrop", Prim_LISTDROP, interp);
   InterpAddPrimFun("gc", Prim_GC, interp);
+  InterpAddPrimFun("gotoIfTrue", Prim_GOTOIFTRUE, interp);
+  InterpAddPrimFun("gotoIfFalse", Prim_GOTOIFFALSE, interp);
   //InterpAddPrimFun("Recur", Prim_RECUR, interp);
   //InterpAddPrimFun("Quote", Prim_QUOTE, interp);
   //InterpAddPrimFun(":", Prim_QUOTE, interp);

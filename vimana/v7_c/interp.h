@@ -414,8 +414,6 @@ void InterpRun(register Interp* interp, List* list)
     {
       PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
 
-      //interp->contextSwitch = TRUE;
-
       // Switch to parent context.
       currentContext = interp->currentContext = currentContext->prevContext;
 
