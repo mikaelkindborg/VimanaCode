@@ -26,7 +26,27 @@ DOC
 )
 DOC
 
+(Branch c2test was not faster! 
+
+c2test results: 
+miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana 
+./vimana stackbenchmark.vimana  9.89s user 0.01s system 99% cpu 9.903 total
+miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
+./vimana stackbenchmark.vimana  9.76s user 0.01s system 99% cpu 9.780 total
+miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
+./vimana stackbenchmark.vimana  9.87s user 0.01s system 99% cpu 9.896 total
+
+c2 results:
+miki@mikis-Air v7_c % cc vimana.c -o vimana -Ofast             
+miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana      
+./vimana stackbenchmark.vimana  9.31s user 0.01s system 79% cpu 11.658 total
+miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
+./vimana stackbenchmark.vimana  9.55s user 0.01s system 99% cpu 9.566 totalmiki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
+./vimana stackbenchmark.vimana  9.37s user 0.01s system 99% cpu 9.387 total
+) DOC
+
 (TIMESDO) (SWAP DUP EVAL SWAP SUB1 DUP ISZERO (DROP DROP) (TIMESDO) IFELSE) DEF
 (FACT) (DUP ISZERO (DROP 1) (DUP SUB1 FACT *) IFELSE) DEF
 
 (20 FACT DROP) 10000000 TIMESDO
+
