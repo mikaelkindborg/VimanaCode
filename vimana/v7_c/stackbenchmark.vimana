@@ -43,9 +43,18 @@ miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
 miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
 ./vimana stackbenchmark.vimana  9.55s user 0.01s system 99% cpu 9.566 totalmiki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
 ./vimana stackbenchmark.vimana  9.37s user 0.01s system 99% cpu 9.387 total
-) DOC
+
+210721:
+miki@mikis-Air v7_c % cc vimana.c -o vimana -Ofast              
+miki@mikis-Air v7_c % time ./vimana stackbenchmark.vimana
+./vimana stackbenchmark.vimana  9.16s user 0.01s system 95% cpu 9.616 total
 
 (TIMESDO) (SWAP DUP EVAL SWAP SUB1 DUP ISZERO (DROP DROP) (TIMESDO) IFELSE) DEF
+
+) DOC
+
+(TIMESDO) (DUP ISZERO (DROP DROP) (SWAP DUP EVAL SWAP SUB1 TIMESDO) IFELSE) DEF
+
 (FACT) (DUP ISZERO (DROP 1) (DUP SUB1 FACT *) IFELSE) DEF
 
 (20 FACT DROP) 10000000 TIMESDO

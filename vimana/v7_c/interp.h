@@ -464,6 +464,12 @@ void InterpRun(register Interp* interp, List* list)
       if (IsFun(evalResult))
       {
         InterpEnterFunCallContext(interp, evalResult.value.list);
+
+        currentContext = interp->currentContext;
+        code = currentContext->code;
+        codeLength = ListLength(code);
+        interp->contextSwitch = FALSE;
+
         goto Next; //continue;
       }
 
