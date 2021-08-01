@@ -1,0 +1,12 @@
+(./vimana fibstack.vimana  0.26s user 0.00s system 98% cpu 0.268 total) DOC
+
+(FIB)
+  (DUP 2 < (DUP 1 - FIB SWAP 2 - FIB +) IFFALSE) DEF
+
+(TIMESDO) 
+  (DUP ISZERO 
+    (DROP DROP) 
+    (SWAP DUP EVAL SWAP SUB1 TIMESDO) 
+  IFELSE) DEF
+
+(28 FIB PRINT) 5 TIMESDO
