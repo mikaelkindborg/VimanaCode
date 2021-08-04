@@ -1,5 +1,8 @@
 // GARBAGE COLLECTOR -------------------------------------------
 
+// Code below based on this article by Bob Nystrom:
+// https://journal.stuffwithstuff.com/2013/12/08/babys-first-garbage-collector/
+
 // DECLARATIONS ------------------------------------------------
 
 void GCMarkChildren(List* list, Index startIndex);
