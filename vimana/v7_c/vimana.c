@@ -17,9 +17,19 @@ int main(int numargs, char* args[])
 
   for (int i = 1; i < numargs; ++i)
   {
+    if (StringEquals(args[i], "--uppercase"))
+    {
+      interp->symbolCase = SymbolUpperCase;
+    }
+    else
     if (StringEquals(args[i], "--mixedcase"))
     {
       interp->symbolCase = SymbolMixedCase;
+    }
+    else
+    if (StringEquals(args[i], "--lowercase"))
+    {
+      interp->symbolCase = SymbolLowerCase;
     }
     else
     if (StringEquals(args[i], "--repl"))

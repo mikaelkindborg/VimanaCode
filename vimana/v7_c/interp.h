@@ -16,7 +16,8 @@ typedef struct MyContext
   Index codePointer; // Pointer in code list
   List* env;         // Environment used by the context
   List* ownEnv;      // Environment owned and reused by the context
-  Bool  releaseEnv;  // Release ownEnv on stackframe exit
+  Bool isFunCall;    // Flag for function calls
+  //Bool  releaseEnv;  // Release ownEnv on stackframe exit
   struct MyContext* nextContext;
   struct MyContext* prevContext;
 }
@@ -65,7 +66,8 @@ Context* ContextCreate(Interp* interp)
   context->ownEnv = ListCreate();
 #endif
   context->env = context->ownEnv;
-  context->releaseEnv = FALSE;
+  //context->releaseEnv = FALSE;
+  context->isFunCall = FALSE;
   context->code = NULL;
   context->codePointer = -1;
   context->nextContext = NULL;
@@ -299,12 +301,15 @@ Item InterpEvalSymbol(Interp* interp, Item item)
 // CALLSTACK ---------------------------------------------------
 
 #define InterpEnterContext(interp, code) \
-  InterpEnterCallContext(interp, code, FALSE)
+  InterpEnterCallContext(interp, code, NULL, FALSE)
 
 #define InterpEnterFunCallContext(interp, code) \
-  InterpEnterCallContext(interp, code, TRUE)
+  InterpEnterCallContext(interp, code, NULL, TRUE)
 
-void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
+#define InterpEnterContextWithEnv(interp, code, env) \
+  InterpEnterCallContext(interp, code, env, FALSE)
+
+void InterpEnterCallContext(Interp* interp, List* code, List* env, Bool isFunCall)
 {
   Context* currentContext;
   Context* nextContext;
@@ -353,25 +358,61 @@ void InterpEnterCallContext(Interp* interp, List* code, Bool isFunCall)
   nextContext->code = code;
   nextContext->codePointer = -1;
 
+  nextContext->isFunCall = FALSE;
+
   // Set environment.
   if (isFunCall)
   {
-    // Use fresh (empty) environment.
+    nextContext->isFunCall = isFunCall;
+    // Use fresh (empty) environment
     nextContext->env = nextContext->ownEnv;
     ListEmpty(nextContext->env);
   }
-  else if (code->env)
+  else if (NULL != env)
   {
-    // Use closure environment.
+    // Use supplied environment
+    nextContext->env = env;
+  }
+/*
+  else if (NULL != code->env)
+  {
+    // Use closure environment
     nextContext->env = code->env;
   }
+*/
   else
   {
     // Use environment of previous context.
     nextContext->env = currentContext->env;
   }
 
+  //nextContext->isFunCall = isFunCall;
+
   interp->currentContext = nextContext;
+}
+
+// Get the current environment.
+List* InterpGetCurrentEnv(Interp* interp)
+{
+  return interp->currentContext->env;
+}
+
+// Get the parent environment.
+List* InterpGetSuperEnv(Interp* interp)
+{
+  Context* context = interp->currentContext;
+  while (NULL != context->prevContext)
+  {
+    PrintLine("Searching Context");
+    context = context->prevContext;
+    if (context->isFunCall)
+    {
+      PrintLine("Found FunCall Context");
+      return context->env;
+    }
+  }
+  // Return root env if no parent.
+  return context->env;
 }
 
 // INTERPRETER LOOP --------------------------------------------

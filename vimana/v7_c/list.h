@@ -12,7 +12,7 @@ typedef struct MyList
 {
   int   gcMarker;     // Mark flag for GC
   int   printMarker;  // Mark flag for print and other list traversal
-  int   length;       // Current number of items; TODO: last ???
+  int   length;       // Current number of items (last ???)
   int   maxLength;    // Max number of items
   Item* items;        // Array of items
   struct MyList* env; // Local environment for closures
@@ -69,6 +69,27 @@ void ListFree(List* list)
 
   // Free list object.
   MemFree(list);
+}
+
+// Deep-copy a non-circular list.
+// TODO: Copy list->env?
+List* ListCopyDeep(List* list)
+{
+  List* copy = ListCreate();
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    Item item = ListGet(list, i);
+    if (IsList(item))
+    {
+      List* childList = ListCopyDeep(ItemList(item));
+      ListPush(copy, ItemWithList(childList));
+    }
+    else
+    {
+      ListPush(copy, item);
+    }
+  }
+  return copy;
 }
 
 #ifdef OPTIMIZE

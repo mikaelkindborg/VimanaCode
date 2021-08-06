@@ -131,6 +131,39 @@ void Prim_EVAL(Interp* interp)
     ErrorExit("Prim_EVAL got a non-list");
 }
 
+// EVALINENV evaluates a list in a given environment.
+// LIST ENV EVALINENV ->
+void Prim_EVALINENV(Interp* interp)
+{
+  PrintDebug("Prim_EVALINENV");
+  Item env;
+  Item list;
+  InterpPopInto(interp, env);
+  InterpPopInto(interp, list);
+  if (IsList(env) && IsList(list))
+    InterpEnterContextWithEnv(interp, ItemList(list), ItemList(env));
+  else
+    ErrorExit("Prim_EVALINENV got a non-list");
+}
+
+// CURRENTENV -> ENV
+void Prim_CURRENTENV(Interp* interp)
+{
+  PrintDebug("Prim_CURRENTENV");
+  List* env = InterpGetCurrentEnv(interp);
+  Item item = ItemWithList(env);
+  InterpPush(interp, item);
+}
+
+// SUPERENV -> ENV
+void Prim_SUPERENV(Interp* interp)
+{
+  PrintDebug("Prim_SUPERENV");
+  List* env = InterpGetSuperEnv(interp);
+  Item item = ItemWithList(env);
+  InterpPush(interp, item);
+}
+
 // ITEM VALUE -> ITEM (evaluated)
 void Prim_VALUE(Interp* interp)
 {
@@ -448,7 +481,7 @@ void Prim_FALSE(Interp* interp)
 {
   Item item;
   item.type = TypeBool;
-  item.value.truth = TRUE;
+  item.value.truth = FALSE;
   InterpPush(interp, item);
 }
 
@@ -814,6 +847,9 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("set", Prim_SETLOCAL, interp);
   InterpAddPrimFun("=>", Prim_SETLOCAL, interp);
   InterpAddPrimFun("eval", Prim_EVAL, interp);
+  InterpAddPrimFun("evalInEnv", Prim_EVALINENV, interp);
+  InterpAddPrimFun("currentEnv", Prim_CURRENTENV, interp);
+  InterpAddPrimFun("superEnv", Prim_SUPERENV, interp);
   InterpAddPrimFun("value", Prim_VALUE, interp);
   InterpAddPrimFun("call", Prim_CALL, interp);
   InterpAddPrimFun("ifTrue", Prim_IFTRUE, interp);
