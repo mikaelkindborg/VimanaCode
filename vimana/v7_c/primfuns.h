@@ -71,6 +71,18 @@ void Prim_FUNIFY(Interp* interp)
   InterpPush(interp, list);
 }
 
+// FUNIFYSPECIAL turns a list into a special function.
+// LIST FUNIFYSPECIAL -> FUNOBJ
+void Prim_FUNIFYSPECIAL(Interp* interp)
+{
+  Item list;
+  InterpPopInto(interp, list);
+  if (!IsList(list))
+    ErrorExit("Prim_FUNIFYSPECIAL: Got a non-list!");
+  list.type = list.type | TypeSpecialFun;
+  InterpPush(interp, list);
+}
+
 // ITEM (SYMBOL) SETLOCAL ->
 void Prim_SETLOCAL(Interp* interp)
 {
@@ -109,6 +121,17 @@ void Prim_DEF(Interp* interp)
   // DEF defined in the target language:
   // (FUNIFY SWAP LISTFIRST SETGLOBAL) FUNIFY (DEF) LISTFIRST SETGLOBAL
   Prim_FUNIFY(interp);
+  Prim_SWAP(interp);
+  Prim_LISTFIRST(interp);
+  Prim_SETGLOBAL(interp);
+}
+
+// (FUNNAME) (FUNBODY) DEFSPECIAL ->
+void Prim_DEFSPECIAL(Interp* interp)
+{
+  // DEFSPECIAL defined in the target language:
+  // (FUNIFY SWAP LISTFIRST SETGLOBAL) FUNIFYSPECIAL (DEFSPECIAL) LISTFIRST SETGLOBAL
+  Prim_FUNIFYSPECIAL(interp);
   Prim_SWAP(interp);
   Prim_LISTFIRST(interp);
   Prim_SETGLOBAL(interp);
@@ -571,7 +594,7 @@ void Prim_EQ(Interp* interp)
     res.value.truth = a.value.intNum == b.value.intNum;
   else
   if (IsSymbol(a) && IsSymbol(b))
-    res.value.truth = a.value.symbol == b.value.symbol;
+    res.value.truth = a.symbol == b.symbol;
   else
   if (IsIntNum(a) && IsDecNum(b))
     res.value.truth = a.value.intNum == b.value.decNum;
@@ -843,7 +866,9 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("over", Prim_OVER, interp);
   InterpAddPrimFun("swap", Prim_SWAP, interp);
   InterpAddPrimFun("funify", Prim_FUNIFY, interp);
+  InterpAddPrimFun("funifySpecial", Prim_FUNIFYSPECIAL, interp);
   InterpAddPrimFun("def", Prim_DEF, interp);
+  InterpAddPrimFun("defSpecial", Prim_DEFSPECIAL, interp);
   InterpAddPrimFun("set", Prim_SETLOCAL, interp);
   InterpAddPrimFun("=>", Prim_SETLOCAL, interp);
   InterpAddPrimFun("eval", Prim_EVAL, interp);

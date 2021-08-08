@@ -77,7 +77,7 @@ Context* ContextCreate(Interp* interp)
 
 void ContextFree(Context* context)
 {
-  PrintDebug("ContextFree ownEnv: %lu", (unsigned long)(context->ownEnv));
+  //PrintDebug("ContextFree ownEnv: %lu", (unsigned long)(context->ownEnv));
 #ifndef USE_GC // ! USE_GC
   ListFree(context->ownEnv);
 #endif
@@ -231,6 +231,7 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
   // Add function to value table.
   Item item;
   item.type = TypePrimFun;
+  item.symbol = interp->numberOfPrimFuns - 1;
   item.value.primFun = fun;
   ListPush(interp->gvarTable, item);
 
@@ -243,7 +244,7 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
 void InterpSetGlobal(Interp* interp, Item name, Item value)
 {
   if (IsSymbol(name))
-    ListSet(interp->gvarTable, name.value.symbol, value);
+    ListSet(interp->gvarTable, name.symbol, value);
   else
     ErrorExit("InterpSetGlobal: Got a non-symbol");
 }
@@ -252,7 +253,7 @@ void InterpSetGlobal(Interp* interp, Item name, Item value)
 #define InterpSetLocal(interp, name, item) \
   do { \
     Context* context = (interp)->currentContext; \
-    ListAssocSet(context->env, (name).value.symbol, &(item)); \
+    ListAssocSet(context->env, (name).symbol, &(item)); \
   } while (0)
 #else
 void InterpSetLocal(Interp* interp, Item name, Item value)
@@ -270,8 +271,8 @@ void InterpSetLocal(Interp* interp, Item name, Item value)
     ErrorExit("InterpSetLocal: Context has no environment");
 
   // Set symbol value.
-  //ListAssocSet(context->env, name.value.symbol, &value);
-  ListAssocSet(context->env, name.value.symbol, &value);
+  //ListAssocSet(context->env, name.symbol, &value);
+  ListAssocSet(context->env, name.symbol, &value);
 
   //PrintDebug("InterpSetLocal: PRINTING ENV");
   //ListPrint(context->env, interp);
@@ -286,19 +287,19 @@ Item InterpEvalSymbol(Interp* interp, Item item)
   {
     //PrintLine("InterpEvalSymbol: ENV");
     //ListPrint(context->env, interp);
-    Item* value = ListAssocGet(context->env, item.value.symbol);
+    Item* value = ListAssocGet(context->env, item.symbol);
     if (value) return *value;
   }
 
   // Lookup global symbol.
-  Item value = ListGet(interp->gvarTable, item.value.symbol);
+  Item value = ListGet(interp->gvarTable, item.symbol);
   if (!IsVirgin(value)) return value;
 
   // Symbol is unbound and evaluates to itself.
   return item;
 }
 
-// CALLSTACK ---------------------------------------------------
+// CALLSTACK CONTEXTS ------------------------------------------
 
 #define InterpEnterContext(interp, code) \
   InterpEnterCallContext(interp, code, NULL, FALSE)
@@ -357,13 +358,11 @@ void InterpEnterCallContext(Interp* interp, List* code, List* env, Bool isFunCal
   // Set context data.
   nextContext->code = code;
   nextContext->codePointer = -1;
-
-  nextContext->isFunCall = FALSE;
+  nextContext->isFunCall = isFunCall;
 
   // Set environment.
   if (isFunCall)
   {
-    nextContext->isFunCall = isFunCall;
     // Use fresh (empty) environment
     nextContext->env = nextContext->ownEnv;
     ListEmpty(nextContext->env);
@@ -373,7 +372,7 @@ void InterpEnterCallContext(Interp* interp, List* code, List* env, Bool isFunCal
     // Use supplied environment
     nextContext->env = env;
   }
-/*
+/* TODO: Use a Context for closures
   else if (NULL != code->env)
   {
     // Use closure environment
@@ -386,8 +385,7 @@ void InterpEnterCallContext(Interp* interp, List* code, List* env, Bool isFunCal
     nextContext->env = currentContext->env;
   }
 
-  //nextContext->isFunCall = isFunCall;
-
+  // Set current context.
   interp->currentContext = nextContext;
 }
 
@@ -455,6 +453,10 @@ void InterpRun(register Interp* interp, List* list)
     {
       PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
 
+      // TODO: If env is being used/shared, set ownEnv to new env, or to NULL (and set it later).
+
+      // TODO: Allow a "primfun callback" that is called on exit frame ???
+
       // Switch to parent context.
       currentContext = interp->currentContext = currentContext->prevContext;
 
@@ -505,6 +507,18 @@ void InterpRun(register Interp* interp, List* list)
       if (IsFun(evalResult))
       {
         InterpEnterFunCallContext(interp, evalResult.value.list);
+
+        currentContext = interp->currentContext;
+        code = currentContext->code;
+        codeLength = ListLength(code);
+        interp->contextSwitch = FALSE;
+
+        goto Next; //continue;
+      }
+
+      if (IsSpecialFun(evalResult))
+      {
+        InterpEnterContext(interp, evalResult.value.list);
 
         currentContext = interp->currentContext;
         code = currentContext->code;

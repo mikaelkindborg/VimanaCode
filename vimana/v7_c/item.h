@@ -2,7 +2,7 @@
 // C TYPES -----------------------------------------------------
 
 typedef unsigned int     Type;
-typedef long             Index;
+typedef int              Index;
 typedef long             IntNum;
 typedef double           DecNum;
 typedef struct MyItem    Item;
@@ -23,6 +23,7 @@ typedef void   (*PrimFun)(Interp*);
 #define TypeString        128
 #define TypeContext       256
 #define TypeDynAlloc      512
+#define TypeSpecialFun    1024
 #define TypeVirgin        0 // Represents unbound symbol/uninitialized item
 #define TypePushable (TypeIntNum | TypeDecNum | TypeBool | TypeList)
 
@@ -34,6 +35,7 @@ typedef void   (*PrimFun)(Interp*);
 #define IsList(item)      ((item).type & TypeList)
 #define IsPrimFun(item)   ((item).type & TypePrimFun)
 #define IsFun(item)       ((item).type & TypeFun)
+#define IsSpecialFun(item)((item).type & TypeSpecialFun)
 #define IsString(item)    ((item).type & TypeString)
 #define IsContext(item)   ((item).type & TypeContext)
 #define IsDynAlloc(item)  ((item).type & TypeDynAlloc)
@@ -48,7 +50,6 @@ typedef void   (*PrimFun)(Interp*);
 #define OpCodeCallPrimFun 3 
 */
 
-
 // STRUCTS -----------------------------------------------------
 
 // An item encapsulates C data types. Everything in the
@@ -56,10 +57,10 @@ typedef void   (*PrimFun)(Interp*);
 typedef struct MyItem
 {
   Type type;
-  //Type opCode;
+  Index symbol;
   union
   {
-    Index     symbol; // Index in global symbol table
+    //Index     symbol; // Index in global symbol table
     DecNum    decNum;
     IntNum    intNum;
     List*     list;
@@ -79,7 +80,7 @@ Item ItemWithSymbol(Index symbolIndex)
   Item item;
   item.type = TypeSymbol;
   //item.opCode = OpCodeEvalSymbol;
-  item.value.symbol = symbolIndex;
+  item.symbol = symbolIndex;
   return item;
 }
 

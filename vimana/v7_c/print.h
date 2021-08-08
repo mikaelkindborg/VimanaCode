@@ -18,7 +18,8 @@ void ItemPrintToStream(FileStream* stream, Item item, Interp* interp)
   }
   else if (IsPrimFun(item))
   {
-    PrintToStream(stream, "[PRIMFUN]");
+    char* str = InterpGetSymbolString(interp, item.symbol);
+    PrintToStream(stream, "[PRIMFUN %s]", str);
   }
   //else if (IsOptimizedList(item))
   //{
@@ -43,7 +44,7 @@ void ItemPrintToStream(FileStream* stream, Item item, Interp* interp)
   }
   else if (IsSymbol(item))
   {
-    char* str = InterpGetSymbolString(interp, item.value.symbol);
+    char* str = InterpGetSymbolString(interp, item.symbol);
     if (NULL == str)
     {
       ErrorExit("ItemToString: symbol has no string\n");
@@ -52,7 +53,7 @@ void ItemPrintToStream(FileStream* stream, Item item, Interp* interp)
   }
   //else if (IsLocalVar(item))
   //{
-  //  PrintToStream(stream, "[VAR %li]", (long)item.value.symbol);
+  //  PrintToStream(stream, "[VAR %li]", (long)item.symbol);
   //}
   else if (IsVirgin(item))
   {

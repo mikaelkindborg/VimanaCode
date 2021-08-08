@@ -15,7 +15,8 @@ typedef struct MyList
   int   length;       // Current number of items (last ???)
   int   maxLength;    // Max number of items
   Item* items;        // Array of items
-  struct MyList* env; // Local environment for closures
+  // TODO: Use Context instead for closures.
+  //struct MyList* env; // Local environment for closures
 }
 List;
 
@@ -40,7 +41,7 @@ List* ListCreate()
   list->printMarker = 0;
   list->length = 0;
   list->maxLength = size;
-  list->env = NULL;
+  //list->env = NULL;
 
   // Alloc list array.
   size_t arraySize = size * sizeof(Item);
@@ -64,32 +65,12 @@ void ListFree(List* list)
   // Free item array.
   MemFree(list->items);
 
+  // TODO: Use Context for closures.
   // Environment (list->env) is deallocated by GC.
   // Using closures without GC will leak memory.
 
   // Free list object.
   MemFree(list);
-}
-
-// Deep-copy a non-circular list.
-// TODO: Copy list->env?
-List* ListCopyDeep(List* list)
-{
-  List* copy = ListCreate();
-  for (int i = 0; i < ListLength(list); ++i)
-  {
-    Item item = ListGet(list, i);
-    if (IsList(item))
-    {
-      List* childList = ListCopyDeep(ItemList(item));
-      ListPush(copy, ItemWithList(childList));
-    }
-    else
-    {
-      ListPush(copy, item);
-    }
-  }
-  return copy;
 }
 
 #ifdef OPTIMIZE
@@ -284,7 +265,7 @@ Item* ListAssocSetGet(List* list, Index symbol, Item* value)
 
   while (i < length)
   {
-    if (IsSymbol(*item) && (item->value.symbol == symbol))
+    if (IsSymbol(*item) && (item->symbol == symbol))
     {
       // Found symbol entry.
       Item* p = item + 1;
@@ -329,6 +310,27 @@ Index ListLookupStringIndex(List* list, char* symbolString)
   return -1; // Not found.
 }
 
+// Deep-copy a non-circular list.
+List* ListCopyDeep(List* list)
+{
+  List* copy = ListCreate();
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    Item item = ListGet(list, i);
+    if (IsList(item))
+    {
+      List* childList = ListCopyDeep(ItemList(item));
+      ListPush(copy, ItemWithList(childList));
+    }
+    else
+    {
+      ListPush(copy, item);
+    }
+  }
+  return copy;
+}
+
+// Deep-free a non-circular list.
 void ListFreeDeep(List* list)
 {
   for (int i = 0; i < ListLength(list); ++i)
