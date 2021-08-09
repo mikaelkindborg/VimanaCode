@@ -7,7 +7,7 @@ typedef long             IntNum;
 typedef double           DecNum;
 typedef struct MyItem    Item;
 typedef struct MyList    List;
-typedef struct MyContext Context;
+//typedef struct MyContext Context;
 typedef struct MyInterp  Interp;
 typedef void   (*PrimFun)(Interp*);
 
@@ -21,11 +21,12 @@ typedef void   (*PrimFun)(Interp*);
 #define TypePrimFun       32
 #define TypeFun           64
 #define TypeString        128
-#define TypeContext       256
+//#define TypeContext       256
 #define TypeDynAlloc      512
 #define TypeSpecialFun    1024
+#define TypeClosure       2048
 #define TypeVirgin        0 // Represents unbound symbol/uninitialized item
-#define TypePushable (TypeIntNum | TypeDecNum | TypeBool | TypeList)
+//#define TypePushable (TypeIntNum | TypeDecNum | TypeBool | TypeList)
 
 #define IsVirgin(item)    ((item).type == TypeVirgin)
 #define IsSymbol(item)    ((item).type & TypeSymbol)
@@ -37,9 +38,9 @@ typedef void   (*PrimFun)(Interp*);
 #define IsFun(item)       ((item).type & TypeFun)
 #define IsSpecialFun(item)((item).type & TypeSpecialFun)
 #define IsString(item)    ((item).type & TypeString)
-#define IsContext(item)   ((item).type & TypeContext)
+#define IsClosure(item)   ((item).type & TypeClosure)
 #define IsDynAlloc(item)  ((item).type & TypeDynAlloc)
-#define IsPushable(item)  ((item).type & TypePushable)
+//#define IsPushable(item)  ((item).type & TypePushable)
 
 /*
 // OP CODES USED BY INTERPRETER
@@ -64,7 +65,7 @@ typedef struct MyItem
     DecNum    decNum;
     IntNum    intNum;
     List*     list;
-    Context*  context;
+    //Context*  context;
     char*     string; // TODO: Make custom string object
     Bool      truth;
     PrimFun   primFun;
@@ -129,6 +130,7 @@ List* ItemList(Item item)
 }
 #endif
 
+/*
 // Get the context object of an item.
 #ifdef OPTIMIZE
 #define ItemContext(item) ((item).value.context)
@@ -141,3 +143,4 @@ Context* ItemContext(Item item)
     return item.value.context;
 }
 #endif
+*/

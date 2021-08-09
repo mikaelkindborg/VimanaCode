@@ -15,8 +15,7 @@ typedef struct MyList
   int   length;       // Current number of items (last ???)
   int   maxLength;    // Max number of items
   Item* items;        // Array of items
-  // TODO: Use Context instead for closures.
-  //struct MyList* env; // Local environment for closures
+  Bool  isShared;     // List is shared flag (used by environments)
 }
 List;
 
@@ -41,7 +40,7 @@ List* ListCreate()
   list->printMarker = 0;
   list->length = 0;
   list->maxLength = size;
-  //list->env = NULL;
+  list->isShared = FALSE;
 
   // Alloc list array.
   size_t arraySize = size * sizeof(Item);

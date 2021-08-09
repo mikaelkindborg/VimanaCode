@@ -47,6 +47,13 @@ void Prim_DUP(Interp* interp)
   ListDup(interp->stack, ListLength(interp->stack) - 1);
 }
 
+// ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
+void Prim_2DUP(Interp* interp)
+{
+  ListDup(interp->stack, ListLength(interp->stack) - 2);
+  ListDup(interp->stack, ListLength(interp->stack) - 2);
+}
+
 // ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
 void Prim_OVER(Interp* interp)
 {
@@ -144,47 +151,49 @@ void Prim_EVAL(Interp* interp)
   //PrintDebug("Prim_EVAL");
   //ListPrint(interp->stack, interp);
   //ListPrint(interp->currentContext->env, interp);
+
   Item item;
   InterpPopInto(interp, item);
-  // If item is a list, create a stackframe and push it onto the stack.
+  if (IsClosure(item)) // Must test IsClosure before IsList
+  {
+    List* closure = ItemList(item);
+    List* code = ListGet(closure, 0);
+    List* env = ListGet(closure, 1);
+    InterpEnterContextWithEnv(interp, code, env);
+  }
+  else
   if (IsList(item))
-    //PrimEval_EvalList(interp, ItemList(item));
+  {
     InterpEnterContext(interp, ItemList(item));
+  }
   else
+  {
     ErrorExit("Prim_EVAL got a non-list");
+  }
 }
 
-// EVALINENV evaluates a list in a given environment.
-// LIST ENV EVALINENV ->
-void Prim_EVALINENV(Interp* interp)
+// Create a closure bound to the current environment.
+// LIST BIND -> CLOSURE
+void Prim_BIND(Interp* interp)
 {
-  PrintDebug("Prim_EVALINENV");
-  Item env;
-  Item list;
-  InterpPopInto(interp, env);
-  InterpPopInto(interp, list);
-  if (IsList(env) && IsList(list))
-    InterpEnterContextWithEnv(interp, ItemList(list), ItemList(env));
-  else
-    ErrorExit("Prim_EVALINENV got a non-list");
-}
+  Item closure;
+  Item code;
 
-// CURRENTENV -> ENV
-void Prim_CURRENTENV(Interp* interp)
-{
-  PrintDebug("Prim_CURRENTENV");
-  List* env = InterpGetCurrentEnv(interp);
-  Item item = ItemWithList(env);
-  InterpPush(interp, item);
-}
+  closure.type = TypeList | TypeDynAlloc | TypeClosure;
+#ifdef USE_GC
+  closure.value.list = GCListCreate(interp->gc);
+#else
+  closure.value.list = ListCreate();
+#endif
 
-// SUPERENV -> ENV
-void Prim_SUPERENV(Interp* interp)
-{
-  PrintDebug("Prim_SUPERENV");
-  List* env = InterpGetSuperEnv(interp);
-  Item item = ItemWithList(env);
-  InterpPush(interp, item);
+  InterpPopInto(interp, code);
+  ListPush(closure, code);
+
+  List* env = interp->currentContext->env;
+  env->isShared = TRUE;
+  ListPush(closure, ItemWithList(env));
+
+  InterpPush(interp, closure);
 }
 
 // ITEM VALUE -> ITEM (evaluated)
@@ -222,10 +231,7 @@ void Prim_IFTRUE(Interp* interp)
     ErrorExit("Prim_IFTRUE: got non-bool");
 
   if (boolVal.value.truth)
-  {
-    //PrimEval_EvalList(interp, ItemList(list));
     InterpEnterContext(interp, ItemList(list));
-  }
 }
 
 // BOOL LIST IFALSE ->
@@ -240,12 +246,9 @@ void Prim_IFFALSE(Interp* interp)
     ErrorExit("Prim_IFFALSE: branch is non-list");
   if (!IsBool(boolVal))
     ErrorExit("Prim_IFFALSE: got non-bool");
-
+  
   if (!boolVal.value.truth)
-  {
-    //PrimEval_EvalList(interp, ItemList(list));
     InterpEnterContext(interp, ItemList(list));
-  }
 }
 
 // BOOL LIST LIST IFELSE ->
@@ -265,15 +268,9 @@ void Prim_IFELSE(Interp* interp)
     ErrorExit("Prim_IFELSE: got non-bool of type");
 
   if (boolVal.value.truth)
-  {
-    //PrimEval_EvalList(interp, ItemList(branch1));
-    InterpEnterContext(interp, ItemList(branch1)); 
-  }
+    InterpEnterContext(interp, ItemList(branch1));
   else
-  {
-    //PrimEval_EvalList(interp, ItemList(branch2));
     InterpEnterContext(interp, ItemList(branch2));
-  }
 }
 
 // NUM NUM PLUS -> NUM
@@ -819,6 +816,157 @@ void Prim_GC(Interp* interp)
 #endif
 }
 
+void DefinePrimFuns(Interp* interp)
+{
+  InterpAddPrimFun("setGlobal", Prim_SETGLOBAL, interp);
+  InterpAddPrimFun("drop", Prim_DROP, interp);
+  InterpAddPrimFun("doc", Prim_DROP, interp);
+  InterpAddPrimFun("dup", Prim_DUP, interp);
+  InterpAddPrimFun("2dup", Prim_2DUP, interp);
+  InterpAddPrimFun("over", Prim_OVER, interp);
+  InterpAddPrimFun("swap", Prim_SWAP, interp);
+  InterpAddPrimFun("funify", Prim_FUNIFY, interp);
+  InterpAddPrimFun("funifySpecial", Prim_FUNIFYSPECIAL, interp);
+  InterpAddPrimFun("def", Prim_DEF, interp);
+  InterpAddPrimFun("defSpecial", Prim_DEFSPECIAL, interp);
+  InterpAddPrimFun("set", Prim_SETLOCAL, interp);
+  InterpAddPrimFun("=>", Prim_SETLOCAL, interp);
+  InterpAddPrimFun("eval", Prim_EVAL, interp);
+  InterpAddPrimFun("bind", Prim_BIND, interp);
+  InterpAddPrimFun("value", Prim_VALUE, interp);
+  InterpAddPrimFun("call", Prim_CALL, interp);
+  InterpAddPrimFun("ifTrue", Prim_IFTRUE, interp);
+  InterpAddPrimFun("ifFalse", Prim_IFFALSE, interp);
+  InterpAddPrimFun("ifElse", Prim_IFELSE, interp);
+  InterpAddPrimFun("+", Prim_PLUS, interp);
+  InterpAddPrimFun("-", Prim_MINUS, interp);
+  InterpAddPrimFun("*", Prim_TIMES, interp);
+  InterpAddPrimFun("/", Prim_DIV, interp);
+  InterpAddPrimFun("modulo", Prim_MODULO, interp);
+  InterpAddPrimFun("add1", Prim_ADD1, interp);
+  InterpAddPrimFun("sub1", Prim_SUB1, interp);
+  InterpAddPrimFun("true", Prim_TRUE, interp);
+  InterpAddPrimFun("false", Prim_FALSE, interp);
+  InterpAddPrimFun("not", Prim_NOT, interp);
+  InterpAddPrimFun("isZero", Prim_ISZERO, interp);
+  InterpAddPrimFun("gtZero", Prim_GTZERO, interp);
+  InterpAddPrimFun("ltZero", Prim_LTZERO, interp);
+  InterpAddPrimFun("eq", Prim_EQ, interp);
+  InterpAddPrimFun(">", Prim_GREATERTHAN, interp);
+  InterpAddPrimFun("<", Prim_LESSTHAN, interp);
+  InterpAddPrimFun("print", Prim_PRINT, interp);
+  InterpAddPrimFun("listNew", Prim_LISTNEW, interp);
+  InterpAddPrimFun("length", Prim_LISTLENGTH, interp);
+  InterpAddPrimFun("first", Prim_LISTFIRST, interp);
+  InterpAddPrimFun("last", Prim_LISTLAST, interp);
+  InterpAddPrimFun("pop", Prim_LISTPOP, interp);
+  InterpAddPrimFun("push", Prim_LISTPUSH, interp);
+  InterpAddPrimFun("getAt", Prim_LISTGET, interp);
+  InterpAddPrimFun("setAt", Prim_LISTSET, interp);
+  InterpAddPrimFun("listDup", Prim_LISTDUP, interp);
+  InterpAddPrimFun("listSwap", Prim_LISTSWAP, interp);
+  InterpAddPrimFun("listDrop", Prim_LISTDROP, interp);
+  InterpAddPrimFun("gc", Prim_GC, interp);
+  //InterpAddPrimFun("PRN", Prim_PRN, interp);
+  //InterpAddPrimFun("NEWLINE", Prim_NEWLINE, interp);
+  //InterpAddPrimFun("SPACE", Prim_SPACE, interp);
+  //InterpAddPrimFun("JOIN", Prim_JOIN, interp);
+}
+
+/**************************************************************/
+
+/*
+
+  //InterpAddPrimFun("Recur", Prim_RECUR, interp);
+  //InterpAddPrimFun("Quote", Prim_QUOTE, interp);
+  //InterpAddPrimFun(":", Prim_QUOTE, interp);
+  //InterpAddPrimFun("Label", Prim_LABEL, interp);
+
+void Prim_RECUR(Interp* interp)
+{
+  PrintDebug("HELLO RECUR");
+
+  // TODO: Add info to context about current function and use that code list recur.
+
+  // Below code does not work, need to get the function context.
+  // Enter new context with current code list.
+  //PrimEval_EvalFun(interp, interp->currentContext->code);
+}
+
+// Don't evaluate next element, just push it onto the data stack.
+void Prim_QUOTE(Interp* interp)
+{
+  //PrintDebug("HELLO QUOTE");
+  
+  Context* context = interp->currentContext;
+  int codePointer = ++ context->codePointer;
+  List* code = context->code;
+  if (codePointer < ListLength(code))
+  {
+    // Get the next element and push it.
+    Item element = ListGet(code, codePointer);
+    ListPush(interp->stack, element);
+  }
+}
+
+void Prim_LABEL(Interp* interp)
+{
+  Item symbol, item;
+
+  InterpPopInto(interp, symbol);
+
+  if (!IsSymbol(symbol))
+    ErrorExit("Prim_LABEL: Expected TypeSymbol");
+
+  Context* context = interp->currentContext;
+  IntNum codePointer = context->codePointer + 1;
+  item.type = TypeIntNum;
+  item.value.intNum = codePointer;
+  InterpSetLocal(interp, symbol, item);
+}
+*/
+
+/** EXPERIMENTAL UNUSED CODE
+
+  InterpAddPrimFun("evalInEnv", Prim_EVALINENV, interp);
+  InterpAddPrimFun("currentEnv", Prim_CURRENTENV, interp);
+  InterpAddPrimFun("superEnv", Prim_SUPERENV, interp);
+  InterpAddPrimFun("gotoIfTrue", Prim_GOTOIFTRUE, interp);
+  InterpAddPrimFun("gotoIfFalse", Prim_GOTOIFFALSE, interp);
+
+// EVALINENV evaluates a list in a given environment.
+// LIST ENV EVALINENV ->
+void Prim_EVALINENV(Interp* interp)
+{
+  PrintDebug("Prim_EVALINENV");
+  Item env;
+  Item list;
+  InterpPopInto(interp, env);
+  InterpPopInto(interp, list);
+  if (IsList(env) && IsList(list))
+    InterpEnterContextWithEnv(interp, ItemList(list), ItemList(env));
+  else
+    ErrorExit("Prim_EVALINENV got a non-list");
+}
+
+// CURRENTENV -> ENV
+void Prim_CURRENTENV(Interp* interp)
+{
+  PrintDebug("Prim_CURRENTENV");
+  List* env = InterpGetCurrentEnv(interp);
+  Item item = ItemWithList(env);
+  InterpPush(interp, item);
+}
+
+// SUPERENV -> ENV
+void Prim_SUPERENV(Interp* interp)
+{
+  PrintDebug("Prim_SUPERENV");
+  List* env = InterpGetSuperEnv(interp);
+  Item item = ItemWithList(env);
+  InterpPush(interp, item);
+}
+
 void Prim_GOTOIFTRUE(Interp* interp)
 {
   Item codePointer, boolVal;
@@ -857,115 +1005,4 @@ void Prim_GOTOIFFALSE(Interp* interp)
   }
 }
 
-void DefinePrimFuns(Interp* interp)
-{
-  InterpAddPrimFun("setGlobal", Prim_SETGLOBAL, interp);
-  InterpAddPrimFun("drop", Prim_DROP, interp);
-  InterpAddPrimFun("doc", Prim_DROP, interp);
-  InterpAddPrimFun("dup", Prim_DUP, interp);
-  InterpAddPrimFun("over", Prim_OVER, interp);
-  InterpAddPrimFun("swap", Prim_SWAP, interp);
-  InterpAddPrimFun("funify", Prim_FUNIFY, interp);
-  InterpAddPrimFun("funifySpecial", Prim_FUNIFYSPECIAL, interp);
-  InterpAddPrimFun("def", Prim_DEF, interp);
-  InterpAddPrimFun("defSpecial", Prim_DEFSPECIAL, interp);
-  InterpAddPrimFun("set", Prim_SETLOCAL, interp);
-  InterpAddPrimFun("=>", Prim_SETLOCAL, interp);
-  InterpAddPrimFun("eval", Prim_EVAL, interp);
-  InterpAddPrimFun("evalInEnv", Prim_EVALINENV, interp);
-  InterpAddPrimFun("currentEnv", Prim_CURRENTENV, interp);
-  InterpAddPrimFun("superEnv", Prim_SUPERENV, interp);
-  InterpAddPrimFun("value", Prim_VALUE, interp);
-  InterpAddPrimFun("call", Prim_CALL, interp);
-  InterpAddPrimFun("ifTrue", Prim_IFTRUE, interp);
-  InterpAddPrimFun("ifFalse", Prim_IFFALSE, interp);
-  InterpAddPrimFun("ifElse", Prim_IFELSE, interp);
-  InterpAddPrimFun("+", Prim_PLUS, interp);
-  InterpAddPrimFun("-", Prim_MINUS, interp);
-  InterpAddPrimFun("*", Prim_TIMES, interp);
-  InterpAddPrimFun("/", Prim_DIV, interp);
-  InterpAddPrimFun("modulo", Prim_MODULO, interp);
-  InterpAddPrimFun("add1", Prim_ADD1, interp);
-  InterpAddPrimFun("sub1", Prim_SUB1, interp);
-  InterpAddPrimFun("true", Prim_TRUE, interp);
-  InterpAddPrimFun("false", Prim_FALSE, interp);
-  InterpAddPrimFun("not", Prim_NOT, interp);
-  InterpAddPrimFun("isZero", Prim_ISZERO, interp);
-  InterpAddPrimFun("gtZero", Prim_GTZERO, interp);
-  InterpAddPrimFun("ltZero", Prim_LTZERO, interp);
-  InterpAddPrimFun("eq", Prim_EQ, interp);
-  InterpAddPrimFun(">", Prim_GREATERTHAN, interp);
-  InterpAddPrimFun("<", Prim_LESSTHAN, interp);
-  InterpAddPrimFun("print", Prim_PRINT, interp);
-  InterpAddPrimFun("listNew", Prim_LISTNEW, interp);
-  InterpAddPrimFun("length", Prim_LISTLENGTH, interp);
-  InterpAddPrimFun("first", Prim_LISTFIRST, interp);
-  InterpAddPrimFun("last", Prim_LISTLAST, interp);
-  InterpAddPrimFun("pop", Prim_LISTPOP, interp);
-  InterpAddPrimFun("push", Prim_LISTPUSH, interp);
-  InterpAddPrimFun("getAt", Prim_LISTGET, interp);
-  InterpAddPrimFun("setAt", Prim_LISTSET, interp);
-  InterpAddPrimFun("listDup", Prim_LISTDUP, interp);
-  InterpAddPrimFun("listSwap", Prim_LISTSWAP, interp);
-  InterpAddPrimFun("listDrop", Prim_LISTDROP, interp);
-  InterpAddPrimFun("gc", Prim_GC, interp);
-  InterpAddPrimFun("gotoIfTrue", Prim_GOTOIFTRUE, interp);
-  InterpAddPrimFun("gotoIfFalse", Prim_GOTOIFFALSE, interp);
-  //InterpAddPrimFun("Recur", Prim_RECUR, interp);
-  //InterpAddPrimFun("Quote", Prim_QUOTE, interp);
-  //InterpAddPrimFun(":", Prim_QUOTE, interp);
-  //InterpAddPrimFun("Label", Prim_LABEL, interp);
-  //InterpAddPrimFun("PRN", Prim_PRN, interp);
-  //InterpAddPrimFun("NEWLINE", Prim_NEWLINE, interp);
-  //InterpAddPrimFun("SPACE", Prim_SPACE, interp);
-  //InterpAddPrimFun("JOIN", Prim_JOIN, interp);
-}
-
-/*
-void Prim_RECUR(Interp* interp)
-{
-  PrintDebug("HELLO RECUR");
-
-  // TODO: Add info to context about current function and use that code list recur.
-
-  // Below code does not work, need to get the function context.
-  // Enter new context with current code list.
-  //PrimEval_EvalFun(interp, interp->currentContext->code);
-}
-*/
-
-/*
-// Don't evaluate next element, just push it onto the data stack.
-void Prim_QUOTE(Interp* interp)
-{
-  //PrintDebug("HELLO QUOTE");
-  
-  Context* context = interp->currentContext;
-  int codePointer = ++ context->codePointer;
-  List* code = context->code;
-  if (codePointer < ListLength(code))
-  {
-    // Get the next element and push it.
-    Item element = ListGet(code, codePointer);
-    ListPush(interp->stack, element);
-  }
-}
-*/
-
-/*
-void Prim_LABEL(Interp* interp)
-{
-  Item symbol, item;
-
-  InterpPopInto(interp, symbol);
-
-  if (!IsSymbol(symbol))
-    ErrorExit("Prim_LABEL: Expected TypeSymbol");
-
-  Context* context = interp->currentContext;
-  IntNum codePointer = context->codePointer + 1;
-  item.type = TypeIntNum;
-  item.value.intNum = codePointer;
-  InterpSetLocal(interp, symbol, item);
-}
-*/
+**/

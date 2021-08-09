@@ -25,6 +25,13 @@ def test_fact_1():
     i = i + 1
   return res
 
+def test_fact100():
+  i = 0
+  while i < 100000:
+    res = fact(100)
+    i = i + 1
+  return res
+
 # python fact.py  20.35s user 0.04s system 99% cpu 20.422 total
 def test_fact_2():
   i = 0
@@ -52,3 +59,4 @@ print(test_fact_1())
 
 #print(fact(500))
 
+#print(test_fact100())
