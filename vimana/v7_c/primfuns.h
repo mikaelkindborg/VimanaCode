@@ -157,9 +157,9 @@ void Prim_EVAL(Interp* interp)
   if (IsClosure(item)) // Must test IsClosure before IsList
   {
     List* closure = ItemList(item);
-    List* code = ListGet(closure, 0);
-    List* env = ListGet(closure, 1);
-    InterpEnterContextWithEnv(interp, code, env);
+    Item code = ListGet(closure, 0);
+    Item env = ListGet(closure, 1);
+    InterpEnterContextWithEnv(interp, ItemList(code), ItemList(env));
   }
   else
   if (IsList(item))
@@ -173,25 +173,23 @@ void Prim_EVAL(Interp* interp)
 }
 
 // Create a closure bound to the current environment.
+// Note: Use only with GC.
 // LIST BIND -> CLOSURE
 void Prim_BIND(Interp* interp)
 {
   Item closure;
   Item code;
+  List* env;
 
-  closure.type = TypeList | TypeDynAlloc | TypeClosure;
-#ifdef USE_GC
-  closure.value.list = GCListCreate(interp->gc);
-#else
-  closure.value.list = ListCreate();
-#endif
+  closure = InterpListItemCreate(interp);
+  closure.type = closure.type | TypeClosure;
 
   InterpPopInto(interp, code);
-  ListPush(closure, code);
+  ListPush(ItemList(closure), code);
 
-  List* env = interp->currentContext->env;
+  env = interp->currentContext->env;
   env->isShared = TRUE;
-  ListPush(closure, ItemWithList(env));
+  ListPush(ItemList(closure), ItemWithList(env));
 
   InterpPush(interp, closure);
 }
@@ -667,28 +665,11 @@ void Prim_LESSTHAN(Interp* interp)
   InterpPush(interp, res);
 }
 
-// ITEM PRINT ->
-void Prim_PRINT(Interp* interp)
-{
-  //PrintDebug("Prim_PRINT");
-  Item item;
-  InterpPopInto(interp, item);
-  char* buf = ItemToString(item, interp);
-  puts(buf);
-  free(buf);
-}
-
 // LISTNEW -> LIST
 void Prim_LISTNEW(Interp* interp)
 {
   //PrintDebug("Prim_LISTNEW");
-  Item list;
-  list.type = TypeList | TypeDynAlloc;
-#ifdef USE_GC
-  list.value.list = GCListCreate(interp->gc);
-#else
-  list.value.list = ListCreate();
-#endif
+  Item list = InterpListItemCreate(interp);
   InterpPush(interp, list);
 }
 
@@ -750,12 +731,12 @@ void Prim_LISTPUSH(Interp* interp)
   ListPush(ItemList(list), item);
 }
 
-// INDEX LIST LISTGET -> ITEM
+// LIST INDEX LISTGET -> ITEM
 void Prim_LISTGET(Interp* interp)
 {
   Item index, list, item;
-  InterpPopInto(interp, list);
   InterpPopInto(interp, index);
+  InterpPopInto(interp, list);
   if (!IsIntNum(index))
     ErrorExit("Prim_LISTGET: Got non-integer index");
   if (!IsList(list))
@@ -764,13 +745,14 @@ void Prim_LISTGET(Interp* interp)
   InterpPush(interp, item); // Push element
 }
 
-// INDEX ITEM LIST LISTSET ->
+//mylist 2 bar setat
+// LIST INDEX ITEM LISTSET ->
 void Prim_LISTSET(Interp* interp)
 {
   Item index, list, item;
-  InterpPopInto(interp, list);
   InterpPopInto(interp, item);
   InterpPopInto(interp, index);
+  InterpPopInto(interp, list);
   if (!IsIntNum(index))
     ErrorExit("Prim_LISTSET: Got non-integer index");
   if (!IsDynAlloc(list))
@@ -816,6 +798,47 @@ void Prim_GC(Interp* interp)
 #endif
 }
 
+
+// ITEM PRINT ->
+void Prim_PRINT(Interp* interp)
+{
+  Item item;
+  InterpPopInto(interp, item);
+  char* buf = ItemToString(item, interp);
+  puts(buf);
+  free(buf);
+}
+
+// PRINTSTACK ->
+void Prim_PRINTSTACK(Interp* interp)
+{
+  Item stack = ItemWithList(interp->stack);
+  char* buf = ItemToString(stack, interp);
+  puts(buf);
+  free(buf);
+}
+
+// STRING EVALFILE ->
+void Prim_EVALFILE(Interp* interp)
+{
+  Item item;
+  InterpPopInto(interp, item);
+  if (!IsString(item))
+    ErrorExit("Prim_EVALFILE: Got non-string");
+  // TODO: Read file
+}
+
+// LIST TOSTRING ->
+void Prim_TOSTRING(Interp* interp)
+{
+  Item item;
+  InterpPopInto(interp, item);
+  if (!IsList(item))
+    ErrorExit("Prim_TOSTRING: Got non-list");
+  char* buf = ListToString(ItemList(item), interp);
+  InterpPush(interp, ItemWithString(buf));
+}
+
 void DefinePrimFuns(Interp* interp)
 {
   InterpAddPrimFun("setGlobal", Prim_SETGLOBAL, interp);
@@ -854,7 +877,6 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("eq", Prim_EQ, interp);
   InterpAddPrimFun(">", Prim_GREATERTHAN, interp);
   InterpAddPrimFun("<", Prim_LESSTHAN, interp);
-  InterpAddPrimFun("print", Prim_PRINT, interp);
   InterpAddPrimFun("listNew", Prim_LISTNEW, interp);
   InterpAddPrimFun("length", Prim_LISTLENGTH, interp);
   InterpAddPrimFun("first", Prim_LISTFIRST, interp);
@@ -867,10 +889,13 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("listSwap", Prim_LISTSWAP, interp);
   InterpAddPrimFun("listDrop", Prim_LISTDROP, interp);
   InterpAddPrimFun("gc", Prim_GC, interp);
+  InterpAddPrimFun("print", Prim_PRINT, interp);
+  InterpAddPrimFun("printStack", Prim_PRINTSTACK, interp);
+  InterpAddPrimFun("toString", Prim_TOSTRING, interp);
+  InterpAddPrimFun("evalFile", Prim_EVALFILE, interp);
   //InterpAddPrimFun("PRN", Prim_PRN, interp);
   //InterpAddPrimFun("NEWLINE", Prim_NEWLINE, interp);
   //InterpAddPrimFun("SPACE", Prim_SPACE, interp);
-  //InterpAddPrimFun("JOIN", Prim_JOIN, interp);
 }
 
 /**************************************************************/
@@ -928,11 +953,35 @@ void Prim_LABEL(Interp* interp)
 
 /** EXPERIMENTAL UNUSED CODE
 
-  InterpAddPrimFun("evalInEnv", Prim_EVALINENV, interp);
-  InterpAddPrimFun("currentEnv", Prim_CURRENTENV, interp);
-  InterpAddPrimFun("superEnv", Prim_SUPERENV, interp);
-  InterpAddPrimFun("gotoIfTrue", Prim_GOTOIFTRUE, interp);
-  InterpAddPrimFun("gotoIfFalse", Prim_GOTOIFFALSE, interp);
+// Get the current environment.
+List* InterpGetCurrentEnv(Interp* interp)
+{
+  return interp->currentContext->env;
+}
+
+// Get the parent environment.
+List* InterpGetSuperEnv(Interp* interp)
+{
+  Context* context = interp->currentContext;
+  while (NULL != context->prevContext)
+  {
+    PrintLine("Searching Context");
+    context = context->prevContext;
+    if (context->isFunCall)
+    {
+      PrintLine("Found FunCall Context");
+      return context->env;
+    }
+  }
+  // Return root env if no parent.
+  return context->env;
+}
+
+InterpAddPrimFun("evalInEnv", Prim_EVALINENV, interp);
+InterpAddPrimFun("currentEnv", Prim_CURRENTENV, interp);
+InterpAddPrimFun("superEnv", Prim_SUPERENV, interp);
+InterpAddPrimFun("gotoIfTrue", Prim_GOTOIFTRUE, interp);
+InterpAddPrimFun("gotoIfFalse", Prim_GOTOIFFALSE, interp);
 
 // EVALINENV evaluates a list in a given environment.
 // LIST ENV EVALINENV ->

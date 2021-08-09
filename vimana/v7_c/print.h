@@ -19,7 +19,7 @@ void ItemPrintToStream(FileStream* stream, Item item, Interp* interp)
   else if (IsPrimFun(item))
   {
     char* str = InterpGetSymbolString(interp, item.symbol);
-    PrintToStream(stream, "[PRIMFUN %s]", str);
+    PrintToStream(stream, "[%s]", str);
   }
   //else if (IsOptimizedList(item))
   //{
@@ -136,6 +136,18 @@ void ListPrintHelper(List* list, Bool useNewLine, Interp* interp)
   fclose(stream);
   puts(buffer);
   free(buffer);
+}
+
+// Prints list without top-level parens.
+// Caller must free returned string.
+char* ListToString(List* list, Interp* interp)
+{
+  char* buffer;
+  size_t size;
+  FileStream* stream = open_memstream(&buffer, &size);
+  ListPrintWorker(stream, list, FALSE, interp);
+  fclose(stream);
+  return buffer;
 }
 
 // Print list using parens with no line breaks.

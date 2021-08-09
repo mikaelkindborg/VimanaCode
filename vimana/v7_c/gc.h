@@ -15,6 +15,8 @@ unsigned long GCMarker = 0;
 // Call before mark.
 #define GCPrepare() (++ GCMarker)
 
+// TODO: Add GC for strings. Make generic memory object.
+
 typedef struct MyGCEntry 
 {
   struct MyGCEntry* next;
@@ -62,12 +64,6 @@ void GCMarkList(List* list)
   
   // Traverse list.
   GCMarkChildren(list, 0);
-
-  // Traverse environment of closure list.
-  if (NULL != list->env)
-  {
-    GCMarkChildren(list->env, 0);
-  }
 }
 
 // GC children by traversing the list tree.
@@ -87,15 +83,15 @@ void GCMarkChildren(List* list, Index startIndex)
 
 void GCSweep(GarbageCollector* gc)
 { 
-  PrintLine("GCSweep BEGIN");
+  PrintDebug("GCSweep BEGIN");
   int i = 1;
   GCEntry** entry = &(gc->firstEntry);
   while (*entry)
   {
-    PrintLine("GCSweep ENTRY %i", i++);
+    PrintDebug("GCSweep ENTRY %i", i++);
     if ((*entry)->object->gcMarker != GCMarker)
     {
-      PrintLine("GCSweep DEALLOC: %lu",(unsigned long)((*entry)->object));
+      PrintDebug("GCSweep DEALLOC: %lu",(unsigned long)((*entry)->object));
       GCEntry* unreachableEntry = *entry;
       *entry = (*entry)->next;
       ListFree(unreachableEntry->object);
@@ -103,11 +99,11 @@ void GCSweep(GarbageCollector* gc)
     }
     else
     {
-      PrintLine("GCSweep NEXT");
+      PrintDebug("GCSweep NEXT");
       entry = &((*entry)->next);
     }
   }
-  PrintLine("GCSweep END");
+  PrintDebug("GCSweep END");
 }
 
 void GCPrintEntries(GarbageCollector* gc)

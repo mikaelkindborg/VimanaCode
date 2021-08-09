@@ -54,6 +54,7 @@ List* ListCreate()
   return list;
 }
 
+// TODO: Free strings?
 void ListFree(List* list)
 {
 #ifdef TRACK_MEMORY_USAGE
@@ -61,12 +62,10 @@ void ListFree(List* list)
 #endif
   PrintDebug("ListFree: %lu", (unsigned long)list);
 
+  // TODO: Free string items.
+  
   // Free item array.
   MemFree(list->items);
-
-  // TODO: Use Context for closures.
-  // Environment (list->env) is deallocated by GC.
-  // Using closures without GC will leak memory.
 
   // Free list object.
   MemFree(list);

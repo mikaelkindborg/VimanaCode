@@ -55,16 +55,29 @@ Interp;
 
 // CREATE/FREE FUNCTIONS ---------------------------------------
 
+// Create (garbage collected) list.
+List* InterpListCreate(Interp* interp)
+{
+#ifdef USE_GC
+  return GCListCreate(interp->gc);
+#else
+  return ListCreate();
+#endif
+}
+
+// Create (garbage collected) list item.
+Item InterpListItemCreate(Interp* interp)
+{
+  Item item;
+  item.type = TypeList | TypeDynAlloc;
+  item.value.list = InterpListCreate(interp);
+  return item;
+}
+
 Context* ContextCreate(Interp* interp)
 {
   Context* context = MemAlloc(sizeof(Context));
-#ifdef USE_GC
-  // Environments may be shared by closures,
-  // so we allocate it using the GC.
-  context->ownEnv = GCListCreate(interp->gc);
-#else
-  context->ownEnv = ListCreate();
-#endif
+  context->ownEnv = InterpListCreate(interp);
   context->env = context->ownEnv;
   //context->releaseEnv = FALSE;
   context->isFunCall = FALSE;
@@ -79,7 +92,8 @@ void ContextFree(Context* context)
 {
   //PrintDebug("ContextFree ownEnv: %lu", (unsigned long)(context->ownEnv));
 #ifndef USE_GC // ! USE_GC
-  ListFree(context->ownEnv);
+  if (!context->ownEnv->isShared)
+    ListFree(context->ownEnv);
 #endif
   MemFree(context);
 }
@@ -87,15 +101,15 @@ void ContextFree(Context* context)
 Interp* InterpCreate()
 {
   Interp* interp = MemAlloc(sizeof(Interp));
+#ifdef USE_GC
+  interp->gc = GCCreate();
+#endif
   interp->symbolTable = ListCreate();
   interp->gvarTable = ListCreate();
   interp->stack = ListCreate();
   interp->callstack = ContextCreate(interp);
   interp->symbolCase = SymbolUpperCase; // Default
   interp->numberOfPrimFuns = 0;
-#ifdef USE_GC
-  interp->gc = GCCreate();
-#endif
   return interp;
 }
 
@@ -363,7 +377,13 @@ void InterpEnterCallContext(Interp* interp, List* code, List* env, Bool isFunCal
   // Set environment.
   if (isFunCall)
   {
-    // Use fresh (empty) environment
+#ifdef USE_GC
+    // If env is shared (using BIND) then create a new one.
+    if (nextContext->ownEnv->isShared)
+      nextContext->ownEnv = InterpListCreate(interp);
+#endif
+
+    // Funcall contexts are initialized with an empty environment.
     nextContext->env = nextContext->ownEnv;
     ListEmpty(nextContext->env);
   }
@@ -372,13 +392,6 @@ void InterpEnterCallContext(Interp* interp, List* code, List* env, Bool isFunCal
     // Use supplied environment
     nextContext->env = env;
   }
-/* TODO: Use a Context for closures
-  else if (NULL != code->env)
-  {
-    // Use closure environment
-    nextContext->env = code->env;
-  }
-*/
   else
   {
     // Use environment of previous context.
@@ -387,30 +400,6 @@ void InterpEnterCallContext(Interp* interp, List* code, List* env, Bool isFunCal
 
   // Set current context.
   interp->currentContext = nextContext;
-}
-
-// Get the current environment.
-List* InterpGetCurrentEnv(Interp* interp)
-{
-  return interp->currentContext->env;
-}
-
-// Get the parent environment.
-List* InterpGetSuperEnv(Interp* interp)
-{
-  Context* context = interp->currentContext;
-  while (NULL != context->prevContext)
-  {
-    PrintLine("Searching Context");
-    context = context->prevContext;
-    if (context->isFunCall)
-    {
-      PrintLine("Found FunCall Context");
-      return context->env;
-    }
-  }
-  // Return root env if no parent.
-  return context->env;
 }
 
 // INTERPRETER LOOP --------------------------------------------
@@ -452,8 +441,6 @@ void InterpRun(register Interp* interp, List* list)
     if (codePointer >= codeLength)
     {
       PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-
-      // TODO: If env is being used/shared, set ownEnv to new env, or to NULL (and set it later).
 
       // TODO: Allow a "primfun callback" that is called on exit frame ???
 
