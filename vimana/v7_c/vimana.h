@@ -1,6 +1,8 @@
 #ifndef __VIMANA_H___
 #define __VIMANA_H___
 #include "base.h"
+#include "obj.h"
+#include "string.h"
 #include "item.h"
 #include "list.h"
 #include "print.h"

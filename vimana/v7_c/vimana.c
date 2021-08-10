@@ -17,22 +17,22 @@ int main(int numargs, char* args[])
 
   for (int i = 1; i < numargs; ++i)
   {
-    if (StringEquals(args[i], "--uppercase"))
+    if (StrEquals(args[i], "--uppercase"))
     {
       interp->symbolCase = SymbolUpperCase;
     }
     else
-    if (StringEquals(args[i], "--mixedcase"))
+    if (StrEquals(args[i], "--mixedcase"))
     {
       interp->symbolCase = SymbolMixedCase;
     }
     else
-    if (StringEquals(args[i], "--lowercase"))
+    if (StrEquals(args[i], "--lowercase"))
     {
       interp->symbolCase = SymbolLowerCase;
     }
     else
-    if (StringEquals(args[i], "--repl"))
+    if (StrEquals(args[i], "--repl"))
     {
       runREPL = TRUE;
     }
@@ -80,8 +80,8 @@ int main(int numargs, char* args[])
       printf(": ");
       if (!fgets(input, sizeof(input), stdin)) 
         break;
-      if (StringEquals(input, "EXIT\n") || 
-          StringEquals(input, "exit\n"))
+      if (StrEquals(input, "EXIT\n") || 
+          StrEquals(input, "exit\n"))
       {
         PrintLine("GOODBYE");
         break;

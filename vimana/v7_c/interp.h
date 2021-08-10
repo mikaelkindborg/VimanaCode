@@ -119,7 +119,7 @@ void InterpFree(Interp* interp)
   for (int i = 0; i < ListLength(interp->symbolTable); ++i)
   {
     Item item = ListGet(interp->symbolTable, i);
-    MemFree(item.value.string);
+    StringFree(item.value.string);
   }
 
   // Free global tables and data stack.
@@ -150,9 +150,8 @@ void InterpFree(Interp* interp)
 #ifdef USE_GC
 void InterpGC(Interp* interp)
 {
+  // Debug printing.
   GCPrintEntries(interp->gc);
-
-  GCPrepare();
 
   // Mark items on the stack.
   GCMarkChildren(interp->stack, 0);
@@ -171,6 +170,7 @@ void InterpGC(Interp* interp)
   // Free unreachable objects.
   GCSweep(interp->gc);
 
+  // Debug printing.
   GCPrintEntries(interp->gc);
 }
 #endif
@@ -188,7 +188,7 @@ void InterpGC(Interp* interp)
 char* InterpGetSymbolString(Interp* interp, Index symbolIndex)
 {
   Item item = ListGet(interp->symbolTable, symbolIndex);
-  return item.value.string;
+  return StringStr(item.value.string);
 }
 
 // Add a symbol to the symbol table and return an
@@ -235,9 +235,9 @@ void InterpAddPrimFun(char* str, PrimFun fun, Interp* interp)
   // If you want to use lower or upper case, you can
   // specify that in the interpreter object.
   if (SymbolUpperCase == interp->symbolCase)
-    StringToUpper(name);
+    StrToUpper(name);
   else if (SymbolLowerCase == interp->symbolCase)
-    StringToLower(name);
+    StrToLower(name);
 
   // Add name to symbol table.
   ListPush(interp->symbolTable, ItemWithString(name));

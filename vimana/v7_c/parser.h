@@ -9,11 +9,7 @@ int ParserWorker(Interp* interp, char* code, int i, int length, List* list);
 
 List* ParseCode(Interp* interp, char* code)
 {
-#ifdef USE_GC
-  List* list = GCListCreate(interp->gc);
-#else
-  List* list = ListCreate();
-#endif
+  List* list = InterpListCreate(interp);
   ParserWorker(interp, code, 0, strlen(code), list);
   return list;
 }

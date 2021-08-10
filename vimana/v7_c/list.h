@@ -10,12 +10,12 @@
 
 typedef struct MyList
 {
-  int   gcMarker;     // Mark flag for GC
-  int   printMarker;  // Mark flag for print and other list traversal
-  int   length;       // Current number of items (last ???)
-  int   maxLength;    // Max number of items
-  Item* items;        // Array of items
-  Bool  isShared;     // List is shared flag (used by environments)
+  VObjHeader header;
+  //int        printMarker;  // Mark flag for printing and other list traversal
+  int        length;       // Current number of items (last ???)
+  int        maxLength;    // Max number of items
+  Bool       isShared;     // List is shared flag (used by environments)
+  Item*      items;        // Array of items
 }
 List;
 
@@ -36,8 +36,9 @@ List* ListCreate()
   //printf("MALLOC COUNTER: %i\n", GMallocCounter);
 
   List* list = MemAlloc(sizeof(List));
-  list->gcMarker = 0;
-  list->printMarker = 0;
+  list->header.type = TypeList;
+  list->header.gcMarker = 0;
+  //list->printMarker = 0;
   list->length = 0;
   list->maxLength = size;
   list->isShared = FALSE;
@@ -54,7 +55,6 @@ List* ListCreate()
   return list;
 }
 
-// TODO: Free strings?
 void ListFree(List* list)
 {
 #ifdef TRACK_MEMORY_USAGE
@@ -62,8 +62,6 @@ void ListFree(List* list)
 #endif
   PrintDebug("ListFree: %lu", (unsigned long)list);
 
-  // TODO: Free string items.
-  
   // Free item array.
   MemFree(list->items);
 
@@ -97,8 +95,8 @@ void ListGrow(List* list, size_t newSize)
   // TODO: Does not compile, reallocarray not found.
   //Item* newArray = reallocarray(list->items, sizeof(Item), newSize);
 
-  //GReallocCounter ++;
-  //printf("REALLOC COUNTER: %i\n", GReallocCounter);
+  //GMemReallocCounter ++;
+  //printf("REALLOC COUNTER: %i\n", GMemReallocCounter);
   
   // Make space for more items.
   size_t newArraySize = newSize * sizeof(Item);
@@ -301,8 +299,8 @@ Index ListLookupStringIndex(List* list, char* symbolString)
   for (int i = 0; i < ListLength(list); ++ i)
   {
     Item item = ListGet(list, i);
-    char* string = item.value.string;
-    if (StringEquals(string, symbolString))
+    char* str = StringStr(item.value.string);
+    if (StrEquals(str, symbolString))
       return i; // Found it.
   }
   return -1; // Not found.

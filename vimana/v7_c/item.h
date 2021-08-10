@@ -1,32 +1,11 @@
+/*
+File: item.h
+Author: Mikael Kindborg (mikael@kindborg.com)
 
-// C TYPES -----------------------------------------------------
+Items are objects that hold values. They are used in lists and on the data stack. Items are always copied in code that uses them, but objects (lists and string) pointed to are not copied. Copying items seems to be fast (items are small).
+*/
 
-typedef unsigned int     Type;
-typedef int              Index;
-typedef long             IntNum;
-typedef double           DecNum;
-typedef struct MyItem    Item;
-typedef struct MyList    List;
-//typedef struct MyContext Context;
-typedef struct MyInterp  Interp;
-typedef void   (*PrimFun)(Interp*);
-
-// VIMANA TYPES ------------------------------------------------
-
-#define TypeSymbol        1
-#define TypeIntNum        2
-#define TypeDecNum        4
-#define TypeBool          8
-#define TypeList          16
-#define TypePrimFun       32
-#define TypeFun           64
-#define TypeString        128
-//#define TypeContext       256
-#define TypeDynAlloc      512
-#define TypeSpecialFun    1024
-#define TypeClosure       2048
-#define TypeVirgin        0 // Represents unbound symbol/uninitialized item
-//#define TypePushable (TypeIntNum | TypeDecNum | TypeBool | TypeList)
+// ITEM TYPE CHECKING ------------------------------------------
 
 #define IsVirgin(item)    ((item).type == TypeVirgin)
 #define IsSymbol(item)    ((item).type & TypeSymbol)
@@ -43,6 +22,8 @@ typedef void   (*PrimFun)(Interp*);
 //#define IsPushable(item)  ((item).type & TypePushable)
 
 /*
+TODO: UNUSED - REMOVE
+
 // OP CODES USED BY INTERPRETER
 
 #define OpCodeNone        0
@@ -57,17 +38,15 @@ typedef void   (*PrimFun)(Interp*);
 // high-level language is an item.
 typedef struct MyItem
 {
-  Type type;
+  Type  type;
   Index symbol;
   union
   {
-    //Index     symbol; // Index in global symbol table
     DecNum    decNum;
     IntNum    intNum;
-    List*     list;
-    //Context*  context;
-    char*     string; // TODO: Make custom string object
     Bool      truth;
+    List*     list;
+    VString*  string;
     PrimFun   primFun;
   }
   value;
@@ -85,14 +64,15 @@ Item ItemWithSymbol(Index symbolIndex)
   return item;
 }
 
-Item ItemWithString(char* string)
+Item ItemWithString(char* str)
 {
   Item item;
   item.type = TypeString;
   //item.opCode = OpCodePushItem;
-  char* stringbuf = MemAlloc(strlen(string) + 1);
-  strcpy(stringbuf, string);
-  item.value.string = stringbuf;
+  //char* stringbuf = MemAlloc(strlen(string) + 1);
+  //strcpy(stringbuf, string);
+  //item.value.string = stringbuf;
+  item.value.string = StringCreate(str);
   return item;
 }
 
@@ -129,18 +109,3 @@ List* ItemList(Item item)
     return item.value.list;
 }
 #endif
-
-/*
-// Get the context object of an item.
-#ifdef OPTIMIZE
-#define ItemContext(item) ((item).value.context)
-#else
-Context* ItemContext(Item item)
-{
-  if (!IsContext(item))
-    ErrorExit("ItemContext: Item is not of TypeContext");
-  else
-    return item.value.context;
-}
-#endif
-*/

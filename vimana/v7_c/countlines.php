@@ -1,8 +1,5 @@
 <?php
 
-//TODO: Count number of lines in code files
-echo "HELLO WORLD\n";
-
 function countlines($file)
 {
   return count(file($file));
@@ -10,6 +7,8 @@ function countlines($file)
 
 $numlines = 
   countlines("base.h") +
+  countlines("obj.h") +
+  countlines("string.h") +
   countlines("item.h") +
   countlines("list.h") +
   countlines("print.h") +
@@ -34,6 +33,7 @@ echo "NUMBER OF LINES: ".$numlines."\n";
 210521: 1641 lines
 210706: 1993 lines (more primitives)
 210802: 2413 lines (GC and more primitives)
+210810: 2548 lines (String object and more primitives)
 
 ***/
 

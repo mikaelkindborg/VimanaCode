@@ -40,7 +40,7 @@ void ItemPrintToStream(FileStream* stream, Item item, Interp* interp)
   }
   else if (IsString(item))
   {
-    PrintToStream(stream, "%s", item.value.string);
+    PrintToStream(stream, "%s", StringStr(item.value.string));
   }
   else if (IsSymbol(item))
   {

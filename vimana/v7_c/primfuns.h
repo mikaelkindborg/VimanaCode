@@ -15,7 +15,6 @@ void Prim_LISTFIRST(Interp* interp);
 // Example:
 // 42 (FOO) SETGLOBAL 
 // FOO PRINTLN
-
 // ITEM (SYMBOL) SETGLOBAL ->
 void Prim_SETGLOBAL(Interp* interp)
 {
@@ -604,7 +603,7 @@ void Prim_EQ(Interp* interp)
     res.value.truth = a.value.truth == b.value.truth;
   else
   if (IsString(a) && IsString(b))
-    res.value.truth = StringEquals(a.value.string, b.value.string);
+    res.value.truth = StrEquals(StringStr(a.value.string), StringStr(b.value.string));
   else
     ErrorExit("Prim_EQ: Cannot compare items");
 
@@ -839,6 +838,25 @@ void Prim_TOSTRING(Interp* interp)
   InterpPush(interp, ItemWithString(buf));
 }
 
+/*
+// UNUSED - USE LISTS TO QUOTE OBJECTS
+// Don't evaluate next element, just push it onto the data stack.
+void Prim_QUOTE(Interp* interp)
+{
+  //PrintDebug("HELLO QUOTE");
+  
+  Context* context = interp->currentContext;
+  int codePointer = ++ context->codePointer;
+  List* code = context->code;
+  if (codePointer < ListLength(code))
+  {
+    // Get the next element and push it.
+    Item element = ListGet(code, codePointer);
+    ListPush(interp->stack, element);
+  }
+}
+*/
+
 void DefinePrimFuns(Interp* interp)
 {
   InterpAddPrimFun("setGlobal", Prim_SETGLOBAL, interp);
@@ -893,165 +911,9 @@ void DefinePrimFuns(Interp* interp)
   InterpAddPrimFun("printStack", Prim_PRINTSTACK, interp);
   InterpAddPrimFun("toString", Prim_TOSTRING, interp);
   InterpAddPrimFun("evalFile", Prim_EVALFILE, interp);
+  //InterpAddPrimFun("Quote", Prim_QUOTE, interp);
+  //InterpAddPrimFun(":", Prim_QUOTE, interp);
   //InterpAddPrimFun("PRN", Prim_PRN, interp);
   //InterpAddPrimFun("NEWLINE", Prim_NEWLINE, interp);
   //InterpAddPrimFun("SPACE", Prim_SPACE, interp);
 }
-
-/**************************************************************/
-
-/*
-
-  //InterpAddPrimFun("Recur", Prim_RECUR, interp);
-  //InterpAddPrimFun("Quote", Prim_QUOTE, interp);
-  //InterpAddPrimFun(":", Prim_QUOTE, interp);
-  //InterpAddPrimFun("Label", Prim_LABEL, interp);
-
-void Prim_RECUR(Interp* interp)
-{
-  PrintDebug("HELLO RECUR");
-
-  // TODO: Add info to context about current function and use that code list recur.
-
-  // Below code does not work, need to get the function context.
-  // Enter new context with current code list.
-  //PrimEval_EvalFun(interp, interp->currentContext->code);
-}
-
-// Don't evaluate next element, just push it onto the data stack.
-void Prim_QUOTE(Interp* interp)
-{
-  //PrintDebug("HELLO QUOTE");
-  
-  Context* context = interp->currentContext;
-  int codePointer = ++ context->codePointer;
-  List* code = context->code;
-  if (codePointer < ListLength(code))
-  {
-    // Get the next element and push it.
-    Item element = ListGet(code, codePointer);
-    ListPush(interp->stack, element);
-  }
-}
-
-void Prim_LABEL(Interp* interp)
-{
-  Item symbol, item;
-
-  InterpPopInto(interp, symbol);
-
-  if (!IsSymbol(symbol))
-    ErrorExit("Prim_LABEL: Expected TypeSymbol");
-
-  Context* context = interp->currentContext;
-  IntNum codePointer = context->codePointer + 1;
-  item.type = TypeIntNum;
-  item.value.intNum = codePointer;
-  InterpSetLocal(interp, symbol, item);
-}
-*/
-
-/** EXPERIMENTAL UNUSED CODE
-
-// Get the current environment.
-List* InterpGetCurrentEnv(Interp* interp)
-{
-  return interp->currentContext->env;
-}
-
-// Get the parent environment.
-List* InterpGetSuperEnv(Interp* interp)
-{
-  Context* context = interp->currentContext;
-  while (NULL != context->prevContext)
-  {
-    PrintLine("Searching Context");
-    context = context->prevContext;
-    if (context->isFunCall)
-    {
-      PrintLine("Found FunCall Context");
-      return context->env;
-    }
-  }
-  // Return root env if no parent.
-  return context->env;
-}
-
-InterpAddPrimFun("evalInEnv", Prim_EVALINENV, interp);
-InterpAddPrimFun("currentEnv", Prim_CURRENTENV, interp);
-InterpAddPrimFun("superEnv", Prim_SUPERENV, interp);
-InterpAddPrimFun("gotoIfTrue", Prim_GOTOIFTRUE, interp);
-InterpAddPrimFun("gotoIfFalse", Prim_GOTOIFFALSE, interp);
-
-// EVALINENV evaluates a list in a given environment.
-// LIST ENV EVALINENV ->
-void Prim_EVALINENV(Interp* interp)
-{
-  PrintDebug("Prim_EVALINENV");
-  Item env;
-  Item list;
-  InterpPopInto(interp, env);
-  InterpPopInto(interp, list);
-  if (IsList(env) && IsList(list))
-    InterpEnterContextWithEnv(interp, ItemList(list), ItemList(env));
-  else
-    ErrorExit("Prim_EVALINENV got a non-list");
-}
-
-// CURRENTENV -> ENV
-void Prim_CURRENTENV(Interp* interp)
-{
-  PrintDebug("Prim_CURRENTENV");
-  List* env = InterpGetCurrentEnv(interp);
-  Item item = ItemWithList(env);
-  InterpPush(interp, item);
-}
-
-// SUPERENV -> ENV
-void Prim_SUPERENV(Interp* interp)
-{
-  PrintDebug("Prim_SUPERENV");
-  List* env = InterpGetSuperEnv(interp);
-  Item item = ItemWithList(env);
-  InterpPush(interp, item);
-}
-
-void Prim_GOTOIFTRUE(Interp* interp)
-{
-  Item codePointer, boolVal;
-
-  InterpPopInto(interp, codePointer);
-  InterpPopInto(interp, boolVal);
-
-  if (!IsIntNum(codePointer))
-    ErrorExit("Prim_GOTOIFTRUE: Expected TypeIntNum");
-  if (!IsBool(boolVal))
-    ErrorExit("Prim_GOTOIFTRUE: Expected TypeBool");
-
-  if (boolVal.value.truth)
-  {
-    //PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
-    interp->currentContext->codePointer = codePointer.value.intNum - 1;
-  }
-}
-
-void Prim_GOTOIFFALSE(Interp* interp)
-{
-  Item codePointer, boolVal;
-
-  InterpPopInto(interp, codePointer);
-  InterpPopInto(interp, boolVal);
-
-  if (!IsIntNum(codePointer))
-    ErrorExit("Prim_GOTOIFFALSE: Expected TypeIntNum");
-  if (!IsBool(boolVal))
-    ErrorExit("Prim_GOTOIFFALSE: Expected TypeBool");
-
-  if (!boolVal.value.truth)
-  {
-    //PrintDebug("GOTO codepointer: %li", codePointer.value.intNum);
-    interp->currentContext->codePointer = codePointer.value.intNum - 1;
-  }
-}
-
-**/

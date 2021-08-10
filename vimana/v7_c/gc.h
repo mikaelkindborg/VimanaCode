@@ -7,21 +7,11 @@
 
 void GCMarkChildren(List* list, Index startIndex);
 
-// Incremented marker used to track traversed lists during GC.
-// For each GC this global marker is incremented, which 
-// allows us to not have to reset the marker list field.
-unsigned long GCMarker = 0;
-
-// Call before mark.
-#define GCPrepare() (++ GCMarker)
-
-// TODO: Add GC for strings. Make generic memory object.
-
-typedef struct MyGCEntry 
+typedef struct _GCEntry 
 {
-  struct MyGCEntry* next;
-  List* object;
-} 
+  VObj* object;
+  struct _GCEntry* next;
+}
 GCEntry;
 
 typedef struct MyGarbageCollector
@@ -39,7 +29,7 @@ GarbageCollector* GCCreate()
   return gc;
 }
 
-void GCPushObject(GarbageCollector* gc, List* object)
+void GCPushObject(GarbageCollector* gc, VObj* object)
 {
   PrintDebug("GCPushObject: %lu", (unsigned long)object);
   GCEntry* entry = MemAlloc(sizeof(GCEntry));
@@ -51,22 +41,31 @@ void GCPushObject(GarbageCollector* gc, List* object)
 List* GCListCreate(GarbageCollector* gc)
 {
   List* list = ListCreate();
-  GCPushObject(gc, list);
+  GCPushObject(gc, (VObj*)list);
   return list;
 }
 
+/* TODO
+String* GCStringCreate(GarbageCollector* gc)
+{
+  String* string = StringCreate();
+  GCPushObject(gc, (VObj*)string);
+  return string;
+}
+*/
+
 void GCMarkList(List* list)
 { 
-  if (list->gcMarker == GCMarker) return; // Already traversed.
+  if (1 == list->header.gcMarker) return; // Already traversed.
 
   // Mark list as traversed.
-  list->gcMarker = GCMarker;
+  list->header.gcMarker = 1;
   
   // Traverse list.
   GCMarkChildren(list, 0);
 }
 
-// GC children by traversing the list tree.
+// Mark children by traversing the list tree.
 void GCMarkChildren(List* list, Index startIndex)
 { 
   PrintDebug("GCMarkChildren: %d %lu", ListLength(list), (unsigned long)list);
@@ -77,6 +76,11 @@ void GCMarkChildren(List* list, Index startIndex)
     if (IsDynAlloc(item))
     {
       GCMarkList(ItemList(item));
+    }
+    else
+    if (IsString(item))
+    {
+      item.value.string->header.gcMarker = 1;
     }
   }
 }
@@ -89,21 +93,37 @@ void GCSweep(GarbageCollector* gc)
   while (*entry)
   {
     PrintDebug("GCSweep ENTRY %i", i++);
-    if ((*entry)->object->gcMarker != GCMarker)
+    if (0 == (*entry)->object->header.gcMarker)
     {
       PrintDebug("GCSweep DEALLOC: %lu",(unsigned long)((*entry)->object));
       GCEntry* unreachableEntry = *entry;
       *entry = (*entry)->next;
-      ListFree(unreachableEntry->object);
+      if (TypeList & unreachableEntry->object->header.type)
+        ListFree((List*)unreachableEntry->object);
+      else
+      if (TypeString & unreachableEntry->object->header.type)
+        StringFree((VString*)unreachableEntry->object);
       MemFree(unreachableEntry);
     }
     else
     {
       PrintDebug("GCSweep NEXT");
+      (*entry)->object->header.gcMarker = 0;
       entry = &((*entry)->next);
     }
   }
   PrintDebug("GCSweep END");
+}
+
+void GCSweepUnmarkAll(GarbageCollector* gc)
+{ 
+  int i = 1;
+  GCEntry** entry = &(gc->firstEntry);
+  while (*entry)
+  {
+    (*entry)->object->header.gcMarker = 0;
+    entry = &((*entry)->next);
+  }
 }
 
 void GCPrintEntries(GarbageCollector* gc)
@@ -120,48 +140,7 @@ void GCPrintEntries(GarbageCollector* gc)
 // Free allocated objects.
 void GCFree(GarbageCollector* gc) 
 {
-  GCPrepare();
+  //GCSweepUnmarkAll(gc);
   GCSweep(gc);
   MemFree(gc);
 }
-
-/*
-
-UNUSED!
-
-// DYNAMIC ARRAY -----------------------------------------------
-
-#define DynArraySize 10
-#define DynArrayType int
-
-typedef struct MyDynArray
-{
-  int size;
-  int maxSize;
-  DynArrayType* values; // Array of values
-}
-DynArray;
-
-DynArray* DynArrayCreate()
-{
-  // Allocate array object.
-  DynArray* array = malloc(sizeof(DynArray));
-
-  // Allocate array entries.
-  size_t arraySize = DynArraySize * sizeof(DynArrayType);
-  array->values = = malloc(arraySize);
-
-  // Init entries.
-  memset(array->values, 0, arraySize);
-
-  // Return array object.
-  return array;
-}
-
-DynArray* DynArrayFree(DynArray* array)
-{
-  free(array->values);
-  free(array);
-}
-
-*/
