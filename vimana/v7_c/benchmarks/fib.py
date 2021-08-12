@@ -9,5 +9,5 @@ def fib(n):
   return fib(n - 1) + fib(n - 2)
 
 for i in range(0, 5):
-  print(fib(30))
+  print(fib(32))
 

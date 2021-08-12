@@ -16,7 +16,7 @@ Basic data types and functions.
 #define OPTIMIZE_PRIMFUNS
 #define USE_GC
 //#define DEBUG
-#define TRACK_MEMORY_USAGE
+//#define TRACK_MEMORY_USAGE
 
 // C TYPES -----------------------------------------------------
 

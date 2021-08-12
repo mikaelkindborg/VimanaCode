@@ -10,5 +10,5 @@ def fib(n)
 end
 
 for i in 0...5
-  puts fib(30)
+  puts fib(32)
 end

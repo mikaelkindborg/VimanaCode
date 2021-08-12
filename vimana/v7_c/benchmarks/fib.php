@@ -58,5 +58,5 @@ function fib($n)
 }
 
 for ($i = 0; $i < 5; $i++):
-  echo fib(30) . "\n";
+  echo fib(32) . "\n";
 endfor;

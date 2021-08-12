@@ -484,7 +484,7 @@ void InterpRun(register Interp* interp, List* list)
       evalResult = InterpEvalSymbol(interp, element);
       
 #ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
-      if (IsPrimFun(item))
+      if (IsPrimFun(evalResult))
       {
         evalResult.value.primFun(interp);
         goto Next; //continue;
