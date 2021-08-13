@@ -250,6 +250,25 @@ void Prim_IFTRUE(Interp* interp)
 // BOOL LIST IFALSE ->
 void Prim_IFFALSE(Interp* interp)
 {
+  List* stack = interp->stack;
+  int length = stack->length;
+  Item* listPtr = ListItemPtr(stack, length - 1);
+  Item* boolPtr = listPtr - 1;
+
+  if (!IsList(*listPtr))
+    ErrorExit("Prim_IFFALSE: branch is non-list");
+  if (!IsBool(*boolPtr))
+    ErrorExit("Prim_IFFALSE: got non-bool");
+
+  stack->length = length - 2;
+
+  if (!(boolPtr->value.truth))
+    InterpEnterContext(interp, ItemList(*listPtr));
+}
+
+// BOOL LIST IFALSE ->
+void ORIG_Prim_IFFALSE(Interp* interp)
+{
   Item list, boolVal;
 
   InterpPopInto(interp, list);

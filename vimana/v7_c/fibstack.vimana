@@ -31,7 +31,7 @@ TEST 210813
 ./vimana fibstack.vimana  1.66s user 0.01s system 99% cpu 1.673 total
 With item pointers in DUP, SWAP, PLUS and MINUS:
 ./vimana fibstack.vimana  1.48s user 0.01s system 78% cpu 1.906 total
-With pointers in LESSTHAN:
+With pointers in LESSTHAN, IFFALSE:
 ./vimana fibstack.vimana  1.43s user 0.01s system 67% cpu 2.133 total
 ./vimana fibstack.vimana  1.41s user 0.01s system 99% cpu 1.427 total
 
