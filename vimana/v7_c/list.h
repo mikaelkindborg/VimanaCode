@@ -12,9 +12,10 @@ typedef struct MyList
 {
   VObjHeader header;
   //int        printMarker;  // Mark flag for printing and other list traversal
-  int        length;       // Current number of items (last ???)
-  int        maxLength;    // Max number of items
   Bool       isShared;     // List is shared flag (used by environments)
+  int        length;       // Current number of items
+  int        maxLength;    // Max number of items
+  //Item*      lastItem;
   Item*      items;        // Array of items
 }
 List;
@@ -47,6 +48,7 @@ List* ListCreate()
   size_t arraySize = size * sizeof(Item);
   Item* itemArray = MemAlloc(arraySize);
   list->items = itemArray;
+  //list->lastItem = NULL;
 
   // Init list array.
   memset(itemArray, 0, arraySize);
@@ -133,6 +135,7 @@ void ListPush(List* list, Item item)
     ListGrow(list, list->length + ListGrowIncrement);
   list->items[list->length] = item;
   list->length++;
+  //list->lastItem = list->items + (list->length - 1);
 }
 #endif
 
@@ -188,8 +191,9 @@ Item ListGet(List* list, int index)
   do { \
     if ((index) >= (list)->maxLength) \
       ListGrow((list), (index) + ListGrowIncrement); \
-    if ((index) >= (list)->length) \
+    if ((index) >= (list)->length) { \
       (list)->length = (index) + 1; \
+    } \
     (list)->items[index] = (item); \
   } while (0)
 #else
@@ -198,8 +202,10 @@ void ListSet(List* list, int index, Item item)
   // Grow list if needed.
   if (index >= list->maxLength)
     ListGrow(list, index + ListGrowIncrement);
-  if (index >= list->length)
+  if (index >= list->length) {
     list->length = index + 1;
+    //list->lastItem = list->items + index;
+  }
   // Set new item.
   list->items[index] = item;
 }
@@ -235,6 +241,17 @@ void ListSwap(List* list)
   list->items[index2] = item1;
 }
 #endif
+
+#define ListItemPtr(list, index) ((list)->items + (index))
+#define ListPushItemPtrVal(list, itemPtr) \
+do { \
+  int length = (list)->length; \
+  if (length + 1 > (list)->maxLength) \
+    ListGrow(list, length + ListGrowIncrement); \
+  (list)->items[length] = (*(itemPtr)); \
+  (list)->length++; \
+} while (0)
+
 
 /*
 // Experimental. Useful for updating item values "in place" 

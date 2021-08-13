@@ -43,7 +43,16 @@ void Prim_DROP(Interp* interp)
 // ITEM DUP -> ITEM ITEM
 void Prim_DUP(Interp* interp)
 {
-  ListDup(interp->stack, ListLength(interp->stack) - 1);
+  //ListDup(interp->stack, ListLength(interp->stack) - 1);
+
+  List* stack = interp->stack;
+  int length = stack->length + 1;
+  stack->length = length;
+  if (length > stack->maxLength)
+    ListGrow(stack, length + ListGrowIncrement);
+  Item* itemPtr2 = ListItemPtr(stack, length - 1);
+  Item* itemPtr1 = itemPtr2 - 1;
+  *itemPtr2 = *itemPtr1;
 }
 
 // ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
@@ -62,7 +71,14 @@ void Prim_OVER(Interp* interp)
 // ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
 void Prim_SWAP(Interp* interp)
 {
-  ListSwap(interp->stack);
+  //ListSwap(interp->stack);
+
+  List* stack = interp->stack;
+  Item* itemPtr2 = ListItemPtr(stack, stack->length - 1);
+  Item* itemPtr1 = itemPtr2 - 1;
+  Item temp = *itemPtr2;
+  *itemPtr2 = *itemPtr1;
+  *itemPtr1 = temp;
 }
 
 // FUNIFY turns a list into a function.
@@ -273,6 +289,42 @@ void Prim_IFELSE(Interp* interp)
 // NUM NUM PLUS -> NUM
 void Prim_PLUS(Interp* interp)
 {
+  List* stack = interp->stack;
+  int length = -- stack->length;
+  if (length < 1) ErrorExit("Prim_PLUS: STACK IS EMPTY");
+  Item* b = stack->items + length;
+  Item* a = b - 1;
+
+  if (IsIntNum(*a) && IsIntNum(*b))
+  {
+    a->type = TypeIntNum;
+    a->value.intNum = a->value.intNum + b->value.intNum;
+  }
+  else
+  if (IsIntNum(*a) && IsDecNum(*b))
+  {
+    a->type = TypeDecNum;
+    a->value.decNum = a->value.intNum + b->value.decNum;
+  }
+  else
+  if (IsDecNum(*a) && IsIntNum(*b))
+  {
+    a->type = TypeDecNum;
+    a->value.decNum = a->value.decNum + b->value.intNum;
+  }
+  else
+  if (IsDecNum(*a) && IsDecNum(*b))
+  {
+    a->type = TypeDecNum;
+    a->value.decNum = a->value.decNum + b->value.decNum;
+  }
+  else
+    ErrorExit("Prim_PLUS: Unsupported types");
+}
+
+// NUM NUM PLUS -> NUM
+void ORIG_Prim_PLUS(Interp* interp)
+{
   Item a, b, res;
 
   InterpPopInto(interp, b);
@@ -309,6 +361,43 @@ void Prim_PLUS(Interp* interp)
 
 // NUM NUM MINUS -> NUM
 void Prim_MINUS(Interp* interp)
+{
+  List* stack = interp->stack;
+  int length = -- stack->length;
+  if (length < 1) ErrorExit("Prim_MINUS: STACK IS EMPTY");
+  Item* b = stack->items + length; //stack->lastItem;
+  Item* a = b - 1;
+  //-- stack->lastItem;
+
+  if (IsIntNum(*a) && IsIntNum(*b))
+  {
+    a->type = TypeIntNum;
+    a->value.intNum = a->value.intNum - b->value.intNum;
+  }
+  else
+  if (IsIntNum(*a) && IsDecNum(*b))
+  {
+    a->type = TypeDecNum;
+    a->value.decNum = a->value.intNum - b->value.decNum;
+  }
+  else
+  if (IsDecNum(*a) && IsIntNum(*b))
+  {
+    a->type = TypeDecNum;
+    a->value.decNum = a->value.decNum - b->value.intNum;
+  }
+  else
+  if (IsDecNum(*a) && IsDecNum(*b))
+  {
+    a->type = TypeDecNum;
+    a->value.decNum = a->value.decNum - b->value.decNum;
+  }
+  else
+    ErrorExit("Prim_MINUS: Unsupported types");
+}
+
+// NUM NUM MINUS -> NUM
+void ORIG_Prim_MINUS(Interp* interp)
 {
   Item a, b, res;
 
@@ -639,6 +728,33 @@ void Prim_GREATERTHAN(Interp* interp)
 
 // ITEM ITEM < -> BOOL
 void Prim_LESSTHAN(Interp* interp)
+{
+
+  List* stack = interp->stack;
+  int length = -- stack->length;
+  if (length < 1) ErrorExit("Prim_PLUS: STACK IS EMPTY");
+  Item* b = stack->items + length;
+  Item* a = b - 1;
+
+  if (IsIntNum(*a) && IsIntNum(*b))
+    a->value.truth = a->value.intNum < b->value.intNum;
+  else
+  if (IsIntNum(*a) && IsDecNum(*b))
+    a->value.truth = a->value.intNum < b->value.decNum;
+  else
+  if (IsDecNum(*a) && IsIntNum(*b))
+    a->value.truth = a->value.decNum < b->value.intNum;
+  else
+  if (IsDecNum(*a) && IsDecNum(*b))
+    a->value.truth = a->value.decNum < b->value.decNum;
+  else
+    ErrorExit("Prim_LESSTHAN: Cannot compare items");
+
+  a->type = TypeBool;
+}
+
+// ITEM ITEM < -> BOOL
+void ORIG_Prim_LESSTHAN(Interp* interp)
 {
   Item a, b, res;
 

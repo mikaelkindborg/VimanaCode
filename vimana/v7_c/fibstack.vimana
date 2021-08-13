@@ -4,8 +4,8 @@ INITIAL TEST
 28 fib 5 times:
 ./vimana fibstack.vimana  0.26s user 0.00s system 98% cpu 0.268 total
 
-TESTS 210808
-------------
+TEST 210808
+-----------
 32 fib 5 times:
 ./vimana fibstack.vimana  1.56s user 0.00s system 99% cpu 1.576 total
 
@@ -13,8 +13,9 @@ After change of item.value.symbol to item.symbol:
 ./vimana fibstack.vimana  1.62s user 0.01s system 99% cpu 1.630 total
 ./vimana fibstack.vimana  1.60s user 0.00s system 80% cpu 1.997 total
 
-TESTS 210809
-------------
+TEST 210809
+-----------
+32 fib 5 times:
 With closure shared env check:
 ./vimana fibstack.vimana  1.68s user 0.00s system 99% cpu 1.688 total
 Without env check:
@@ -22,6 +23,17 @@ Without env check:
 With closure env check and GC:
 ./vimana fibstack.vimana  1.64s user 0.00s system 99% cpu 1.646 total
 ./vimana fibstack.vimana  1.60s user 0.00s system 99% cpu 1.614 total
+
+TEST 210813
+-----------
+32 fib 5 times:
+./vimana fibstack.vimana  1.63s user 0.01s system 99% cpu 1.645 total
+./vimana fibstack.vimana  1.66s user 0.01s system 99% cpu 1.673 total
+With item pointers in DUP, SWAP, PLUS and MINUS:
+./vimana fibstack.vimana  1.48s user 0.01s system 78% cpu 1.906 total
+With pointers in LESSTHAN:
+./vimana fibstack.vimana  1.43s user 0.01s system 67% cpu 2.133 total
+./vimana fibstack.vimana  1.41s user 0.01s system 99% cpu 1.427 total
 
 ) DOC
 
