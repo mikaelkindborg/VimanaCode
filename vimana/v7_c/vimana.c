@@ -47,7 +47,7 @@ int main(int numargs, char* args[])
   // Eval file
   if (fileName)
   {
-    char buf[100000]; // Host, host.
+    char buf[100000]; // Host, host (Swedish joke).
     char* p = buf;
     int c;
     FILE* file = fopen(fileName, "r");

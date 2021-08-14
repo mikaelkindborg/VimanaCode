@@ -47,9 +47,9 @@ void Prim_DUP(Interp* interp)
 
   List* stack = interp->stack;
   int length = stack->length + 1;
-  stack->length = length;
   if (length > stack->maxLength)
     ListGrow(stack, length + ListGrowIncrement);
+  stack->length = length;
   Item* itemPtr2 = ListItemPtr(stack, length - 1);
   Item* itemPtr1 = itemPtr2 - 1;
   *itemPtr2 = *itemPtr1;
@@ -597,25 +597,19 @@ void Prim_ADD1(Interp* interp)
 // NUM SUB1 -> NUM
 void Prim_SUB1(Interp* interp)
 {
-  Item a, res;
+  Item* a = interp->stack->items + (interp->stack->length - 1);
 
-  InterpPopInto(interp, a);
-
-  if (IsIntNum(a))
+  if (IsIntNum(*a))
   {
-    res.type = TypeIntNum;
-    res.value.intNum = a.value.intNum - 1;
+    a->value.intNum = a->value.intNum - 1;
   }
   else
-  if (IsDecNum(a))
+  if (IsDecNum(*a))
   {
-    res.type = TypeDecNum;
-    res.value.decNum = a.value.decNum - 1;
+    a->value.decNum = a->value.decNum - 1;
   }
   else
     ErrorExit("Prim_SUB1: Unsupported types");
-
-  InterpPush(interp, res);
 }
 
 // TRUE -> TRUE

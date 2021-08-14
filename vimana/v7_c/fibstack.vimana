@@ -38,15 +38,23 @@ With pointers also in LESSTHAN, IFFALSE:
 ./vimana fibstack.vimana  1.37s user 0.01s system 99% cpu 1.383 total
 ./vimana fibstack.vimana  1.37s user 0.00s system 84% cpu 1.619 total
 
-) DOC
+TEST 210814
+-----------
+32 fib 5 times:
+Using optimized SUB1:
+./vimana fibstack.vimana  1.34s user 0.00s system 57% cpu 2.346 total
+./vimana fibstack.vimana  1.33s user 0.01s system 78% cpu 1.699 total
+./vimana fibstack.vimana  1.32s user 0.01s system 99% cpu 1.337 total
+) 
+DOC
 
 (FIB)
-  (DUP 2 < (DUP 1 - FIB SWAP 2 - FIB +) IFFALSE) DEF
+  (DUP 2 < (DUP SUB1 FIB SWAP 2 - FIB +) IFFALSE) DEF
 
 (TIMESDO) 
   (DUP ISZERO 
     (DROP DROP) 
     (SWAP DUP EVAL SWAP SUB1 TIMESDO) 
-  IFELSE) DEF
+  IFELSE) DEFSPECIAL
 
 (32 FIB PRINT) 5 TIMESDO

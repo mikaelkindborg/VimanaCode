@@ -5,6 +5,11 @@ INITIAL TEST
 
 TEST 210814
 32 fib 5 times:
+./vimana fib.vimana  2.09s user 0.00s system 99% cpu 2.107 total
+Using SUB1:
+./vimana fib.vimana  2.06s user 0.00s system 99% cpu 2.068 total
+./vimana fib.vimana  2.05s user 0.00s system 99% cpu 2.064 total
+./vimana fib.vimana  2.03s user 0.00s system 99% cpu 2.048 total
 )
 DOC
 
@@ -29,9 +34,9 @@ DOC
 
 
 (FIB) ((N) => 
-  N 2 < (N) (N 1 - FIB N 2 - FIB +) IFELSE) DEF
+  N 2 < (N) (N SUB1 FIB N 2 - FIB +) IFELSE) DEF
 
 (TIMESDO) ((L N) => 
-  N ISZERO (L EVAL L N 1 - TIMESDO) IFFALSE) DEF
+  N ISZERO (L EVAL L N SUB1 TIMESDO) IFFALSE) DEF
 
 (32 FIB PRINT) 5 TIMESDO

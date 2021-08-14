@@ -118,14 +118,23 @@ void ListGrow(List* list, size_t newSize)
   //PrintDebug("REALLOC successful in ListGrow");
 }
 
-#ifdef OPTIMIZE
-#define ListPush(list, item) \
+
+#define ORIG_ListPush(list, item) \
 do { \
   int length = (list)->length; \
   if (length + 1 > (list)->maxLength) \
     ListGrow(list, length + ListGrowIncrement); \
   (list)->items[length] = (item); \
   (list)->length++; \
+} while (0)
+
+#ifdef OPTIMIZE
+#define ListPush(list, item) \
+do { \
+  int length = ++ (list)->length; \
+  if (length > (list)->maxLength) \
+    ListGrow(list, length + ListGrowIncrement); \
+  (list)->items[length - 1] = (item); \
 } while (0)
 #else
 void ListPush(List* list, Item item)
