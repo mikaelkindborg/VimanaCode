@@ -217,7 +217,7 @@ void Prim_VALUE(Interp* interp)
   InterpPopInto(interp, item);
   if (IsSymbol(item))
   {
-    evalResult = ORIG_InterpEvalSymbol(interp, item);
+    evalResult = InterpEvalSymbol(interp, item);
     //InterpEvalSymbolSetResult(interp, item, evalResult);
   }
   InterpPush(interp, evalResult); // Push value
@@ -247,25 +247,7 @@ void Prim_IFTRUE(Interp* interp)
     InterpEnterContext(interp, ItemList(list));
 }
 
-// BOOL LIST IFALSE ->
-void X_Prim_IFFALSE(Interp* interp)
-{
-  List* stack = interp->stack;
-  int length = stack->length;
-  Item* listPtr = ListItemPtr(stack, length - 1);
-  Item* boolPtr = listPtr - 1;
-
-  if (!IsList(*listPtr))
-    ErrorExit("Prim_IFFALSE: branch is non-list");
-  if (!IsBool(*boolPtr))
-    ErrorExit("Prim_IFFALSE: got non-bool");
-
-  stack->length = length - 2;
-
-  if (!(boolPtr->value.truth))
-    InterpEnterContext(interp, ItemList(*listPtr));
-}
-
+// FASTER
 // BOOL LIST IFALSE ->
 void Prim_IFFALSE(Interp* interp)
 {
@@ -285,6 +267,27 @@ void Prim_IFFALSE(Interp* interp)
     InterpEnterContext(interp, ItemList(*listPtr));
 }
 
+// Just another style, but the one above feels more clean.
+// BOOL LIST IFALSE ->
+void X_Prim_IFFALSE(Interp* interp)
+{
+  List* stack = interp->stack;
+  int length = stack->length;
+  Item* listPtr = ListItemPtr(stack, length - 1);
+  Item* boolPtr = listPtr - 1;
+
+  if (!IsList(*listPtr))
+    ErrorExit("Prim_IFFALSE: branch is non-list");
+  if (!IsBool(*boolPtr))
+    ErrorExit("Prim_IFFALSE: got non-bool");
+
+  stack->length = length - 2;
+
+  if (!(boolPtr->value.truth))
+    InterpEnterContext(interp, ItemList(*listPtr));
+}
+
+// SLOWER
 // BOOL LIST IFALSE ->
 void ORIG_Prim_IFFALSE(Interp* interp)
 {

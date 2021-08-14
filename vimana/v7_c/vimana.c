@@ -60,8 +60,8 @@ int main(int numargs, char* args[])
       *p = 0;
       fclose(file);
       List* list = ParseCode(interp, buf);
-      ORIG_InterpRun(interp, list);
-      //InterpRun(interp, list);
+      InterpRun(interp, list);
+      //POINTERBASED_InterpRun(interp, list);
 #ifndef USE_GC // ! USE_GC
       ListFreeDeep(list);
 #endif
