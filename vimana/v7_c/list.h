@@ -243,6 +243,7 @@ void ListSwap(List* list)
 #endif
 
 #define ListItemPtr(list, index) ((list)->items + (index))
+
 #define ListPushItemPtrVal(list, itemPtr) \
 do { \
   int length = (list)->length; \

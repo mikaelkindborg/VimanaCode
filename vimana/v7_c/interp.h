@@ -293,7 +293,27 @@ void InterpSetLocal(Interp* interp, Item name, Item value)
 }
 #endif
 
-Item InterpEvalSymbol(Interp* interp, Item item)
+Item* InterpEvalSymbol(Interp* interp, Item* item)
+{
+  // Look for symbol in current context.
+  Context* context = interp->currentContext;
+  if (context && context->env && (context->env->length > 0))
+  {
+    //PrintLine("InterpEvalSymbol: ENV");
+    //ListPrint(context->env, interp);
+    Item* value = ListAssocGet(context->env, item->symbol);
+    if (value) return value;
+  }
+
+  // Lookup global symbol.
+  Item* value = ListItemPtr(interp->gvarTable, item->symbol);
+  if (!IsVirgin(*value)) return value;
+
+  // Symbol is unbound and evaluates to itself.
+  return item;
+}
+
+Item ORIG_InterpEvalSymbol(Interp* interp, Item item)
 {
   // Look for symbol in current context.
   Context* context = interp->currentContext;
@@ -404,8 +424,133 @@ void InterpEnterCallContext(Interp* interp, List* code, List* env, Bool isFunCal
 
 // INTERPRETER LOOP --------------------------------------------
 
+// SLOWER
 // Evaluate list.
 void InterpRun(register Interp* interp, List* list)
+{
+  register Context*   currentContext;
+  register List*      code;
+  register int        codePointer;
+  register int        codeLength;
+  register Item*      element;
+  register Item*      evalResult;
+
+  // Initialize interpreter state and create root context.
+  interp->run = TRUE;
+  interp->contextSwitch = TRUE;
+  interp->callstackIndex = 0;
+  interp->currentContext = interp->callstack;
+  interp->currentContext->code = list;
+
+  while (TRUE)
+  {
+    // Check context switch.
+    if (interp->contextSwitch)
+    {
+      interp->contextSwitch = FALSE;
+      currentContext = interp->currentContext;
+      code = currentContext->code;
+      codeLength = ListLength(code);
+    }
+
+    // Increment code pointer.
+    codePointer = ++ currentContext->codePointer;
+
+    // BEGIN EXIT STACKFRAME
+    // Exit stackframe if the code in the current context 
+    // has finished executing.
+    if (codePointer >= codeLength)
+    {
+      PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
+
+      // TODO: Allow a "primfun callback" that is called on exit frame ???
+
+      // Switch to parent context.
+      currentContext = interp->currentContext = currentContext->prevContext;
+
+      // Exit if this was the last stackframe
+      if (!currentContext) goto Exit;
+      
+      code = currentContext->code;
+      codeLength = ListLength(code);
+
+#ifndef OPTIMIZE // ! OPTIMIZE
+      -- interp->callstackIndex;
+      if (interp->currentContext)
+      {
+        ContextFree(interp->currentContext->nextContext);
+        interp->currentContext->nextContext = NULL;
+      }
+#endif
+      goto Next; //continue;
+    }
+    // END EXIT STACKFRAME
+
+    // Get next element.
+    element = ListItemPtr(code, codePointer);
+
+#ifdef OPTIMIZE_PRIMFUNS
+    // Optimized primfun calls
+    if (IsPrimFun(*element))
+    {
+      element->value.primFun(interp);
+      goto Next; //continue;
+    }
+#endif
+
+    if (IsSymbol(*element))
+    {
+      // Evaluate symbol (search local and global env).
+      // Symbols evaluate to themselves if unbound.
+      evalResult = InterpEvalSymbol(interp, element);
+      
+#ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
+      if (IsPrimFun(*evalResult))
+      {
+        evalResult->value.primFun(interp);
+        goto Next; //continue;
+      }
+#endif
+      // If it is a function call it.
+      if (IsFun(*evalResult))
+      {
+        InterpEnterFunCallContext(interp, evalResult->value.list);
+
+        currentContext = interp->currentContext;
+        code = currentContext->code;
+        codeLength = ListLength(code);
+        interp->contextSwitch = FALSE;
+
+        goto Next; //continue;
+      }
+
+      if (IsSpecialFun(*evalResult))
+      {
+        InterpEnterContext(interp, evalResult->value.list);
+
+        currentContext = interp->currentContext;
+        code = currentContext->code;
+        codeLength = ListLength(code);
+        interp->contextSwitch = FALSE;
+
+        goto Next; //continue;
+      }
+
+      // If not a function, push the symbol value.
+      ListPush(interp->stack, *evalResult);
+      goto Next; //continue;
+    }
+
+    // If none of the above, push the element.
+    ListPush(interp->stack, *element);
+Next:;
+  } // while
+Exit:;
+}
+
+// FASTER
+// Evaluate list.
+void ORIG_InterpRun(register Interp* interp, List* list)
 {
   register Context*   currentContext;
   register List*      code;
@@ -481,7 +626,7 @@ void InterpRun(register Interp* interp, List* list)
     {
       // Evaluate symbol (search local and global env).
       // Symbols evaluate to themselves if unbound.
-      evalResult = InterpEvalSymbol(interp, element);
+      evalResult = ORIG_InterpEvalSymbol(interp, element);
       
 #ifndef OPTIMIZE_PRIMFUNS // ! OPTIMIZE_PRIMFUNS     
       if (IsPrimFun(evalResult))

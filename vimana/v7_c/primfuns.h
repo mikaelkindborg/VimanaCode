@@ -217,7 +217,7 @@ void Prim_VALUE(Interp* interp)
   InterpPopInto(interp, item);
   if (IsSymbol(item))
   {
-    evalResult = InterpEvalSymbol(interp, item);
+    evalResult = ORIG_InterpEvalSymbol(interp, item);
     //InterpEvalSymbolSetResult(interp, item, evalResult);
   }
   InterpPush(interp, evalResult); // Push value
@@ -248,7 +248,7 @@ void Prim_IFTRUE(Interp* interp)
 }
 
 // BOOL LIST IFALSE ->
-void Prim_IFFALSE(Interp* interp)
+void X_Prim_IFFALSE(Interp* interp)
 {
   List* stack = interp->stack;
   int length = stack->length;
@@ -261,6 +261,25 @@ void Prim_IFFALSE(Interp* interp)
     ErrorExit("Prim_IFFALSE: got non-bool");
 
   stack->length = length - 2;
+
+  if (!(boolPtr->value.truth))
+    InterpEnterContext(interp, ItemList(*listPtr));
+}
+
+// BOOL LIST IFALSE ->
+void Prim_IFFALSE(Interp* interp)
+{
+  List* stack = interp->stack;
+  int length = stack->length - 2;
+  Item* boolPtr = ListItemPtr(stack, length);
+  Item* listPtr = boolPtr + 1;
+
+  if (!IsList(*listPtr))
+    ErrorExit("Prim_IFFALSE: branch is non-list");
+  if (!IsBool(*boolPtr))
+    ErrorExit("Prim_IFFALSE: got non-bool");
+
+  stack->length = length;
 
   if (!(boolPtr->value.truth))
     InterpEnterContext(interp, ItemList(*listPtr));
@@ -382,11 +401,15 @@ void ORIG_Prim_PLUS(Interp* interp)
 void Prim_MINUS(Interp* interp)
 {
   List* stack = interp->stack;
-  int length = -- stack->length;
+  int length = -- stack->length; // TODO: ListDrop(stack);
+  // TODO: < 2
   if (length < 1) ErrorExit("Prim_MINUS: STACK IS EMPTY");
-  Item* b = stack->items + length; //stack->lastItem;
+  Item* b = stack->items + length;
+  // TODO: ListItemPtr(stack, length);
+  // TODO: ListLastItemPtr()
   Item* a = b - 1;
-  //-- stack->lastItem;
+  // TODO: ListDrop(stack);
+  // TODO: ListDrop2(stack);
 
   if (IsIntNum(*a) && IsIntNum(*b))
   {
