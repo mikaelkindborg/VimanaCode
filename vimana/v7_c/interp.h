@@ -441,6 +441,7 @@ void InterpRun(register Interp* interp, List* list)
   interp->callstackIndex = 0;
   interp->currentContext = interp->callstack;
   interp->currentContext->code = list;
+  interp->currentContext->codePointer = -1;
 
   while (TRUE)
   {
@@ -462,8 +463,6 @@ void InterpRun(register Interp* interp, List* list)
     if (codePointer >= codeLength)
     {
       PrintDebug("EXIT CONTEXT: %i", interp->callstackIndex);
-
-      // TODO: Allow a "primfun callback" that is called on exit frame ???
 
       // Switch to parent context.
       currentContext = interp->currentContext = currentContext->prevContext;

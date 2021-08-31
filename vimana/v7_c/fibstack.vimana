@@ -45,6 +45,8 @@ Using optimized SUB1:
 ./vimana fibstack.vimana  1.34s user 0.00s system 57% cpu 2.346 total
 ./vimana fibstack.vimana  1.33s user 0.01s system 78% cpu 1.699 total
 ./vimana fibstack.vimana  1.32s user 0.01s system 99% cpu 1.337 total
+./vimana fibstack.vimana  1.31s user 0.00s system 99% cpu 1.322 total
+./vimana fibstack.vimana  1.30s user 0.00s system 99% cpu 1.305 total
 ) 
 DOC
 

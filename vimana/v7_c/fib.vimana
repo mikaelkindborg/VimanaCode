@@ -34,7 +34,10 @@ DOC
 
 
 (FIB) ((N) => 
-  N 2 < (N) (N SUB1 FIB N 2 - FIB +) IFELSE) DEF
+  N 2 < 
+    (N) 
+    (N SUB1 FIB N 2 - FIB +) 
+  IFELSE) DEF
 
 (TIMESDO) ((L N) => 
   N ISZERO (L EVAL L N SUB1 TIMESDO) IFFALSE) DEF
