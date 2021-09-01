@@ -99,9 +99,20 @@ int main()
   size = sizeof(double);
   printf("Size of double: %i\n", size);
 
-  //addUsingItem(); // ./a.out  8.03s user 0.03s system 97% cpu 8.270 total
+  // ./a.out  8.03s user 0.03s system 97% cpu 8.270 total
+  // ./a.out  7.74s user 0.02s system 96% cpu 8.069 total
+  //addUsingItem(); 
 
-  addUsingLong(); // ./a.out  7.05s user 0.01s system 96% cpu 7.304 total
+  // ./a.out  7.05s user 0.01s system 96% cpu 7.304 total
+  addUsingLong();
 
   //addUsingInt();
 }
+
+/*
+Sketch uses 26054 bytes (80%) of program storage space. Maximum is 32256 bytes.
+Global variables use 434 bytes (21%) of dynamic memory, leaving 1614 bytes for local variables. Maximum is 2048 bytes.
+
+Sketch uses 26116 bytes (80%) of program storage space. Maximum is 32256 bytes.
+Global variables use 496 bytes (24%) of dynamic memory, leaving 1552 bytes for local variables. Maximum is 2048 bytes.
+*/
