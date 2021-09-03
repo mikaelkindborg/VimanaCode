@@ -81,13 +81,21 @@ int main(int numargs, char* args[])
   VmInterp* interp = InterpCreate();
   
   VmList* codeList = ListCreate(sizeof(VmItem));
-  
   VmItem codeItem;
   codeItem = ItemWithNumber(42);
   ListPush(list, &codeItem);
   codeItem = ItemWithPrimFun(1);
   ListPush(list, &codeItem);
   codeItem = ItemWithNumber(43);
+  ListPush(list, &codeItem);
+  codeItem = ItemWithPrimFun(1);
+  ListPush(list, &codeItem);
+
+  codeItem = ItemWithNumber(1);
+  ListPush(list, &codeItem);
+  codeItem = ItemWithNumber(2);
+  ListPush(list, &codeItem);
+  codeItem = ItemWithPrimFun(2);
   ListPush(list, &codeItem);
   codeItem = ItemWithPrimFun(1);
   ListPush(list, &codeItem);

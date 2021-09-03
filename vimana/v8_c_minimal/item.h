@@ -72,6 +72,13 @@ VmItem ItemWithNumber(VmNumber number)
   return item;
 }
 
+void ItemSetNumber(VmItem* item, VmNumber number)
+{
+  if (((number << 3) >> 3) != number) 
+    ErrorExit("ItemWithNumber: Number is too large");
+  item->value.number = (number << 3) | TypeNumber;
+}
+
 VmItem ItemWithSymbol(VmNumber symbolId)
 {
   if (((symbolId << 3) >> 3) != symbolId) 
