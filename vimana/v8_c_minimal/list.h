@@ -10,6 +10,7 @@ Size of items in the list is configurable (all items must be same size).
 
 typedef struct __VmList
 {
+  int        type;         // List type
   int        length;       // Current number of items
   int        maxLength;    // Max number of items
   int        itemSize;     // Size of a list item
@@ -28,6 +29,8 @@ VmList;
 
 void ListInit(VmList* list, int itemSize)
 {
+  list->type = TypeList;
+  
   // Set inital values.
   size_t size = ListGrowIncrement;
   ListLength(list) = 0;
@@ -124,8 +127,6 @@ void ListGrow(VmList* list, size_t newSize)
 
 void ListSet(VmList* list, VmIndex index, void* item)
 {
-  PrintDebug("ListSet");
-    
   if (index < 0)
     ErrorExit("ListSet: Index < 0");
     
@@ -141,27 +142,17 @@ void ListSet(VmList* list, VmIndex index, void* item)
   ListSetFast(list, index, item);
 }
 
-#ifdef OPTIMIZE
-
-  #define ListGet(list, index) \
-    ListGetFast(list, index)
-  
-#else
-
-  void* ListGet(VmList* list, VmIndex index)
-  {
-    if (index >= ListLength(list) || index < 0)
-      ErrorExitNum("ListGet: Index out of bounds", index);
-    return ListGetFast(list, index);
-  }
-
-#endif
+void* ListGet(VmList* list, VmIndex index)
+{
+  if (index >= ListLength(list) || index < 0)
+    ErrorExitNum("ListGet: Index out of bounds: ", index);
+  return ListGetFast(list, index);
+}
 
 // ListPush and ListPop ----------------------------------------
 
 void ListPush(VmList* list, void* item)
 {
-  PrintDebug("ListPush");
   ListSet(list, ListLength(list), item);
 }
 

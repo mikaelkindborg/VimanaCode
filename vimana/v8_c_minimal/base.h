@@ -35,14 +35,18 @@ typedef int              VmIndex;
 // TODO: Arduino serial print.
 
 #define Print(str)      printf(str)
-#define PrintLine(str)  printf(str "\n")
 #define PrintNum(num)   printf("%ld", (long)(num))
 #define PrintChar(c)    printf("%c",  (char)(c))
+#define PrintNewLine()  printf("\n")
+#define PrintLine(str)  printf(str "\n")
+#define PrintStrNumLine(str, num)  printf(str "%ld" "\n", (long)num)
 
 #ifdef DEBUG
-  #define PrintDebug(str) PrintLine("[DEBUG] " str)
+  #define PrintDebug(str)             PrintLine("[DEBUG] " str)
+  #define PrintDebugStrNum(str, num)  PrintStrNumLine("[DEBUG] " str, num)
 #else
   #define PrintDebug(str)
+  #define PrintDebugStrNum(str, num)
 #endif
 
 void PrintBinaryULong(unsigned long n)
@@ -67,7 +71,11 @@ void PrintBinaryULong(unsigned long n)
     Print("[ERROR] " str); PrintNum(num); PrintLine(""); \
     exit(0); \
   } while (0)
-  
+
+// UNIT TESTS HELPER -------------------------------------------
+
+#define ShouldHold(description, condition) \
+  do { if (!condition) PrintLine("[SHOULD_HOLD] " description); } while(0)
 
 // C STRING FUNCTIONS ------------------------------------------
 

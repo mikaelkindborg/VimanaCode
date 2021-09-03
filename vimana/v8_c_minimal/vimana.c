@@ -45,7 +45,10 @@ int main(int numargs, char* args[])
   ListPush(list, p++);
   ListPush(list, p++);
   ListPush(list, p++);
-  ListPush(list, p++);
+  ListPush(list, p);
+  //ListSet(list, -1, p);
+  //ListGet(list, -1);
+  //ListGet(list, 100);
   PrintIntList(list);
   
   ListSwap(list);
@@ -64,6 +67,37 @@ int main(int numargs, char* args[])
   PrintIntList(list);
   
   ListFree(list);
+
+  ShouldHold("Item must be number", IsNumber(ItemWithNumber(42)));
+  ShouldHold("Item must be symbol", IsSymbol(ItemWithSymbol(42)));
+  ShouldHold("Item must be primfun", IsPrimFun(ItemWithPrimFun(42)));
+
+  VmList* funList = ListCreate(sizeof(int));
+  funList->type = TypeFun;
+  ShouldHold("Item must be pointer", IsPointer(ItemWithPointer(funList)));
+  ShouldHold("Item must be fun", IsFun(ItemWithPointer(funList)));
+  ListFree(funList);
+  
+  
+  VmInterp* interp = InterpCreate();
+  
+  VmList* codeList = ListCreate(sizeof(VmItem));
+  
+  VmItem codeItem;
+  codeItem = ItemWithNumber(42);
+  ListPush(list, &codeItem);
+  codeItem = ItemWithNumber(1);
+  ListPush(list, &codeItem);
+  codeItem = ItemWithNumber(43);
+  ListPush(list, &codeItem);
+  codeItem = ItemWithNumber(1);
+  ListPush(list, &codeItem);
+  
+  InterpRun(interp, codeList);
+  
+  ListFree(codeList);
+  
+  InterpFree(interp);
   
   PrintMemStat();
   

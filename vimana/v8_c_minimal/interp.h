@@ -45,13 +45,13 @@ VmInterp;
 #define InterpCallStackIndex(interp) \
   ((interp)->callstackIndex)
 #define InterpContext(interp) \
-  (ListGet(InterpCallStack(interp), InterpCallStackIndex(interp)))
+  ((VmContext*)ListGet(InterpCallStack(interp), InterpCallStackIndex(interp)))
 #define InterpCodeList(interp) \
   (InterpContext(interp)->codeList)
 #define InterpCodePointer(interp) \
   (InterpContext(interp)->codePointer)
 #define InterpCurrentCodeElement(interp) \
-  (ListGet(InterpCodeList(interp), InterpCodePointer(interp)))
+  ((VmItem*)ListGet(InterpCodeList(interp), InterpCodePointer(interp)))
 
 // CREATE/FREE FUNCTIONS ---------------------------------------
 
@@ -64,7 +64,7 @@ VmInterp* InterpCreate()
   return interp;
 }
 
-void InterpFree(Interp* interp)
+void InterpFree(VmInterp* interp)
 {
   // Free lists.
   ListDeallocItems(InterpGlobalVars(interp));
@@ -86,39 +86,41 @@ void InterpFree(Interp* interp)
 // DATA STACK --------------------------------------------------
 
 // Push an item onto the data stack.
-#define InterpPush(interp, context) ListPush(InterpStack(interp), context)
+#define InterpPush(interp, item) ListPush(InterpStack(interp), item)
 
 // Pop an item off the data stack.
 #define InterpPop(interp) ListPop(InterpStack(interp))
 
 // CONTEXT HANDLING --------------------------------------------
 
-void InterpInit(Interp* interp)
+void InterpInit(VmInterp* interp)
 {
   interp->run = TRUE;
-  InterpCallstackIndex(interp) = -1;
+  InterpCallStackIndex(interp) = -1;
 }
 
-void InterpPushContext(Interp* interp, VmList* codeList)
+void InterpPushContext(VmInterp* interp, VmList* codeList)
 {
-  ++ InterpCallstackIndex(interp);
+  // TODO Tailcall
+  ++ InterpCallStackIndex(interp);
   InterpCodeList(interp) = codeList;
   InterpCodePointer(interp) = -1;
 }
 
 #define InterpPopContext(interp) \
-  (-- InterpCallstackIndex(interp))
+  (-- InterpCallStackIndex(interp))
 
 // INTERPRETER LOOP --------------------------------------------
 
-void InterpRun(register Interp* interp, List* codeList)
+void InterpRun(register VmInterp* interp, VmList* codeList)
 {
-  register VmItem     element;
-  register VmItem     evalResult;
+  register VmItem* element;
+  register VmItem* evalResult;
+  register int     primFun;
 
   // Initialize interpreter state and create root context.
   InterpInit(interp);
-  InterpPushContext(codeList);
+  InterpPushContext(interp, codeList);
 
   while (interp->run)
   {
@@ -129,7 +131,7 @@ void InterpRun(register Interp* interp, List* codeList)
     // context has finished executing.
     if (InterpCodePointer(interp) >= ListLength(InterpCodeList(interp)))
     {
-      PrintDebug("EXIT CONTEXT: %i", callstackIndex);
+      PrintDebugStrNum("EXIT CONTEXT: ", InterpCallStackIndex(interp));
 
       // Pop stackframe.
       InterpPopContext(interp);
@@ -144,12 +146,14 @@ void InterpRun(register Interp* interp, List* codeList)
     // Get current element in the code list.
     element = InterpCurrentCodeElement(interp);
 
-    if (IsPrimFun(element))
+    if (IsPrimFun(*element))
     {
+      primFun = ItemPrimFun(*element);
+      PrintDebugStrNum("PrimFun: ", primFun);
       #include "primfuns.h"
       goto Next;
     }
-
+/*
     if (IsSymbol(element))
     {
       // Find symbol value in global env.
@@ -164,12 +168,12 @@ void InterpRun(register Interp* interp, List* codeList)
       }
 
       // If not a function, push the symbol value.
-      InterpPush(interp->stack, evalResult);
+      InterpPush(interp, evalResult);
       goto Next;
     }
-
+*/
     // If none of the above, push the element.
-    ListPush(interp->stack, element);
+    InterpPush(interp, element);
 Next:;
   } // while
 }

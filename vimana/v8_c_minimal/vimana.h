@@ -3,4 +3,5 @@
 #include "base.h"
 #include "item.h"
 #include "list.h"
+#include "interp.h"
 #endif
