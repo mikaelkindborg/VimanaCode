@@ -78,7 +78,6 @@ int main(int numargs, char* args[])
   ShouldHold("Item must be fun", IsFun(ItemWithPointer(funList)));
   ListFree(funList);
   
-  
   VmInterp* interp = InterpCreate();
   
   VmList* codeList = ListCreate(sizeof(VmItem));
@@ -86,11 +85,11 @@ int main(int numargs, char* args[])
   VmItem codeItem;
   codeItem = ItemWithNumber(42);
   ListPush(list, &codeItem);
-  codeItem = ItemWithNumber(1);
+  codeItem = ItemWithPrimFun(1);
   ListPush(list, &codeItem);
   codeItem = ItemWithNumber(43);
   ListPush(list, &codeItem);
-  codeItem = ItemWithNumber(1);
+  codeItem = ItemWithPrimFun(1);
   ListPush(list, &codeItem);
   
   InterpRun(interp, codeList);

@@ -102,9 +102,13 @@ void InterpInit(VmInterp* interp)
 void InterpPushContext(VmInterp* interp, VmList* codeList)
 {
   // TODO Tailcall
+  VmContext context;
+  context.codeList = codeList;
+  context.codePointer = -1;
+  ListPush(InterpCallStack(interp), &context);
   ++ InterpCallStackIndex(interp);
-  InterpCodeList(interp) = codeList;
-  InterpCodePointer(interp) = -1;
+  //InterpCodeList(interp) = codeList;
+  //InterpCodePointer(interp) = -1;
 }
 
 #define InterpPopContext(interp) \
@@ -143,8 +147,12 @@ void InterpRun(register VmInterp* interp, VmList* codeList)
       goto Next;
     }
 
+  PrintDebug("Get element");
+
     // Get current element in the code list.
     element = InterpCurrentCodeElement(interp);
+
+  PrintBinaryULong(element->value.bits);
 
     if (IsPrimFun(*element))
     {
