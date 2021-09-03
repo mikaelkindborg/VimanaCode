@@ -1,3 +1,10 @@
+/*
+File: list.h
+Author: Mikael Kindborg (mikael@kindborg.com)
+
+List object (array) used for code and stacks.
+Size of items in the list is configurable (all items must be same size).
+*/
 
 // LIST OBJECT -------------------------------------------------
 
@@ -13,19 +20,23 @@ VmList;
 // Initial list array size and how much to grow on each reallocation.
 #define ListGrowIncrement 5
 
+// ListLength --------------------------------------------------
+
+#define ListLength(list) ((list)->length)
+
 // CREATE / FREE -----------------------------------------------
 
 void ListInit(VmList* list, int itemSize)
 {
   // Set inital values.
   size_t size = ListGrowIncrement;
-  list->length = 0;
+  ListLength(list) = 0;
   list->maxLength = size;
   list->itemSize = itemSize;
 
   // Alloc list array.
   size_t arraySize = size * itemSize;
-  Item* itemArray = MemAlloc(arraySize);
+  void* itemArray = MemAlloc(arraySize);
   list->items = itemArray;
 
   // Init list array.
@@ -39,12 +50,12 @@ VmList* ListCreate(int itemSize)
   return list;
 }
 
-void ListDeallocItems(List* list)
+void ListDeallocItems(VmList* list)
 {
   MemFree(list->items);
 }
 
-void ListFree(List* list)
+void ListFree(VmList* list)
 {
   // Free item array.
   ListDeallocItems(list);
@@ -54,10 +65,6 @@ void ListFree(List* list)
 }
 
 // LIST FUNCTIONS ----------------------------------------------
-
-// ListLength --------------------------------------------------
-
-#define ListLength(list) ((list)->length)
 
 // ListGrow ----------------------------------------------------
 
@@ -72,7 +79,7 @@ void ListGrow(VmList* list, size_t newSize)
   list->maxLength = newSize;
 
   // Set new entries in the array to zero.
-  size_t prevArraySize = list->length * list->itemSize;
+  size_t prevArraySize = ListLength(list) * list->itemSize;
   size_t numNewBytes = newArraySize - prevArraySize;
   VmByte* p = newArray + prevArraySize;
   memset(p, 0, numNewBytes);
@@ -83,144 +90,143 @@ void ListGrow(VmList* list, size_t newSize)
 // ListSetFast and ListGetFast ---------------------------------
 
 #ifdef OPTIMIZE
-#define ListSetFast(list, index, item) \
-  memcpy((list)->items + (index * (list)->itemSize), item, (list)->itemSize)
+
+  #define ListSetFast(list, index, item) \
+    memcpy((list)->items + ((index) * (list)->itemSize), (item), (list)->itemSize)
+
 #else
-void ListSetFast(VmList* list, VmIndex index, void* item)
-{
-  size_t offset = index * list->itemSize;
-  VmByte* p = list->items + offset;
-  memcpy(p, item, list->itemSize); // dest, src, nbytes
-}
+
+  void ListSetFast(VmList* list, VmIndex index, void* item)
+  {
+    size_t offset = index * list->itemSize;
+    VmByte* p = list->items + offset;
+    memcpy(p, item, list->itemSize); // dest, src, nbytes
+  }
+  
 #endif
 
 #ifdef OPTIMIZE
-#define ListGetFast(list, index) \
-  ((void*) (((list)->items) + (index * (list)->itemSize)))
+
+  #define ListGetFast(list, index) \
+    ((void*) (((list)->items) + ((index) * (list)->itemSize)))
+
 #else
-void* ListGetFast(VmList* list, VmIndex index)
-{
-  size_t offset = index * list->itemSize;
-  return list->items + offset;
-}
+
+  void* ListGetFast(VmList* list, VmIndex index)
+  {
+    size_t offset = index * list->itemSize;
+    return list->items + offset;
+  }
+  
 #endif
 
 // ListSet and ListGet -----------------------------------------
 
 void ListSet(VmList* list, VmIndex index, void* item)
 {
+  PrintDebug("ListSet");
+    
+  if (index < 0)
+    ErrorExit("ListSet: Index < 0");
+    
   // Grow list if needed.
   if (index >= list->maxLength)
     ListGrow(list, index + ListGrowIncrement);
 
   // Increase length if needed.
-  if (index >= list->length) 
-    list->length = index + 1;
+  if (index >= ListLength(list)) 
+    ListLength(list) = index + 1;
   
   // Set data.
   ListSetFast(list, index, item);
 }
 
 #ifdef OPTIMIZE
-#define ListGet(list, index) \
-  ListGetFast(list, index)
+
+  #define ListGet(list, index) \
+    ListGetFast(list, index)
+  
 #else
-void* ListGet(VmList* list, VmIndex index)
-{
-  if (index >= list->length)
-    ErrorExit("ListGet: Index out of bounds: %i", index);
-  return ListGetFast(list, index);
-}
+
+  void* ListGet(VmList* list, VmIndex index)
+  {
+    if (index >= ListLength(list) || index < 0)
+      ErrorExitNum("ListGet: Index out of bounds", index);
+    return ListGetFast(list, index);
+  }
+
 #endif
 
-// ListPush and ListPop -----------------------------------------
+// ListPush and ListPop ----------------------------------------
 
-void ListPush(List* list, void* item)
+void ListPush(VmList* list, void* item)
 {
-  ListSet(list, list->length, item);
+  PrintDebug("ListPush");
+  ListSet(list, ListLength(list), item);
 }
 
-void ListPop(List* list)
+void* ListPop(VmList* list)
 {
-  if (list->length < 1)
-    ErrorExit("Cannot pop empty list");
-  return ListGetFast(list, -- list->length);
+  if (ListLength(list) < 1)
+    ErrorExit("ListPop: Cannot pop empty list");
+  return ListGetFast(list, -- ListLength(list));
 }
 
-// -------------------------------------------------------------
+// Forth Stack Operations --------------------------------------
 
-
+// ITEM DROP ->
 #ifdef OPTIMIZE
-#define ListDrop(list) \
-  do { \
-    if (list->length < 1) \
-      ErrorExit("ListDrop: Cannot drop from list of length < 0"); \
-    -- list->length; \
-  } while (0)
+
+  #define ListDrop(list) \
+    do { \
+      if (ListLength(list) < 1) \
+        ErrorExit("ListDrop: Cannot drop from list of length < 0"); \
+      -- ListLength(list); \
+    } while (0)
+  
 #else
-void ListDrop(List* list)
-{
-  if (list->length < 1)
-    ErrorExit("ListDrop: Cannot drop from list of length: %i", list->length);
-  -- list->length;
-  Item item = list->items[list->length];
-}
+
+  void ListDrop(VmList* list)
+  {
+    if (ListLength(list) < 1)
+      ErrorExit("ListDrop: Cannot drop from list of length < 0");
+    -- ListLength(list);
+  }
+
 #endif
 
-#ifdef OPTIMIZE
-#define ListDup(list, index) \
-  ListPush(list, ListGet(list, index))
-#else
-void ListDup(List* list, Index index)
+// ITEM DUP -> ITEM ITEM
+void ListDup(VmList* list)
 {
-  Item item = ListGet(list, index);
+  void* item = ListGet(list, ListLength(list) - 1);
   ListPush(list, item);
 }
-#endif
 
-#ifdef OPTIMIZE
-#define ListSwap(list) \
-  do { \
-    Index index1 = ListLength(list) - 1; \
-    Index index2 = index1 - 1; \
-    Item item1 = (list)->items[index1]; \
-    (list)->items[index1] = (list)->items[index2]; \
-    (list)->items[index2] = item1; \
-  } while (0)
-#else
-void ListSwap(List* list)
+// ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
+void List2Dup(VmList* list)
 {
-  Index index1 = ListLength(list) - 1;
-  Index index2 = ListLength(list) - 2;
-  Item item1 = list->items[index1];
-  list->items[index1] = list->items[index2];
-  list->items[index2] = item1;
+  void* item;
+  item = ListGet(list, ListLength(list) - 2);
+  ListPush(list, item);
+  item = ListGet(list, ListLength(list) - 2);
+  ListPush(list, item);
 }
-#endif
 
-#define ListItemPtr(list, index) ((list)->items + (index))
-
-#define ListPushItemPtrVal(list, itemPtr) \
-do { \
-  int length = (list)->length; \
-  if (length + 1 > (list)->maxLength) \
-    ListGrow(list, length + ListGrowIncrement); \
-  (list)->items[length] = (*(itemPtr)); \
-  (list)->length++; \
-} while (0)
-
-
-/*
-// Experimental. Useful for updating item values "in place" 
-// without having to copy and write back the item.
-#ifdef OPTIMIZE
-#define ListGetItemPtr(list, index) (&((list)->items[index]))
-#else
-Item* ListGetItemPtr(List* list, int index)
+// ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
+void ListOver(VmList* list)
 {
-  if (index >= list->length)
-    ErrorExit("ListGetItemPtr: Index out of bounds: %i\n", index);
-  return &(list->items[index]);
+  void* item = ListGet(list, ListLength(list) - 2);
+  ListPush(list, item);
 }
-#endif
-*/
+
+// ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
+void ListSwap(VmList* list)
+{
+  size_t size = list->itemSize;
+  char temp[size];
+  void* item1 = ListGet(list, ListLength(list) - 1);
+  void* item2 = ListGet(list, ListLength(list) - 2);
+  memcpy(temp, item1, size);
+  memcpy(item1, item2, size);
+  memcpy(item2, temp, size);
+}

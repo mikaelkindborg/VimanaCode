@@ -12,7 +12,7 @@ typedef struct __VmItem
 {
   union
   {
-    VmPointer  obj;
+    void*      obj;
     VmNumber   number;
     VmUNumber  bits;
   }
@@ -42,18 +42,17 @@ VmItem;
 
 // CREATE ITEMS ------------------------------------------------
 
-/*
-VmItem ItemWithList(VmList* list)
+VmItem ItemWithPointer(void* obj)
 {
   VmItem item;
-  item.value.obj = list;
+  item.value.obj = obj;
   return item;
 }
-*/
 
 VmItem ItemWithNumber(VmNumber number)
 {
-  if (((number << 3) >> 3) != number) ErrorExit("Number is too large");
+  if (((number << 3) >> 3) != number) 
+    ErrorExit("ItemWithNumber: Number is too large");
   VmItem item;
   item.value.number = (number << 3) | TypeNumber;
   return item;
@@ -61,11 +60,12 @@ VmItem ItemWithNumber(VmNumber number)
 
 VmNumber ItemNumber(VmItem item)
 {
-  if (!IsNumber(item)) ErrorExit("Not a number");
+  if (!IsNumber(item)) 
+    ErrorExit("ItemNumber: Not a number");
   return item.value.number >> 3;
 }
 
-// Uninitialized value
+// Create uninitialized value
 VmItem ItemWithVirgin()
 {
   VmItem item;
