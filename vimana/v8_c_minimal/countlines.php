@@ -9,6 +9,8 @@ $numlines =
   countlines("base.h") +
   countlines("item.h") +
   countlines("list.h") +
+  countlines("print.h") +
+  countlines("parser.h") +
   countlines("interp.h") +
   countlines("primfuns.h");
   
@@ -18,6 +20,8 @@ echo "NUMBER OF LINES: ".$numlines." lines\n";
 
 Version v8_minimal:
 210903: 662 lines (first working prototype)
+210904: 821 lines (parsning and printing)
+210904: 894 lines (added strings, this is starting to look a bit complex...)
 
 Version v7_c:
 210426: 484 lines 

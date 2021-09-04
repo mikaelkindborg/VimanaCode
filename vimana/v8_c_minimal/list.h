@@ -221,3 +221,31 @@ void ListSwap(VmList* list)
   memcpy(item1, item2, size);
   memcpy(item2, temp, size);
 }
+
+
+// Free List Deep ----------------------------------------------
+
+// Note: For lists that contain VmItem:s.
+// Does not work for circular lists!
+void ListFreeDeep(VmList* list)
+{
+  for (VmIndex i = 0; i < ListLength(list); ++i)
+  {
+    VmItem* item = ListGet(list, i);
+    if (IsList(*item))
+    {
+      ListFreeDeep(ItemObj(*item));
+    }
+    else
+    if (IsString(*item))
+    {
+      MemFree(ItemString(*item));
+    }
+  }
+
+  // Free item array.
+  ListDeallocItems(list);
+
+  // Free list object.
+  MemFree(list);
+}

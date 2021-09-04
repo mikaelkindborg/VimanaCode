@@ -34,7 +34,7 @@ typedef int              VmIndex;
 // TODO: Make function that displays the interpreter state.
 // TODO: Arduino serial print.
 
-#define Print(str)      printf(str)
+#define Print(str)      fputs(str, stdout)
 #define PrintNum(num)   printf("%ld", (long)(num))
 #define PrintChar(c)    printf("%c",  (char)(c))
 #define PrintNewLine()  printf("\n")

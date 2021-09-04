@@ -6,7 +6,8 @@ switch (primFun)
   
   case 1: // print
     item1 = InterpPop(interp);
-    PrintNum(ItemNumber(*item1)); 
+    PrintItem(item1);
+    //PrintNum(ItemNumber(*item1)); 
     PrintNewLine();
     break;
   case 2: // add

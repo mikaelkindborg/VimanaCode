@@ -97,6 +97,7 @@ void InterpInit(VmInterp* interp)
 {
   interp->run = TRUE;
   InterpCallStackIndex(interp) = -1;
+  ListLength(InterpCallStack(interp)) = 0;
 }
 
 void InterpPushContext(VmInterp* interp, VmList* codeList)
@@ -147,17 +148,15 @@ void InterpRun(register VmInterp* interp, VmList* codeList)
       goto Next;
     }
 
-  PrintDebug("Get element");
-
     // Get current element in the code list.
     element = InterpCurrentCodeElement(interp);
 
-  PrintBinaryULong(element->value.bits);
+    //PrintBinaryULong(element->value.bits);
 
     if (IsPrimFun(*element))
     {
       primFun = ItemPrimFun(*element);
-      PrintDebugStrNum("PrimFun: ", primFun);
+      //PrintDebugStrNum("PrimFun: ", primFun);
       #include "primfuns.h"
       goto Next;
     }

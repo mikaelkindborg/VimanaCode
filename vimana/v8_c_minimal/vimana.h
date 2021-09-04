@@ -3,5 +3,7 @@
 #include "base.h"
 #include "item.h"
 #include "list.h"
+#include "print.h"
+#include "parser.h"
 #include "interp.h"
 #endif

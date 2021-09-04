@@ -23,15 +23,16 @@ VmItem;
 // VIMANA TYPES ------------------------------------------------
 
 // Three low bits are used for type information.
-// Pointers have all zero values in the three low bits.
+// Object pointers have all zero values in the three low bits.
 
 #define TypeBitMask       7
-#define TypePointer       0
+#define TypeObj           0
 #define TypeNumber        1
 #define TypeSymbol        2
 #define TypePrimFun       3
+#define TypeString        4
 
-// LIST TYPES
+// OBJECT TYPES
 
 #define TypeList          1
 #define TypeFun           2
@@ -39,12 +40,15 @@ VmItem;
 // ITEM TYPE CHECKING ------------------------------------------
 
 #define IsVirgin(item)    ((item).value.bits == 0)
-#define IsPointer(item)   (((item).value.bits & TypeBitMask) == TypePointer)
+#define IsObj(item)       (((item).value.bits & TypeBitMask) == TypeObj)
 #define IsNumber(item)    (((item).value.bits & TypeBitMask) == TypeNumber)
 #define IsSymbol(item)    (((item).value.bits & TypeBitMask) == TypeSymbol)
 #define IsPrimFun(item)   (((item).value.bits & TypeBitMask) == TypePrimFun)
+#define IsString(item)    (((item).value.bits & TypeBitMask) == TypeString)
+#define IsList(item) \
+  ( (IsObj(item)) && (TypeList == ((VmList*)((item).value.obj))->type) )
 #define IsFun(item) \
-  ( (IsPointer(item)) && (TypeFun == ((VmList*)((item).value.obj))->type) )
+  ( (IsObj(item)) && (TypeFun == ((VmList*)((item).value.obj))->type) )
 
 // CREATE ITEMS ------------------------------------------------
 
@@ -56,7 +60,7 @@ VmItem ItemWithVirgin()
   return item;
 }
 
-VmItem ItemWithPointer(void* obj)
+VmItem ItemWithObj(void* obj)
 {
   VmItem item;
   item.value.obj = obj;
@@ -97,6 +101,14 @@ VmItem ItemWithPrimFun(VmNumber primFunId)
   return item;
 }
 
+// The item takes ownership of the string buffer.
+VmItem ItemWithString(char* pBuf)
+{
+  VmItem item;
+  item.value.bits = (VmUNumber)pBuf | TypeString;
+  return item;
+}
+
 // ACCESS ITEMS ------------------------------------------------
 
 VmNumber ItemNumber(VmItem item)
@@ -120,3 +132,16 @@ VmNumber ItemPrimFun(VmItem item)
   return item.value.number >> 3;
 }
 
+void* ItemObj(VmItem item)
+{
+  if (!IsObj(item)) 
+    ErrorExit("ItemObj: Not a pointer!");
+  return item.value.obj;
+}
+
+char* ItemString(VmItem item)
+{
+  if (!IsString(item)) 
+    ErrorExit("ItemString: Not a string!");
+  return (char*)((item.value.bits) & ~TypeString);
+}
