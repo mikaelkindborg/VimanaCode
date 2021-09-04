@@ -4,7 +4,7 @@
 
 // TODO: Make file with item tests.
 
-void PrintIntList(VmList* list)
+void PrintIntList(VList* list)
 {
   for (int i = 0; i < ListLength(list); ++i)
   {
@@ -20,9 +20,9 @@ int main(int numargs, char* args[])
   PrintBinaryULong(15);
   PrintBinaryULong(x);
   PrintBinaryULong(x << 3);
-  VmItem item = ItemWithNumber(x);
+  VItem item = ItemWithNumber(x);
   PrintBinaryULong(item.value.bits);
-  VmNumber num = ItemNumber(item);
+  VNumber num = ItemNumber(item);
   PrintBinaryULong(num);
   printf("Number: %ld\n", num);
 
@@ -34,9 +34,9 @@ int main(int numargs, char* args[])
   PrintBinaryULong(xx);
   printf("xx: %lu\n", xx);
   printf("xx: %ld\n", (long)xx);
-  VmItem errorTest = ItemWithNumber(xx);
+  VItem errorTest = ItemWithNumber(xx);
 
-  VmList* list = ListCreate(sizeof(int));
+  VList* list = ListCreate(sizeof(int));
   
   int numbers[] = { 1, 2, 3, 4, 5, 6 };
   int* p = numbers;
@@ -72,7 +72,7 @@ int main(int numargs, char* args[])
   ShouldHold("Item must be symbol", IsSymbol(ItemWithSymbol(42)));
   ShouldHold("Item must be primfun", IsPrimFun(ItemWithPrimFun(42)));
 
-  VmList* funList = ListCreate(sizeof(int));
+  VList* funList = ListCreate(sizeof(int));
   funList->type = TypeFun;
   ShouldHold("Item must be object", IsObj(ItemWithObj(funList)));
   ShouldHold("Item must be fun", IsFun(ItemWithObj(funList)));
@@ -80,24 +80,24 @@ int main(int numargs, char* args[])
   
   PrintLine("\nTESTING STRING ITEM\n");
   char* myString = MemAlloc(10);
-  PrintBinaryULong((VmUNumber)myString);
-  PrintBinaryULong((VmUNumber)myString | TypeString);
+  PrintBinaryULong((VUNumber)myString);
+  PrintBinaryULong((VUNumber)myString | TypeString);
   PrintBinaryULong(~TypeString);
-  PrintBinaryULong((VmUNumber)myString & ~TypeString);
+  PrintBinaryULong((VUNumber)myString & ~TypeString);
 
   strcpy(myString, "FUBAR\n");
-  VmItem stringItem = ItemWithString(myString);
+  VItem stringItem = ItemWithString(myString);
   PrintBinaryULong(item.value.bits);
   char* myString2 = ItemString(stringItem);
-  PrintBinaryULong((VmUNumber)myString2);
+  PrintBinaryULong((VUNumber)myString2);
   printf("THE STRING IS: %s\n", myString2);
   MemFree(myString2);
 
   PrintLine("\nTESTING INTERPRETER\n");
-  VmInterp* interp = InterpCreate();
+  VInterp* interp = InterpCreate();
   
-  VmList* codeList = ListCreate(sizeof(VmItem));
-  VmItem codeItem;
+  VList* codeList = ListCreate(sizeof(VItem));
+  VItem codeItem;
   codeItem = ItemWithNumber(42);
   ListPush(codeList, &codeItem);
   codeItem = ItemWithPrimFun(1);
@@ -122,7 +122,7 @@ int main(int numargs, char* args[])
 
   ListFreeDeep(codeList);
   
-  VmList* codeList2 = ParseCode("N8888881 P1 N33 N33 P2 P1 (S1 S2) P1 ('FOO HEJ HOPP') P1");
+  VList* codeList2 = ParseCode("N8888881 P1 N33 N33 P2 P1 (S1 S2) P1 ('FOO HEJ HOPP') P1");
 
   PrintList(codeList2);
   PrintNewLine();

@@ -7,7 +7,7 @@ Parser for symbolic code.
 TODO: Add some form of syntax error checking.
 */
 
-char* ParseNumber(char* p, VmNumber* result)
+char* ParseNumber(char* p, VNumber* result)
 {
   char* pstart = p;
   while (isdigit(*p)) ++ p;
@@ -40,7 +40,7 @@ char* ParseString(char* p, char** pBuf)
   return p + 1;
 }
 
-VmBool IsWhiteSpace(char c)
+VBool IsWhiteSpace(char c)
 {
   return (' ' == c || '\t' == c || '\n' == c || '\r' == c);
 }
@@ -49,11 +49,11 @@ VmBool IsWhiteSpace(char c)
 // p is the current position in the string.
 // Returns the new current position. 
 // Parse result is in codeList.
-char* ParserWorker(char* p, VmList* codeList)
+char* ParserWorker(char* p, VList* codeList)
 {
-  VmItem    item;
-  VmNumber  number;
-  VmList*   childList;
+  VItem    item;
+  VNumber  number;
+  VList*   childList;
   char      c;
   char*     pBuf;
   
@@ -66,7 +66,7 @@ char* ParserWorker(char* p, VmList* codeList)
     else
     if ('(' == *p)
     {
-      childList = ListCreate(sizeof(VmItem));
+      childList = ListCreate(sizeof(VItem));
       p = ParserWorker(p + 1, childList);
       item = ItemWithObj(childList);
       ListPush(codeList, &item);
@@ -104,11 +104,11 @@ char* ParserWorker(char* p, VmList* codeList)
 
 // Returned list contains the parsed code. 
 // This list must be deallocated along with its children.
-VmList* ParseCode(char* p)
+VList* ParseCode(char* p)
 {
   char* buf = MemAlloc(strlen(p + 1));
   strcpy(buf, p);
-  VmList* codeList = ListCreate(sizeof(VmItem));
+  VList* codeList = ListCreate(sizeof(VItem));
   ParserWorker(buf, codeList);
   MemFree(buf);
   return codeList;

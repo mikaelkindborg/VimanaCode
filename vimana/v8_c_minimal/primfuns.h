@@ -1,8 +1,8 @@
 
 switch (primFun)
 {
-  VmItem* item1;
-  VmItem* item2;
+  VItem* item1;
+  VItem* item2;
   
   case 1: // print
     item1 = InterpPop(interp);

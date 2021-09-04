@@ -18,11 +18,11 @@ Basic data types and functions.
 
 // BASIC TYPES -------------------------------------------------
 
-typedef unsigned char    VmByte;
-typedef long             VmNumber;
-typedef unsigned long    VmUNumber;
-typedef int              VmBool;
-typedef int              VmIndex;
+typedef unsigned char    VByte;
+typedef long             VNumber;
+typedef unsigned long    VUNumber;
+typedef int              VBool;
+typedef int              VIndex;
 
 // BOOLEAN VALUES ----------------------------------------------
 

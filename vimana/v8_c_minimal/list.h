@@ -8,15 +8,15 @@ Size of items in the list is configurable (all items must be same size).
 
 // LIST OBJECT -------------------------------------------------
 
-typedef struct __VmList
+typedef struct __VList
 {
   int        type;         // List type
   int        length;       // Current number of items
   int        maxLength;    // Max number of items
   int        itemSize;     // Size of a list item
-  VmByte*    items;        // Array of items
+  VByte*    items;        // Array of items
 }
-VmList;
+VList;
 
 // Initial list array size and how much to grow on each reallocation.
 #define ListGrowIncrement 5
@@ -27,7 +27,7 @@ VmList;
 
 // CREATE / FREE -----------------------------------------------
 
-void ListInit(VmList* list, int itemSize)
+void ListInit(VList* list, int itemSize)
 {
   list->type = TypeList;
   
@@ -46,19 +46,19 @@ void ListInit(VmList* list, int itemSize)
   memset(itemArray, 0, arraySize);
 }
 
-VmList* ListCreate(int itemSize)
+VList* ListCreate(int itemSize)
 {
-  VmList* list = MemAlloc(sizeof(VmList));
+  VList* list = MemAlloc(sizeof(VList));
   ListInit(list, itemSize);
   return list;
 }
 
-void ListDeallocItems(VmList* list)
+void ListDeallocItems(VList* list)
 {
   MemFree(list->items);
 }
 
-void ListFree(VmList* list)
+void ListFree(VList* list)
 {
   // Free item array.
   ListDeallocItems(list);
@@ -71,11 +71,11 @@ void ListFree(VmList* list)
 
 // ListGrow ----------------------------------------------------
 
-void ListGrow(VmList* list, size_t newSize)
+void ListGrow(VList* list, size_t newSize)
 {
   // Make space for more items.
   size_t newArraySize = newSize * list->itemSize;
-  VmByte* newArray = realloc(list->items, newArraySize);
+  VByte* newArray = realloc(list->items, newArraySize);
   if (NULL == newArray)
     ErrorExit("ListGrow: Out of memory");
   list->items = newArray;
@@ -84,7 +84,7 @@ void ListGrow(VmList* list, size_t newSize)
   // Set new entries in the array to zero.
   size_t prevArraySize = ListLength(list) * list->itemSize;
   size_t numNewBytes = newArraySize - prevArraySize;
-  VmByte* p = newArray + prevArraySize;
+  VByte* p = newArray + prevArraySize;
   memset(p, 0, numNewBytes);
 
   PrintDebug("REALLOC successful in ListGrow");
@@ -99,10 +99,10 @@ void ListGrow(VmList* list, size_t newSize)
 
 #else
 
-  void ListSetFast(VmList* list, VmIndex index, void* item)
+  void ListSetFast(VList* list, VIndex index, void* item)
   {
     size_t offset = index * list->itemSize;
-    VmByte* p = list->items + offset;
+    VByte* p = list->items + offset;
     memcpy(p, item, list->itemSize); // dest, src, nbytes
   }
   
@@ -115,7 +115,7 @@ void ListGrow(VmList* list, size_t newSize)
 
 #else
 
-  void* ListGetFast(VmList* list, VmIndex index)
+  void* ListGetFast(VList* list, VIndex index)
   {
     size_t offset = index * list->itemSize;
     return list->items + offset;
@@ -125,7 +125,7 @@ void ListGrow(VmList* list, size_t newSize)
 
 // ListSet and ListGet -----------------------------------------
 
-void ListSet(VmList* list, VmIndex index, void* item)
+void ListSet(VList* list, VIndex index, void* item)
 {
   if (index < 0)
     ErrorExit("ListSet: Index < 0");
@@ -142,7 +142,7 @@ void ListSet(VmList* list, VmIndex index, void* item)
   ListSetFast(list, index, item);
 }
 
-void* ListGet(VmList* list, VmIndex index)
+void* ListGet(VList* list, VIndex index)
 {
   if (index >= ListLength(list) || index < 0)
     ErrorExitNum("ListGet: Index out of bounds: ", index);
@@ -151,12 +151,12 @@ void* ListGet(VmList* list, VmIndex index)
 
 // ListPush and ListPop ----------------------------------------
 
-void ListPush(VmList* list, void* item)
+void ListPush(VList* list, void* item)
 {
   ListSet(list, ListLength(list), item);
 }
 
-void* ListPop(VmList* list)
+void* ListPop(VList* list)
 {
   if (ListLength(list) < 1)
     ErrorExit("ListPop: Cannot pop empty list");
@@ -177,7 +177,7 @@ void* ListPop(VmList* list)
   
 #else
 
-  void ListDrop(VmList* list)
+  void ListDrop(VList* list)
   {
     if (ListLength(list) < 1)
       ErrorExit("ListDrop: Cannot drop from list of length < 0");
@@ -187,14 +187,14 @@ void* ListPop(VmList* list)
 #endif
 
 // ITEM DUP -> ITEM ITEM
-void ListDup(VmList* list)
+void ListDup(VList* list)
 {
   void* item = ListGet(list, ListLength(list) - 1);
   ListPush(list, item);
 }
 
 // ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
-void List2Dup(VmList* list)
+void List2Dup(VList* list)
 {
   void* item;
   item = ListGet(list, ListLength(list) - 2);
@@ -204,14 +204,14 @@ void List2Dup(VmList* list)
 }
 
 // ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
-void ListOver(VmList* list)
+void ListOver(VList* list)
 {
   void* item = ListGet(list, ListLength(list) - 2);
   ListPush(list, item);
 }
 
 // ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
-void ListSwap(VmList* list)
+void ListSwap(VList* list)
 {
   size_t size = list->itemSize;
   char temp[size];
@@ -225,13 +225,13 @@ void ListSwap(VmList* list)
 
 // Free List Deep ----------------------------------------------
 
-// Note: For lists that contain VmItem:s.
+// Note: For lists that contain VItem:s.
 // Does not work for circular lists!
-void ListFreeDeep(VmList* list)
+void ListFreeDeep(VList* list)
 {
-  for (VmIndex i = 0; i < ListLength(list); ++i)
+  for (VIndex i = 0; i < ListLength(list); ++i)
   {
-    VmItem* item = ListGet(list, i);
+    VItem* item = ListGet(list, i);
     if (IsList(*item))
     {
       ListFreeDeep(ItemObj(*item));

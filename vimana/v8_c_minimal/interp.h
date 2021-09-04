@@ -5,12 +5,12 @@
 
 // A context is a stackframe on the callstack.
 // It is used to track code execution.
-typedef struct __VmContext
+typedef struct __VContext
 {
-  VmList* codeList;
-  VmIndex codePointer;
+  VList* codeList;
+  VIndex codePointer;
 }
-VmContext;
+VContext;
 
 // INTERPRETER -------------------------------------------------
 
@@ -24,15 +24,15 @@ VmContext;
 // by index can be used for global vars. This scheme is intended
 // as a simplistic and straightforward implementation.
 
-typedef struct __VmInterp
+typedef struct __VInterp
 {
-  VmList     globalVars;        // List of global variable values
-  VmList     stack;             // The data stack
-  VmList     callstack;         // Callstack with context frames
-  VmIndex    callstackIndex;    // Index of current frame
-  VmBool     run;               // Run flag
+  VList     globalVars;        // List of global variable values
+  VList     stack;             // The data stack
+  VList     callstack;         // Callstack with context frames
+  VIndex    callstackIndex;    // Index of current frame
+  VBool     run;               // Run flag
 }
-VmInterp;
+VInterp;
 
 // ACCESSORS ---------------------------------------------------
 
@@ -45,26 +45,26 @@ VmInterp;
 #define InterpCallStackIndex(interp) \
   ((interp)->callstackIndex)
 #define InterpContext(interp) \
-  ((VmContext*)ListGet(InterpCallStack(interp), InterpCallStackIndex(interp)))
+  ((VContext*)ListGet(InterpCallStack(interp), InterpCallStackIndex(interp)))
 #define InterpCodeList(interp) \
   (InterpContext(interp)->codeList)
 #define InterpCodePointer(interp) \
   (InterpContext(interp)->codePointer)
 #define InterpCurrentCodeElement(interp) \
-  ((VmItem*)ListGet(InterpCodeList(interp), InterpCodePointer(interp)))
+  ((VItem*)ListGet(InterpCodeList(interp), InterpCodePointer(interp)))
 
 // CREATE/FREE FUNCTIONS ---------------------------------------
 
-VmInterp* InterpCreate()
+VInterp* InterpCreate()
 {
-  VmInterp* interp = MemAlloc(sizeof(VmInterp));
-  ListInit(InterpGlobalVars(interp), sizeof(VmItem));
-  ListInit(InterpStack(interp), sizeof(VmItem));
-  ListInit(InterpCallStack(interp), sizeof(VmContext));
+  VInterp* interp = MemAlloc(sizeof(VInterp));
+  ListInit(InterpGlobalVars(interp), sizeof(VItem));
+  ListInit(InterpStack(interp), sizeof(VItem));
+  ListInit(InterpCallStack(interp), sizeof(VContext));
   return interp;
 }
 
-void InterpFree(VmInterp* interp)
+void InterpFree(VInterp* interp)
 {
   // Free lists.
   ListDeallocItems(InterpGlobalVars(interp));
@@ -93,17 +93,17 @@ void InterpFree(VmInterp* interp)
 
 // CONTEXT HANDLING --------------------------------------------
 
-void InterpInit(VmInterp* interp)
+void InterpInit(VInterp* interp)
 {
   interp->run = TRUE;
   InterpCallStackIndex(interp) = -1;
   ListLength(InterpCallStack(interp)) = 0;
 }
 
-void InterpPushContext(VmInterp* interp, VmList* codeList)
+void InterpPushContext(VInterp* interp, VList* codeList)
 {
   // TODO Tailcall
-  VmContext context;
+  VContext context;
   context.codeList = codeList;
   context.codePointer = -1;
   ListPush(InterpCallStack(interp), &context);
@@ -117,10 +117,10 @@ void InterpPushContext(VmInterp* interp, VmList* codeList)
 
 // INTERPRETER LOOP --------------------------------------------
 
-void InterpRun(register VmInterp* interp, VmList* codeList)
+void InterpRun(register VInterp* interp, VList* codeList)
 {
-  register VmItem* element;
-  register VmItem* evalResult;
+  register VItem* element;
+  register VItem* evalResult;
   register int     primFun;
 
   // Initialize interpreter state and create root context.
@@ -170,7 +170,7 @@ void InterpRun(register VmInterp* interp, VmList* codeList)
       // If it is a function, call it.
       if (IsFun(evalResult))
       {
-        InterpPushContext(interp, (VmList*) symbolValue.value.obj);
+        InterpPushContext(interp, (VList*) symbolValue.value.obj);
         goto Next;
       }
 

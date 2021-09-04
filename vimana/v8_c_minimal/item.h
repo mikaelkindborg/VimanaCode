@@ -8,17 +8,17 @@ Items are objects that hold values. They are used in lists and on the data stack
 // STRUCTS -----------------------------------------------------
 
 // Data item used in lists
-typedef struct __VmItem
+typedef struct __VItem
 {
   union
   {
     void*      obj;
-    VmNumber   number;
-    VmUNumber  bits;
+    VNumber   number;
+    VUNumber  bits;
   }
   value;
 }
-VmItem;
+VItem;
 
 // VIMANA TYPES ------------------------------------------------
 
@@ -46,100 +46,100 @@ VmItem;
 #define IsPrimFun(item)   (((item).value.bits & TypeBitMask) == TypePrimFun)
 #define IsString(item)    (((item).value.bits & TypeBitMask) == TypeString)
 #define IsList(item) \
-  ( (IsObj(item)) && (TypeList == ((VmList*)((item).value.obj))->type) )
+  ( (IsObj(item)) && (TypeList == ((VList*)((item).value.obj))->type) )
 #define IsFun(item) \
-  ( (IsObj(item)) && (TypeFun == ((VmList*)((item).value.obj))->type) )
+  ( (IsObj(item)) && (TypeFun == ((VList*)((item).value.obj))->type) )
 
 // CREATE ITEMS ------------------------------------------------
 
 // Create uninitialized value
-VmItem ItemWithVirgin()
+VItem ItemWithVirgin()
 {
-  VmItem item;
+  VItem item;
   item.value.bits = 0;
   return item;
 }
 
-VmItem ItemWithObj(void* obj)
+VItem ItemWithObj(void* obj)
 {
-  VmItem item;
+  VItem item;
   item.value.obj = obj;
   return item;
 }
 
-VmItem ItemWithNumber(VmNumber number)
+VItem ItemWithNumber(VNumber number)
 {
   if (((number << 3) >> 3) != number) 
     ErrorExit("ItemWithNumber: Number is too large");
-  VmItem item;
+  VItem item;
   item.value.number = (number << 3) | TypeNumber;
   return item;
 }
 
-void ItemSetNumber(VmItem* item, VmNumber number)
+void ItemSetNumber(VItem* item, VNumber number)
 {
   if (((number << 3) >> 3) != number) 
     ErrorExit("ItemWithNumber: Number is too large");
   item->value.number = (number << 3) | TypeNumber;
 }
 
-VmItem ItemWithSymbol(VmNumber symbolId)
+VItem ItemWithSymbol(VNumber symbolId)
 {
   if (((symbolId << 3) >> 3) != symbolId) 
     ErrorExit("ItemWithSymbol: Symbol id is too large");
-  VmItem item;
+  VItem item;
   item.value.number = (symbolId << 3) | TypeSymbol;
   return item;
 }
 
-VmItem ItemWithPrimFun(VmNumber primFunId)
+VItem ItemWithPrimFun(VNumber primFunId)
 {
   if (((primFunId << 3) >> 3) != primFunId) 
     ErrorExit("ItemWithPrimFun: Primfun id is too large");
-  VmItem item;
+  VItem item;
   item.value.number = (primFunId << 3) | TypePrimFun;
   return item;
 }
 
 // The item takes ownership of the string buffer.
-VmItem ItemWithString(char* pBuf)
+VItem ItemWithString(char* pBuf)
 {
-  VmItem item;
-  item.value.bits = (VmUNumber)pBuf | TypeString;
+  VItem item;
+  item.value.bits = (VUNumber)pBuf | TypeString;
   return item;
 }
 
 // ACCESS ITEMS ------------------------------------------------
 
-VmNumber ItemNumber(VmItem item)
+VNumber ItemNumber(VItem item)
 {
   if (!IsNumber(item)) 
     ErrorExit("ItemNumber: Not a number");
   return item.value.number >> 3;
 }
 
-VmNumber ItemSymbol(VmItem item)
+VNumber ItemSymbol(VItem item)
 {
   if (!IsSymbol(item)) 
     ErrorExit("ItemSymbol: Not a symbol");
   return item.value.number >> 3;
 }
 
-VmNumber ItemPrimFun(VmItem item)
+VNumber ItemPrimFun(VItem item)
 {
   if (!IsPrimFun(item)) 
     ErrorExit("ItemPrimFun: Not a primfun");
   return item.value.number >> 3;
 }
 
-void* ItemObj(VmItem item)
+void* ItemObj(VItem item)
 {
   if (!IsObj(item)) 
     ErrorExit("ItemObj: Not a pointer!");
   return item.value.obj;
 }
 
-char* ItemString(VmItem item)
+char* ItemString(VItem item)
 {
   if (!IsString(item)) 
     ErrorExit("ItemString: Not a string!");

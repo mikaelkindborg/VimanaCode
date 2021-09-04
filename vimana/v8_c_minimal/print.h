@@ -5,21 +5,21 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Print items.
 */
 
-void PrintItem(VmItem* item);
+void PrintItem(VItem* item);
 
-void PrintList(VmList* list)
+void PrintList(VList* list)
 {
   Print("(");
-  for (VmIndex i = 0; i < ListLength(list); ++i)
+  for (VIndex i = 0; i < ListLength(list); ++i)
   {
-    VmItem* item = ListGet(list, i);
+    VItem* item = ListGet(list, i);
     PrintItem(item);
     if (i < ListLength(list) - 1) Print(" ");
   }
   Print(")");
 }
 
-void PrintItem(VmItem* item)
+void PrintItem(VItem* item)
 {
   if (IsNumber(*item))
   {
