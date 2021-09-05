@@ -1,3 +1,9 @@
+/*
+File: interp.h
+Author: Mikael Kindborg (mikael@kindborg.com)
+
+Interpreter core.
+*/
 
 // DECLARATIONS ------------------------------------------------
 
@@ -119,9 +125,9 @@ void InterpPushContext(VInterp* interp, VList* codeList)
 
 void InterpRun(register VInterp* interp, VList* codeList)
 {
-  register VItem* element;
-  register VItem* evalResult;
-  register int     primFun;
+  register VItem*  element;
+  register VItem*  evalResult;
+  register VIndex  primFun;
 
   // Initialize interpreter state and create root context.
   InterpInit(interp);
@@ -153,9 +159,9 @@ void InterpRun(register VInterp* interp, VList* codeList)
 
     //PrintBinaryULong(element->value.bits);
 
-    if (IsPrimFun(*element))
+    if (IsPrimFun(element))
     {
-      primFun = ItemPrimFun(*element);
+      primFun = ItemPrimFun(element);
       //PrintDebugStrNum("PrimFun: ", primFun);
       #include "primfuns.h"
       goto Next;

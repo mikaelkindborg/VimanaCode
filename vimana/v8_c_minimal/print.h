@@ -21,30 +21,30 @@ void PrintList(VList* list)
 
 void PrintItem(VItem* item)
 {
-  if (IsNumber(*item))
+  if (IsNumber(item))
   {
-    PrintNum(ItemNumber(*item));
+    PrintNum(ItemNumber(item));
   }
   else
-  if (IsPrimFun(*item))
+  if (IsPrimFun(item))
   {
     Print("P");
-    PrintNum(ItemPrimFun(*item));
+    PrintNum(ItemPrimFun(item));
   }
   else
-  if (IsSymbol(*item))
+  if (IsSymbol(item))
   {
     Print("S");
-    PrintNum(ItemSymbol(*item));
+    PrintNum(ItemSymbol(item));
   }
   else
-  if (IsList(*item))
+  if (IsList(item))
   {
-    PrintList(ItemObj(*item));
+    PrintList(ItemObj(item));
   }
   else
-  if (IsString(*item))
+  if (IsString(item))
   {
-    Print(ItemString(*item));
+    Print(ItemString(item));
   }
 }

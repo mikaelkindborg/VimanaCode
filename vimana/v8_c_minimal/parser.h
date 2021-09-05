@@ -51,11 +51,11 @@ VBool IsWhiteSpace(char c)
 // Parse result is in codeList.
 char* ParserWorker(char* p, VList* codeList)
 {
-  VItem    item;
-  VNumber  number;
+  VItem*   item;
   VList*   childList;
-  char      c;
-  char*     pBuf;
+  VNumber  number;
+  char     c;
+  char*    pBuf;
   
   while ('\0' != *p)
   {
@@ -68,8 +68,8 @@ char* ParserWorker(char* p, VList* codeList)
     {
       childList = ListCreate(sizeof(VItem));
       p = ParserWorker(p + 1, childList);
-      item = ItemWithObj(childList);
-      ListPush(codeList, &item);
+      item = ListPushNewItem(codeList);
+      ItemSetObj(item, childList);
     }
     else
     if (')' == *p)
@@ -80,22 +80,24 @@ char* ParserWorker(char* p, VList* codeList)
     if ('\'' == *p)
     {
       p = ParseString(p + 1, &pBuf);
-      item = ItemWithString(pBuf);
-      ListPush(codeList, &item);
+      item = ListPushNewItem(codeList);
+      ItemSetString(item, pBuf);
     }
     else
     {
       c = *p;
       p = ParseNumber(p + 1, &number);
+      item = ListPushNewItem(codeList);
       if ('N' == c)
-        item = ItemWithNumber(number);
+        ItemSetNumber(item, number);
       else
       if ('P' == c)
-        item = ItemWithPrimFun(number);
+        ItemSetPrimFun(item, number);
       else
       if ('S' == c)
-        item = ItemWithSymbol(number);
-      ListPush(codeList, &item);
+        ItemSetSymbol(item, number);
+      else
+        ItemSetVirgin(item);
     }
   }
 

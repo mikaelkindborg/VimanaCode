@@ -39,109 +39,91 @@ VItem;
 
 // ITEM TYPE CHECKING ------------------------------------------
 
-#define IsVirgin(item)    ((item).value.bits == 0)
-#define IsObj(item)       (((item).value.bits & TypeBitMask) == TypeObj)
-#define IsNumber(item)    (((item).value.bits & TypeBitMask) == TypeNumber)
-#define IsSymbol(item)    (((item).value.bits & TypeBitMask) == TypeSymbol)
-#define IsPrimFun(item)   (((item).value.bits & TypeBitMask) == TypePrimFun)
-#define IsString(item)    (((item).value.bits & TypeBitMask) == TypeString)
+#define IsVirgin(item)    ((item)->value.bits == 0)
+#define IsObj(item)       (((item)->value.bits & TypeBitMask) == TypeObj)
+#define IsNumber(item)    (((item)->value.bits & TypeBitMask) == TypeNumber)
+#define IsSymbol(item)    (((item)->value.bits & TypeBitMask) == TypeSymbol)
+#define IsPrimFun(item)   (((item)->value.bits & TypeBitMask) == TypePrimFun)
+#define IsString(item)    (((item)->value.bits & TypeBitMask) == TypeString)
 #define IsList(item) \
-  ( (IsObj(item)) && (TypeList == ((VList*)((item).value.obj))->type) )
+  ( (IsObj(item)) && (TypeList == ((VList*)((item)->value.obj))->type) )
 #define IsFun(item) \
-  ( (IsObj(item)) && (TypeFun == ((VList*)((item).value.obj))->type) )
+  ( (IsObj(item)) && (TypeFun == ((VList*)((item)->value.obj))->type) )
 
-// CREATE ITEMS ------------------------------------------------
+// SET ITEMS ------------------------------------------------
 
 // Create uninitialized value
-VItem ItemWithVirgin()
+void ItemSetVirgin(VItem* item)
 {
-  VItem item;
-  item.value.bits = 0;
-  return item;
+  item->value.bits = 0;
 }
 
-VItem ItemWithObj(void* obj)
+// The item takes ownership of the object.
+void ItemSetObj(VItem* item, void* obj)
 {
-  VItem item;
-  item.value.obj = obj;
-  return item;
-}
-
-VItem ItemWithNumber(VNumber number)
-{
-  if (((number << 3) >> 3) != number) 
-    ErrorExit("ItemWithNumber: Number is too large");
-  VItem item;
-  item.value.number = (number << 3) | TypeNumber;
-  return item;
+  item->value.obj = obj;
 }
 
 void ItemSetNumber(VItem* item, VNumber number)
 {
   if (((number << 3) >> 3) != number) 
-    ErrorExit("ItemWithNumber: Number is too large");
+    ErrorExit("ItemSetNumber: Number is too large");
   item->value.number = (number << 3) | TypeNumber;
 }
 
-VItem ItemWithSymbol(VNumber symbolId)
+void ItemSetSymbol(VItem* item, VNumber symbolId)
 {
   if (((symbolId << 3) >> 3) != symbolId) 
-    ErrorExit("ItemWithSymbol: Symbol id is too large");
-  VItem item;
-  item.value.number = (symbolId << 3) | TypeSymbol;
-  return item;
+    ErrorExit("ItemSetSymbol: Symbol id is too large");
+  item->value.number = (symbolId << 3) | TypeSymbol;
 }
 
-VItem ItemWithPrimFun(VNumber primFunId)
+void ItemSetPrimFun(VItem* item, VNumber primFunId)
 {
   if (((primFunId << 3) >> 3) != primFunId) 
-    ErrorExit("ItemWithPrimFun: Primfun id is too large");
-  VItem item;
-  item.value.number = (primFunId << 3) | TypePrimFun;
-  return item;
+    ErrorExit("ItemSetPrimFun: Primfun id is too large");
+  item->value.number = (primFunId << 3) | TypePrimFun;
 }
 
 // The item takes ownership of the string buffer.
-VItem ItemWithString(char* pBuf)
+void ItemSetString(VItem* item, char* pBuf)
 {
-  VItem item;
-  item.value.bits = (VUNumber)pBuf | TypeString;
-  return item;
+  item->value.bits = (VUNumber)pBuf | TypeString;
 }
 
 // ACCESS ITEMS ------------------------------------------------
 
-VNumber ItemNumber(VItem item)
+VNumber ItemNumber(VItem* item)
 {
   if (!IsNumber(item)) 
-    ErrorExit("ItemNumber: Not a number");
-  return item.value.number >> 3;
+    ErrorExit("ItemNumber: Not a number!");
+  return item->value.number >> 3;
 }
 
-VNumber ItemSymbol(VItem item)
+VNumber ItemSymbol(VItem* item)
 {
   if (!IsSymbol(item)) 
-    ErrorExit("ItemSymbol: Not a symbol");
-  return item.value.number >> 3;
+    ErrorExit("ItemSymbol: Not a symbol!");
+  return item->value.number >> 3;
 }
 
-VNumber ItemPrimFun(VItem item)
+VNumber ItemPrimFun(VItem* item)
 {
   if (!IsPrimFun(item)) 
-    ErrorExit("ItemPrimFun: Not a primfun");
-  return item.value.number >> 3;
+    ErrorExit("ItemPrimFun: Not a primfun!");
+  return item->value.number >> 3;
 }
 
-void* ItemObj(VItem item)
+void* ItemObj(VItem* item)
 {
   if (!IsObj(item)) 
     ErrorExit("ItemObj: Not a pointer!");
-  return item.value.obj;
+  return item->value.obj;
 }
 
-char* ItemString(VItem item)
+char* ItemString(VItem* item)
 {
   if (!IsString(item)) 
     ErrorExit("ItemString: Not a string!");
-  return (char*)((item.value.bits) & ~TypeString);
+  return (char*)((item->value.bits) & ~TypeString);
 }

@@ -20,9 +20,11 @@ int main(int numargs, char* args[])
   PrintBinaryULong(15);
   PrintBinaryULong(x);
   PrintBinaryULong(x << 3);
-  VItem item = ItemWithNumber(x);
-  PrintBinaryULong(item.value.bits);
-  VNumber num = ItemNumber(item);
+
+  VItem numberItem;
+  ItemSetNumber(&numberItem, x);
+  PrintBinaryULong(numberItem.value.bits);
+  VNumber num = ItemNumber(&numberItem);
   PrintBinaryULong(num);
   printf("Number: %ld\n", num);
 
@@ -34,7 +36,8 @@ int main(int numargs, char* args[])
   PrintBinaryULong(xx);
   printf("xx: %lu\n", xx);
   printf("xx: %ld\n", (long)xx);
-  VItem errorTest = ItemWithNumber(xx);
+  VItem errorTest;
+  ItemSetNumber(&errorTest, xx); // Uncomment/comment above to trigger error
 
   VList* list = ListCreate(sizeof(int));
   
@@ -68,14 +71,19 @@ int main(int numargs, char* args[])
   
   ListFree(list);
 
-  ShouldHold("Item must be number", IsNumber(ItemWithNumber(42)));
-  ShouldHold("Item must be symbol", IsSymbol(ItemWithSymbol(42)));
-  ShouldHold("Item must be primfun", IsPrimFun(ItemWithPrimFun(42)));
+  VItem testItem;
+  ItemSetNumber(&testItem, 42);
+  ShouldHold("Item must be number", IsNumber(&testItem));
+  ItemSetSymbol(&testItem, 42);
+  ShouldHold("Item must be symbol", IsSymbol(&testItem));
+  ItemSetPrimFun(&testItem, 42);
+  ShouldHold("Item must be primfun", IsPrimFun(&testItem));
 
   VList* funList = ListCreate(sizeof(int));
   funList->type = TypeFun;
-  ShouldHold("Item must be object", IsObj(ItemWithObj(funList)));
-  ShouldHold("Item must be fun", IsFun(ItemWithObj(funList)));
+  ItemSetObj(&testItem, funList);
+  ShouldHold("Item must be object", IsObj(&testItem));
+  ShouldHold("Item must be fun", IsFun(&testItem));
   ListFree(funList);
   
   PrintLine("\nTESTING STRING ITEM\n");
@@ -86,9 +94,10 @@ int main(int numargs, char* args[])
   PrintBinaryULong((VUNumber)myString & ~TypeString);
 
   strcpy(myString, "FUBAR\n");
-  VItem stringItem = ItemWithString(myString);
-  PrintBinaryULong(item.value.bits);
-  char* myString2 = ItemString(stringItem);
+  VItem stringItem;
+  ItemSetString(&stringItem, myString);
+  PrintBinaryULong(stringItem.value.bits);
+  char* myString2 = ItemString(&stringItem);
   PrintBinaryULong((VUNumber)myString2);
   printf("THE STRING IS: %s\n", myString2);
   MemFree(myString2);
@@ -97,24 +106,25 @@ int main(int numargs, char* args[])
   VInterp* interp = InterpCreate();
   
   VList* codeList = ListCreate(sizeof(VItem));
-  VItem codeItem;
-  codeItem = ItemWithNumber(42);
-  ListPush(codeList, &codeItem);
-  codeItem = ItemWithPrimFun(1);
-  ListPush(codeList, &codeItem);
-  codeItem = ItemWithNumber(43);
-  ListPush(codeList, &codeItem);
-  codeItem = ItemWithPrimFun(1);
-  ListPush(codeList, &codeItem);
+  VItem* codeItem;
 
-  codeItem = ItemWithNumber(1);
-  ListPush(codeList, &codeItem);
-  codeItem = ItemWithNumber(2);
-  ListPush(codeList, &codeItem);
-  codeItem = ItemWithPrimFun(2);
-  ListPush(codeList, &codeItem);
-  codeItem = ItemWithPrimFun(1);
-  ListPush(codeList, &codeItem);
+  codeItem = ListPushNewItem(codeList);
+  ItemSetNumber(codeItem, 42);
+  codeItem = ListPushNewItem(codeList);
+  ItemSetPrimFun(codeItem, 1);
+  codeItem = ListPushNewItem(codeList);
+  ItemSetNumber(codeItem, 43);
+  codeItem = ListPushNewItem(codeList);
+  ItemSetPrimFun(codeItem, 1);
+
+  codeItem = ListPushNewItem(codeList);
+  ItemSetNumber(codeItem, 1);
+  codeItem = ListPushNewItem(codeList);
+  ItemSetNumber(codeItem, 2);
+  codeItem = ListPushNewItem(codeList);
+  ItemSetPrimFun(codeItem, 2);
+  codeItem = ListPushNewItem(codeList);
+  ItemSetPrimFun(codeItem, 1);
   
   InterpRun(interp, codeList);
 

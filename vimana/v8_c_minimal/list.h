@@ -89,67 +89,42 @@ void ListGrow(VList* list, size_t newSize)
 
   PrintDebug("REALLOC successful in ListGrow");
 }
+// Get and Set -------------------------------------------------
 
-// ListSetFast and ListGetFast ---------------------------------
+#define ListItemPtr(list, index) \
+  ( ((VByte*)((list)->items)) + ((index) * (list)->itemSize) )
 
-#ifdef OPTIMIZE
+#define ListSetRaw(list, index, item) \
+  memcpy(ListItemPtr(list, index), item, (list)->itemSize)
 
-  #define ListSetFast(list, index, item) \
-    memcpy((list)->items + ((index) * (list)->itemSize), (item), (list)->itemSize)
-
-#else
-
-  void ListSetFast(VList* list, VIndex index, void* item)
-  {
-    size_t offset = index * list->itemSize;
-    VByte* p = list->items + offset;
-    memcpy(p, item, list->itemSize); // dest, src, nbytes
-  }
-  
-#endif
-
-#ifdef OPTIMIZE
-
-  #define ListGetFast(list, index) \
-    ((void*) (((list)->items) + ((index) * (list)->itemSize)))
-
-#else
-
-  void* ListGetFast(VList* list, VIndex index)
-  {
-    size_t offset = index * list->itemSize;
-    return list->items + offset;
-  }
-  
-#endif
-
-// ListSet and ListGet -----------------------------------------
-
-void ListSet(VList* list, VIndex index, void* item)
+void ListEnsureSize(VList* list, VIndex index)
 {
   if (index < 0)
-    ErrorExit("ListSet: Index < 0");
+    ErrorExit("ListEnsureSize: Index < 0");
     
   // Grow list if needed.
   if (index >= list->maxLength)
     ListGrow(list, index + ListGrowIncrement);
 
-  // Increase length if needed.
+  // Increase list length if needed.
   if (index >= ListLength(list)) 
     ListLength(list) = index + 1;
-  
-  // Set data.
-  ListSetFast(list, index, item);
+}
+
+void ListSet(VList* list, VIndex index, void* item)
+{
+  ListEnsureSize(list, index);
+  ListSetRaw(list, index, item);
 }
 
 void* ListGet(VList* list, VIndex index)
 {
   if (index >= ListLength(list) || index < 0)
     ErrorExitNum("ListGet: Index out of bounds: ", index);
-  return ListGetFast(list, index);
+  return ListItemPtr(list, index);
 }
 
-// ListPush and ListPop ----------------------------------------
+// Push and Pop ------------------------------------------------
 
 void ListPush(VList* list, void* item)
 {
@@ -160,7 +135,14 @@ void* ListPop(VList* list)
 {
   if (ListLength(list) < 1)
     ErrorExit("ListPop: Cannot pop empty list");
-  return ListGetFast(list, -- ListLength(list));
+  return ListItemPtr(list, -- ListLength(list));
+}
+
+// Returns pointer to new item (increses length of list by 1).
+void* ListPushNewItem(VList* list)
+{
+  ListEnsureSize(list, ListLength(list));
+  return ListItemPtr(list, ListLength(list) - 1);
 }
 
 // Forth Stack Operations --------------------------------------
@@ -215,31 +197,30 @@ void ListSwap(VList* list)
 {
   size_t size = list->itemSize;
   char temp[size];
-  void* item1 = ListGet(list, ListLength(list) - 1);
-  void* item2 = ListGet(list, ListLength(list) - 2);
+  void* item1 = ListItemPtr(list, ListLength(list) - 1);
+  void* item2 = ListItemPtr(list, ListLength(list) - 2);
   memcpy(temp, item1, size);
   memcpy(item1, item2, size);
   memcpy(item2, temp, size);
 }
 
-
 // Free List Deep ----------------------------------------------
 
-// Note: For lists that contain VItem:s.
+// Note: Assumes that list contains VItem:s.
 // Does not work for circular lists!
 void ListFreeDeep(VList* list)
 {
   for (VIndex i = 0; i < ListLength(list); ++i)
   {
     VItem* item = ListGet(list, i);
-    if (IsList(*item))
+    if (IsList(item))
     {
-      ListFreeDeep(ItemObj(*item));
+      ListFreeDeep(ItemObj(item));
     }
     else
-    if (IsString(*item))
+    if (IsString(item))
     {
-      MemFree(ItemString(*item));
+      MemFree(ItemString(item));
     }
   }
 

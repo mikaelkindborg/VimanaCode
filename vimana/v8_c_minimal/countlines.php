@@ -22,6 +22,7 @@ Version v8_minimal:
 210903: 662 lines (first working prototype)
 210904: 821 lines (parsning and printing)
 210904: 894 lines (added strings, this is starting to look a bit complex...)
+210905: 885 lines (some cleanup)
 
 Version v7_c:
 210426: 484 lines 
