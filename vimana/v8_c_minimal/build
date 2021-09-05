@@ -1,0 +1,4 @@
+#!/bin/bash
+
+php genprimfuns.php > primfuns.h
+cc vimana.c

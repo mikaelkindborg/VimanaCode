@@ -230,3 +230,12 @@ void ListFreeDeep(VList* list)
   // Free list object.
   MemFree(list);
 }
+
+// Object Access -----------------------------------------------
+
+VList* ItemObjAsList(VItem* item)
+{
+  if (!IsObj(item)) 
+    ErrorExit("ItemObjAsList: Not a pointer!");
+  return item->value.obj;
+}

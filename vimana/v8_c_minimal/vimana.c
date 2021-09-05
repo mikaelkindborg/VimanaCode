@@ -120,25 +120,26 @@ int main(int numargs, char* args[])
   codeItem = ListPushNewItem(codeList);
   ItemSetNumber(codeItem, 1);
   codeItem = ListPushNewItem(codeList);
-  ItemSetNumber(codeItem, 2);
+  ItemSetNumber(codeItem, 4);
   codeItem = ListPushNewItem(codeList);
-  ItemSetPrimFun(codeItem, 2);
+  ItemSetPrimFun(codeItem, 4);
   codeItem = ListPushNewItem(codeList);
   ItemSetPrimFun(codeItem, 1);
-  
-  InterpRun(interp, codeList);
 
   InterpRun(interp, codeList);
-
+  InterpRun(interp, codeList);
   ListFreeDeep(codeList);
   
-  VList* codeList2 = ParseCode("N8888881 P1 N33 N33 P2 P1 (S1 S2) P1 ('FOO HEJ HOPP') P1");
-
+  VList* codeList2 = ParseCode("N8888881 P1 N33 N33 P4 P1 (S1 S2) P1 ('FOO HEJ HOPP') P1");
   PrintList(codeList2);
   PrintNewLine();
-
   InterpRun(interp, codeList2);
+  ListFreeDeep(codeList2);
 
+  codeList2 = ParseCode("8888 (S7) P2 (S1) (N1 N3 P4 P1) P3 S1");
+  PrintList(codeList2);
+  PrintNewLine();
+  InterpRun(interp, codeList2);
   ListFreeDeep(codeList2);
 
   InterpFree(interp);

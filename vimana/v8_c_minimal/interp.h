@@ -84,7 +84,7 @@ void InterpFree(VInterp* interp)
 // GLOBAL VARIABLES --------------------------------------------
 
 #define InterpSetGlobal(interp, index, item) \
-  ListSet(InterpGlobalVars(interp), index, value)
+  ListSet(InterpGlobalVars(interp), index, item)
 
 #define InterpGetGlobal(interp, index) \
   ListGet(InterpGlobalVars(interp), index)
@@ -166,17 +166,20 @@ void InterpRun(register VInterp* interp, VList* codeList)
       #include "primfuns.h"
       goto Next;
     }
-/*
+
     if (IsSymbol(element))
     {
       // Find symbol value in global env.
       // Symbols evaluate to themselves if unbound.
-      symbolValue = InterpEvalSymbol(interp, element);
+      VIndex index = ItemSymbol(element);
+      VItem* symbolValue = InterpGetGlobal(interp, index);
+
+      //symbolValue = InterpEvalSymbol(interp, element);
       
       // If it is a function, call it.
-      if (IsFun(evalResult))
+      if (IsFun(symbolValue))
       {
-        InterpPushContext(interp, (VList*) symbolValue.value.obj);
+        InterpPushContext(interp, ItemObj(symbolValue));
         goto Next;
       }
 
@@ -184,7 +187,7 @@ void InterpRun(register VInterp* interp, VList* codeList)
       InterpPush(interp, evalResult);
       goto Next;
     }
-*/
+
     // If none of the above, push the element.
     InterpPush(interp, element);
 Next:;

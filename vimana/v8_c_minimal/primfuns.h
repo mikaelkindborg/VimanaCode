@@ -1,60 +1,95 @@
 /*
+NOTE: THIS FILE IS GENERATED
+
 File: primfuns.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-The idea with the macros is to be able to generate primfun 
-definitions using different styles.
+This file is generated from primfuns.php. The idea is to generate 
+primfun definitions using different implementation styles.
 
-Symbol tables for use with the parser can be extracted using a script.
+Usage: php genprimfuns.php > primfuns.h 
+
+Install PHP on Raspberry Pi:
+https://lindevs.com/install-php-8-0-on-raspberry-pi/
 */
 
-#define PRIMFUNS_HEADER() switch (primFun) {
-#define PRIMFUNS_FOOTER() } // End of switch
+switch (primFun) {
 
-PRIMFUNS_HEADER()
-
-#define PRIMFUN_BEGIN(name, id) case id: { 
-#define PRIMFUN_END() } break;
-
-PRIMFUN_BEGIN("print", 1)
+case 1: // print
+{
   VItem* item = InterpPop(interp);
   PrintItem(item);
   PrintNewLine();
-PRIMFUN_END()
+}
+break;
 
-PRIMFUN_BEGIN("+", 2)
+case 2: // setglobal
+{
+  VItem* quotedSymbol = InterpPop(interp);
+  VItem* value = InterpPop(interp);
+  VIndex index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
+  InterpSetGlobal(interp, index, value);
+}
+break;
+
+case 3: // def
+{
+  VItem* funBody = InterpPop(interp);
+  VItem* quotedSymbol = InterpPop(interp);
+  ItemObjAsList(funBody)->type = TypeFun;
+  VIndex index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
+  InterpSetGlobal(interp, index, funBody);
+}
+break;
+
+case 4: // add
+{
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
   VNumber number = ItemNumber(item1) + ItemNumber(item2);
   ItemSetNumber(item1, number);
   ++ ListLength(InterpStack(interp));
-PRIMFUN_END()
+}
+break;
 
-PRIMFUNS_FOOTER()
+case 5: // sub
+{
+  VItem* item2 = InterpPop(interp);
+  VItem* item1 = InterpPop(interp);
+  VNumber number = ItemNumber(item1) - ItemNumber(item2);
+  ItemSetNumber(item1, number);
+  ++ ListLength(InterpStack(interp));
+}
+break;
 
-/*
-  // funify
-  // setglobal
-  // getat
-  // setat
-  // length
-  // def
-  // eval
-  // sub
-  // sub1
-  // ifelse
-  // iftrue
-  // iffalse
-  // iszero
-  // >, <, eq
-  // drop, swap, dup, over, 2dup
+case 6: // mult
+{
+  VItem* item2 = InterpPop(interp);
+  VItem* item1 = InterpPop(interp);
+  VNumber number = ItemNumber(item1) * ItemNumber(item2);
+  ItemSetNumber(item1, number);
+  ++ ListLength(InterpStack(interp));
+}
+break;
 
-(FIB)
-  (DUP 2 < (DUP SUB1 FIB SWAP 2 - FIB +) IFFALSE) DEF
+case 7: // div
+{
+  VItem* item2 = InterpPop(interp);
+  VItem* item1 = InterpPop(interp);
+  VNumber number = ItemNumber(item1) / ItemNumber(item2);
+  ItemSetNumber(item1, number);
+  ++ ListLength(InterpStack(interp));
+}
+break;
 
-(TIMESDO) 
-  (DUP ISZERO 
-    (DROP DROP) 
-    (SWAP DUP EVAL SWAP SUB1 TIMESDO) 
-  IFELSE) DEFSPECIAL
-*/
+} // End of switch
+
+#define PRIMFUN_print 1
+#define PRIMFUN_setglobal 2
+#define PRIMFUN_def 3
+#define PRIMFUN_add 4
+#define PRIMFUN_sub 5
+#define PRIMFUN_mult 6
+#define PRIMFUN_div 7
+
+
