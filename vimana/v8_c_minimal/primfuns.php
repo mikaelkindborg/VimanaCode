@@ -1,4 +1,6 @@
 /*
+DO NOT USE, WORKING ON ANOTHER SOLUTION.
+
 File: primfuns.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
@@ -6,10 +8,11 @@ This file is generated from primfuns.php.
 
 The idea is to generate primfun definitions using different styles.
 
-Usage: php primfuns.php > primfuns.h 
+DO NOT USE! Usage: php primfuns.php > primfuns.h 
 */
 
 <?php
+/*
 function PrimFunsHeader()
 {
   echo "switch (primFun) {\n";
@@ -29,6 +32,7 @@ function PrimFunEnd()
 {
   echo "} break;\n";
 }
+*/
 ?>
 <?php PrimFunsHeader(); ?>
 
