@@ -27,7 +27,7 @@ char* ParseString(char* p, char** pBuf)
   while ('\'' != *p) 
   {
     // TODO: Check string buffer overflow and realloc buffer
-    if (size > 19) ErrorExit("ParseString: Buffer overflow");
+    if (size > 19) GuruMeditaton(PARSESTRING_BUFFER_OVERFLOW);
     *pCurrent = *p;
     ++ p;
     ++ pCurrent;

@@ -1,5 +1,5 @@
 /*
-NOTE: THIS FILE IS GENERATED
+GENERATED FILE.
 
 File: primfuns.h
 Author: Mikael Kindborg (mikael@kindborg.com)

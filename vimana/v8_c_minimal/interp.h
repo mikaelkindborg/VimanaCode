@@ -166,7 +166,7 @@ void InterpRun(register VInterp* interp, VList* codeList)
       #include "primfuns.h"
       goto Next;
     }
-
+/*
     if (IsSymbol(element))
     {
       // Find symbol value in global env.
@@ -187,7 +187,7 @@ void InterpRun(register VInterp* interp, VList* codeList)
       InterpPush(interp, evalResult);
       goto Next;
     }
-
+*/
     // If none of the above, push the element.
     InterpPush(interp, element);
 Next:;

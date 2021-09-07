@@ -77,7 +77,7 @@ void ListGrow(VList* list, size_t newSize)
   size_t newArraySize = newSize * list->itemSize;
   VByte* newArray = realloc(list->items, newArraySize);
   if (NULL == newArray)
-    ErrorExit("ListGrow: Out of memory");
+    GuruMeditaton(LISTGROW_OUT_OF_MEMORY);
   list->items = newArray;
   list->maxLength = newSize;
 
@@ -100,7 +100,7 @@ void ListGrow(VList* list, size_t newSize)
 void ListEnsureSize(VList* list, VIndex index)
 {
   if (index < 0)
-    ErrorExit("ListEnsureSize: Index < 0");
+    GuruMeditaton(LISTENSURESIZE_LESS_THAN_ZERO);
     
   // Grow list if needed.
   if (index >= list->maxLength)
@@ -120,7 +120,7 @@ void ListSet(VList* list, VIndex index, void* item)
 void* ListGet(VList* list, VIndex index)
 {
   if (index >= ListLength(list) || index < 0)
-    ErrorExitNum("ListGet: Index out of bounds: ", index);
+    GuruMeditaton(LISTGET_INDEX_OUT_OF_BOUNDS);
   return ListItemPtr(list, index);
 }
 
@@ -134,7 +134,7 @@ void ListPush(VList* list, void* item)
 void* ListPop(VList* list)
 {
   if (ListLength(list) < 1)
-    ErrorExit("ListPop: Cannot pop empty list");
+    GuruMeditaton(LISTPOP_CANNOT_POP_EMPTY_LIST);
   return ListItemPtr(list, -- ListLength(list));
 }
 
@@ -153,7 +153,7 @@ void* ListPushNewItem(VList* list)
   #define ListDrop(list) \
     do { \
       if (ListLength(list) < 1) \
-        ErrorExit("ListDrop: Cannot drop from list of length < 0"); \
+        GuruMeditaton(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST); \
       -- ListLength(list); \
     } while (0)
   
@@ -162,7 +162,7 @@ void* ListPushNewItem(VList* list)
   void ListDrop(VList* list)
   {
     if (ListLength(list) < 1)
-      ErrorExit("ListDrop: Cannot drop from list of length < 0");
+      GuruMeditaton(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
     -- ListLength(list);
   }
 
@@ -236,6 +236,6 @@ void ListFreeDeep(VList* list)
 VList* ItemObjAsList(VItem* item)
 {
   if (!IsObj(item)) 
-    ErrorExit("ItemObjAsList: Not a pointer!");
+    GuruMeditaton(ITEMOBJASLIST_NOT_POINTER);
   return item->value.obj;
 }

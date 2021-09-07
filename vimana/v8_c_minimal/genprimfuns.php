@@ -1,6 +1,6 @@
 <?php /* Comment below is for the generated file primfuns.h */ ?>
 /*
-NOTE: THIS FILE IS GENERATED
+GENERATED FILE.
 
 File: primfuns.h
 Author: Mikael Kindborg (mikael@kindborg.com)

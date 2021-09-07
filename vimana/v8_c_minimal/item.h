@@ -29,8 +29,8 @@ VItem;
 #define TypeObj           0
 #define TypeNumber        1
 #define TypeSymbol        2
-#define TypePrimFun       3
-#define TypeString        4
+#define TypePrimFun       4
+#define TypeString        6
 
 // OBJECT TYPES
 
@@ -41,7 +41,7 @@ VItem;
 
 #define IsVirgin(item)    ((item)->value.bits == 0)
 #define IsObj(item)       (((item)->value.bits & TypeBitMask) == TypeObj)
-#define IsNumber(item)    (((item)->value.bits & TypeBitMask) == TypeNumber)
+#define IsNumber(item)    (((item)->value.bits & 1) == TypeNumber)
 #define IsSymbol(item)    (((item)->value.bits & TypeBitMask) == TypeSymbol)
 #define IsPrimFun(item)   (((item)->value.bits & TypeBitMask) == TypePrimFun)
 #define IsString(item)    (((item)->value.bits & TypeBitMask) == TypeString)
@@ -66,22 +66,22 @@ void ItemSetObj(VItem* item, void* obj)
 
 void ItemSetNumber(VItem* item, VNumber number)
 {
-  if (((number << 3) >> 3) != number) 
-    ErrorExit("ItemSetNumber: Number is too large");
-  item->value.number = (number << 3) | TypeNumber;
+  if (((number << 1) >> 1) != number) 
+    GuruMeditaton(ITEM_NUMBER_TOO_LARGE);
+  item->value.number = (number << 1) | TypeNumber;
 }
 
 void ItemSetSymbol(VItem* item, VNumber symbolId)
 {
   if (((symbolId << 3) >> 3) != symbolId) 
-    ErrorExit("ItemSetSymbol: Symbol id is too large");
+    GuruMeditaton(ITEM_SYMBOL_TOO_LARGE);
   item->value.number = (symbolId << 3) | TypeSymbol;
 }
 
 void ItemSetPrimFun(VItem* item, VNumber primFunId)
 {
   if (((primFunId << 3) >> 3) != primFunId) 
-    ErrorExit("ItemSetPrimFun: Primfun id is too large");
+    GuruMeditaton(ITEM_PRIMFUNID_TOO_LARGE);
   item->value.number = (primFunId << 3) | TypePrimFun;
 }
 
@@ -96,34 +96,34 @@ void ItemSetString(VItem* item, char* pBuf)
 VNumber ItemNumber(VItem* item)
 {
   if (!IsNumber(item)) 
-    ErrorExit("ItemNumber: Not a number!");
-  return item->value.number >> 3;
+    GuruMeditaton(ITEM_NOT_NUMBER);
+  return item->value.number >> 1;
 }
 
 VNumber ItemSymbol(VItem* item)
 {
   if (!IsSymbol(item)) 
-    ErrorExit("ItemSymbol: Not a symbol!");
+    GuruMeditaton(ITEM_NOT_SYMBOL);
   return item->value.number >> 3;
 }
 
 VNumber ItemPrimFun(VItem* item)
 {
   if (!IsPrimFun(item)) 
-    ErrorExit("ItemPrimFun: Not a primfun!");
+    GuruMeditaton(ITEM_NOT_PRIMFUN);
   return item->value.number >> 3;
 }
 
 void* ItemObj(VItem* item)
 {
   if (!IsObj(item)) 
-    ErrorExit("ItemObj: Not a pointer!");
+    GuruMeditaton(ITEM_NOT_POINTER);
   return item->value.obj;
 }
 
 char* ItemString(VItem* item)
 {
   if (!IsString(item)) 
-    ErrorExit("ItemString: Not a string!");
+    GuruMeditaton(ITEM_NOT_STRING);
   return (char*)((item->value.bits) & ~TypeString);
 }

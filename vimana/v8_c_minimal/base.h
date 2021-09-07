@@ -62,8 +62,8 @@ void PrintBinaryULong(unsigned long n)
 }
 
 // ERROR HANDLING ----------------------------------------------
-
-#define ErrorExit(str) \
+/*
+#define GuruMeditaton(str) \
   do { PrintLine("[ERROR] " str); exit(0); } while (0)
 
 #define ErrorExitNum(str, num) \
@@ -71,6 +71,10 @@ void PrintBinaryULong(unsigned long n)
     Print("[ERROR] " str); PrintNum(num); PrintLine(""); \
     exit(0); \
   } while (0)
+*/
+
+#define GuruMeditaton(num) \
+  do { printf("[GURU_MEDITATION] %d", num); exit(0); } while (0)
 
 // UNIT TESTS HELPER -------------------------------------------
 

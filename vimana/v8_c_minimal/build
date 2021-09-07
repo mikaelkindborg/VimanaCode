@@ -1,4 +1,5 @@
 #!/bin/bash
 
+php gengurumeditation.php > gurumeditation.h
 php genprimfuns.php > primfuns.h
 cc vimana.c
