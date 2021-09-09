@@ -31,7 +31,7 @@ GuruMeditation("LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST", "ListDrop: Cannot drop fr
 GuruMeditation("ITEMOBJASLIST_NOT_POINTER", "ItemObjAsList: Not a pointer!");
 
 GuruMeditation("PARSESTRING_BUFFER_OVERFLOW", "ParseString: Buffer overflow");
-//GuruMeditation("", );
+GuruMeditation("PARSETOKEN_BUFFER_OVERFLOW", "ParseToken: Buffer overflow");
 
 GenerateGuruMeditationSymbols();
 

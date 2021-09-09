@@ -130,13 +130,13 @@ int main(int numargs, char* args[])
   InterpRun(interp, codeList);
   ListFreeDeep(codeList);
   
-  VList* codeList2 = ParseCode("N8888881 P1 N33 N33 P4 P1 (S1 S2) P1 ('FOO HEJ HOPP') P1");
+  VList* codeList2 = ParseSymbolicCode("N8888881 P1 N33 N33 P4 P1 (S1 S2) P1 ('FOO HEJ HOPP') P1");
   PrintList(codeList2);
   PrintNewLine();
   InterpRun(interp, codeList2);
   ListFreeDeep(codeList2);
 /*
-  codeList2 = ParseCode("8888 (S7) P2 (S1) (N1 N3 P4 P1) P3 S1");
+  codeList2 = ParseSymbolicCode("8888 (S7) P2 (S1) (N1 N3 P4 P1) P3 S1");
   PrintList(codeList2);
   PrintNewLine();
   InterpRun(interp, codeList2);
@@ -148,8 +148,12 @@ int main(int numargs, char* args[])
   
   //ErrorExit("Exit 1");
   //ErrorExitNum("Exit 2: ", 42);
-  
-  
+
+  PrintLine("Generating Symbolic Code");
+  VSymbolDict* dict = SymbolDictCreate();
+  char* symbolicCode = GenerateSymbolicCode(" FOO  BAR (FOOBAR 1234) 5678 ", dict);
+  printf("%s\n", symbolicCode);
+  SymbolDictFree(dict);
 }
 
 /*

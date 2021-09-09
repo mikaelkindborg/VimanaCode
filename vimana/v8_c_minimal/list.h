@@ -14,7 +14,7 @@ typedef struct __VList
   int        length;       // Current number of items
   int        maxLength;    // Max number of items
   int        itemSize;     // Size of a list item
-  VByte*    items;        // Array of items
+  VByte*     items;        // Array of items
 }
 VList;
 
@@ -206,9 +206,22 @@ void ListSwap(VList* list)
 
 // Free List Deep ----------------------------------------------
 
-// Note: Assumes that list contains VItem:s.
+void ListDeallocItemsDeep(VList* list);
+
+// Assumes that list contains VItem:s.
 // Does not work for circular lists!
 void ListFreeDeep(VList* list)
+{
+  // Free items.
+  ListDeallocItemsDeep(list);
+
+  // Free list object.
+  MemFree(list);
+}
+
+// Assumes that list contains VItem:s.
+// Does not deallocate the top-level list object.
+void ListDeallocItemsDeep(VList* list)
 {
   for (VIndex i = 0; i < ListLength(list); ++i)
   {
@@ -226,9 +239,6 @@ void ListFreeDeep(VList* list)
 
   // Free item array.
   ListDeallocItems(list);
-
-  // Free list object.
-  MemFree(list);
 }
 
 // Object Access -----------------------------------------------
@@ -238,4 +248,27 @@ VList* ItemObjAsList(VItem* item)
   if (!IsObj(item)) 
     GuruMeditaton(ITEMOBJASLIST_NOT_POINTER);
   return item->value.obj;
+}
+
+// Push string item to list.
+// Copies the string.
+VIndex ListAddString(VList* list, char* str)
+{
+  VItem* item = ListPushNewItem(list);
+  ItemSetString(item, StrCopy(str));
+  return ListLength(list) - 1;
+}
+
+// Lookup a string and return the index if it is found.
+// Assumes use of VItem to represent strings.
+VIndex ListLookupString(VList* list, char* strToFind)
+{
+  for (int index = 0; index < ListLength(list); ++ index)
+  {
+    VItem* item = ListGet(list, index);
+    char* str = ItemString(item);
+    if (StrEquals(strToFind, str))
+      return index; // Found it.
+  }
+  return -1; // Not found.
 }

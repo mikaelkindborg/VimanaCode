@@ -5,6 +5,8 @@
 #include "item.h"
 #include "list.h"
 #include "print.h"
-#include "parser.h"
 #include "interp.h"
+#include "codeparser.h"
+#include "symboldict.h"
+#include "sourceparser.h"
 #endif

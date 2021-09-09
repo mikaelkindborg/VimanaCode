@@ -49,62 +49,6 @@ typedef int              VIndex;
   #define PrintDebugStrNum(str, num)
 #endif
 
-void PrintBinaryULong(unsigned long n)
-{
-  int numBits = sizeof(unsigned long) * 8;
-  for (long i = numBits - 1 ; i >= 0; --i) 
-  {
-    //printf("%lu", (n & (1L <<< i)) >> i);
-    PrintChar(n & (1L << i) ? '1' : '0');
-    //printf("%c", n & (((unsigned long)i) << 1) ? '1' : '0');
-  }
-  PrintLine("");
-}
-
-// ERROR HANDLING ----------------------------------------------
-/*
-#define GuruMeditaton(str) \
-  do { PrintLine("[ERROR] " str); exit(0); } while (0)
-
-#define ErrorExitNum(str, num) \
-  do { \
-    Print("[ERROR] " str); PrintNum(num); PrintLine(""); \
-    exit(0); \
-  } while (0)
-*/
-
-#define GuruMeditaton(num) \
-  do { printf("[GURU_MEDITATION] %d", num); exit(0); } while (0)
-
-// UNIT TESTS HELPER -------------------------------------------
-
-#define ShouldHold(description, condition) \
-  do { if (!condition) PrintLine("[SHOULD_HOLD] " description); } while(0)
-
-// C STRING FUNCTIONS ------------------------------------------
-
-#define StrEquals(s1, s2) (0 == strcmp(s1, s2))
-
-void StrToUpper(char* s)
-{
-  char* p = s;
-  while (*p)
-  {
-    *p = toupper((unsigned char) *p);
-    ++ p;
-  }
-}
-
-void StrToLower(char* s)
-{
-  char* p = s;
-  while (*p)
-  {
-    *p = tolower((unsigned char) *p);
-    ++ p;
-  }
-}
-
 // MEMORY TRACKING ---------------------------------------------
 
 #ifdef TRACK_MEMORY_USAGE
@@ -128,3 +72,57 @@ void StrToLower(char* s)
   #define PrintMemStat()
 
 #endif
+
+// C STRING FUNCTIONS ------------------------------------------
+
+#define StrEquals(s1, s2) (0 == strcmp(s1, s2))
+
+char* StrCopy(char* str)
+{
+  char* newStr = MemAlloc(strlen(str + 1));
+  strcpy(newStr, str);
+  return newStr;
+}
+
+void StrToUpper(char* s)
+{
+  char* p = s;
+  while (*p)
+  {
+    *p = toupper((unsigned char) *p);
+    ++ p;
+  }
+}
+
+void StrToLower(char* s)
+{
+  char* p = s;
+  while (*p)
+  {
+    *p = tolower((unsigned char) *p);
+    ++ p;
+  }
+}
+
+// TODO: Move to file debug.h
+void PrintBinaryULong(unsigned long n)
+{
+  int numBits = sizeof(unsigned long) * 8;
+  for (long i = numBits - 1 ; i >= 0; --i) 
+  {
+    //printf("%lu", (n & (1L <<< i)) >> i);
+    PrintChar(n & (1L << i) ? '1' : '0');
+    //printf("%c", n & (((unsigned long)i) << 1) ? '1' : '0');
+  }
+  PrintLine("");
+}
+
+// ERROR HANDLING ----------------------------------------------
+
+#define GuruMeditaton(num) \
+  do { printf("[GURU_MEDITATION] %d", num); exit(0); } while (0)
+
+// UNIT TEST HELPER -------------------------------------------
+
+#define ShouldHold(description, condition) \
+  do { if (!condition) PrintLine("[SHOULD_HOLD] " description); } while(0)

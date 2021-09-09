@@ -26,7 +26,7 @@ VItem;
 // Object pointers have all zero values in the three low bits.
 
 #define TypeBitMask       7
-#define TypeObj           0
+#define TypeObj           0 // Used for VList
 #define TypeNumber        1
 #define TypeSymbol        2
 #define TypePrimFun       4
@@ -86,6 +86,7 @@ void ItemSetPrimFun(VItem* item, VNumber primFunId)
 }
 
 // The item takes ownership of the string buffer.
+// TODO: Take ownership or copy?
 void ItemSetString(VItem* item, char* pBuf)
 {
   item->value.bits = (VUNumber)pBuf | TypeString;

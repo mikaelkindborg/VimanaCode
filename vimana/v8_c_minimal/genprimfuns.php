@@ -20,20 +20,20 @@ $PrimFunTable = [];
 ?>
 <?php PrimFunsHeader(); ?>
 
-<?php PrimFunDefine("print"); ?>
+<?php PrimFunDef("print"); ?>
   VItem* item = InterpPop(interp);
   PrintItem(item);
   PrintNewLine();
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefine("setglobal"); ?>
+<?php PrimFunDef("setglobal"); ?>
   VItem* quotedSymbol = InterpPop(interp);
   VItem* value = InterpPop(interp);
   VIndex index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
   InterpSetGlobal(interp, index, value);
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefine("def"); ?>
+<?php PrimFunDef("def"); ?>
   VItem* funBody = InterpPop(interp);
   VItem* quotedSymbol = InterpPop(interp);
   ItemObjAsList(funBody)->type = TypeFun;
@@ -41,7 +41,7 @@ $PrimFunTable = [];
   InterpSetGlobal(interp, index, funBody);
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefineWithAlias("add", "+"); ?>
+<?php PrimFunDefWithAlias("add", "+"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
   VNumber number = ItemNumber(item1) + ItemNumber(item2);
@@ -49,7 +49,7 @@ $PrimFunTable = [];
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefineWithAlias("sub", "-"); ?>
+<?php PrimFunDefWithAlias("sub", "-"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
   VNumber number = ItemNumber(item1) - ItemNumber(item2);
@@ -57,7 +57,7 @@ $PrimFunTable = [];
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefineWithAlias("mult", "*"); ?>
+<?php PrimFunDefWithAlias("mult", "*"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
   VNumber number = ItemNumber(item1) * ItemNumber(item2);
@@ -65,7 +65,7 @@ $PrimFunTable = [];
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefineWithAlias("div", "/"); ?>
+<?php PrimFunDefWithAlias("div", "/"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
   VNumber number = ItemNumber(item1) / ItemNumber(item2);
@@ -90,9 +90,11 @@ function PrimFunsFooter()
   foreach ($PrimFunTable as $primfun):
     echo "#define PRIMFUN_".$primfun["name"]." ".$primfun["id"]."\n";
   endforeach;
+
+  // TODO: Add primfuns to symbol dict. Or generate function that does this, which can later be called.
 }
 
-function PrimFunDefine($name)
+function PrimFunDef($name)
 {
   global $PrimFunCounter;
   global $PrimFunTable;
@@ -104,9 +106,9 @@ function PrimFunDefine($name)
   echo "case $PrimFunCounter: // $name\n{\n";
 }
 
-function PrimFunDefineWithAlias($name, $alias)
+function PrimFunDefWithAlias($name, $alias)
 {
-  PrimFunDefine($name);
+  PrimFunDef($name);
 }
 
 function PrimFunEnd()

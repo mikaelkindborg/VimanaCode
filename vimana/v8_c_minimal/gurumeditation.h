@@ -23,6 +23,7 @@ Usage: php gengurumeditation.php > gurumeditation.h
 #define LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST 13
 #define ITEMOBJASLIST_NOT_POINTER 14
 #define PARSESTRING_BUFFER_OVERFLOW 15
+#define PARSETOKEN_BUFFER_OVERFLOW 16
 
 char* GuruMeditationTable[] = { 
 "Guru Meditation"
@@ -41,4 +42,5 @@ char* GuruMeditationTable[] = {
 ,"ListDrop: Cannot drop from list of length < 0"
 ,"ItemObjAsList: Not a pointer!"
 ,"ParseString: Buffer overflow"
+,"ParseToken: Buffer overflow"
 }; 
