@@ -7,51 +7,22 @@ Parser for symbolic code.
 TODO: Add some form of syntax error checking.
 */
 
-VBool IsWhiteSpace(char c)
-{
-  return (' ' == c || '\t' == c || '\n' == c || '\r' == c);
-}
-
-VBool IsQuote(char c)
-{
-  return ('\'' == c);
-}
-
-VBool IsLeftParen(char c)
-{
-  return ('(' == c);
-}
-
-VBool IsRightParen(char c)
-{
-  return (')' == c);
-}
-
-VBool IsParen(char c)
-{
-  return (IsLeftParen(c) || IsRightParen(c));
-}
-
-VBool IsEndOfString(char c)
-{
-  return '\0' == c;
-}
-
-VBool IsWhiteSpaceOrSeparatorOrEndOfString(char c)
-{
-  return IsWhiteSpace(c) || IsParen(c) || IsQuote(c) || IsEndOfString(c);
-}
+#define EndOfString ('\0')
+#define StringSeparator ('\'')
+#define IsWhiteSpace(c) \
+  (' ' == (c) || '\t' == (c) || '\n' == (c) || '\r' == (c))
+#define IsStringSeparator(c) (StringSeparator == (c))
+#define IsLeftParen(c) ('(' == (c))
+#define IsRightParen(c) (')' == (c))
+#define IsEndOfString(c) (EndOfString == (c))
 
 char* ParseNumber(char* p, VNumber* result)
 {
-  char* pstart = p;
+  // First char may be a minus sign.
   if ('-' == *p) ++ p;
-  while (isdigit(*p)) ++ p;
-  char restoreMe = *p;
-  *p = 0;
-  *result = strtol(pstart, NULL, 10);
-  *p = restoreMe;
-  return p;
+  char* pNext;
+  *result = strtol(p, &pNext, 10);
+  return pNext;
 }
 
 // Returned string in pBuf must be deallocated.
@@ -61,7 +32,7 @@ char* ParseString(char* p, char** pBuf)
   *pBuf = MemAlloc(bufSize);
   char* pCurrent = *pBuf;
   int size = 0;
-  while (!IsQuote(*p)) 
+  while (!IsStringSeparator(*p)) 
   {
     // TODO: Check string buffer overflow and realloc buffer
     if (size > bufSize - 1) GuruMeditaton(PARSESTRING_BUFFER_OVERFLOW);
@@ -70,7 +41,7 @@ char* ParseString(char* p, char** pBuf)
     ++ pCurrent;
     ++ size;
   }
-  *pCurrent = '\0';
+  *pCurrent = EndOfString;
   //printf("%s\n", *pBuf);
   *pBuf = realloc(*pBuf, strlen(*pBuf) + 1);
   //printf("%s\n", *pBuf);
@@ -109,7 +80,7 @@ char* CodeParserWorker(char* p, VList* codeList)
       return p + 1;
     }
     else
-    if (IsQuote(*p))
+    if (IsStringSeparator(*p))
     {
       p = ParseString(p + 1, &pBuf);
       item = ListPushNewItem(codeList);
@@ -140,10 +111,7 @@ char* CodeParserWorker(char* p, VList* codeList)
 // This list must be deallocated along with its children.
 VList* ParseSymbolicCode(char* p)
 {
-  char* buf = MemAlloc(strlen(p + 1));
-  strcpy(buf, p);
   VList* codeList = ListCreate(sizeof(VItem));
-  CodeParserWorker(buf, codeList);
-  MemFree(buf);
+  CodeParserWorker(p, codeList);
   return codeList;
 }

@@ -7,6 +7,10 @@ Parser for source code. Outputs symbolic code as a string.
 
 typedef FILE VPrintStream;
 
+#define IsParen(c) (IsLeftParen(c) || IsRightParen(c))
+#define IsWhiteSpaceOrSeparatorOrEndOfString(c) \
+  (IsWhiteSpace(c) || IsParen(c) || IsStringSeparator(c) || IsEndOfString(c))
+
 //#define PrintToStream(stream, str, args...) fprintf(stream, str, ## args)
 
 // This version checks for integers
@@ -17,6 +21,7 @@ VBool TokenIsNumber(char* token)
   // Handle the minus sign.
   if ('-' == *p)
   {
+    // A single minus sign is not a number.
     if (1 == strlen(token))
       return FALSE;
     else
@@ -49,20 +54,20 @@ char* ParseToken(char* p, char** pBuf)
     ++ pCurrent;
     ++ size;
   }
-  *pCurrent = '\0';
+  *pCurrent = EndOfString;
   *pBuf = realloc(*pBuf, strlen(*pBuf) + 1);
   return p;
 }
 
 char* SourceParserCopyString(char* p, VPrintStream* stream)
 {
-  fputc('\'', stream);
-  while (!IsQuote(*p)) 
+  fputc(StringSeparator, stream);
+  while (!IsStringSeparator(*p)) 
   {
     fputc(*p, stream);
     ++ p;
   }
-  fputc('\'', stream);
+  fputc(StringSeparator, stream);
   return p + 1;
 }
 
@@ -86,7 +91,7 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
       ++ p;
     }
     else
-    if (IsQuote(*p))
+    if (IsStringSeparator(*p))
     {
       p = SourceParserCopyString(p + 1, stream);
     }
@@ -128,7 +133,7 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
   // While End
 }
 
-// Returned string must be deallocated.
+// Returned string buffer must be deallocated.
 char* GenerateSymbolicCode(char* sourceCode, VSymbolDict* dict)
 {
   char* buffer;
