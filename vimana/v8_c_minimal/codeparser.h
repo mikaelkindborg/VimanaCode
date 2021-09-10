@@ -22,29 +22,21 @@ char* ParseNumber(char* p, VNumber* result)
   if ('-' == *p) ++ p;
   char* pNext;
   *result = strtol(p, &pNext, 10);
+  printf("Number in ParseNumber: %ld\n", *result);
   return pNext;
 }
 
 // Returned string in pBuf must be deallocated.
 char* ParseString(char* p, char** pBuf)
 {
-  int bufSize = 20;
-  *pBuf = MemAlloc(bufSize);
-  char* pCurrent = *pBuf;
-  int size = 0;
+  VString* string = StringCreate();
   while (!IsStringSeparator(*p)) 
   {
-    // TODO: Check string buffer overflow and realloc buffer
-    if (size > bufSize - 1) GuruMeditaton(PARSESTRING_BUFFER_OVERFLOW);
-    *pCurrent = *p;
+    StringWriteChar(string, *p);
     ++ p;
-    ++ pCurrent;
-    ++ size;
   }
-  *pCurrent = EndOfString;
-  //printf("%s\n", *pBuf);
-  *pBuf = realloc(*pBuf, strlen(*pBuf) + 1);
-  //printf("%s\n", *pBuf);
+  *pBuf = StringGetStrCopy(string);
+  StringFree(string);
   return p + 1;
 }
 
@@ -64,11 +56,13 @@ char* CodeParserWorker(char* p, VList* codeList)
   {
     if (IsWhiteSpace(*p))
     {
+      // Skip whitespace
       ++ p;
     }
     else
     if (IsLeftParen(*p))
     {
+      // Create child list
       childList = ListCreate(sizeof(VItem));
       p = CodeParserWorker(p + 1, childList);
       item = ListPushNewItem(codeList);
@@ -77,17 +71,20 @@ char* CodeParserWorker(char* p, VList* codeList)
     else
     if (IsRightParen(*p))
     {
+      // Close list
       return p + 1;
     }
     else
     if (IsStringSeparator(*p))
     {
+      // Create string
       p = ParseString(p + 1, &pBuf);
       item = ListPushNewItem(codeList);
       ItemSetString(item, pBuf);
     }
     else
     {
+      // Create number/primfun/symbol
       c = *p;
       p = ParseNumber(p + 1, &number);
       item = ListPushNewItem(codeList);
@@ -104,6 +101,8 @@ char* CodeParserWorker(char* p, VList* codeList)
     }
   }
 
+  // Reached end of string, 
+  // return pointer to string end.
   return p;
 }
 

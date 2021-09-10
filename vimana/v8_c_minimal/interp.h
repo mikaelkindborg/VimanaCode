@@ -10,7 +10,7 @@ Interpreter core.
 // CONTEXT -----------------------------------------------------
 
 // A context is a stackframe on the callstack.
-// It is used to track code execution.
+// It is used to track code execution of code blocks and functions.
 typedef struct __VContext
 {
   VList* codeList;
@@ -20,23 +20,13 @@ VContext;
 
 // INTERPRETER -------------------------------------------------
 
-// The symbol table and the global var table have the same
-// length. This wastes some memory since not all symbols
-// have global values. It also slows down GC a bit, because
-// the entire gvar table is traversed on GC (except for primfuns,
-// which appear first in the table, and can be skipped).
-//
-// There are speed benefits to this setup since direct lookup
-// by index can be used for global vars. This scheme is intended
-// as a simplistic and straightforward implementation.
-
 typedef struct __VInterp
 {
-  VList     globalVars;        // List of global variable values
-  VList     stack;             // The data stack
-  VList     callstack;         // Callstack with context frames
-  VIndex    callstackIndex;    // Index of current frame
-  VBool     run;               // Run flag
+  VList  globalVars;        // List of global variable values
+  VList  stack;             // The data stack
+  VList  callstack;         // Callstack with context frames
+  VIndex callstackIndex;    // Index of current frame
+  VBool  run;               // Run flag
 }
 VInterp;
 

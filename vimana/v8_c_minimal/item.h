@@ -12,7 +12,7 @@ typedef struct __VItem
 {
   union
   {
-    void*      obj;
+    void*     obj;
     VNumber   number;
     VUNumber  bits;
   }

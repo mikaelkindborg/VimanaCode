@@ -41,21 +41,14 @@ VBool TokenIsNumber(char* token)
 // Token returned in pBuf must be deallocated.
 char* ParseToken(char* p, char** pBuf)
 {
-  int bufSize = 1000;
-  *pBuf = MemAlloc(bufSize);
-  char* pCurrent = *pBuf;
-  int size = 0;
+  VString* token = StringCreate();
   while (!IsWhiteSpaceOrSeparatorOrEndOfString(*p)) 
   {
-    // TODO: Check buffer overflow and realloc buffer
-    if (size > bufSize - 1) GuruMeditaton(PARSETOKEN_BUFFER_OVERFLOW);
-    *pCurrent = *p;
+    StringWriteChar(token, *p);
     ++ p;
-    ++ pCurrent;
-    ++ size;
   }
-  *pCurrent = EndOfString;
-  *pBuf = realloc(*pBuf, strlen(*pBuf) + 1);
+  *pBuf = StringGetStrCopy(token);
+  StringFree(token);
   return p;
 }
 
@@ -82,20 +75,24 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
   {
     if (IsWhiteSpace(*p))
     {
+      // Skip whitespace
       ++ p;
     }
     else
     if (IsParen(*p))
     {
+      // Write paren
       fputc(*p, stream);
       ++ p;
     }
     else
     if (IsStringSeparator(*p))
     {
+      // Write string
       p = SourceParserCopyString(p + 1, stream);
     }
-    else // Parse Token Begin
+    else 
+    // Parse Token Begin
     {
       // Get next token in string.
       p = ParseToken(p, &token);
@@ -110,19 +107,20 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
         id = SymbolDictLookupPrimFunName(dict, token);
         if (id > -1)
         {
-          // Print primfun id to stream.
+          // Write primfun
           fprintf(stream, "P%d", id);
         }
         else
         {
+          // Lookup the symbol
           id = SymbolDictLookupSymbolName(dict, token);
           if (id < 0)
           {
-            // Add symbol to dict.
+            // Symbol does not exist, add it to dictionary
             id = SymbolDictAddSymbolName(dict, token);
           }
           
-          // Print symbol id to stream.
+          // Write symbol
           fprintf(stream, "S%d", id);
         }
       }

@@ -4,6 +4,7 @@
 #include "gurumeditation.h"
 #include "item.h"
 #include "list.h"
+#include "string.h"
 #include "print.h"
 #include "interp.h"
 #include "codeparser.h"

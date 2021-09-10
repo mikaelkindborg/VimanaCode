@@ -13,6 +13,26 @@ void PrintIntList(VList* list)
   PrintLine("");
 }
 
+void TestString()
+{
+  VString* string = StringCreate();
+
+  StringWriteChar(string, 'H');
+  StringWriteChar(string, 'E');
+  StringWriteChar(string, 'J');
+
+  StringWriteStr(string, " HOPP");
+  StringWriteStr(string, " HOPP");
+  StringWriteStr(string, " HOPP");
+  StringWriteStr(string, " HOPP");
+  StringWriteStr(string, " HOPP");
+  StringWriteStr(string, " HOPP");
+
+  printf("%s\n", StringGetStr(string));
+
+  StringFree(string);
+}
+
 // TODO: Organize this into unit tests in a separate file, test.h
 int main(int numargs, char* args[])
 {
@@ -162,6 +182,8 @@ int main(int numargs, char* args[])
   SymbolDictFree(dict);
 
   InterpFree(interp);
+
+  TestString();
 
   PrintMemStat();
 }
