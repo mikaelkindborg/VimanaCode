@@ -2,8 +2,7 @@
 
 // MAIN ------------------------------------------------
 
-// TODO: Make file with item tests.
-
+// TODO: Mote to test.h
 void PrintIntList(VList* list)
 {
   for (int i = 0; i < ListLength(list); ++i)
@@ -14,6 +13,7 @@ void PrintIntList(VList* list)
   PrintLine("");
 }
 
+// TODO: Organize this into unit tests in a separate file, test.h
 int main(int numargs, char* args[])
 {
   long x = -255;
@@ -111,26 +111,26 @@ int main(int numargs, char* args[])
   codeItem = ListPushNewItem(codeList);
   ItemSetNumber(codeItem, 42);
   codeItem = ListPushNewItem(codeList);
-  ItemSetPrimFun(codeItem, 1);
+  ItemSetPrimFun(codeItem, 0);
   codeItem = ListPushNewItem(codeList);
   ItemSetNumber(codeItem, 43);
   codeItem = ListPushNewItem(codeList);
-  ItemSetPrimFun(codeItem, 1);
+  ItemSetPrimFun(codeItem, 0);
 
   codeItem = ListPushNewItem(codeList);
   ItemSetNumber(codeItem, 1);
   codeItem = ListPushNewItem(codeList);
   ItemSetNumber(codeItem, 4);
   codeItem = ListPushNewItem(codeList);
-  ItemSetPrimFun(codeItem, 4);
+  ItemSetPrimFun(codeItem, 3);
   codeItem = ListPushNewItem(codeList);
-  ItemSetPrimFun(codeItem, 1);
+  ItemSetPrimFun(codeItem, 0);
 
   InterpRun(interp, codeList);
   InterpRun(interp, codeList);
   ListFreeDeep(codeList);
   
-  VList* codeList2 = ParseSymbolicCode("N8888881 P1 N33 N33 P4 P1 (S1 S2) P1 ('FOO HEJ HOPP') P1");
+  VList* codeList2 = ParseSymbolicCode("N8888881 P0 N33 N33 P3 P0 (S1 S2) P0 ('FOO HEJ HOPP') P0");
   PrintList(codeList2);
   PrintNewLine();
   InterpRun(interp, codeList2);
@@ -142,21 +142,28 @@ int main(int numargs, char* args[])
   InterpRun(interp, codeList2);
   ListFreeDeep(codeList2);
 */
-  InterpFree(interp);
-
-  PrintMemStat();
   
   //ErrorExit("Exit 1");
   //ErrorExitNum("Exit 2: ", 42);
 
   PrintLine("Generating Symbolic Code");
   VSymbolDict* dict = SymbolDictCreate();
+  SymbolDictAddPrimFuns(dict);
   char* symbolicCode = GenerateSymbolicCode(" FOO  BAR(FOOBAR 'Hi World' 1234) 5678", dict);
   printf("%s\n", symbolicCode);
   free(symbolicCode);
   
+  PrintLine("Parsing Source Code");
+  VList* codeListParsed = ParseSourceCode("'Hi World' print", dict);
+  PrintList(codeListParsed); PrintNewLine();
+  InterpRun(interp, codeListParsed);
+  ListFreeDeep(codeListParsed);
 
   SymbolDictFree(dict);
+
+  InterpFree(interp);
+
+  PrintMemStat();
 }
 
 /*

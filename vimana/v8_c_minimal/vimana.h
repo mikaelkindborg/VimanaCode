@@ -7,6 +7,9 @@
 #include "print.h"
 #include "interp.h"
 #include "codeparser.h"
+#ifdef INCLUDE_SOURCE_CODE_PARSER
 #include "symboldict.h"
+#include "symboldictprimfuns.h"
 #include "sourceparser.h"
+#endif
 #endif

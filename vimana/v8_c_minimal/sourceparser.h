@@ -40,7 +40,7 @@ char* ParseToken(char* p, char** pBuf)
   *pBuf = MemAlloc(bufSize);
   char* pCurrent = *pBuf;
   int size = 0;
-  while (!IsWhiteSpaceOrSeparatorOfEndOfString(*p)) 
+  while (!IsWhiteSpaceOrSeparatorOrEndOfString(*p)) 
   {
     // TODO: Check buffer overflow and realloc buffer
     if (size > bufSize - 1) GuruMeditaton(PARSETOKEN_BUFFER_OVERFLOW);

@@ -37,7 +37,7 @@ VBool IsEndOfString(char c)
   return '\0' == c;
 }
 
-VBool IsWhiteSpaceOrSeparatorOfEndOfString(char c)
+VBool IsWhiteSpaceOrSeparatorOrEndOfString(char c)
 {
   return IsWhiteSpace(c) || IsParen(c) || IsQuote(c) || IsEndOfString(c);
 }

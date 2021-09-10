@@ -15,7 +15,7 @@ https://lindevs.com/install-php-8-0-on-raspberry-pi/
 
 switch (primFun) {
 
-case 1: // print
+case 0: // print
 {
   VItem* item = InterpPop(interp);
   PrintItem(item);
@@ -23,7 +23,7 @@ case 1: // print
 }
 break;
 
-case 2: // setglobal
+case 1: // setglobal
 {
   VItem* quotedSymbol = InterpPop(interp);
   VItem* value = InterpPop(interp);
@@ -32,7 +32,7 @@ case 2: // setglobal
 }
 break;
 
-case 3: // def
+case 2: // def
 {
   VItem* funBody = InterpPop(interp);
   VItem* quotedSymbol = InterpPop(interp);
@@ -42,7 +42,7 @@ case 3: // def
 }
 break;
 
-case 4: // add
+case 3: // add
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -52,7 +52,7 @@ case 4: // add
 }
 break;
 
-case 5: // sub
+case 4: // sub
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -62,7 +62,7 @@ case 5: // sub
 }
 break;
 
-case 6: // mult
+case 5: // mult
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -72,7 +72,7 @@ case 6: // mult
 }
 break;
 
-case 7: // div
+case 6: // div
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -83,13 +83,4 @@ case 7: // div
 break;
 
 } // End of switch
-
-#define PRIMFUN_print 1
-#define PRIMFUN_setglobal 2
-#define PRIMFUN_def 3
-#define PRIMFUN_add 4
-#define PRIMFUN_sub 5
-#define PRIMFUN_mult 6
-#define PRIMFUN_div 7
-
 

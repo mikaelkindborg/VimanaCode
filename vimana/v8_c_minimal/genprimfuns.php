@@ -15,7 +15,7 @@ https://lindevs.com/install-php-8-0-on-raspberry-pi/
 */
 
 <?php
-$PrimFunCounter = 0;
+$PrimFunCounter = -1;
 $PrimFunTable = [];
 ?>
 <?php PrimFunsHeader(); ?>
@@ -74,6 +74,7 @@ $PrimFunTable = [];
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunsFooter(); ?>
+<?php GenerateSymbolDict("symboldictfuns.h"); ?>
 
 <?php
 function PrimFunsHeader()
@@ -83,15 +84,40 @@ function PrimFunsHeader()
 
 function PrimFunsFooter()
 {
-  echo "} // End of switch\n\n";
+  echo "} // End of switch\n";
+}
 
+function GenerateSymbolDict($filename)
+{
   global $PrimFunTable;
 
+  $contents = <<<FILEHEADER
+/*
+File: {$filename}
+
+This is file is generate by genprimfuns.php
+*/
+\n
+FILEHEADER;
+/*
   foreach ($PrimFunTable as $primfun):
-    echo "#define PRIMFUN_".$primfun["name"]." ".$primfun["id"]."\n";
+    $contents .= "#define PRIMFUN_".$primfun["name"]." ".$primfun["id"]."\n";
+  endforeach;
+*/
+  $contents .= <<<FUNHEADER
+void SymbolDictAddPrimFuns(VSymbolDict* dict)
+{\n
+FUNHEADER;
+
+  foreach ($PrimFunTable as $primfun):
+    $contents .= "  SymbolDictAddPrimFunName(dict, \"".$primfun["name"]."\");\n";
   endforeach;
 
-  // TODO: Add primfuns to symbol dict. Or generate function that does this, which can later be called.
+  $contents .= <<<FUNFOOTER
+}\n
+FUNFOOTER;
+
+  file_put_contents($filename, $contents);
 }
 
 function PrimFunDef($name)
@@ -115,9 +141,7 @@ function PrimFunEnd()
 {
   echo "}\nbreak;\n";
 }
-?>
 
-<?php 
 /*
 Funify:
   VItem* item = InterpPop(interp);
@@ -150,4 +174,4 @@ Funify:
     (DROP DROP) 
     (SWAP DUP EVAL SWAP SUB1 TIMESDO) 
   IFELSE) DEFSPECIAL
-*/ ?>
+*/

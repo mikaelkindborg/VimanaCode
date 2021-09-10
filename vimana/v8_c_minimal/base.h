@@ -15,6 +15,7 @@ Basic data types and functions.
 #define OPTIMIZE
 #define DEBUG
 #define TRACK_MEMORY_USAGE
+#define INCLUDE_SOURCE_CODE_PARSER
 
 // BASIC TYPES -------------------------------------------------
 
@@ -120,7 +121,7 @@ void PrintBinaryULong(unsigned long n)
 // ERROR HANDLING ----------------------------------------------
 
 #define GuruMeditaton(num) \
-  do { printf("[GURU_MEDITATION] %d", num); exit(0); } while (0)
+  do { printf("[GURU_MEDITATION] %d\n", num); exit(0); } while (0)
 
 // UNIT TEST HELPER -------------------------------------------
 
