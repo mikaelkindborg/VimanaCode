@@ -151,8 +151,11 @@ int main(int numargs, char* args[])
 
   PrintLine("Generating Symbolic Code");
   VSymbolDict* dict = SymbolDictCreate();
-  char* symbolicCode = GenerateSymbolicCode(" FOO  BAR (FOOBAR 1234) 5678 ", dict);
+  char* symbolicCode = GenerateSymbolicCode(" FOO  BAR(FOOBAR 'Hi World' 1234) 5678", dict);
   printf("%s\n", symbolicCode);
+  free(symbolicCode);
+  
+
   SymbolDictFree(dict);
 }
 

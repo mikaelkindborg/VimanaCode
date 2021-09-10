@@ -32,9 +32,14 @@ VBool IsParen(char c)
   return (IsLeftParen(c) || IsRightParen(c));
 }
 
-VBool IsWhiteSpaceOrSeparator(char c)
+VBool IsEndOfString(char c)
 {
-  return IsWhiteSpace(c) || IsParen(c) || IsQuote(c);
+  return '\0' == c;
+}
+
+VBool IsWhiteSpaceOrSeparatorOfEndOfString(char c)
+{
+  return IsWhiteSpace(c) || IsParen(c) || IsQuote(c) || IsEndOfString(c);
 }
 
 char* ParseNumber(char* p, VNumber* result)
@@ -84,7 +89,7 @@ char* CodeParserWorker(char* p, VList* codeList)
   char     c;
   char*    pBuf;
   
-  while ('\0' != *p)
+  while (!IsEndOfString(*p))
   {
     if (IsWhiteSpace(*p))
     {

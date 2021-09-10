@@ -23,10 +23,11 @@ VBool TokenIsNumber(char* token)
       ++ p;
   }
 
-  while ('\0' != *p)
+  while (!IsEndOfString(*p))
   {
     if (!isdigit(*p))
       return FALSE;
+    ++ p;
   }
 
   return TRUE;
@@ -39,7 +40,7 @@ char* ParseToken(char* p, char** pBuf)
   *pBuf = MemAlloc(bufSize);
   char* pCurrent = *pBuf;
   int size = 0;
-  while (!IsWhiteSpaceOrSeparator(*p)) 
+  while (!IsWhiteSpaceOrSeparatorOfEndOfString(*p)) 
   {
     // TODO: Check buffer overflow and realloc buffer
     if (size > bufSize - 1) GuruMeditaton(PARSETOKEN_BUFFER_OVERFLOW);
@@ -72,12 +73,13 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
   char*  token;
   VIndex id;
   
-  while ('\0' != *p)
+  while (!IsEndOfString(*p))
   {
     if (IsWhiteSpace(*p))
     {
       ++ p;
     }
+    else
     if (IsParen(*p))
     {
       fputc(*p, stream);
@@ -88,7 +90,7 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
     {
       p = SourceParserCopyString(p + 1, stream);
     }
-    else // Parse token
+    else // Parse Token Begin
     {
       // Get next token in string.
       p = ParseToken(p, &token);
@@ -120,8 +122,10 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
         }
       }
       MemFree(token);
-    }
+    } 
+    // Parse Token End
   }
+  // While End
 }
 
 // Returned string must be deallocated.
@@ -132,7 +136,7 @@ char* GenerateSymbolicCode(char* sourceCode, VSymbolDict* dict)
   VPrintStream* stream = open_memstream(&buffer, &size);
   SourceParserWorker(sourceCode, stream, dict);
   fclose(stream);
-  puts(buffer);
+  //puts(buffer); // debug
   return buffer;
 }
 
