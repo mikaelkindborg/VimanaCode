@@ -36,13 +36,14 @@
       <option value="vimana-list-primfuns">List PrimFuns</option>
       <option value="vimana-eval-benchmark">Eval Benchmark</option>
       <option value="vimana-reset-workspace">Reset Workspace</option>
+      <option value="vimana-generate-symbolic-code">Generate Symbolic Code</option>
       <option value="vimana-open-github">Open GitHub</option>
       <option value="vimana-about">About</option>
     </select>
   </div>
 
   <div class="vimana-frame vimana-frame-code">
-    <textarea></textarea>
+    <textarea spellcheck="false"></textarea>
   </div>
 
   <div class="vimana-button-bar">
@@ -57,7 +58,7 @@
   </div>
 
   <div class="vimana-frame vimana-frame-output">
-    <textarea></textarea>
+    <textarea spellcheck="false"></textarea>
   </div>
 
 <div class="vimana-workspace vimana-workspace-introduction">(This is a comment) DOC
@@ -234,6 +235,7 @@ GetMantra EVAL PRINT
 
   <script src="interp.js"></script>
   <script src="primfuns.js"></script>
+  <script src="symcodegen.js"></script>
   <script src="workbench.js"></script>
 
   </body>

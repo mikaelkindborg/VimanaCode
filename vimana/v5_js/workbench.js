@@ -29,6 +29,9 @@ function VimanaUIDoMenuCommand(event)
   if ("vimana-reset-workspace" === command)
     VimanaUIResetWorkspace()
   else
+  if ("vimana-generate-symbolic-code" === command)
+    VimanaGenerateSymbolicCode()
+  else
   if ("vimana-open-github" === command)
     VimanaUIOpenGitHub()
   else
@@ -68,6 +71,16 @@ function VimanaUIResetWorkspace()
     localStorage.removeItem(VimanaUIWorkspace)
     VimanaUISelectWorkspace({ target: { value: VimanaUIWorkspace } })
   }
+}
+
+function VimanaGenerateSymbolicCode()
+{
+  VimanaUIPrint("CODE RUNNABLE ON ADRUINO")
+  let code = document.getElementsByTagName("textarea")[0].value
+  let symcode = SymbolDictGenerateSymCode(code)
+  VimanaUIPrint(symcode)
+  window.prompt("Copy to clipboard: Ctrl+C, Enter", symcode)
+  //VimanaUIPrint(SymbolDictGenerateSymCode("1 2 3 'Hi World''Hi'(foo bar) print"))
 }
 
 function VimanaUIClearStack()
