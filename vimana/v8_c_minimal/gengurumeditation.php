@@ -33,6 +33,8 @@ GuruMeditation("ITEMOBJASLIST_NOT_POINTER", "ItemObjAsList: Not a pointer!");
 GuruMeditation("PARSESTRING_BUFFER_OVERFLOW", "ParseString: Buffer overflow");
 GuruMeditation("PARSETOKEN_BUFFER_OVERFLOW", "ParseToken: Buffer overflow");
 
+GuruMeditation("SYMBOL_UNKNOWN_TYPE", "Print: Unknown symbol type");
+
 GenerateGuruMeditationSymbols();
 
 GenerateGuruMeditationTable();

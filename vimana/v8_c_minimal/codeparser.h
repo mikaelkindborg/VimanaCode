@@ -22,12 +22,12 @@ char* ParseNumber(char* p, VNumber* result)
   if ('-' == *p) ++ p;
   char* pNext;
   *result = strtol(p, &pNext, 10);
-  printf("Number in ParseNumber: %ld\n", *result);
+  //printf("Number in ParseNumber: %ld\n", *result);
   return pNext;
 }
 
 // Returned string in pBuf must be deallocated.
-char* ParseString(char* p, char** pBuf)
+char* ParseString(char* p, VString** pString)
 {
   VString* string = StringCreate();
   while (!IsStringSeparator(*p)) 
@@ -35,8 +35,10 @@ char* ParseString(char* p, char** pBuf)
     StringWriteChar(string, *p);
     ++ p;
   }
-  *pBuf = StringGetStrCopy(string);
-  StringFree(string);
+  *pString = string;
+  // OLD CODE
+  //*pBuf = StringGetStrCopy(string);
+  //StringFree(string);
   return p + 1;
 }
 
@@ -48,9 +50,9 @@ char* CodeParserWorker(char* p, VList* codeList)
 {
   VItem*   item;
   VList*   childList;
+  VString* string;
   VNumber  number;
   char     c;
-  char*    pBuf;
   
   while (!IsEndOfString(*p))
   {
@@ -78,9 +80,9 @@ char* CodeParserWorker(char* p, VList* codeList)
     if (IsStringSeparator(*p))
     {
       // Create string
-      p = ParseString(p + 1, &pBuf);
+      p = ParseString(p + 1, &string);
       item = ListPushNewItem(codeList);
-      ItemSetString(item, pBuf);
+      ItemSetObj(item, string);
     }
     else
     {

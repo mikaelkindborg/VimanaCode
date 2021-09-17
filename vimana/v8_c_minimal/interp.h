@@ -14,7 +14,7 @@ Interpreter core.
 typedef struct __VContext
 {
   VList* codeList;
-  VIndex codePointer;
+  VSize codePointer;
 }
 VContext;
 
@@ -25,7 +25,7 @@ typedef struct __VInterp
   VList  globalVars;        // List of global variable values
   VList  stack;             // The data stack
   VList  callstack;         // Callstack with context frames
-  VIndex callstackIndex;    // Index of current frame
+  VSize  callstackIndex;    // Index of current frame
   VBool  run;               // Run flag
 }
 VInterp;
@@ -62,10 +62,19 @@ VInterp* InterpCreate()
 
 void InterpFree(VInterp* interp)
 {
+  Print("STACK:");
+  PrintList(InterpStack(interp));
+  PrintNewLine();
+  Print("GLOBALS:");
+  PrintList(InterpGlobalVars(interp));
+  PrintNewLine();
+
   // Free lists.
-  ListDeallocItems(InterpGlobalVars(interp));
-  ListDeallocItems(InterpStack(interp));
-  ListDeallocItems(InterpCallStack(interp));
+  VList* deallocatedItems = ListCreate(sizeof(VItem));
+  ListDeallocArrayBufDeepSafe(InterpGlobalVars(interp), deallocatedItems);
+  ListDeallocArrayBufDeepSafe(InterpStack(interp), deallocatedItems);
+  ListDeallocArrayBuf(InterpCallStack(interp));
+  ListFree(deallocatedItems);
 
   // Free interpreter struct.
   MemFree(interp);
@@ -73,11 +82,63 @@ void InterpFree(VInterp* interp)
 
 // GLOBAL VARIABLES --------------------------------------------
 
-#define InterpSetGlobal(interp, index, item) \
+#define InterpSetGlobalVar(interp, index, item) \
   ListSet(InterpGlobalVars(interp), index, item)
 
-#define InterpGetGlobal(interp, index) \
-  ListGet(InterpGlobalVars(interp), index)
+VItem* InterpGetGlobalVar(VInterp* interp, VSize index)
+{
+  if (index < ListLength(InterpGlobalVars(interp)))
+  {
+    VItem* item = ListGet(InterpGlobalVars(interp), index);
+    if (!IsVirgin(item))
+      return item;
+  }
+  
+  // No value found
+  return NULL;
+}
+
+// DEALLOCATE UNREFRENCED ITEMS --------------------------------
+
+// This version of Vimana has manual memory management, with the
+// assistance of this function that deallocates all items not
+// referenced in the global var table.
+
+// Check if an item is in the global var list.
+// Does not handle circular lists.
+void InterpTinyGarbageCollect(VInterp* interp, VList* list)
+{
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    VItem* item = (VItem*) ListItemPtr(list, i);
+    if (IsObj(item))
+    {
+      VBool isGlobal = ListContainsItem(InterpGlobalVars(interp), item);
+      if (isGlobal)
+      {
+        continue; // Keep item
+      }
+
+      VBool isOnStack = ListContainsItem(InterpStack(interp), item);
+      if (isOnStack)
+      {
+        continue; // Keep item
+      }
+
+      // Free item
+      if (IsList(item))
+      {
+        InterpTinyGarbageCollect(interp, ItemList(item));
+        ListFree(ItemList(item));
+      }
+      else
+      if (IsString(item))
+      {
+        StringFree(ItemObj(item));
+      }
+    } 
+  }
+}
 
 // DATA STACK --------------------------------------------------
 
@@ -116,8 +177,8 @@ void InterpPushContext(VInterp* interp, VList* codeList)
 void InterpRun(register VInterp* interp, VList* codeList)
 {
   register VItem*  element;
-  register VItem*  evalResult;
-  register VIndex  primFun;
+  register VItem*  symbolValue;
+  register VSize   primFun;
 
   // Initialize interpreter state and create root context.
   InterpInit(interp);
@@ -156,16 +217,20 @@ void InterpRun(register VInterp* interp, VList* codeList)
       #include "primfuns.h"
       goto Next;
     }
-/*
+
     if (IsSymbol(element))
     {
       // Find symbol value in global env.
       // Symbols evaluate to themselves if unbound.
-      VIndex index = ItemSymbol(element);
-      VItem* symbolValue = InterpGetGlobal(interp, index);
+      VSize index = ItemSymbol(element);
+      symbolValue = InterpGetGlobalVar(interp, index);
+      if (NULL == symbolValue)
+      {
+        // Symbol is unbound, push the symbol itself.
+        InterpPush(interp, element);
+        goto Next;
+      }
 
-      //symbolValue = InterpEvalSymbol(interp, element);
-      
       // If it is a function, call it.
       if (IsFun(symbolValue))
       {
@@ -173,13 +238,17 @@ void InterpRun(register VInterp* interp, VList* codeList)
         goto Next;
       }
 
+      //PrintDebug("PUSH SYMBOL VALUE");
       // If not a function, push the symbol value.
-      InterpPush(interp, evalResult);
+      InterpPush(interp, symbolValue);
       goto Next;
     }
-*/
+
     // If none of the above, push the element.
     InterpPush(interp, element);
 Next:;
   } // while
+
+  InterpTinyGarbageCollect(interp, codeList);
+  ListFree(codeList);
 }

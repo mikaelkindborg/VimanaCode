@@ -23,7 +23,7 @@ typedef unsigned char    VByte;
 typedef long             VNumber;
 typedef unsigned long    VUNumber;
 typedef int              VBool;
-typedef int              VIndex;
+typedef int              VSize;
 
 // BOOLEAN VALUES ----------------------------------------------
 
@@ -105,7 +105,7 @@ void StrToLower(char* s)
   }
 }
 
-// TODO: Move to file debug.h
+// TODO: Move to new file debug.h
 void PrintBinaryULong(unsigned long n)
 {
   int numBits = sizeof(unsigned long) * 8;
@@ -120,7 +120,7 @@ void PrintBinaryULong(unsigned long n)
 
 // ERROR HANDLING ----------------------------------------------
 
-#define GuruMeditaton(num) \
+#define GuruMeditation(num) \
   do { printf("[GURU_MEDITATION] %d\n", num); exit(0); } while (0)
 
 // UNIT TEST HELPER -------------------------------------------

@@ -9,33 +9,44 @@ void PrintItem(VItem* item);
 
 void PrintList(VList* list)
 {
-  Print("(");
-  for (VIndex i = 0; i < ListLength(list); ++i)
+  PrintChar('(');
+  for (VSize i = 0; i < ListLength(list); ++i)
   {
     VItem* item = ListGet(list, i);
     PrintItem(item);
     if (i < ListLength(list) - 1) Print(" ");
   }
-  Print(")");
+  PrintChar(')');
 }
 
 void PrintItem(VItem* item)
 {
+  if (IsVirgin(item))
+  {
+    PrintChar('V');
+  }
+  else
   if (IsNumber(item))
   {
     PrintNum(ItemNumber(item));
   }
   else
+  if (IsSymbol(item))
+  {
+    PrintChar('S');
+    PrintNum(ItemSymbol(item));
+  }
+  else
   if (IsPrimFun(item))
   {
-    Print("P");
+    PrintChar('P');
     PrintNum(ItemPrimFun(item));
   }
   else
-  if (IsSymbol(item))
+  if (IsFun(item))
   {
-    Print("S");
-    PrintNum(ItemSymbol(item));
+    PrintChar('F');
+    PrintList(ItemObj(item));
   }
   else
   if (IsList(item))
@@ -45,6 +56,10 @@ void PrintItem(VItem* item)
   else
   if (IsString(item))
   {
-    Print(ItemString(item));
+    Print(StringGetStr(ItemObj(item)));
+  }
+  else
+  {
+    GuruMeditation(SYMBOL_UNKNOWN_TYPE);
   }
 }

@@ -26,16 +26,16 @@ VItem;
 // Object pointers have all zero values in the three low bits.
 
 #define TypeBitMask       7
-#define TypeObj           0 // Used for VList
+#define TypeObj           0 // Used for VList and VString
 #define TypeNumber        1
 #define TypeSymbol        2
 #define TypePrimFun       4
-#define TypeString        6
 
 // OBJECT TYPES
 
 #define TypeList          1
 #define TypeFun           2
+#define TypeString        3
 
 // ITEM TYPE CHECKING ------------------------------------------
 
@@ -44,11 +44,12 @@ VItem;
 #define IsNumber(item)    (((item)->value.bits & 1) == TypeNumber)
 #define IsSymbol(item)    (((item)->value.bits & TypeBitMask) == TypeSymbol)
 #define IsPrimFun(item)   (((item)->value.bits & TypeBitMask) == TypePrimFun)
-#define IsString(item)    (((item)->value.bits & TypeBitMask) == TypeString)
 #define IsList(item) \
   ( (IsObj(item)) && (TypeList == ((VList*)((item)->value.obj))->type) )
 #define IsFun(item) \
   ( (IsObj(item)) && (TypeFun == ((VList*)((item)->value.obj))->type) )
+#define IsString(item) \
+  ( (IsObj(item)) && (TypeString == ((VList*)((item)->value.obj))->type) )
 
 // SET ITEMS ------------------------------------------------
 
@@ -67,64 +68,77 @@ void ItemSetObj(VItem* item, void* obj)
 void ItemSetNumber(VItem* item, VNumber number)
 {
   if (((number << 1) >> 1) != number) 
-    GuruMeditaton(ITEM_NUMBER_TOO_LARGE);
+    GuruMeditation(ITEM_NUMBER_TOO_LARGE);
   item->value.number = (number << 1) | TypeNumber;
 }
 
 void ItemSetSymbol(VItem* item, VNumber symbolId)
 {
   if (((symbolId << 3) >> 3) != symbolId) 
-    GuruMeditaton(ITEM_SYMBOL_TOO_LARGE);
+    GuruMeditation(ITEM_SYMBOL_TOO_LARGE);
   item->value.number = (symbolId << 3) | TypeSymbol;
 }
 
 void ItemSetPrimFun(VItem* item, VNumber primFunId)
 {
   if (((primFunId << 3) >> 3) != primFunId) 
-    GuruMeditaton(ITEM_PRIMFUNID_TOO_LARGE);
+    GuruMeditation(ITEM_PRIMFUNID_TOO_LARGE);
   item->value.number = (primFunId << 3) | TypePrimFun;
 }
 
+/*
 // The item takes ownership of the string buffer.
 // TODO: Take ownership or copy?
 void ItemSetString(VItem* item, char* pBuf)
 {
   item->value.bits = (VUNumber)pBuf | TypeString;
 }
+*/
 
 // ACCESS ITEMS ------------------------------------------------
 
 VNumber ItemNumber(VItem* item)
 {
   if (!IsNumber(item)) 
-    GuruMeditaton(ITEM_NOT_NUMBER);
+    GuruMeditation(ITEM_NOT_NUMBER);
   return item->value.number >> 1;
 }
 
 VNumber ItemSymbol(VItem* item)
 {
   if (!IsSymbol(item)) 
-    GuruMeditaton(ITEM_NOT_SYMBOL);
+    GuruMeditation(ITEM_NOT_SYMBOL);
   return item->value.number >> 3;
 }
 
 VNumber ItemPrimFun(VItem* item)
 {
   if (!IsPrimFun(item)) 
-    GuruMeditaton(ITEM_NOT_PRIMFUN);
+    GuruMeditation(ITEM_NOT_PRIMFUN);
   return item->value.number >> 3;
 }
 
 void* ItemObj(VItem* item)
 {
   if (!IsObj(item)) 
-    GuruMeditaton(ITEM_NOT_POINTER);
+    GuruMeditation(ITEM_NOT_POINTER);
   return item->value.obj;
 }
 
+#define ItemList(item) ItemObj(item)
+
+
+// COMPARE ITEMS -----------------------------------------------
+
+#define ItemEquals(item1, item2) \
+  ( (((VItem*)(item1))->value.bits) == (((VItem*)(item2))->value.bits) )
+
+/* 
+//UNUSED
 char* ItemString(VItem* item)
 {
   if (!IsString(item)) 
-    GuruMeditaton(ITEM_NOT_STRING);
+    GuruMeditation(ITEM_NOT_STRING);
   return (char*)((item->value.bits) & ~TypeString);
 }
+*/

@@ -53,7 +53,7 @@ VList* ListCreate(int itemSize)
   return list;
 }
 
-void ListDeallocItems(VList* list)
+void ListDeallocArrayBuf(VList* list)
 {
   MemFree(list->items);
 }
@@ -61,7 +61,7 @@ void ListDeallocItems(VList* list)
 void ListFree(VList* list)
 {
   // Free item array.
-  ListDeallocItems(list);
+  ListDeallocArrayBuf(list);
 
   // Free list object.
   MemFree(list);
@@ -77,7 +77,7 @@ void ListGrow(VList* list, size_t newSize)
   size_t newArraySize = newSize * list->itemSize;
   VByte* newArray = realloc(list->items, newArraySize);
   if (NULL == newArray)
-    GuruMeditaton(LISTGROW_OUT_OF_MEMORY);
+    GuruMeditation(LISTGROW_OUT_OF_MEMORY);
   list->items = newArray;
   list->maxLength = newSize;
 
@@ -87,7 +87,7 @@ void ListGrow(VList* list, size_t newSize)
   VByte* p = newArray + prevArraySize;
   memset(p, 0, numNewBytes);
 
-  PrintDebug("REALLOC successful in ListGrow");
+  //PrintDebug("REALLOC successful in ListGrow");
 }
 // Get and Set -------------------------------------------------
 
@@ -97,10 +97,10 @@ void ListGrow(VList* list, size_t newSize)
 #define ListSetRaw(list, index, item) \
   memcpy(ListItemPtr(list, index), item, (list)->itemSize)
 
-void ListEnsureSize(VList* list, VIndex index)
+void ListEnsureSize(VList* list, VSize index)
 {
   if (index < 0)
-    GuruMeditaton(LISTENSURESIZE_LESS_THAN_ZERO);
+    GuruMeditation(LISTENSURESIZE_LESS_THAN_ZERO);
     
   // Grow list if needed.
   if (index >= list->maxLength)
@@ -111,16 +111,16 @@ void ListEnsureSize(VList* list, VIndex index)
     ListLength(list) = index + 1;
 }
 
-void ListSet(VList* list, VIndex index, void* item)
+void ListSet(VList* list, VSize index, void* item)
 {
   ListEnsureSize(list, index);
   ListSetRaw(list, index, item);
 }
 
-void* ListGet(VList* list, VIndex index)
+void* ListGet(VList* list, VSize index)
 {
   if (index >= ListLength(list) || index < 0)
-    GuruMeditaton(LISTGET_INDEX_OUT_OF_BOUNDS);
+    GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
   return ListItemPtr(list, index);
 }
 
@@ -134,7 +134,7 @@ void ListPush(VList* list, void* item)
 void* ListPop(VList* list)
 {
   if (ListLength(list) < 1)
-    GuruMeditaton(LISTPOP_CANNOT_POP_EMPTY_LIST);
+    GuruMeditation(LISTPOP_CANNOT_POP_EMPTY_LIST);
   return ListItemPtr(list, -- ListLength(list));
 }
 
@@ -153,7 +153,7 @@ void* ListPushNewItem(VList* list)
   #define ListDrop(list) \
     do { \
       if (ListLength(list) < 1) \
-        GuruMeditaton(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST); \
+        GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST); \
       -- ListLength(list); \
     } while (0)
   
@@ -162,7 +162,7 @@ void* ListPushNewItem(VList* list)
   void ListDrop(VList* list)
   {
     if (ListLength(list) < 1)
-      GuruMeditaton(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
+      GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
     -- ListLength(list);
   }
 
@@ -204,71 +204,23 @@ void ListSwap(VList* list)
   memcpy(item2, temp, size);
 }
 
-// Free List Deep ----------------------------------------------
-
-void ListDeallocItemsDeep(VList* list);
-
-// Assumes that list contains VItem:s.
-// Does not work for circular lists!
-void ListFreeDeep(VList* list)
-{
-  // Free items.
-  ListDeallocItemsDeep(list);
-
-  // Free list object.
-  MemFree(list);
-}
-
-// Assumes that list contains VItem:s.
-// Does not deallocate the top-level list object.
-void ListDeallocItemsDeep(VList* list)
-{
-  for (VIndex i = 0; i < ListLength(list); ++i)
-  {
-    VItem* item = ListGet(list, i);
-    if (IsList(item))
-    {
-      ListFreeDeep(ItemObj(item));
-    }
-    else
-    if (IsString(item))
-    {
-      MemFree(ItemString(item));
-    }
-  }
-
-  // Free item array.
-  ListDeallocItems(list);
-}
-
 // Object Access -----------------------------------------------
 
 VList* ItemObjAsList(VItem* item)
 {
   if (!IsObj(item)) 
-    GuruMeditaton(ITEMOBJASLIST_NOT_POINTER);
+    GuruMeditation(ITEMOBJASLIST_NOT_POINTER);
   return item->value.obj;
 }
 
-// Push string item to list.
-// Copies the string.
-VIndex ListAddString(VList* list, char* str)
+// Check if an item is in the list.
+VBool ListContainsItem(VList* list, VItem* item)
 {
-  VItem* item = ListPushNewItem(list);
-  ItemSetString(item, StrCopy(str));
-  return ListLength(list) - 1;
-}
-
-// Lookup a string and return the index if it is found.
-// Assumes use of VItem to represent strings.
-VIndex ListLookupString(VList* list, char* strToFind)
-{
-  for (int index = 0; index < ListLength(list); ++ index)
+  for (int i = 0; i < ListLength(list); ++i)
   {
-    VItem* item = ListGet(list, index);
-    char* str = ItemString(item);
-    if (StrEquals(strToFind, str))
-      return index; // Found it.
+    if (ItemEquals(item, ListItemPtr(list, i)))
+      return TRUE;
   }
-  return -1; // Not found.
+
+  return FALSE;
 }

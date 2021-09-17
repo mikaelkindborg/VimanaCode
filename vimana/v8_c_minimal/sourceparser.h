@@ -69,7 +69,7 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
 {
   char   c;
   char*  token;
-  VIndex id;
+  VSize id;
   
   while (!IsEndOfString(*p))
   {
@@ -131,7 +131,7 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
   // While End
 }
 
-// Returned string buffer must be deallocated.
+// Returned string buffer must be deallocated using free().
 char* GenerateSymbolicCode(char* sourceCode, VSymbolDict* dict)
 {
   char* buffer;

@@ -2,17 +2,6 @@
 
 // MAIN ------------------------------------------------
 
-// TODO: Mote to test.h
-void PrintIntList(VList* list)
-{
-  for (int i = 0; i < ListLength(list); ++i)
-  {
-    PrintNum(*((int*)(ListGet(list, i)))); 
-    Print(" ");
-  }
-  PrintLine("");
-}
-
 // Test of VString object
 void TestString()
 {
@@ -37,6 +26,7 @@ void TestString()
   StringFree(string);
 }
 
+/*
 void TestString2()
 {
   PrintLine("\nTESTING STRING ITEM\n");
@@ -55,6 +45,7 @@ void TestString2()
   printf("THE STRING IS: %s\n", myString2);
   MemFree(myString2);
 }
+*/
 
 void TestBinary()
 {
@@ -82,9 +73,18 @@ void TestBinary()
   ItemSetNumber(&errorTest, xx); // Uncomment/comment above to trigger error
 }
 
+void PrintIntList(VList* list)
+{
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    PrintNum(*((int*)(ListGet(list, i)))); 
+    Print(" ");
+  }
+  PrintLine("");
+}
+
 void TestList()
 {
-
   VList* list = ListCreate(sizeof(int));
   
   int numbers[] = { 1, 2, 3, 4, 5, 6 };
@@ -135,7 +135,7 @@ void TestList()
 
 void TestInterpreter()
 {
-  PrintLine("\nTESTING INTERPRETER\n");
+  PrintLine("\nTEST INTERPRETER\n");
 
   VInterp* interp = InterpCreate();
   
@@ -161,28 +161,30 @@ void TestInterpreter()
   ItemSetPrimFun(codeItem, 0);
 
   InterpRun(interp, codeList);
-  InterpRun(interp, codeList);
-  ListFreeDeep(codeList);
+  //ListFreeDeep(codeList);
 
   InterpFree(interp);
 }
 
 void TestInterpreter2()
 {
+  PrintLine("\nTEST INTERPRETER 2\n");
+
   VInterp* interp = InterpCreate();
   
   VList* codeList = ParseSymbolicCode("N8888881 P0 N33 N33 P3 P0 (S1 S2) P0 ('FOO HEJ HOPP') P0");
   PrintList(codeList);
   PrintNewLine();
   InterpRun(interp, codeList);
-  ListFreeDeep(codeList);
+  //ListFreeDeep(codeList);
 
   //ErrorExit("Exit 1");
   //ErrorExitNum("Exit 2: ", 42);
 
-  PrintLine("Generating Symbolic Code");
   VSymbolDict* dict = SymbolDictCreate();
   SymbolDictAddPrimFuns(dict);
+
+  PrintLine("Generating Symbolic Code");
   char* symbolicCode = GenerateSymbolicCode(" FOO  BAR(FOOBAR 'Hi World' 1234) 5678", dict);
   printf("%s\n", symbolicCode);
   free(symbolicCode);
@@ -192,28 +194,86 @@ void TestInterpreter2()
   PrintList(codeListParsed); 
   PrintNewLine();
   InterpRun(interp, codeListParsed);
-  ListFreeDeep(codeListParsed);
+  //ListFreeDeep(codeListParsed);
 
   SymbolDictFree(dict);
 
   InterpFree(interp);
 }
 
+void TestInterpreter3()
+{
+  VList* code;
+
+  VInterp* interp = InterpCreate();
+  VSymbolDict* dict = SymbolDictCreate();
+  SymbolDictAddPrimFuns(dict);
+
+  code = ParseSourceCode("1 2 + print", dict);
+  PrintList(code); 
+  PrintNewLine();
+  InterpRun(interp, code);
+  //ListFreeDeep(code);
+
+  code = ParseSourceCode("(1 2 3) 42 42", dict);
+  InterpRun(interp, code);
+  code = ParseSourceCode("* print", dict);
+  InterpRun(interp, code);
+
+  code = ParseSourceCode("'HI WORLD' print", dict);
+  PrintList(code); 
+  PrintNewLine();
+  InterpRun(interp, code);
+  //ListFreeDeep(code);
+
+  code = ParseSourceCode("(foo) ('HI WORLD 2' print) def foo", dict);
+  PrintList(code); 
+  PrintNewLine();
+  InterpRun(interp, code);
+  //ListFreeDeep(code);
+
+  code = ParseSourceCode("(double) (2 *) def 4 double print", dict);
+  PrintList(code); 
+  PrintNewLine();
+  InterpRun(interp, code);
+  //ListFreeDeep(code);
+
+  code = ParseSourceCode("'I am Foobar' (foobar) setglobal", dict);
+  PrintList(code); 
+  PrintNewLine();
+  InterpRun(interp, code);
+
+  code = ParseSourceCode("foobar foobar print", dict);
+  PrintList(code); 
+  PrintNewLine();
+  InterpRun(interp, code);
+/*
+  code = ParseSourceCode("0 (foobar) setglobal", dict);
+  PrintList(code); 
+  PrintNewLine();
+  InterpRun(interp, code);
+*/
+  //ListFreeDeep(code);
+
+  SymbolDictFree(dict);
+  InterpFree(interp);
+}
+
 int main(int numargs, char* args[])
 {
-  TestString();
-  TestString2();
-  TestBinary();
-  TestList();
-  TestInterpreter();
-  TestInterpreter2();
+  //TestString();
+  //TestString2();
+  //TestBinary();
+  //TestList();
+  //TestInterpreter();
+  //TestInterpreter2();
+  TestInterpreter3();
   PrintMemStat();
 }
 
 /*
 Parser that takes a string and outputs a string
 Parser maintains symbol table and primfun table
-
 
 TYPE VALUE PAIRS INPUT STREAM
 

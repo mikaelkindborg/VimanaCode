@@ -2,14 +2,16 @@
 File: string.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Using Vlist for growable strings.
+Using Vlist to implement growable strings.
 */
 
 typedef struct __VList VString;
 
 VString* StringCreate()
 {
-  return ListCreate(sizeof(char));
+  VString* string = ListCreate(sizeof(char));
+  string->type = TypeString;
+  return string;
 }
 
 void StringFree(VString* string)
@@ -43,10 +45,36 @@ char* StringGetStr(VString* string)
   return (char*)(string->items);
 }
 
-// You must dealloc returned buffer.
+// You must dealloc returned buffer with MemFree().
 char* StringGetStrCopy(VString* string)
 {
   char* buf = MemAlloc(ListLength(string) + 1);
   strcpy(buf, StringGetStr(string));
   return buf;
+}
+
+// Lookup a string and return the index if it is found.
+// Assumes use of VItem to represent strings.
+// All items in the list must be strings.
+VSize ListLookupString(VList* list, char* strToFind)
+{
+  for (int index = 0; index < ListLength(list); ++ index)
+  {
+    VItem* item = ListGet(list, index);
+    char* str = StringGetStr(ItemObj(item));
+    if (StrEquals(strToFind, str))
+      return index; // Found it.
+  }
+  return -1; // Not found.
+}
+
+// Push string item to list.
+// Copies the string.
+VSize ListAddString(VList* list, char* str)
+{
+  VString* string = StringCreate();
+  StringWriteStr(string, str);
+  VItem* item = ListPushNewItem(list);
+  ItemSetObj(item, string);
+  return ListLength(list) - 1;
 }

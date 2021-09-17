@@ -5,6 +5,7 @@
 #include "item.h"
 #include "list.h"
 #include "string.h"
+#include "list_dealloc.h"
 #include "print.h"
 #include "interp.h"
 #include "codeparser.h"
