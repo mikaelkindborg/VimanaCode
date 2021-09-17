@@ -10,7 +10,7 @@
 #include "codeparser.h"
 #ifdef INCLUDE_SOURCE_CODE_PARSER
 #include "symboldict.h"
-#include "symboldictprimfuns.h"
+#include "symboldict_primfuns.h"
 #include "sourceparser.h"
 #endif
 #endif

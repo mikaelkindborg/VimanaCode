@@ -150,3 +150,46 @@ VList* ParseSourceCode(char* sourceCode, VSymbolDict* dict)
   free(symbolicCode);
   return codeList;
 }
+
+/*
+Parser takes a source string and outputs a symbolic string.
+
+Parser relies on symbol table and primfun table.
+
+TYPE VALUE PAIRS INPUT STREAM
+
+1 42 // Number 42
+2 1  // PrimFun 1
+3    // List Begin
+4    // List End
+
+Alternative using chars:
+
+S1            // Symbol 1
+N42           // Number 42
+P1            // PrimFun 1
+(             // List Begin
+)             // List End
+"Hi World"    // String
+
+READ BYTE
+  WHITESPACE -> SKIP
+  'S' -> READ NUMBER: SYMBOL ID
+  'P' -> READ NUMBER: PRIMFUN ID
+  'N' -> READ NUMBER
+  '(' -> LIST BEGIN
+  ')' -> LIST END
+
+(S1) (P3 N2 P4 (P3 P5 S1 P6 N2 P7 S1 P8) P9) P10
+
+(FIB)
+  (DUP 2 < (DUP SUB1 FIB SWAP 2 - FIB +) IFFALSE) DEF
+
+(TIMESDO) 
+  (DUP ISZERO 
+    (DROP DROP) 
+    (SWAP DUP EVAL SWAP SUB1 TIMESDO) 
+  IFELSE) DEFSPECIAL
+
+(32 FIB PRINT) 5 TIMESDO
+*/

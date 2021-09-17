@@ -1,6 +1,4 @@
 /*
-GENERATED FILE.
-
 File: primfuns.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
@@ -42,7 +40,7 @@ case 2: // def
 }
 break;
 
-case 3: // add
+case 3: // +
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -52,7 +50,7 @@ case 3: // add
 }
 break;
 
-case 4: // sub
+case 4: // -
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -62,7 +60,7 @@ case 4: // sub
 }
 break;
 
-case 5: // mult
+case 5: // *
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -72,7 +70,7 @@ case 5: // mult
 }
 break;
 
-case 6: // div
+case 6: // /
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -83,4 +81,5 @@ case 6: // div
 break;
 
 } // End of switch
+
 

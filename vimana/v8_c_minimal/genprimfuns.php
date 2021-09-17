@@ -1,7 +1,5 @@
 <?php /* Comment below is for the generated file primfuns.h */ ?>
 /*
-GENERATED FILE.
-
 File: primfuns.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
@@ -41,7 +39,7 @@ $PrimFunTable = [];
   InterpSetGlobal(interp, index, funBody);
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefWithAlias("add", "+"); ?>
+<?php PrimFunDef("+"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
   VNumber number = ItemNumber(item1) + ItemNumber(item2);
@@ -49,7 +47,7 @@ $PrimFunTable = [];
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefWithAlias("sub", "-"); ?>
+<?php PrimFunDef("-"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
   VNumber number = ItemNumber(item1) - ItemNumber(item2);
@@ -57,7 +55,7 @@ $PrimFunTable = [];
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefWithAlias("mult", "*"); ?>
+<?php PrimFunDef("*"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
   VNumber number = ItemNumber(item1) * ItemNumber(item2);
@@ -65,7 +63,7 @@ $PrimFunTable = [];
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
-<?php PrimFunDefWithAlias("div", "/"); ?>
+<?php PrimFunDef("/"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
   VNumber number = ItemNumber(item1) / ItemNumber(item2);
@@ -74,7 +72,8 @@ $PrimFunTable = [];
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunsFooter(); ?>
-<?php GenerateSymbolDict("symboldictfuns.h"); ?>
+
+<?php GenerateSymbolDict("symboldict_primfuns.h"); ?>
 
 <?php
 function PrimFunsHeader()
