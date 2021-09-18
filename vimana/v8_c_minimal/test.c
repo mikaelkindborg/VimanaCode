@@ -243,17 +243,26 @@ void TestInterpreter3()
   PrintNewLine();
   InterpRun(interp, code);
 
+  /*
+  // This should crash.
   code = ParseSourceCode("foobar foobar print", dict);
   PrintList(code); 
   PrintNewLine();
   InterpRun(interp, code);
+  */
+
+  // This should work.
+  code = ParseSourceCode("foobar print", dict);
+  PrintList(code); 
+  PrintNewLine();
+  InterpRun(interp, code);
+
 /*
   code = ParseSourceCode("0 (foobar) setglobal", dict);
   PrintList(code); 
   PrintNewLine();
   InterpRun(interp, code);
 */
-  //ListFreeDeep(code);
 
   SymbolDictFree(dict);
   InterpFree(interp);
