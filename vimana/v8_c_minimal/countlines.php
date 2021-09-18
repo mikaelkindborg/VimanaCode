@@ -5,23 +5,13 @@ function countlines($file)
   return count(file($file));
 }
 
-#include "base.h"
-#include "gurumeditation.h"
-#include "item.h"
-#include "list.h"
-#include "print.h"
-#include "interp.h"
-#include "codeparser.h"
-#ifdef INCLUDE_SOURCE_CODE_PARSER
-#include "symboldict.h"
-#include "symboldictfuns.h"
-#include "sourceparser.h"
-
 $numlines = 
   countlines("base.h") +
   countlines("gurumeditation.h") +
   countlines("item.h") +
   countlines("list.h") +
+  countlines("string.h") +
+  countlines("list_dealloc.h") +
   countlines("print.h") +
   countlines("interp.h") +
   countlines("primfuns.h") +
@@ -31,7 +21,7 @@ echo "BASE VERSION: ".$numlines." lines\n";
 
 $numlines += 
   countlines("symboldict.h") +
-  countlines("symboldictprimfuns.h") +
+  countlines("symboldict_primfuns.h") +
   countlines("sourceparser.h");
 
 echo "FULL VERSION: ".$numlines." lines\n";
@@ -46,6 +36,9 @@ Version v8_minimal:
 210910 (including generated files):
   BASE VERSION: 1059 lines (without source code parser)
   FULL VERSION: 1291 lines (with source code parser)
+210918:
+  BASE VERSION: 1244 lines
+  FULL VERSION: 1522 lines
 
 Version v7_c:
 210426: 484 lines 
