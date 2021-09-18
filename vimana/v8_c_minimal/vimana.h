@@ -10,8 +10,8 @@
 #include "interp.h"
 #include "codeparser.h"
 #ifdef INCLUDE_SOURCE_CODE_PARSER
-#include "symboldict.h"
-#include "symboldict_primfuns.h"
-#include "sourceparser.h"
+  #include "symboldict.h"
+  #include "symboldict_primfuns.h"
+  #include "sourceparser.h"
 #endif
 #endif
