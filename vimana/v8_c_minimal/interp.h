@@ -254,11 +254,6 @@ void InterpRun(register VInterp* interp, VList* codeList)
 Next:;
   } // while
 
-  PrintDebug("FOO1");
   InterpTinyGarbageCollect(interp, codeList);
-
-  PrintDebug("FOO2");
   ListFree(codeList);
-
-  PrintDebug("FOO3");
 }
