@@ -70,11 +70,16 @@ void InterpFree(VInterp* interp)
   PrintNewLine();
 
   // Free lists.
+  ListDeallocArrayBufDeep(InterpGlobalVars(interp));
+  ListDeallocArrayBufDeep(InterpStack(interp));
+  ListDeallocArrayBuf(InterpCallStack(interp));
+  /*
   VList* deallocatedItems = ListCreate(sizeof(VItem));
   ListDeallocArrayBufDeepSafe(InterpGlobalVars(interp), deallocatedItems);
   ListDeallocArrayBufDeepSafe(InterpStack(interp), deallocatedItems);
   ListDeallocArrayBuf(InterpCallStack(interp));
   ListFree(deallocatedItems);
+  */
 
   // Free interpreter struct.
   MemFree(interp);

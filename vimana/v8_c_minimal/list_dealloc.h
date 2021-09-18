@@ -46,29 +46,9 @@ void ListDeallocArrayBufDeep(VList* list)
   // Free list array.
   ListDeallocArrayBuf(list);
 }
+
+/*
 void ListDeallocArrayBufDeepSafe(VList* list, VList* safeList)
 {
-  for (VSize i = 0; i < ListLength(list); ++i)
-  {
-    VItem* item = ListGet(list, i);
-    if (ListContainsItem(safeList, item))
-    
-    if (IsString(item))
-    {
-      StringFree(ItemObj(item));
-    }
-    else
-    if (IsList(item))
-    {
-      ListFreeDeep(ItemObj(item));
-    }
-    else
-    if (IsFun(item))
-    {
-      ListFreeDeep(ItemObj(item));
-    }
-  }
-
-  // Free list array.
-  ListDeallocArrayBuf(list);
 }
+*/
