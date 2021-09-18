@@ -17,14 +17,16 @@ Usage: php gengurumeditation.php > gurumeditation.h
 #define ITEM_NOT_POINTER 7
 #define ITEM_NOT_STRING 8
 #define LISTGROW_OUT_OF_MEMORY 9
-#define LISTENSURESIZE_LESS_THAN_ZERO 10
-#define LISTGET_INDEX_OUT_OF_BOUNDS 11
-#define LISTPOP_CANNOT_POP_EMPTY_LIST 12
-#define LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST 13
-#define ITEMOBJASLIST_NOT_POINTER 14
-#define PARSESTRING_BUFFER_OVERFLOW 15
-#define PARSETOKEN_BUFFER_OVERFLOW 16
-#define SYMBOL_UNKNOWN_TYPE 17
+#define LISTGROW_VINDEXMAX_EXCEEDED 10
+#define LISTENSURECAPACITY_LESS_THAN_ZERO 11
+#define LISTENSURECAPACITY_VINDEXMAX_EXCEEDED 12
+#define LISTGET_INDEX_OUT_OF_BOUNDS 13
+#define LISTPOP_CANNOT_POP_EMPTY_LIST 14
+#define LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST 15
+#define ITEMOBJASLIST_NOT_POINTER 16
+#define PARSESTRING_BUFFER_OVERFLOW 17
+#define PARSETOKEN_BUFFER_OVERFLOW 18
+#define SYMBOL_UNKNOWN_TYPE 19
 
 char* GuruMeditationTable[] = { 
 "Guru Meditation"
@@ -37,7 +39,9 @@ char* GuruMeditationTable[] = {
 ,"ItemObj: Not a pointer!"
 ,"ItemString: Not a string!"
 ,"ListGrow: Out of memory"
-,"ListEnsureSize: Index < 0"
+,"ListGrow: VINDEXMAX exceeded"
+,"ListEnsureCapacity: Index < 0"
+,"ListEnsureCapacity: VINDEXMAX exceeded"
 ,"ListGet: Index out of bounds"
 ,"ListPop: Cannot pop empty list"
 ,"ListDrop: Cannot drop from list of length < 0"

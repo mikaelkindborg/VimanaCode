@@ -2,4 +2,4 @@
 
 php gengurumeditation.php > gurumeditation.h
 php genprimfuns.php > primfuns.h
-cc vimana.c
+cc vimana.c -o vimana

@@ -10,7 +10,7 @@ void PrintItem(VItem* item);
 void PrintList(VList* list)
 {
   PrintChar('(');
-  for (VSize i = 0; i < ListLength(list); ++i)
+  for (VIndex i = 0; i < ListLength(list); ++i)
   {
     VItem* item = ListGet(list, i);
     PrintItem(item);

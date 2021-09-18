@@ -25,7 +25,7 @@ case 1: // setglobal
 {
   VItem* quotedSymbol = InterpPop(interp);
   VItem* value = InterpPop(interp);
-  VSize index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
+  VIndex index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
   InterpSetGlobalVar(interp, index, value);
 }
 break;
@@ -35,7 +35,7 @@ case 2: // def
   VItem* funBody = InterpPop(interp);
   VItem* quotedSymbol = InterpPop(interp);
   ItemObjAsList(funBody)->type = TypeFun;
-  VSize index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
+  VIndex index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
   InterpSetGlobalVar(interp, index, funBody);
 }
 break;

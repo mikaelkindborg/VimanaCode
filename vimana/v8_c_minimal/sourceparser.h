@@ -69,7 +69,7 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
 {
   char   c;
   char*  token;
-  VSize id;
+  VIndex id;
   
   while (!IsEndOfString(*p))
   {

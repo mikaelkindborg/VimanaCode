@@ -10,11 +10,11 @@ Size of items in the list is configurable (all items must be same size).
 
 typedef struct __VList
 {
-  int        type;         // List type
-  int        length;       // Current number of items
-  int        maxLength;    // Max number of items
-  int        itemSize;     // Size of a list item
-  VByte*     items;        // Array of items
+  VType        type;         // List type
+  VSize        length;       // Current number of items
+  VSize        maxLength;    // Max number of items
+  VSize        itemSize;     // Size of a list item
+  VByte*       items;        // Array of items
 }
 VList;
 
@@ -27,7 +27,7 @@ VList;
 
 // CREATE / FREE -----------------------------------------------
 
-void ListInit(VList* list, int itemSize)
+void ListInit(VList* list, VSize itemSize)
 {
   list->type = TypeList;
   
@@ -46,7 +46,7 @@ void ListInit(VList* list, int itemSize)
   memset(itemArray, 0, arraySize);
 }
 
-VList* ListCreate(int itemSize)
+VList* ListCreate(VSize itemSize)
 {
   VList* list = MemAlloc(sizeof(VList));
   ListInit(list, itemSize);
@@ -71,8 +71,11 @@ void ListFree(VList* list)
 
 // ListGrow ----------------------------------------------------
 
-void ListGrow(VList* list, size_t newSize)
+void ListGrow(VList* list, VSize newSize)
 {
+  if (newSize > VINDEXMAX)
+    GuruMeditation(LISTGROW_VINDEXMAX_EXCEEDED);
+
   // Make space for more items.
   size_t newArraySize = newSize * list->itemSize;
   VByte* newArray = realloc(list->items, newArraySize);
@@ -97,10 +100,13 @@ void ListGrow(VList* list, size_t newSize)
 #define ListSetRaw(list, index, item) \
   memcpy(ListItemPtr(list, index), item, (list)->itemSize)
 
-void ListEnsureSize(VList* list, VSize index)
+void ListEnsureCapacity(VList* list, VIndex index)
 {
   if (index < 0)
-    GuruMeditation(LISTENSURESIZE_LESS_THAN_ZERO);
+    GuruMeditation(LISTENSURECAPACITY_LESS_THAN_ZERO);
+  
+  if (index > VINDEXMAX)
+    GuruMeditation(LISTENSURECAPACITY_VINDEXMAX_EXCEEDED);
     
   // Grow list if needed.
   if (index >= list->maxLength)
@@ -111,13 +117,13 @@ void ListEnsureSize(VList* list, VSize index)
     ListLength(list) = index + 1;
 }
 
-void ListSet(VList* list, VSize index, void* item)
+void ListSet(VList* list, VIndex index, void* item)
 {
-  ListEnsureSize(list, index);
+  ListEnsureCapacity(list, index);
   ListSetRaw(list, index, item);
 }
 
-void* ListGet(VList* list, VSize index)
+void* ListGet(VList* list, VIndex index)
 {
   if (index >= ListLength(list) || index < 0)
     GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
@@ -141,7 +147,7 @@ void* ListPop(VList* list)
 // Returns pointer to new item (increses length of list by 1).
 void* ListPushNewItem(VList* list)
 {
-  ListEnsureSize(list, ListLength(list));
+  ListEnsureCapacity(list, ListLength(list));
   return ListItemPtr(list, ListLength(list) - 1);
 }
 

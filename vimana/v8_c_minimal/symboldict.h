@@ -30,38 +30,38 @@ void SymbolDictFree(VSymbolDict* dict)
   MemFree(dict);
 }
 
-char* SymbolDictLookupSymbolId(VSymbolDict* dict, VSize symbolId)
+char* SymbolDictLookupSymbolId(VSymbolDict* dict, VIndex symbolId)
 {
   VItem* item = ListGet(SymbolDictSymbols(dict), symbolId);
   return StringGetStr(ItemObj(item));
 }
 
-char* SymbolDictLookupPrimFunId(VSymbolDict* dict, VSize primfunId)
+char* SymbolDictLookupPrimFunId(VSymbolDict* dict, VIndex primfunId)
 {
   VItem* item = ListGet(SymbolDictPrimFuns(dict), primfunId);
   return StringGetStr(ItemObj(item));
 }
 
 // Returns -1 if symbol name is not found.
-VSize SymbolDictLookupSymbolName(VSymbolDict* dict, char* symbolName)
+VIndex SymbolDictLookupSymbolName(VSymbolDict* dict, char* symbolName)
 {
   return ListLookupString(SymbolDictSymbols(dict), symbolName);
 }
 
 // Returns -1 if primfun name is not found.
-VSize SymbolDictLookupPrimFunName(VSymbolDict* dict, char* primfunName)
+VIndex SymbolDictLookupPrimFunName(VSymbolDict* dict, char* primfunName)
 {
   return ListLookupString(SymbolDictPrimFuns(dict), primfunName);
 }
 
 // Returns index of new item.
-VSize SymbolDictAddSymbolName(VSymbolDict* dict, char* symbolName)
+VIndex SymbolDictAddSymbolName(VSymbolDict* dict, char* symbolName)
 {
   return ListAddString(SymbolDictSymbols(dict), symbolName);
 }
 
 // Returns index of new item.
-VSize SymbolDictAddPrimFunName(VSymbolDict* dict, char* primfunName)
+VIndex SymbolDictAddPrimFunName(VSymbolDict* dict, char* primfunName)
 {
   return ListAddString(SymbolDictPrimFuns(dict), primfunName);
 }

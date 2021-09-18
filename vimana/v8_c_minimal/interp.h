@@ -14,7 +14,7 @@ Interpreter core.
 typedef struct __VContext
 {
   VList* codeList;
-  VSize codePointer;
+  VIndex codePointer;
 }
 VContext;
 
@@ -25,7 +25,7 @@ typedef struct __VInterp
   VList  globalVars;        // List of global variable values
   VList  stack;             // The data stack
   VList  callstack;         // Callstack with context frames
-  VSize  callstackIndex;    // Index of current frame
+  VIndex callstackIndex;    // Index of current frame
   VBool  run;               // Run flag
 }
 VInterp;
@@ -90,7 +90,7 @@ void InterpFree(VInterp* interp)
 #define InterpSetGlobalVar(interp, index, item) \
   ListSet(InterpGlobalVars(interp), index, item)
 
-VItem* InterpGetGlobalVar(VInterp* interp, VSize index)
+VItem* InterpGetGlobalVar(VInterp* interp, VIndex index)
 {
   if (index < ListLength(InterpGlobalVars(interp)))
   {
@@ -183,7 +183,7 @@ void InterpRun(register VInterp* interp, VList* codeList)
 {
   register VItem*  element;
   register VItem*  symbolValue;
-  register VSize   primFun;
+  register VIndex  primFun;
 
   // Initialize interpreter state and create root context.
   InterpInit(interp);
@@ -227,7 +227,7 @@ void InterpRun(register VInterp* interp, VList* codeList)
     {
       // Find symbol value in global env.
       // Symbols evaluate to themselves if unbound.
-      VSize index = ItemSymbol(element);
+      VIndex index = ItemSymbol(element);
       symbolValue = InterpGetGlobalVar(interp, index);
       if (NULL == symbolValue)
       {
@@ -254,6 +254,11 @@ void InterpRun(register VInterp* interp, VList* codeList)
 Next:;
   } // while
 
+  PrintDebug("FOO1");
   InterpTinyGarbageCollect(interp, codeList);
+
+  PrintDebug("FOO2");
   ListFree(codeList);
+
+  PrintDebug("FOO3");
 }

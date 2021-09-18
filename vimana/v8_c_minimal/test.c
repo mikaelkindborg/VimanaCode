@@ -216,8 +216,12 @@ void TestInterpreter3()
   //ListFreeDeep(code);
 
   code = ParseSourceCode("(1 2 3) 42 42", dict);
+  PrintList(code); 
+  PrintNewLine();
   InterpRun(interp, code);
   code = ParseSourceCode("* print", dict);
+  PrintList(code); 
+  PrintNewLine();
   InterpRun(interp, code);
 
   code = ParseSourceCode("'HI WORLD' print", dict);

@@ -24,7 +24,7 @@ void ListFreeDeep(VList* list)
 // Does not deallocate the top-level list object.
 void ListDeallocArrayBufDeep(VList* list)
 {
-  for (VSize i = 0; i < ListLength(list); ++i)
+  for (VIndex i = 0; i < ListLength(list); ++i)
   {
     VItem* item = ListGet(list, i);
     if (IsString(item))

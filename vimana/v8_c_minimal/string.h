@@ -54,9 +54,10 @@ char* StringGetStrCopy(VString* string)
 }
 
 // Lookup a string and return the index if it is found.
+// Returns -1 if not found.
 // Assumes use of VItem to represent strings.
 // All items in the list must be strings.
-VSize ListLookupString(VList* list, char* strToFind)
+VIndex ListLookupString(VList* list, char* strToFind)
 {
   for (int index = 0; index < ListLength(list); ++ index)
   {
@@ -70,7 +71,8 @@ VSize ListLookupString(VList* list, char* strToFind)
 
 // Push string item to list.
 // Copies the string.
-VSize ListAddString(VList* list, char* str)
+// Returns index to the added item.
+VIndex ListAddString(VList* list, char* str)
 {
   VString* string = StringCreate();
   StringWriteStr(string, str);

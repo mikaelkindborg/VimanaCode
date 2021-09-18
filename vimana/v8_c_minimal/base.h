@@ -12,18 +12,41 @@ Basic data types and functions.
 
 // FLAGS -------------------------------------------------------
 
+#define PLATFORM_LINUX64
+//#define PLATFORM_ARDUINO
 #define OPTIMIZE
 #define DEBUG
 #define TRACK_MEMORY_USAGE
 #define INCLUDE_SOURCE_CODE_PARSER
+#ifdef PLATFORM_ARDUINO
+#undef INCLUDE_SOURCE_CODE_PARSER
+#endif
 
 // BASIC TYPES -------------------------------------------------
 
+#ifdef PLATFORM_LINUX64
 typedef unsigned char    VByte;
 typedef long             VNumber;
 typedef unsigned long    VUNumber;
 typedef int              VBool;
+typedef unsigned int     VType;
 typedef int              VSize;
+typedef int              VIndex;
+#define VSIZEMAX         4294967295
+#define VINDEXMAX        2147483647
+#endif
+
+#ifdef PLATFORM_ARDUINO
+typedef unsigned char    VByte;
+typedef int              VNumber;
+typedef unsigned int     VUNumber;
+typedef char             VBool;
+typedef unsigned char    VType;
+typedef char             VSize;
+typedef char             VIndex;
+#define VSIZEMAX         255
+#define VINDEXMAX        127
+#endif
 
 // BOOLEAN VALUES ----------------------------------------------
 

@@ -24,7 +24,9 @@ GuruMeditation("ITEM_NOT_POINTER", "ItemObj: Not a pointer!");
 GuruMeditation("ITEM_NOT_STRING", "ItemString: Not a string!");
 
 GuruMeditation("LISTGROW_OUT_OF_MEMORY", "ListGrow: Out of memory");
-GuruMeditation("LISTENSURESIZE_LESS_THAN_ZERO", "ListEnsureSize: Index < 0");
+GuruMeditation("LISTGROW_VINDEXMAX_EXCEEDED", "ListGrow: VINDEXMAX exceeded");
+GuruMeditation("LISTENSURECAPACITY_LESS_THAN_ZERO", "ListEnsureCapacity: Index < 0");
+GuruMeditation("LISTENSURECAPACITY_VINDEXMAX_EXCEEDED", "ListEnsureCapacity: VINDEXMAX exceeded");
 GuruMeditation("LISTGET_INDEX_OUT_OF_BOUNDS", "ListGet: Index out of bounds");
 GuruMeditation("LISTPOP_CANNOT_POP_EMPTY_LIST", "ListPop: Cannot pop empty list");
 GuruMeditation("LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST", "ListDrop: Cannot drop from list of length < 0");
