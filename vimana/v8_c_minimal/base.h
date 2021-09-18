@@ -145,7 +145,7 @@ void PrintBinaryULong(unsigned long n)
 // ERROR HANDLING ----------------------------------------------
 
 #define GuruMeditation(num) \
-  do { printf("[GURU_MEDITATION] %d\n", num); exit(0); } while (0)
+  do { PrintStrNumLine("[GURU_MEDITATION] ", num); exit(0); } while (0)
 
 // UNIT TEST HELPER -------------------------------------------
 
