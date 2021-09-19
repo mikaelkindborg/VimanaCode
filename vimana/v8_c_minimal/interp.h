@@ -164,14 +164,31 @@ void InterpInit(VInterp* interp)
 
 void InterpPushContext(VInterp* interp, VList* codeList)
 {
-  // TODO Tailcall
-  VContext context;
-  context.codeList = codeList;
-  context.codePointer = -1;
-  ListPush(InterpCallStack(interp), &context);
+  VBool isTailCall = 
+    (1 + InterpCodePointer(interp)) >= 
+    ListLength(InterpCodeList(interp));
+  if (isTailCall)
+  {
+    //PrintDebugStrNum("TAILCALL CONTEXT: ", InterpCallStackIndex(interp));
+  }
+  else
+  {
+    ListPushNewItem(InterpCallStack(interp));
+    ++ InterpCallStackIndex(interp);
+    //PrintDebugStrNum("ENTER CONTEXT: ", InterpCallStackIndex(interp));
+  }
+
+  InterpCodeList(interp) = codeList;
+  InterpCodePointer(interp) = -1;
+}
+
+void InterpPushContextBasic(VInterp* interp, VList* codeList)
+{
+  ListPushNewItem(InterpCallStack(interp));
   ++ InterpCallStackIndex(interp);
-  //InterpCodeList(interp) = codeList;
-  //InterpCodePointer(interp) = -1;
+  InterpCodeList(interp) = codeList;
+  InterpCodePointer(interp) = -1;
+  //PrintDebugStrNum("ENTER CONTEXT: ", InterpCallStackIndex(interp));
 }
 
 #define InterpPopContext(interp) \
@@ -187,18 +204,20 @@ void InterpRun(register VInterp* interp, VList* codeList)
 
   // Initialize interpreter state and create root context.
   InterpInit(interp);
-  InterpPushContext(interp, codeList);
+  InterpPushContextBasic(interp, codeList);
 
   while (interp->run)
   {
     // Increment code pointer.
     ++ InterpCodePointer(interp);
+    
+    //PrintDebugStrNum("CODE POINTER: ", InterpCodePointer(interp));
 
     // Exit stackframe if the code in the current 
     // context has finished executing.
     if (InterpCodePointer(interp) >= ListLength(InterpCodeList(interp)))
     {
-      PrintDebugStrNum("EXIT CONTEXT: ", InterpCallStackIndex(interp));
+      //PrintDebugStrNum("EXIT CONTEXT: ", InterpCallStackIndex(interp));
 
       // Pop stackframe.
       InterpPopContext(interp);
