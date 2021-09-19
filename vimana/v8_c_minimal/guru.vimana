@@ -1,0 +1,55 @@
+'Guru Meditation Mantras' print
+'-----------------------' print
+(
+(mustBeTrue) (
+  swap
+  (print ' is true' print)
+  (print ' must be true' print)
+  ifelse
+) def
+
+(mustBeFalse) (
+  swap
+  (print ' must be false' print)
+  (print ' is false' print)
+  ifelse
+) def
+) drop
+
+
+(hi) ('Hi World' print) def
+hi
+hi
+
+
+(
+(mustBeTrue) (
+  swap
+  ('it is true:' print)
+  ('it should be true:' print)
+  ifelse
+  print
+) def
+)drop
+
+(
+(mustBeTrue) (
+  print
+  print
+) def
+
+2 3 < 'foobar1' mustBeTrue
+2 3 < 'foobar2' mustBeTrue
+
+
+
+1 'Hi World' mustBeTrue
+1 2 < '1 2 <' mustBeTrue
+)drop
+
+(printstack
+1 2 > '1 2 >' mustBeFalse
+1 2 eq print
+1 iszero print
+0 iszero print
+) drop

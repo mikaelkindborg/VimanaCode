@@ -42,6 +42,7 @@ VItem;
 #define IsVirgin(item)    ((item)->value.bits == 0)
 #define IsObj(item)       (((item)->value.bits & TypeBitMask) == TypeObj)
 #define IsNumber(item)    (((item)->value.bits & 1) == TypeNumber)
+#define IsBool(item)      IsNumber(item)
 #define IsSymbol(item)    (((item)->value.bits & TypeBitMask) == TypeSymbol)
 #define IsPrimFun(item)   (((item)->value.bits & TypeBitMask) == TypePrimFun)
 #define IsList(item) \
@@ -71,6 +72,9 @@ void ItemSetNumber(VItem* item, VNumber number)
     GuruMeditation(ITEM_NUMBER_TOO_LARGE);
   item->value.number = (number << 1) | TypeNumber;
 }
+
+#define ItemSetBool(item, booleanValue) \
+  ItemSetNumber(item, (VBool)booleanValue)
 
 void ItemSetSymbol(VItem* item, VNumber symbolId)
 {
@@ -104,6 +108,13 @@ VNumber ItemNumber(VItem* item)
   return item->value.number >> 1;
 }
 
+VNumber ItemBool(VItem* item)
+{
+  if (!IsBool(item)) 
+    GuruMeditation(ITEM_NOT_BOOL);
+  return item->value.number >> 1;
+}
+
 VNumber ItemSymbol(VItem* item)
 {
   if (!IsSymbol(item)) 
@@ -126,7 +137,6 @@ void* ItemObj(VItem* item)
 }
 
 #define ItemList(item) ItemObj(item)
-
 
 // COMPARE ITEMS -----------------------------------------------
 

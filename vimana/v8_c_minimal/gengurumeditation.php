@@ -18,6 +18,7 @@ GuruMeditation("ITEM_NUMBER_TOO_LARGE", "ItemSetNumber: Number is too large");
 GuruMeditation("ITEM_SYMBOL_TOO_LARGE", "ItemSetSymbol: Symbol id is too large"); 
 GuruMeditation("ITEM_PRIMFUNID_TOO_LARGE", "ItemSetPrimFun: Primfun id is too large");
 GuruMeditation("ITEM_NOT_NUMBER", "ItemNumber: Not a number");
+GuruMeditation("ITEM_NOT_BOOL", "ItemBool: Not a boolean");
 GuruMeditation("ITEM_NOT_SYMBOL", "ItemSymbol: Not a symbol!");
 GuruMeditation("ITEM_NOT_PRIMFUN", "ItemPrimFun: Not a primfun!");
 GuruMeditation("ITEM_NOT_POINTER", "ItemObj: Not a pointer!");

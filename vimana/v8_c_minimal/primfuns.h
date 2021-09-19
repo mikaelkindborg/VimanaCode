@@ -18,6 +18,7 @@ case 0: // print
   VItem* item = InterpPop(interp);
   PrintItem(item);
   PrintNewLine();
+  // InterpGC(interp, item);
 }
 break;
 
@@ -77,6 +78,120 @@ case 6: // /
   VNumber number = ItemNumber(item1) / ItemNumber(item2);
   ItemSetNumber(item1, number);
   ++ ListLength(InterpStack(interp));
+}
+break;
+
+case 7: // eq
+{
+  VItem* item2 = InterpPop(interp);
+  VItem* item1 = InterpPop(interp);
+  VBool booleanValue = ItemEquals(item1, item2);
+  ItemSetBool(item1, booleanValue);
+  ++ ListLength(InterpStack(interp));
+}
+break;
+
+case 8: // <
+{
+  VItem* item2 = InterpPop(interp);
+  VItem* item1 = InterpPop(interp);
+  VBool booleanValue = ItemNumber(item1) < ItemNumber(item2);
+  ItemSetBool(item1, booleanValue);
+  ++ ListLength(InterpStack(interp));
+}
+break;
+
+case 9: // >
+{
+  VItem* item2 = InterpPop(interp);
+  VItem* item1 = InterpPop(interp);
+  VBool booleanValue = ItemNumber(item1) > ItemNumber(item2);
+  ItemSetBool(item1, booleanValue);
+  ++ ListLength(InterpStack(interp));
+}
+break;
+
+case 10: // iszero
+{
+  VItem* item = InterpPop(interp);
+  VBool booleanValue = 0 == ItemNumber(item);
+  ItemSetBool(item, booleanValue);
+  ++ ListLength(InterpStack(interp));
+}
+break;
+
+case 11: // eval
+{
+  VItem* item = InterpPop(interp);
+  InterpPushContext(interp, ItemList(item));
+}
+break;
+
+case 12: // iftrue
+{
+  VItem* trueBlock = InterpPop(interp);
+  VItem* booleanValue = InterpPop(interp);
+  if (ItemBool(booleanValue))
+    InterpPushContext(interp, ItemList(trueBlock));
+}
+break;
+
+case 13: // iffalse
+{
+  VItem* falseBlock = InterpPop(interp);
+  VItem* booleanValue = InterpPop(interp);
+  if (!ItemBool(booleanValue))
+    InterpPushContext(interp, ItemList(falseBlock));
+}
+break;
+
+case 14: // ifelse
+{
+  VItem* falseBlock = InterpPop(interp);
+  VItem* trueBlock = InterpPop(interp);
+  VItem* booleanValue = InterpPop(interp);
+  if (ItemBool(booleanValue))
+    InterpPushContext(interp, ItemList(trueBlock));
+  else
+    InterpPushContext(interp, ItemList(falseBlock));
+}
+break;
+
+case 15: // drop
+{
+  ListDrop(InterpStack(interp));
+}
+break;
+
+case 16: // dup
+{
+  ListDup(InterpStack(interp));
+}
+break;
+
+case 17: // 2dup
+{
+  List2Dup(InterpStack(interp));
+}
+break;
+
+case 18: // over
+{
+  ListOver(InterpStack(interp));
+}
+break;
+
+case 19: // swap
+{
+  ListSwap(InterpStack(interp));
+}
+break;
+
+case 20: // printstack
+{
+  Print("STACK:");
+  PrintList(InterpStack(interp));
+  PrintNewLine();
 }
 break;
 

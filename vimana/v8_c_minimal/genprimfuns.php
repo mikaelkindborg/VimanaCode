@@ -22,6 +22,7 @@ $PrimFunTable = [];
   VItem* item = InterpPop(interp);
   PrintItem(item);
   PrintNewLine();
+  // InterpGC(interp, item);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("setglobal"); ?>
@@ -69,6 +70,92 @@ $PrimFunTable = [];
   VNumber number = ItemNumber(item1) / ItemNumber(item2);
   ItemSetNumber(item1, number);
   ++ ListLength(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("eq"); ?>
+  VItem* item2 = InterpPop(interp);
+  VItem* item1 = InterpPop(interp);
+  VBool booleanValue = ItemEquals(item1, item2);
+  ItemSetBool(item1, booleanValue);
+  ++ ListLength(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("<"); ?>
+  VItem* item2 = InterpPop(interp);
+  VItem* item1 = InterpPop(interp);
+  VBool booleanValue = ItemNumber(item1) < ItemNumber(item2);
+  ItemSetBool(item1, booleanValue);
+  ++ ListLength(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef(">"); ?>
+  VItem* item2 = InterpPop(interp);
+  VItem* item1 = InterpPop(interp);
+  VBool booleanValue = ItemNumber(item1) > ItemNumber(item2);
+  ItemSetBool(item1, booleanValue);
+  ++ ListLength(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("iszero"); ?>
+  VItem* item = InterpPop(interp);
+  VBool booleanValue = 0 == ItemNumber(item);
+  ItemSetBool(item, booleanValue);
+  ++ ListLength(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("eval"); ?>
+  VItem* item = InterpPop(interp);
+  InterpPushContext(interp, ItemList(item));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("iftrue"); ?>
+  VItem* trueBlock = InterpPop(interp);
+  VItem* booleanValue = InterpPop(interp);
+  if (ItemBool(booleanValue))
+    InterpPushContext(interp, ItemList(trueBlock));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("iffalse"); ?>
+  VItem* falseBlock = InterpPop(interp);
+  VItem* booleanValue = InterpPop(interp);
+  if (!ItemBool(booleanValue))
+    InterpPushContext(interp, ItemList(falseBlock));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("ifelse"); ?>
+  VItem* falseBlock = InterpPop(interp);
+  VItem* trueBlock = InterpPop(interp);
+  VItem* booleanValue = InterpPop(interp);
+  if (ItemBool(booleanValue))
+    InterpPushContext(interp, ItemList(trueBlock));
+  else
+    InterpPushContext(interp, ItemList(falseBlock));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("drop"); ?>
+  ListDrop(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("dup"); ?>
+  ListDup(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("2dup"); ?>
+  List2Dup(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("over"); ?>
+  ListOver(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("swap"); ?>
+  ListSwap(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("printstack"); ?>
+  Print("STACK:");
+  PrintList(InterpStack(interp));
+  PrintNewLine();
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunsFooter(); ?>
