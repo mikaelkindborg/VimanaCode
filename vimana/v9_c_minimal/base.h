@@ -19,8 +19,8 @@ Basic data types and functions.
 #define DEBUG
 #define TRACK_MEMORY_USAGE
 #define INCLUDE_SOURCE_CODE_PARSER
-  #ifdef PLATFORM_ARDUINO
-#undef INCLUDE_SOURCE_CODE_PARSER
+#ifdef PLATFORM_ARDUINO
+  //#undef INCLUDE_SOURCE_CODE_PARSER
 #endif
 
 // BASIC TYPES -------------------------------------------------

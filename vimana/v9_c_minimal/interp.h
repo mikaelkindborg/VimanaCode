@@ -29,6 +29,7 @@ typedef struct __VInterp
   VList  callstack;         // Callstack with context frames
   VIndex callstackIndex;    // Index of current frame
   VBool  run;               // Run flag
+  long  numContextCalls;
 }
 VInterp;
 
@@ -59,6 +60,7 @@ VInterp* InterpCreate()
   ItemList_Init(InterpGlobalVars(interp));
   ItemList_Init(InterpStack(interp));
   ContextList_Init(InterpCallStack(interp));
+  interp->numContextCalls = 0;
   return interp;
 }
 
@@ -69,6 +71,9 @@ void InterpFree(VInterp* interp)
   PrintNewLine();
   Print("GLOBALS:");
   PrintList(InterpGlobalVars(interp));
+  PrintNewLine();
+  PrintLine("CONTEXT CALLS:");
+  PrintNum(interp->numContextCalls);
   PrintNewLine();
 
   // Free lists.
@@ -166,6 +171,8 @@ void InterpInit(VInterp* interp)
 
 void InterpPushContext(VInterp* interp, VList* codeList)
 {
+  ++ interp->numContextCalls;
+
   VBool isTailCall = 
     (1 + InterpCodePointer(interp)) >= 
     ListLength(InterpCodeList(interp));
@@ -175,8 +182,9 @@ void InterpPushContext(VInterp* interp, VList* codeList)
   }
   else
   {
-    ListPushNewElement(InterpCallStack(interp));
     ++ InterpCallStackIndex(interp);
+    if (InterpCallStackIndex(interp) >= ListLength(InterpCallStack(interp)))
+      ListPushNewElement(InterpCallStack(interp));
     //PrintDebugStrNum("ENTER CONTEXT: ", InterpCallStackIndex(interp));
   }
 
@@ -184,7 +192,7 @@ void InterpPushContext(VInterp* interp, VList* codeList)
   InterpCodePointer(interp) = -1;
 }
 
-void InterpPushContextBasic(VInterp* interp, VList* codeList)
+void InterpPushRootContext(VInterp* interp, VList* codeList)
 {
   ListPushNewElement(InterpCallStack(interp));
   ++ InterpCallStackIndex(interp);
@@ -206,7 +214,7 @@ void InterpRun(register VInterp* interp, VList* codeList)
 
   // Initialize interpreter state and create root context.
   InterpInit(interp);
-  InterpPushContextBasic(interp, codeList);
+  InterpPushRootContext(interp, codeList);
 
   while (interp->run)
   {

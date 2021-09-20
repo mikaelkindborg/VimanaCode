@@ -80,6 +80,7 @@ void ListGrow(VList* list, VSize newSize)
 
   // Make space for more items.
   size_t newArraySize = newSize * list->itemSize;
+  //PrintStrNumLine("ListGrow new size: ", newArraySize);
   VByte* newArray = realloc(list->items, newArraySize);
   if (NULL == newArray)
     GuruMeditation(LISTGROW_OUT_OF_MEMORY);
