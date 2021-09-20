@@ -5,12 +5,12 @@
 
 VList* String_Create()
 {
-  return ListCreate(sizeof(char));
+  return ListCreate_Internal(sizeof(char));
 }
 
 void String_Init(VList* list)
 {
-  ListInit(list, sizeof(char));
+  ListInit_Internal(list, sizeof(char));
 }
 
 // Set and Get -------------------------------------------------

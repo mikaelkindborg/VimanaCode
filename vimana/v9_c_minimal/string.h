@@ -9,7 +9,7 @@ typedef struct __VList VString;
 
 VString* StringCreate()
 {
-  VString* string = ListCreate(sizeof(char));
+  VString* string = String_Create();
   string->type = TypeString;
   return string;
 }
@@ -22,8 +22,8 @@ void StringFree(VString* string)
 void StringWriteChar(VString* string, char c)
 {
   char endOfString = '\0';
-  ListPush(string, &c);
-  ListPush(string, &endOfString);
+  String_Push(string, &c);
+  String_Push(string, &endOfString);
   -- ListLength(string);
 }
 
@@ -33,10 +33,10 @@ void StringWriteStr(VString* string, char* str)
   char* p = str;
   while (*p)
   {
-    ListPush(string, p);
+    String_Push(string, p);
     ++ p;
   }
-  ListPush(string, &endOfString);
+  String_Push(string, &endOfString);
   -- ListLength(string);
 }
 
@@ -51,32 +51,4 @@ char* StringGetStrCopy(VString* string)
   char* buf = MemAlloc(ListLength(string) + 1);
   strcpy(buf, StringGetStr(string));
   return buf;
-}
-
-// Lookup a string and return the index if it is found.
-// Returns -1 if not found.
-// Assumes use of VItem to represent strings.
-// All items in the list must be strings.
-VIndex ListLookupString(VList* list, char* strToFind)
-{
-  for (int index = 0; index < ListLength(list); ++ index)
-  {
-    VItem* item = ListGet(list, index);
-    char* str = StringGetStr(ItemObj(item));
-    if (StrEquals(strToFind, str))
-      return index; // Found it.
-  }
-  return -1; // Not found.
-}
-
-// Push string item to list.
-// Copies the string.
-// Returns index to the added item.
-VIndex ListAddString(VList* list, char* str)
-{
-  VString* string = StringCreate();
-  StringWriteStr(string, str);
-  VItem* item = ListPushNewItem(list);
-  ItemSetObj(item, string);
-  return ListLength(list) - 1;
 }

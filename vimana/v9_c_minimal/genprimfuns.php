@@ -28,15 +28,15 @@ $PrimFunTable = [];
 <?php PrimFunDef("setglobal"); ?>
   VItem* quotedSymbol = InterpPop(interp);
   VItem* value = InterpPop(interp);
-  VIndex index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
+  VIndex index = ItemSymbol(ItemList_Get(ItemObj(quotedSymbol), 0));
   InterpSetGlobalVar(interp, index, value);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("def"); ?>
   VItem* funBody = InterpPop(interp);
   VItem* quotedSymbol = InterpPop(interp);
-  ItemObjAsList(funBody)->type = TypeFun;
-  VIndex index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
+  ItemList(funBody)->type = TypeFun;
+  VIndex index = ItemSymbol(ItemList_Get(ItemObj(quotedSymbol), 0));
   InterpSetGlobalVar(interp, index, funBody);
 <?php PrimFunEnd(); ?>
 
@@ -132,24 +132,30 @@ $PrimFunTable = [];
     InterpPushContext(interp, ItemList(falseBlock));
 <?php PrimFunEnd(); ?>
 
+<?php PrimFunDef("not"); ?>
+  VItem* item = InterpPop(interp);
+  ItemSetBool(item, ! ItemBool(item));
+  ++ ListLength(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
 <?php PrimFunDef("drop"); ?>
-  ListDrop(InterpStack(interp));
+  ItemListDrop(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("dup"); ?>
-  ListDup(InterpStack(interp));
+  ItemListDup(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("2dup"); ?>
-  List2Dup(InterpStack(interp));
+  ItemList2Dup(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("over"); ?>
-  ListOver(InterpStack(interp));
+  ItemListOver(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("swap"); ?>
-  ListSwap(InterpStack(interp));
+  ItemListSwap(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("printstack"); ?>

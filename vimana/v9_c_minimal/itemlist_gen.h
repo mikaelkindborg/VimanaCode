@@ -5,12 +5,12 @@
 
 VList* ItemList_Create()
 {
-  return ListCreate(sizeof(VItem));
+  return ListCreate_Internal(sizeof(VItem));
 }
 
 void ItemList_Init(VList* list)
 {
-  ListInit(list, sizeof(VItem));
+  ListInit_Internal(list, sizeof(VItem));
 }
 
 // Set and Get -------------------------------------------------

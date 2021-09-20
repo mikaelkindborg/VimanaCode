@@ -18,8 +18,8 @@ VSymbolDict;
 VSymbolDict* SymbolDictCreate()
 {
   VSymbolDict* dict = MemAlloc(sizeof(VSymbolDict));
-  ListInit(SymbolDictSymbols(dict), sizeof(VItem));
-  ListInit(SymbolDictPrimFuns(dict), sizeof(VItem));
+  ItemList_Init(SymbolDictSymbols(dict));
+  ItemList_Init(SymbolDictPrimFuns(dict));
   return dict;
 }
 
@@ -32,13 +32,13 @@ void SymbolDictFree(VSymbolDict* dict)
 
 char* SymbolDictLookupSymbolId(VSymbolDict* dict, VIndex symbolId)
 {
-  VItem* item = ListGet(SymbolDictSymbols(dict), symbolId);
+  VItem* item = ItemList_Get(SymbolDictSymbols(dict), symbolId);
   return StringGetStr(ItemObj(item));
 }
 
 char* SymbolDictLookupPrimFunId(VSymbolDict* dict, VIndex primfunId)
 {
-  VItem* item = ListGet(SymbolDictPrimFuns(dict), primfunId);
+  VItem* item = ItemList_Get(SymbolDictPrimFuns(dict), primfunId);
   return StringGetStr(ItemObj(item));
 }
 

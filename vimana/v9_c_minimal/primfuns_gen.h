@@ -26,7 +26,7 @@ case 1: // setglobal
 {
   VItem* quotedSymbol = InterpPop(interp);
   VItem* value = InterpPop(interp);
-  VIndex index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
+  VIndex index = ItemSymbol(ItemList_Get(ItemObj(quotedSymbol), 0));
   InterpSetGlobalVar(interp, index, value);
 }
 break;
@@ -35,8 +35,8 @@ case 2: // def
 {
   VItem* funBody = InterpPop(interp);
   VItem* quotedSymbol = InterpPop(interp);
-  ItemObjAsList(funBody)->type = TypeFun;
-  VIndex index = ItemSymbol(ListGet(ItemObj(quotedSymbol), 0));
+  ItemList(funBody)->type = TypeFun;
+  VIndex index = ItemSymbol(ItemList_Get(ItemObj(quotedSymbol), 0));
   InterpSetGlobalVar(interp, index, funBody);
 }
 break;
@@ -157,37 +157,45 @@ case 14: // ifelse
 }
 break;
 
-case 15: // drop
+case 15: // not
 {
-  ListDrop(InterpStack(interp));
+  VItem* item = InterpPop(interp);
+  ItemSetBool(item, ! ItemBool(item));
+  ++ ListLength(InterpStack(interp));
 }
 break;
 
-case 16: // dup
+case 16: // drop
 {
-  ListDup(InterpStack(interp));
+  ItemListDrop(InterpStack(interp));
 }
 break;
 
-case 17: // 2dup
+case 17: // dup
 {
-  List2Dup(InterpStack(interp));
+  ItemListDup(InterpStack(interp));
 }
 break;
 
-case 18: // over
+case 18: // 2dup
 {
-  ListOver(InterpStack(interp));
+  ItemList2Dup(InterpStack(interp));
 }
 break;
 
-case 19: // swap
+case 19: // over
 {
-  ListSwap(InterpStack(interp));
+  ItemListOver(InterpStack(interp));
 }
 break;
 
-case 20: // printstack
+case 20: // swap
+{
+  ItemListSwap(InterpStack(interp));
+}
+break;
+
+case 21: // printstack
 {
   Print("STACK:");
   PrintList(InterpStack(interp));

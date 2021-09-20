@@ -18,6 +18,8 @@ typedef struct __VContext
 }
 VContext;
 
+#include "contextlist_gen.h"
+
 // INTERPRETER -------------------------------------------------
 
 typedef struct __VInterp
@@ -41,22 +43,22 @@ VInterp;
 #define InterpCallStackIndex(interp) \
   ((interp)->callstackIndex)
 #define InterpContext(interp) \
-  ((VContext*)ListGet(InterpCallStack(interp), InterpCallStackIndex(interp)))
+  (ContextList_Get(InterpCallStack(interp), InterpCallStackIndex(interp)))
 #define InterpCodeList(interp) \
   (InterpContext(interp)->codeList)
 #define InterpCodePointer(interp) \
   (InterpContext(interp)->codePointer)
 #define InterpCurrentCodeElement(interp) \
-  ((VItem*)ListGet(InterpCodeList(interp), InterpCodePointer(interp)))
+  (ItemList_Get(InterpCodeList(interp), InterpCodePointer(interp)))
 
 // CREATE/FREE FUNCTIONS ---------------------------------------
 
 VInterp* InterpCreate()
 {
   VInterp* interp = MemAlloc(sizeof(VInterp));
-  ListInit(InterpGlobalVars(interp), sizeof(VItem));
-  ListInit(InterpStack(interp), sizeof(VItem));
-  ListInit(InterpCallStack(interp), sizeof(VContext));
+  ItemList_Init(InterpGlobalVars(interp));
+  ItemList_Init(InterpStack(interp));
+  ContextList_Init(InterpCallStack(interp));
   return interp;
 }
 
@@ -88,13 +90,13 @@ void InterpFree(VInterp* interp)
 // GLOBAL VARIABLES --------------------------------------------
 
 #define InterpSetGlobalVar(interp, index, item) \
-  ListSet(InterpGlobalVars(interp), index, item)
+  ItemList_Set(InterpGlobalVars(interp), index, item)
 
 VItem* InterpGetGlobalVar(VInterp* interp, VIndex index)
 {
   if (index < ListLength(InterpGlobalVars(interp)))
   {
-    VItem* item = ListGet(InterpGlobalVars(interp), index);
+    VItem* item = ItemList_Get(InterpGlobalVars(interp), index);
     if (!IsVirgin(item))
       return item;
   }
@@ -115,16 +117,16 @@ void InterpTinyGarbageCollect(VInterp* interp, VList* list)
 {
   for (int i = 0; i < ListLength(list); ++i)
   {
-    VItem* item = (VItem*) ListItemPtr(list, i);
+    VItem* item = ItemList_GetRaw(list, i);
     if (IsObj(item))
     {
-      VBool isGlobal = ListContainsItem(InterpGlobalVars(interp), item);
+      VBool isGlobal = ItemListContains(InterpGlobalVars(interp), item);
       if (isGlobal)
       {
         continue; // Keep item
       }
 
-      VBool isOnStack = ListContainsItem(InterpStack(interp), item);
+      VBool isOnStack = ItemListContains(InterpStack(interp), item);
       if (isOnStack)
       {
         continue; // Keep item
@@ -148,10 +150,10 @@ void InterpTinyGarbageCollect(VInterp* interp, VList* list)
 // DATA STACK --------------------------------------------------
 
 // Push an item onto the data stack.
-#define InterpPush(interp, item) ListPush(InterpStack(interp), item)
+#define InterpPush(interp, item) ItemList_Push(InterpStack(interp), item)
 
 // Pop an item off the data stack.
-#define InterpPop(interp) ListPop(InterpStack(interp))
+#define InterpPop(interp) ItemList_Pop(InterpStack(interp))
 
 // CONTEXT HANDLING --------------------------------------------
 
@@ -173,7 +175,7 @@ void InterpPushContext(VInterp* interp, VList* codeList)
   }
   else
   {
-    ListPushNewItem(InterpCallStack(interp));
+    ListPushNewElement(InterpCallStack(interp));
     ++ InterpCallStackIndex(interp);
     //PrintDebugStrNum("ENTER CONTEXT: ", InterpCallStackIndex(interp));
   }
@@ -184,7 +186,7 @@ void InterpPushContext(VInterp* interp, VList* codeList)
 
 void InterpPushContextBasic(VInterp* interp, VList* codeList)
 {
-  ListPushNewItem(InterpCallStack(interp));
+  ListPushNewElement(InterpCallStack(interp));
   ++ InterpCallStackIndex(interp);
   InterpCodeList(interp) = codeList;
   InterpCodePointer(interp) = -1;
@@ -238,7 +240,7 @@ void InterpRun(register VInterp* interp, VList* codeList)
     {
       primFun = ItemPrimFun(element);
       //PrintDebugStrNum("PrimFun: ", primFun);
-      #include "primfuns.h"
+      #include "primfuns_gen.h"
       goto Next;
     }
 

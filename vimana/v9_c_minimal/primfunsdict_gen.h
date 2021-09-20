@@ -21,6 +21,7 @@ void SymbolDictAddPrimFuns(VSymbolDict* dict)
   SymbolDictAddPrimFunName(dict, "iftrue");
   SymbolDictAddPrimFunName(dict, "iffalse");
   SymbolDictAddPrimFunName(dict, "ifelse");
+  SymbolDictAddPrimFunName(dict, "not");
   SymbolDictAddPrimFunName(dict, "drop");
   SymbolDictAddPrimFunName(dict, "dup");
   SymbolDictAddPrimFunName(dict, "2dup");

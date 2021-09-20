@@ -5,12 +5,12 @@
 
 VList* ContextList_Create()
 {
-  return ListCreate(sizeof(VContext));
+  return ListCreate_Internal(sizeof(VContext));
 }
 
 void ContextList_Init(VList* list)
 {
-  ListInit(list, sizeof(VContext));
+  ListInit_Internal(list, sizeof(VContext));
 }
 
 // Set and Get -------------------------------------------------

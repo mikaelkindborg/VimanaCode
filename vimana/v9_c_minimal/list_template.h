@@ -5,12 +5,12 @@
 
 VList* ListType_Create()
 {
-  return ListCreate(sizeof(ItemType));
+  return ListCreate_Internal(sizeof(ItemType));
 }
 
 void ListType_Init(VList* list)
 {
-  ListInit(list, sizeof(ItemType));
+  ListInit_Internal(list, sizeof(ItemType));
 }
 
 // Set and Get -------------------------------------------------

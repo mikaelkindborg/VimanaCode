@@ -56,6 +56,8 @@ char* CodeParserWorker(char* p, VList* codeList)
   
   while (!IsEndOfString(*p))
   {
+    //printf("%c", *p);
+
     if (IsWhiteSpace(*p))
     {
       // Skip whitespace
@@ -65,9 +67,9 @@ char* CodeParserWorker(char* p, VList* codeList)
     if (IsLeftParen(*p))
     {
       // Create child list
-      childList = ListCreate(sizeof(VItem));
+      childList = ItemList_Create();
       p = CodeParserWorker(p + 1, childList);
-      item = ListPushNewItem(codeList);
+      item = ListPushNewElement(codeList);
       ItemSetObj(item, childList);
     }
     else
@@ -81,7 +83,7 @@ char* CodeParserWorker(char* p, VList* codeList)
     {
       // Create string
       p = ParseString(p + 1, &string);
-      item = ListPushNewItem(codeList);
+      item = ListPushNewElement(codeList);
       ItemSetObj(item, string);
     }
     else
@@ -89,7 +91,7 @@ char* CodeParserWorker(char* p, VList* codeList)
       // Create number/primfun/symbol
       c = *p;
       p = ParseNumber(p + 1, &number);
-      item = ListPushNewItem(codeList);
+      item = ListPushNewElement(codeList);
       if ('N' == c)
         ItemSetNumber(item, number);
       else
@@ -112,7 +114,7 @@ char* CodeParserWorker(char* p, VList* codeList)
 // This list must be deallocated along with its children.
 VList* ParseSymbolicCode(char* p)
 {
-  VList* codeList = ListCreate(sizeof(VItem));
+  VList* codeList = ItemList_Create();
   CodeParserWorker(p, codeList);
   return codeList;
 }

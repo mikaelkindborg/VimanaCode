@@ -7,21 +7,23 @@ function countlines($file)
 
 $numlines = 
   countlines("base.h") +
-  countlines("gurumeditation.h") +
+  countlines("gurumeditation_gen.h") +
   countlines("item.h") +
   countlines("list.h") +
+  countlines("string_gen.h") +
   countlines("string.h") +
-  countlines("list_dealloc.h") +
-  countlines("print.h") +
+  countlines("itemlist_gen.h") +
+  countlines("itemlist.h") +
+  countlines("itemprint.h") +
   countlines("interp.h") +
-  countlines("primfuns.h") +
+  countlines("primfuns_gen.h") +
   countlines("codeparser.h");
   
 echo "BASE VERSION: ".$numlines." lines\n";
 
 $numlines += 
   countlines("symboldict.h") +
-  countlines("symboldict_primfuns.h") +
+  countlines("primfunsdict_gen.h") +
   countlines("sourceparser.h");
 
 echo "FULL VERSION: ".$numlines." lines\n";
@@ -39,6 +41,9 @@ Version v8_minimal:
 210918:
   BASE VERSION: 1244 lines
   FULL VERSION: 1522 lines
+210920 (it has grown bigger with generated code for typed list):
+  BASE VERSION: 1467 lines
+  FULL VERSION: 1759 lines
 
 Version v7_c:
 210426: 484 lines 

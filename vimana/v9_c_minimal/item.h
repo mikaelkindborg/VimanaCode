@@ -136,8 +136,6 @@ void* ItemObj(VItem* item)
   return item->value.obj;
 }
 
-#define ItemList(item) ItemObj(item)
-
 // COMPARE ITEMS -----------------------------------------------
 
 #define ItemEquals(item1, item2) \

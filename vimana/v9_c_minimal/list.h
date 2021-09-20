@@ -29,7 +29,7 @@ VList;
 
 // CREATE / FREE -----------------------------------------------
 
-void ListInit(VList* list, VSize itemSize)
+void ListInit_Internal(VList* list, VSize itemSize)
 {
   list->type = TypeList;
   
@@ -48,10 +48,10 @@ void ListInit(VList* list, VSize itemSize)
   memset(itemArray, 0, arraySize);
 }
 
-VList* ListCreate(VSize itemSize)
+VList* ListCreate_Internal(VSize itemSize)
 {
   VList* list = MemAlloc(sizeof(VList));
-  ListInit(list, itemSize);
+  ListInit_Internal(list, itemSize);
   return list;
 }
 
@@ -92,7 +92,7 @@ void ListGrow(VList* list, VSize newSize)
   VByte* p = newArray + prevArraySize;
   memset(p, 0, numNewBytes);
 
-  PrintDebug("REALLOC successful in ListGrow");
+  //PrintDebug("REALLOC successful in ListGrow");
 }
 
 #define ListCheckCapacity(list, index) \
@@ -104,98 +104,16 @@ do { \
 
 // Generic Pointer-Based Functions -----------------------------
 
-#define ListGetItemPtr(list, index) \
+#define ListGetElement(list, index) \
   ( ((VByte*)((list)->items)) + ((index) * (list)->itemSize) )
 
-#define ListSetItemPtr(list, index, item) \
-  memcpy(ListGetItemPtr(list, index), item, (list)->itemSize)
+#define ListSetElement(list, index, element) \
+  memcpy(ListGetElement(list, index), element, (list)->itemSize)
 
-// Returns pointer to new item (increses length of list by 1).
-void* ListPushNewItemPtr(VList* list)
+// Returns pointer to new element (increses length of list by 1).
+void* ListPushNewElement(VList* list)
 {
   ListCheckCapacity(list, ListLength(list));
-  return ListGetItemPtr(list, ListLength(list) - 1);
+  ++ ListLength(list);
+  return ListGetElement(list, ListLength(list) - 1);
 }
-
-/*
-// Forth Stack Operations --------------------------------------
-
-// ITEM DROP ->
-#ifdef OPTIMIZE
-
-  #define ListDrop(list) \
-    do { \
-      if (ListLength(list) < 1) \
-        GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST); \
-      -- ListLength(list); \
-    } while (0)
-  
-#else
-
-  void ListDrop(VList* list)
-  {
-    if (ListLength(list) < 1)
-      GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
-    -- ListLength(list);
-  }
-
-#endif
-
-// ITEM DUP -> ITEM ITEM
-void ListDup(VList* list)
-{
-  void* item = ListGet(list, ListLength(list) - 1);
-  ListPush(list, item);
-}
-
-// ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
-void List2Dup(VList* list)
-{
-  void* item;
-  item = ListGet(list, ListLength(list) - 2);
-  ListPush(list, item);
-  item = ListGet(list, ListLength(list) - 2);
-  ListPush(list, item);
-}
-
-// ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
-void ListOver(VList* list)
-{
-  void* item = ListGet(list, ListLength(list) - 2);
-  ListPush(list, item);
-}
-
-// ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
-void ListSwap(VList* list)
-{
-  size_t size = list->itemSize;
-  char temp[size];
-  void* item1 = ListItemPtr(list, ListLength(list) - 1);
-  void* item2 = ListItemPtr(list, ListLength(list) - 2);
-  memcpy(temp, item1, size);
-  memcpy(item1, item2, size);
-  memcpy(item2, temp, size);
-}
-
-// Object Access -----------------------------------------------
-
-VList* ItemObjAsList(VItem item)
-{
-  if (!IsObj(item)) 
-    GuruMeditation(ITEMOBJASLIST_NOT_POINTER);
-  return item.value.obj;
-}
-
-// Check if an item is in the list.
-VBool ListContainsItem(VList* list, VItem item)
-{
-  for (int i = 0; i < ListLength(list); ++i)
-  {
-    if (ItemEquals(item, ListItemPtr(list, i)))
-      return TRUE;
-  }
-
-  return FALSE;
-}
-*/
-
