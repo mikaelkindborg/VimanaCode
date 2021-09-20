@@ -1,0 +1,77 @@
+'Guru Meditation Mantras' print
+'-----------------------' print
+
+(fib)
+  (dup 2 < (dup 1 - fib swap 2 - fib +) iffalse) def
+
+(times) 
+  (dup iszero 
+    (drop drop) 
+    (swap dup eval swap 1 - times) 
+  ifelse) def
+
+('Hi World' print) 5 times
+
+(32 fib print) 5 times
+
+
+(***
+
+(TIMESDO) 
+  (DUP ISZERO 
+    (DROP DROP) 
+    (SWAP DUP EVAL SWAP SUB1 TIMESDO) 
+  IFELSE) DEFSPECIAL
+
+(32 FIB PRINT) 5 TIMESDO
+
+***) drop
+
+(***
+
+(hi) ('Hi World' print) def
+hi
+hi
+hi
+
+(
+(mustBeTrue) (
+  swap
+  (print ' is true' print)
+  (print ' must be true' print)
+  ifelse
+) def
+
+(mustBeFalse) (
+  swap
+  (print ' must be false' print)
+  (print ' is false' print)
+  ifelse
+) def
+) drop
+
+
+
+(mustBeTrue) (
+  swap
+  ('it is true:' print)
+  ('it should be true:' print)
+  ifelse
+  print
+) def
+
+
+2 3 < 'foobar1' mustBeTrue
+2 3 < 'foobar2' mustBeTrue
+
+
+1 'Hi World' mustBeTrue
+1 2 < '1 2 <' mustBeTrue
+
+printstack
+1 2 > '1 2 >' mustBeFalse
+1 2 eq print
+1 iszero print
+0 iszero print
+
+***) drop

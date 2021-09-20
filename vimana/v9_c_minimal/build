@@ -1,0 +1,6 @@
+#!/bin/bash
+
+php gengurumeditation.php > gurumeditation_gen.h
+php genprimfuns.php > primfuns_gen.h
+php genlistfuns.php
+#cc vimana.c -o vimana
