@@ -7,4 +7,4 @@
     (swap dup eval swap 1 - times) 
   ifelse) def
 
-(32 fib print) 5 times
+(8 fib print) 5 times

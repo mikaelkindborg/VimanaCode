@@ -12,6 +12,8 @@ Also see generated file: itemlist_gen.h
 
 #define ItemList(item) ((VList*)ItemObj(item))
 
+#define ItemObjHeader(item) ((VObj*)ItemObj(item))
+
 // Forth Stack Operations --------------------------------------
 
 // ITEM DROP ->
@@ -167,8 +169,81 @@ VIndex ListAddString(VList* list, char* str)
   return ListLength(list) - 1;
 }
 
-// Free List Deep ----------------------------------------------
+// Tiny GC -----------------------------------------------------
 
+void ItemGC(VItem* item);
+
+void ItemIncrRefCount(VItem* item)
+{
+  if (IsObj(item)) 
+  {
+    ++ ItemObjHeader(item)->refCount;
+    PrintStrNumLine("INCR_REF_COUNT: ", ItemObjHeader(item)->refCount);
+  }
+}
+
+/*
+void ItemDecrRefCount(VItem* item)
+{
+  if (IsObj(item)) -- ItemObjHeader(item)->refCount;
+}
+*/
+
+void ListGCChildren(VList* list)
+{
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    VItem* item = ItemList_GetRaw(list, i);
+    ItemGC(item);
+  }
+}
+
+void PrintList(VList* list);
+
+void ObjGC(VObj* obj)
+{
+  -- obj->refCount;
+
+  PrintStrNumLine("DECR_REF_COUNT: ", obj->refCount);
+
+  if (obj->refCount <= 0)
+  {
+    PrintLine("FREE OBJECT");
+
+    if (TypeString == obj->type)
+    {
+      PrintLine("FREE STRING");
+      StringFree((VString*) obj);
+    }
+    else
+    if (TypeList == obj->type || TypeFun == obj->type)
+    {
+      PrintLine("FREE LIST");
+      PrintList((VList*) obj);
+      PrintNewLine();
+      ListGCChildren((VList*) obj);
+      ListFree((VList*) obj);
+    }
+    else
+    {
+      PrintLine("ALERT - UNKNOWN TYPE IN ObjGC");
+      exit(0);
+    }
+  }
+}
+
+void ListGC(VList* list)
+{
+  ObjGC((VObj*) list);
+}
+
+void ItemGC(VItem* item)
+{
+  if (IsObj(item)) ObjGC(ItemObj(item));
+}
+
+// Free List Deep ----------------------------------------------
+/*
 void ListDeallocArrayBufDeep(VList* list);
 
 // Assumes that list contains VItem:s.
@@ -207,10 +282,5 @@ void ListDeallocArrayBufDeep(VList* list)
 
   // Free list array.
   ListDeallocArrayBuf(list);
-}
-
-/*
-void ListDeallocArrayBufDeepSafe(VList* list, VList* safeList)
-{
 }
 */

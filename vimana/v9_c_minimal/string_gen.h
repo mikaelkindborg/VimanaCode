@@ -8,11 +8,6 @@ VList* String_Create()
   return ListCreate_Internal(sizeof(char));
 }
 
-void String_Init(VList* list)
-{
-  ListInit_Internal(list, sizeof(char));
-}
-
 // Set and Get -------------------------------------------------
 
 #define String_SetRaw(list, index, item) \

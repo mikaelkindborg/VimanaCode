@@ -8,11 +8,6 @@ VList* ItemList_Create()
   return ListCreate_Internal(sizeof(VItem));
 }
 
-void ItemList_Init(VList* list)
-{
-  ListInit_Internal(list, sizeof(VItem));
-}
-
 // Set and Get -------------------------------------------------
 
 #define ItemList_SetRaw(list, index, item) \

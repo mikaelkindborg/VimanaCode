@@ -77,116 +77,12 @@ void InterpFree(VInterp* interp)
   PrintNewLine();
 
   // Free lists.
-  ObjGC(InterpGlobalVars(interp));
-  ObjDeref(InterpStack(interp));
-  ObjDeref(InterpCallStack(interp));
-
-  /*
-  VList* deallocatedItems = ListCreate(sizeof(VItem));
-  ListDeallocArrayBufDeepSafe(InterpGlobalVars(interp), deallocatedItems);
-  ListDeallocArrayBufDeepSafe(InterpStack(interp), deallocatedItems);
-  ListDeallocArrayBuf(InterpCallStack(interp));
-  ListFree(deallocatedItems);
-  */
+  ListGC(InterpGlobalVars(interp));
+  ListGC(InterpStack(interp));
+  ListFree(InterpCallStack(interp));
 
   // Free interpreter struct.
   MemFree(interp);
-}
-
-// TINY GC -----------------------------------------------------
-
-void ListGC(VList* list)
-{
-  for (int i = 0; i < ListLength(list); ++i)
-  {
-    VItem* item = ItemList_GetRaw(list, i);
-
-      // Free item
-      if (IsList(item))
-      {
-        InterpTinyGC(interp, ItemList(item));
-        ListFree(ItemList(item));
-      }
-      else
-      if (IsString(item))
-      {
-        StringFree(ItemObj(item));
-      }
-    } 
-  }
-}
-
-void ItemIncrementRefCounter(VItem* item)
-{
-  if (IsObj(item))
-  {
-    VObj* obj = ItemObj(item);
-    ++ obj->refCount;
-  }
-}
-
-void ItemGC(VItem* item)
-{
-  if (IsObj(item))
-  {
-    ObjGC(ItemObj(item));
-  }
-}
-
-void ObjGC(VObj* obj)
-{
-  -- obj->refCount;
-  if (obj->refCounter <= 0)
-  {
-  if (TypeString == obj->type)
-  {
-    StringFree((VString*) obj);
-  }
-  else
-  if (TypeList == obj->type || TypeFun == obj->type)
-  {
-    ListGC((VList*) obj);
-    ListFree(ItemList(item));
-  }
-  else
-  {
-    PrintLine("ALERT - UNKNOWN TYPE IN ObjGC");
-    exit(0);
-  }
-}
-
-void InterpGCObj(VInterp* interp, VObj* obj)
-{
-  // TODO: Check String/List. New type VObj.
-}
-
-void InterpGCList(VInterp* interp, VList* list)
-{
-  for (int i = 0; i < ListLength(list); ++i)
-  {
-    VItem* item = ItemList_GetRaw(list, i);
-    if (IsObj(item))
-    {
-      VList* obj = ItemObj(item);
-      -- obj->refCount;
-      if (obj->refCount > 0)
-      {
-        continue; // Keep item
-      }
-
-      // Free item
-      if (IsList(item))
-      {
-        InterpTinyGC(interp, ItemList(item));
-        ListFree(ItemList(item));
-      }
-      else
-      if (IsString(item))
-      {
-        StringFree(ItemObj(item));
-      }
-    } 
-  }
 }
 
 // GLOBAL VARIABLES --------------------------------------------
@@ -196,7 +92,7 @@ VItem* InterpGetGlobalVar(VInterp* interp, VIndex index)
   if (index < ListLength(InterpGlobalVars(interp)))
   {
     VItem* item = ItemList_Get(InterpGlobalVars(interp), index);
-    if (!IsVirgin(item))
+    if (!IsVirgin(item)) 
       return item;
   }
   
@@ -207,60 +103,13 @@ VItem* InterpGetGlobalVar(VInterp* interp, VIndex index)
 //#define InterpSetGlobalVar(interp, index, item) \
 //  ItemList_Set(InterpGlobalVars(interp), index, item)
 
-void InterpSetGlobalVar(VInterp* interp, VIndex index, VItem* item)
+void InterpSetGlobalVar(VInterp* interp, VIndex index, VItem* newItem)
 {
-  VItem* currentItem = InterpGetGlobalVar(interp, index);
-  if (NULL != currentItem)
-  { 
-    ItemDecrementRefCounter(currentItem);
-  }
-  ItemIncrementRefCounter(item);
-  ItemList_Set(InterpGlobalVars(interp), index, item);
-}
-
-// DEALLOCATE UNREFRENCED ITEMS --------------------------------
-
-// This version of Vimana has manual memory management, with the
-// assistance of this function that deallocates all items not
-// referenced in the global var table.
-
-// Check if an item is in the global var list.
-// Does not handle circular lists.
-
-// TODO: Rewrite using InterpTinyCG()
-
-void InterpTinyGarbageCollect(VInterp* interp, VList* list)
-{
-  for (int i = 0; i < ListLength(list); ++i)
-  {
-    VItem* item = ItemList_GetRaw(list, i);
-    if (IsObj(item))
-    {
-      VBool isGlobal = ItemListContains(InterpGlobalVars(interp), item);
-      if (isGlobal)
-      {
-        continue; // Keep item
-      }
-
-      VBool isOnStack = ItemListContains(InterpStack(interp), item);
-      if (isOnStack)
-      {
-        continue; // Keep item
-      }
-
-      // Free item
-      if (IsList(item))
-      {
-        InterpTinyGarbageCollect(interp, ItemList(item));
-        ListFree(ItemList(item));
-      }
-      else
-      if (IsString(item))
-      {
-        StringFree(ItemObj(item));
-      }
-    } 
-  }
+  VItem* oldItem = InterpGetGlobalVar(interp, index);
+  if (NULL != oldItem) 
+    ItemGC(oldItem);
+  ItemIncrRefCount(newItem);
+  ItemList_Set(InterpGlobalVars(interp), index, newItem);
 }
 
 // DATA STACK --------------------------------------------------
@@ -270,12 +119,7 @@ void InterpTinyGarbageCollect(VInterp* interp, VList* list)
 
 void InterpPush(VInterp* interp, VItem* item)
 {
-  if (IsObj(item))
-  {
-    VList* obj = ItemObj(item);
-    ++ obj->refCount;
-  }
-
+  ItemIncrRefCount(item);
   ItemList_Push(InterpStack(interp), item);
 }
 
@@ -285,13 +129,8 @@ void InterpPush(VInterp* interp, VItem* item)
 VItem* InterpPop(VInterp* interp)
 {
   VItem* item = ItemList_Pop(InterpStack(interp));
-  if (IsObj(item))
-  {
-    VList* obj = ItemObj(item);
-    -- obj->refCount;
-  }
-
-  ItemList_Push(InterpStack(interp), item);
+  ItemGC(item); // scary prospect
+  return item;
 }
 
 // CONTEXT HANDLING --------------------------------------------
@@ -417,6 +256,5 @@ void InterpRun(register VInterp* interp, VList* codeList)
 Next:;
   } // while
 
-  InterpTinyGarbageCollect(interp, codeList);
-  ListFree(codeList);
+  ListGC(codeList);
 }

@@ -8,11 +8,6 @@ VList* ContextList_Create()
   return ListCreate_Internal(sizeof(VContext));
 }
 
-void ContextList_Init(VList* list)
-{
-  ListInit_Internal(list, sizeof(VContext));
-}
-
 // Set and Get -------------------------------------------------
 
 #define ContextList_SetRaw(list, index, item) \

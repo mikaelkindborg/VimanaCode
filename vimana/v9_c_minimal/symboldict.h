@@ -25,8 +25,8 @@ VSymbolDict* SymbolDictCreate()
 
 void SymbolDictFree(VSymbolDict* dict)
 {
-  ListFreeDeep(SymbolDictSymbols(dict));
-  ListFreeDeep(SymbolDictPrimFuns(dict));
+  ListGC(SymbolDictSymbols(dict));
+  ListGC(SymbolDictPrimFuns(dict));
   MemFree(dict);
 }
 
