@@ -126,7 +126,7 @@ void TestList()
   ShouldHold("Item must be primfun", IsPrimFun(&testItem));
 
   VList* funList = ListCreate(sizeof(int));
-  funList->type = TypeFun;
+  funList->header.type = TypeFun;
   ItemSetObj(&testItem, funList);
   ShouldHold("Item must be object", IsObj(&testItem));
   ShouldHold("Item must be fun", IsFun(&testItem));

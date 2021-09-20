@@ -7,26 +7,26 @@ Dictionary for symbols. Used for parsing and printing.
 
 typedef struct __VSymbolDict
 {
-  VList symbols;
-  VList primfuns;
+  VList* symbols;
+  VList* primfuns;
 }
 VSymbolDict;
 
-#define SymbolDictSymbols(dict)  (& ((dict)->symbols))
-#define SymbolDictPrimFuns(dict) (& ((dict)->primfuns))
+#define SymbolDictSymbols(dict)  ((dict)->symbols)
+#define SymbolDictPrimFuns(dict) ((dict)->primfuns)
 
 VSymbolDict* SymbolDictCreate()
 {
   VSymbolDict* dict = MemAlloc(sizeof(VSymbolDict));
-  ItemList_Init(SymbolDictSymbols(dict));
-  ItemList_Init(SymbolDictPrimFuns(dict));
+  SymbolDictSymbols(dict) = ItemList_Create();
+  SymbolDictPrimFuns(dict) = ItemList_Create();
   return dict;
 }
 
 void SymbolDictFree(VSymbolDict* dict)
 {
-  ListDeallocArrayBufDeep(SymbolDictSymbols(dict));
-  ListDeallocArrayBufDeep(SymbolDictPrimFuns(dict));
+  ListFreeDeep(SymbolDictSymbols(dict));
+  ListFreeDeep(SymbolDictPrimFuns(dict));
   MemFree(dict);
 }
 

@@ -6,6 +6,8 @@ Functions for lists (arrays) with elements of type VItem.
 Also see generated file: itemlist_gen.h
 */
 
+#include "itemlist_gen.h"
+
 // ItemList Access ---------------------------------------------
 
 #define ItemList(item) ((VList*)ItemObj(item))

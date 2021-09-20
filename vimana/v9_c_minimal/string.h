@@ -7,10 +7,12 @@ Using Vlist to implement growable strings.
 
 typedef struct __VList VString;
 
+#include "string_gen.h"
+
 VString* StringCreate()
 {
   VString* string = String_Create();
-  string->type = TypeString;
+  string->header.type = TypeString;
   return string;
 }
 

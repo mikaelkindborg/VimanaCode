@@ -24,23 +24,23 @@ VContext;
 
 typedef struct __VInterp
 {
-  VList  globalVars;        // List of global variable values
-  VList  stack;             // The data stack
-  VList  callstack;         // Callstack with context frames
-  VIndex callstackIndex;    // Index of current frame
-  VBool  run;               // Run flag
-  long  numContextCalls;
+  VList*  globalVars;        // List of global variable values
+  VList*  stack;             // The data stack
+  VList*  callstack;         // Callstack with context frames
+  VIndex  callstackIndex;    // Index of current frame
+  VBool   run;               // Run flag
+  long    numContextCalls;
 }
 VInterp;
 
 // ACCESSORS ---------------------------------------------------
 
 #define InterpGlobalVars(interp) \
-  (& ((interp)->globalVars))
+  ((interp)->globalVars)
 #define InterpStack(interp) \
-  (& ((interp)->stack))
+  ((interp)->stack)
 #define InterpCallStack(interp) \
-  (& ((interp)->callstack))
+  ((interp)->callstack)
 #define InterpCallStackIndex(interp) \
   ((interp)->callstackIndex)
 #define InterpContext(interp) \
@@ -57,9 +57,9 @@ VInterp;
 VInterp* InterpCreate()
 {
   VInterp* interp = MemAlloc(sizeof(VInterp));
-  ItemList_Init(InterpGlobalVars(interp));
-  ItemList_Init(InterpStack(interp));
-  ContextList_Init(InterpCallStack(interp));
+  InterpGlobalVars(interp) = ItemList_Create();
+  InterpStack(interp) = ItemList_Create();
+  InterpCallStack(interp) = ContextList_Create();
   interp->numContextCalls = 0;
   return interp;
 }
@@ -77,9 +77,10 @@ void InterpFree(VInterp* interp)
   PrintNewLine();
 
   // Free lists.
-  ListDeallocArrayBufDeep(InterpGlobalVars(interp));
-  ListDeallocArrayBufDeep(InterpStack(interp));
-  ListDeallocArrayBuf(InterpCallStack(interp));
+  ObjGC(InterpGlobalVars(interp));
+  ObjDeref(InterpStack(interp));
+  ObjDeref(InterpCallStack(interp));
+
   /*
   VList* deallocatedItems = ListCreate(sizeof(VItem));
   ListDeallocArrayBufDeepSafe(InterpGlobalVars(interp), deallocatedItems);
@@ -92,10 +93,103 @@ void InterpFree(VInterp* interp)
   MemFree(interp);
 }
 
-// GLOBAL VARIABLES --------------------------------------------
+// TINY GC -----------------------------------------------------
 
-#define InterpSetGlobalVar(interp, index, item) \
-  ItemList_Set(InterpGlobalVars(interp), index, item)
+void ListGC(VList* list)
+{
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    VItem* item = ItemList_GetRaw(list, i);
+
+      // Free item
+      if (IsList(item))
+      {
+        InterpTinyGC(interp, ItemList(item));
+        ListFree(ItemList(item));
+      }
+      else
+      if (IsString(item))
+      {
+        StringFree(ItemObj(item));
+      }
+    } 
+  }
+}
+
+void ItemIncrementRefCounter(VItem* item)
+{
+  if (IsObj(item))
+  {
+    VObj* obj = ItemObj(item);
+    ++ obj->refCount;
+  }
+}
+
+void ItemGC(VItem* item)
+{
+  if (IsObj(item))
+  {
+    ObjGC(ItemObj(item));
+  }
+}
+
+void ObjGC(VObj* obj)
+{
+  -- obj->refCount;
+  if (obj->refCounter <= 0)
+  {
+  if (TypeString == obj->type)
+  {
+    StringFree((VString*) obj);
+  }
+  else
+  if (TypeList == obj->type || TypeFun == obj->type)
+  {
+    ListGC((VList*) obj);
+    ListFree(ItemList(item));
+  }
+  else
+  {
+    PrintLine("ALERT - UNKNOWN TYPE IN ObjGC");
+    exit(0);
+  }
+}
+
+void InterpGCObj(VInterp* interp, VObj* obj)
+{
+  // TODO: Check String/List. New type VObj.
+}
+
+void InterpGCList(VInterp* interp, VList* list)
+{
+  for (int i = 0; i < ListLength(list); ++i)
+  {
+    VItem* item = ItemList_GetRaw(list, i);
+    if (IsObj(item))
+    {
+      VList* obj = ItemObj(item);
+      -- obj->refCount;
+      if (obj->refCount > 0)
+      {
+        continue; // Keep item
+      }
+
+      // Free item
+      if (IsList(item))
+      {
+        InterpTinyGC(interp, ItemList(item));
+        ListFree(ItemList(item));
+      }
+      else
+      if (IsString(item))
+      {
+        StringFree(ItemObj(item));
+      }
+    } 
+  }
+}
+
+// GLOBAL VARIABLES --------------------------------------------
 
 VItem* InterpGetGlobalVar(VInterp* interp, VIndex index)
 {
@@ -110,6 +204,20 @@ VItem* InterpGetGlobalVar(VInterp* interp, VIndex index)
   return NULL;
 }
 
+//#define InterpSetGlobalVar(interp, index, item) \
+//  ItemList_Set(InterpGlobalVars(interp), index, item)
+
+void InterpSetGlobalVar(VInterp* interp, VIndex index, VItem* item)
+{
+  VItem* currentItem = InterpGetGlobalVar(interp, index);
+  if (NULL != currentItem)
+  { 
+    ItemDecrementRefCounter(currentItem);
+  }
+  ItemIncrementRefCounter(item);
+  ItemList_Set(InterpGlobalVars(interp), index, item);
+}
+
 // DEALLOCATE UNREFRENCED ITEMS --------------------------------
 
 // This version of Vimana has manual memory management, with the
@@ -118,6 +226,9 @@ VItem* InterpGetGlobalVar(VInterp* interp, VIndex index)
 
 // Check if an item is in the global var list.
 // Does not handle circular lists.
+
+// TODO: Rewrite using InterpTinyCG()
+
 void InterpTinyGarbageCollect(VInterp* interp, VList* list)
 {
   for (int i = 0; i < ListLength(list); ++i)
@@ -155,10 +266,33 @@ void InterpTinyGarbageCollect(VInterp* interp, VList* list)
 // DATA STACK --------------------------------------------------
 
 // Push an item onto the data stack.
-#define InterpPush(interp, item) ItemList_Push(InterpStack(interp), item)
+//#define InterpPush(interp, item) ItemList_Push(InterpStack(interp), item)
+
+void InterpPush(VInterp* interp, VItem* item)
+{
+  if (IsObj(item))
+  {
+    VList* obj = ItemObj(item);
+    ++ obj->refCount;
+  }
+
+  ItemList_Push(InterpStack(interp), item);
+}
 
 // Pop an item off the data stack.
-#define InterpPop(interp) ItemList_Pop(InterpStack(interp))
+//#define InterpPop(interp) ItemList_Pop(InterpStack(interp))
+
+VItem* InterpPop(VInterp* interp)
+{
+  VItem* item = ItemList_Pop(InterpStack(interp));
+  if (IsObj(item))
+  {
+    VList* obj = ItemObj(item);
+    -- obj->refCount;
+  }
+
+  ItemList_Push(InterpStack(interp), item);
+}
 
 // CONTEXT HANDLING --------------------------------------------
 

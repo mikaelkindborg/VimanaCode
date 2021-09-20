@@ -6,13 +6,22 @@ List object (array) used for code and stacks.
 Size of items in the list is configurable (all items must be same size).
 */
 
-#define VItemType VItem
+// OBJECT HEADER -----------------------------------------------
+
+typedef struct __VObj
+{
+  VType        type;         // Object type
+  VIndex       refCount;
+}
+VObj;
 
 // LIST OBJECT -------------------------------------------------
 
 typedef struct __VList
 {
+  VObj         header;
   VType        type;         // List type
+  VIndex       refCount;
   VSize        length;       // Current number of items
   VSize        maxLength;    // Max number of items
   VSize        itemSize;     // Size of a list item
@@ -31,7 +40,8 @@ VList;
 
 void ListInit_Internal(VList* list, VSize itemSize)
 {
-  list->type = TypeList;
+  list->header.type = TypeList;
+  list->header.refCount = 1;
   
   // Set inital values.
   size_t size = ListGrowIncrement;

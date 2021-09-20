@@ -46,11 +46,11 @@ VItem;
 #define IsSymbol(item)    (((item)->value.bits & TypeBitMask) == TypeSymbol)
 #define IsPrimFun(item)   (((item)->value.bits & TypeBitMask) == TypePrimFun)
 #define IsList(item) \
-  ( (IsObj(item)) && (TypeList == ((VList*)((item)->value.obj))->type) )
+  ( (IsObj(item)) && (TypeList == ((VList*)((item)->value.obj))->header.type) )
 #define IsFun(item) \
-  ( (IsObj(item)) && (TypeFun == ((VList*)((item)->value.obj))->type) )
+  ( (IsObj(item)) && (TypeFun == ((VList*)((item)->value.obj))->header.type) )
 #define IsString(item) \
-  ( (IsObj(item)) && (TypeString == ((VList*)((item)->value.obj))->type) )
+  ( (IsObj(item)) && (TypeString == ((VList*)((item)->value.obj))->header.type) )
 
 // SET ITEMS ------------------------------------------------
 
