@@ -17,7 +17,7 @@ Basic data types and functions.
 #define OPTIMIZE
 #define GC_STACK
 #define DEBUG
-#define GURUMEDITATION_STRINGS
+//#define GURUMEDITATION_STRINGS
 #define TRACK_MEMORY_USAGE
 #define INCLUDE_SOURCE_CODE_PARSER
 #ifdef PLATFORM_ARDUINO
@@ -72,19 +72,39 @@ Basic data types and functions.
   #define PrintNum(num)   printf("%ld", (long)(num))
   #define PrintChar(c)    printf("%c",  (char)(c))
   #define PrintNewLine()  printf("\n")
-  #define PrintLine(str) \
-    do { Print(str); PrintNewLine(); } while (0)
-  #define PrintStrNum(str, num) \
-    do { Print(str); PrintNum(num); PrintNewLine(); } while (0)
+
+  void PrintLine(char* str)
+  {
+    printf("%s\n", str);
+  }
+
+  void PrintStrNum(char* str, long num)
+  {
+    Print(str); 
+    PrintNum(num); 
+    PrintNewLine(); 
+  }
 
   #ifdef DEBUG
-    #define PrintDebug(str) \
-      do { Print("[DEBUG] "); Print(str); PrintNewLine(); } while (0)
-    #define PrintDebugStrNum(str, num) \
-      do { Print("[DEBUG] "); Print(str); PrintNum(num); PrintNewLine(); } while (0)
+
+    void PrintDebug(char* str)
+    {
+      printf("[DEBUG] %s\n", str);
+    }
+
+    void PrintDebugStrNum(char* str, long num)
+    {
+      Print("[DEBUG] ");
+      Print(str); 
+      PrintNum(num); 
+      PrintNewLine(); 
+    }
+
   #else
+
     #define PrintDebug(str)
     #define PrintDebugStrNum(str, num)
+    
   #endif
 
 #endif
@@ -193,14 +213,23 @@ void PrintBinaryULong(unsigned long n)
 #include "gurumeditation_gen.h"
 
 #ifdef GURUMEDITATION_STRINGS
-  #define GuruMeditation(num) \
-    do { Print("[GURU_MEDITATION: "); PrintNum(num); Print("] "); \
-      PrintLine(GuruMeditationTable[num]); exit(0); } while (0)
+  void GuruMeditation(int num)
+  {
+    printf("[GURU_MEDITATION: %d] %s", num, GuruMeditationTable[num]);
+    exit(0); 
+  }
 #else
-  #define GuruMeditation(num) \
-    do { PrintChar('G'); PrintChar('U'); PrintChar('R'); \
-      PrintChar('U'); PrintChar(':'); PrintNum(num); PrintNewLine(); \
-    } while (0)
+  void GuruMeditation(int num)
+  {
+    PrintChar('G'); 
+    PrintChar('U'); 
+    PrintChar('R');
+    PrintChar('U'); 
+    PrintChar(':'); 
+    PrintNum(num); 
+    PrintNewLine();
+    exit(0); 
+  }
 #endif
 
 // UNIT TEST HELPER -------------------------------------------
