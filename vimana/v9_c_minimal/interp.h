@@ -115,23 +115,42 @@ void InterpSetGlobalVar(VInterp* interp, VIndex index, VItem* newItem)
 // DATA STACK --------------------------------------------------
 
 // Push an item onto the data stack.
-//#define InterpPush(interp, item) ItemList_Push(InterpStack(interp), item)
-
-void InterpPush(VInterp* interp, VItem* item)
-{
-  ItemIncrRefCount(item);
-  ItemList_Push(InterpStack(interp), item);
-}
+#ifdef GC_STACK
+  void InterpPush(VInterp* interp, VItem* item)
+  {
+    ItemIncrRefCount(item);
+    ItemList_Push(InterpStack(interp), item);
+  }
+#else
+  #define InterpPush(interp, item) ItemList_Push(InterpStack(interp), item)
+#endif
 
 // Pop an item off the data stack.
-//#define InterpPop(interp) ItemList_Pop(InterpStack(interp))
+#ifdef GC_STACK
+  VItem* InterpPop(VInterp* interp)
+  {
+    VItem* item = ItemList_Pop(InterpStack(interp));
+    ItemGC(item); // scary prospect
+    return item;
+  }
+#else
+  #define InterpPop(interp) ItemList_Pop(InterpStack(interp))
+#endif
 
-VItem* InterpPop(VInterp* interp)
-{
-  VItem* item = ItemList_Pop(InterpStack(interp));
-  ItemGC(item); // scary prospect
-  return item;
-}
+// Increments the refcount of items indexed from the top of the stack.
+// That is the end of the list. 0 = last item, 1 = next last item.
+// Called from primfuns to maintain refcount.
+#ifdef GC_STACK
+  void InterpStackItemIncrRefCount(VInterp* interp, VIndex stackIndex)
+  {
+    VItem* item = ItemList_Get(
+      InterpStack(interp), 
+      ListLength(InterpStack(interp)) - 1 - stackIndex);
+    ItemIncrRefCount(item);
+  }
+#else
+  #define InterpStackItemIncrRefCount(interp, stackIndex)
+#endif
 
 // CONTEXT HANDLING --------------------------------------------
 
@@ -157,7 +176,7 @@ void InterpPushContext(VInterp* interp, VList* codeList)
   {
     ++ InterpCallStackIndex(interp);
     if (InterpCallStackIndex(interp) >= ListLength(InterpCallStack(interp)))
-      ListPushNewElement(InterpCallStack(interp));
+      ListPushRaw(InterpCallStack(interp));
     //PrintDebugStrNum("ENTER CONTEXT: ", InterpCallStackIndex(interp));
   }
 
@@ -167,7 +186,7 @@ void InterpPushContext(VInterp* interp, VList* codeList)
 
 void InterpPushRootContext(VInterp* interp, VList* codeList)
 {
-  ListPushNewElement(InterpCallStack(interp));
+  ListPushRaw(InterpCallStack(interp));
   ++ InterpCallStackIndex(interp);
   InterpCodeList(interp) = codeList;
   InterpCodePointer(interp) = -1;
@@ -256,5 +275,6 @@ void InterpRun(register VInterp* interp, VList* codeList)
 Next:;
   } // while
 
+  PrintLine("--- GC codeList ---");
   ListGC(codeList);
 }

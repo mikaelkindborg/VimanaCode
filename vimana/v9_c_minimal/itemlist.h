@@ -164,7 +164,7 @@ VIndex ListAddString(VList* list, char* str)
 {
   VString* string = StringCreate();
   StringWriteStr(string, str);
-  VItem* item = ListPushNewElement(list);
+  VItem* item = ListPushRaw(list);
   ItemSetObj(item, string);
   return ListLength(list) - 1;
 }
@@ -178,7 +178,7 @@ void ItemIncrRefCount(VItem* item)
   if (IsObj(item)) 
   {
     ++ ItemObjHeader(item)->refCount;
-    PrintStrNumLine("INCR_REF_COUNT: ", ItemObjHeader(item)->refCount);
+    //PrintStrNumLine("INCR_REF_COUNT: ", ItemObjHeader(item)->refCount);
   }
 }
 
@@ -204,23 +204,17 @@ void ObjGC(VObj* obj)
 {
   -- obj->refCount;
 
-  PrintStrNumLine("DECR_REF_COUNT: ", obj->refCount);
+  //PrintStrNumLine("DECR_REF_COUNT: ", obj->refCount);
 
   if (obj->refCount <= 0)
   {
-    PrintLine("FREE OBJECT");
-
     if (TypeString == obj->type)
     {
-      PrintLine("FREE STRING");
       StringFree((VString*) obj);
     }
     else
     if (TypeList == obj->type || TypeFun == obj->type)
     {
-      PrintLine("FREE LIST");
-      PrintList((VList*) obj);
-      PrintNewLine();
       ListGCChildren((VList*) obj);
       ListFree((VList*) obj);
     }

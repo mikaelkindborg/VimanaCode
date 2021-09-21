@@ -35,11 +35,11 @@ void TestList2()
   PrintLine("--- TestList2 ---");
   VList* list = ItemList_Create();
   VItem* item;
-  item = ListPushNewElement(list);
+  item = ListPushRaw(list);
   ItemSetNumber(item, 32);
-  item = ListPushNewElement(list);
+  item = ListPushRaw(list);
   ItemSetNumber(item, 64);
-  item = ListPushNewElement(list);
+  item = ListPushRaw(list);
   ItemSetNumber(item, 128);
   PrintList(list);
   PrintNewLine();
@@ -93,7 +93,7 @@ void TestSymbolicParser()
   VList* codeList = ParseSymbolicCode("N8888881 P0 N33 N33 P3 P0 (S1 S2) P0 ('FOO HEJ HOPP') P0");
   PrintList(codeList);
   PrintNewLine();
-  ListFreeDeep(codeList);
+  ListGC(codeList);
 }
 
 void TestInterpreter3()
@@ -141,13 +141,19 @@ void TestInterpreter3()
   PrintNewLine();
   InterpRun(interp, code);
 
-  /*
+  // WORKS with refcount gc.
   // This should crash without refcount or gc.
   code = ParseSourceCode("foobar foobar print", dict);
   PrintList(code); 
   PrintNewLine();
   InterpRun(interp, code);
-  */
+
+  // WORKS with refcount gc.
+  // This should crash without refcount or gc.
+  code = ParseSourceCode("foobar (foobar2) setglobal foobar2 print", dict);
+  PrintList(code); 
+  PrintNewLine();
+  InterpRun(interp, code);
 
   // This should work.
   code = ParseSourceCode("foobar print", dict);

@@ -115,16 +115,16 @@ do { \
 
 // Generic Pointer-Based Functions -----------------------------
 
-#define ListGetElement(list, index) \
+#define ListGetRaw(list, index) \
   ( ((VByte*)((list)->items)) + ((index) * (list)->itemSize) )
 
-#define ListSetElement(list, index, element) \
-  memcpy(ListGetElement(list, index), element, (list)->itemSize)
+#define ListSetRaw(list, index, element) \
+  memcpy(ListGetRaw(list, index), element, (list)->itemSize)
 
 // Returns pointer to new element (increses length of list by 1).
-void* ListPushNewElement(VList* list)
+void* ListPushRaw(VList* list)
 {
   ListCheckCapacity(list, ListLength(list));
   ++ ListLength(list);
-  return ListGetElement(list, ListLength(list) - 1);
+  return ListGetRaw(list, ListLength(list) - 1);
 }

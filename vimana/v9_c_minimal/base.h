@@ -16,6 +16,7 @@ Basic data types and functions.
 #define PLATFORM_LINUX
 //#define PLATFORM_ARDUINO
 #define OPTIMIZE
+//#define GC_STACK
 #define DEBUG
 #define TRACK_MEMORY_USAGE
 #define INCLUDE_SOURCE_CODE_PARSER

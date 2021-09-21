@@ -18,7 +18,6 @@ case 0: // print
   VItem* item = InterpPop(interp);
   PrintItem(item);
   PrintNewLine();
-  // InterpGC(interp, item);
 }
 break;
 
@@ -160,32 +159,37 @@ break;
 case 15: // not
 {
   VItem* item = InterpPop(interp);
-  ItemSetBool(item, ! ItemBool(item));
+  ItemSetBool(item, !ItemBool(item));
   ++ ListLength(InterpStack(interp));
 }
 break;
 
 case 16: // drop
 {
-  ItemListDrop(InterpStack(interp));
+  // ItemListDrop(InterpStack(interp));
+  InterpPop(interp);
 }
 break;
 
 case 17: // dup
 {
   ItemListDup(InterpStack(interp));
+  InterpStackItemIncrRefCount(interp, 0);
 }
 break;
 
 case 18: // 2dup
 {
   ItemList2Dup(InterpStack(interp));
+  InterpStackItemIncrRefCount(interp, 0);
+  InterpStackItemIncrRefCount(interp, 1);
 }
 break;
 
 case 19: // over
 {
   ItemListOver(InterpStack(interp));
+  InterpStackItemIncrRefCount(interp, 0);
 }
 break;
 

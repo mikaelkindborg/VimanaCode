@@ -22,7 +22,6 @@ $PrimFunTable = [];
   VItem* item = InterpPop(interp);
   PrintItem(item);
   PrintNewLine();
-  // InterpGC(interp, item);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("setglobal"); ?>
@@ -134,24 +133,29 @@ $PrimFunTable = [];
 
 <?php PrimFunDef("not"); ?>
   VItem* item = InterpPop(interp);
-  ItemSetBool(item, ! ItemBool(item));
+  ItemSetBool(item, !ItemBool(item));
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("drop"); ?>
-  ItemListDrop(InterpStack(interp));
+  // ItemListDrop(InterpStack(interp));
+  InterpPop(interp);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("dup"); ?>
   ItemListDup(InterpStack(interp));
+  InterpStackItemIncrRefCount(interp, 0);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("2dup"); ?>
   ItemList2Dup(InterpStack(interp));
+  InterpStackItemIncrRefCount(interp, 0);
+  InterpStackItemIncrRefCount(interp, 1);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("over"); ?>
   ItemListOver(InterpStack(interp));
+  InterpStackItemIncrRefCount(interp, 0);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("swap"); ?>

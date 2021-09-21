@@ -30,7 +30,17 @@ echo "FULL VERSION: ".$numlines." lines\n";
 
 /***
 
+Version v9_minimal:
+
+210920 (it has grown bigger with generated code for typed list):
+  BASE VERSION: 1467 lines
+  FULL VERSION: 1759 lines
+210921 (reference counting gc):
+  BASE VERSION: 1594 lines
+  FULL VERSION: 1887 lines
+
 Version v8_minimal:
+
 210903: 662 lines (first working prototype)
 210904: 821 lines (parsning and printing)
 210904: 894 lines (added strings, this is starting to look a bit complex...)
@@ -41,11 +51,9 @@ Version v8_minimal:
 210918:
   BASE VERSION: 1244 lines
   FULL VERSION: 1522 lines
-210920 (it has grown bigger with generated code for typed list):
-  BASE VERSION: 1467 lines
-  FULL VERSION: 1759 lines
 
 Version v7_c:
+
 210426: 484 lines 
 210429: 775 lines
 210430: 837 lines

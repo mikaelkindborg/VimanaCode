@@ -69,7 +69,7 @@ char* CodeParserWorker(char* p, VList* codeList)
       // Create child list
       childList = ItemList_Create();
       p = CodeParserWorker(p + 1, childList);
-      item = ListPushNewElement(codeList);
+      item = ListPushRaw(codeList);
       ItemSetObj(item, childList);
     }
     else
@@ -83,7 +83,7 @@ char* CodeParserWorker(char* p, VList* codeList)
     {
       // Create string
       p = ParseString(p + 1, &string);
-      item = ListPushNewElement(codeList);
+      item = ListPushRaw(codeList);
       ItemSetObj(item, string);
     }
     else
@@ -91,7 +91,7 @@ char* CodeParserWorker(char* p, VList* codeList)
       // Create number/primfun/symbol
       c = *p;
       p = ParseNumber(p + 1, &number);
-      item = ListPushNewElement(codeList);
+      item = ListPushRaw(codeList);
       if ('N' == c)
         ItemSetNumber(item, number);
       else
