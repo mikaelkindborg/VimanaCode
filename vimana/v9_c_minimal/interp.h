@@ -275,6 +275,6 @@ void InterpRun(register VInterp* interp, VList* codeList)
 Next:;
   } // while
 
-  PrintLine("--- GC codeList ---");
+  //PrintLine("--- GC codeList ---");
   ListGC(codeList);
 }

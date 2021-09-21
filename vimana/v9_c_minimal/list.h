@@ -11,7 +11,7 @@ Size of items in the list is configurable (all items must be same size).
 typedef struct __VObj
 {
   VType        type;         // Object type
-  VIndex       refCount;
+  VIndex       refCount;     // Reference counter
 }
 VObj;
 
@@ -19,9 +19,7 @@ VObj;
 
 typedef struct __VList
 {
-  VObj         header;
-  VType        type;         // List type
-  VIndex       refCount;
+  VObj         header;       // Object header
   VSize        length;       // Current number of items
   VSize        maxLength;    // Max number of items
   VSize        itemSize;     // Size of a list item
