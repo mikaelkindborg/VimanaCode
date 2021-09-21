@@ -14,14 +14,21 @@ Basic data types and functions.
 // FLAGS -------------------------------------------------------
 
 #define PLATFORM_LINUX
-//#define PLATFORM_ARDUINO
 #define OPTIMIZE
-//#define GC_STACK
-#define DEBUG
-#define TRACK_MEMORY_USAGE
-#define INCLUDE_SOURCE_CODE_PARSER
+#define GC_STACK
+//#define DEBUG
+//#define GURUMEDITATION_STRINGS
+//#define TRACK_MEMORY_USAGE
+//#define INCLUDE_SOURCE_CODE_PARSER
 #ifdef PLATFORM_ARDUINO
-  //#undef INCLUDE_SOURCE_CODE_PARSER
+  #undef PLATFORM_LINUX
+#endif
+#ifdef MINIMAL
+  //#undef OPTIMIZE
+  #undef DEBUG
+  #undef TRACK_MEMORY_USAGE
+  #undef GURUMEDITATION_STRINGS
+  #undef INCLUDE_SOURCE_CODE_PARSER
 #endif
 
 // BASIC TYPES -------------------------------------------------
@@ -58,21 +65,51 @@ Basic data types and functions.
 // PRINTING ----------------------------------------------------
 
 // TODO: Make function that displays the interpreter state.
-// TODO: Arduino serial print.
 
-#define Print(str)      fputs(str, stdout)
-#define PrintNum(num)   printf("%ld", (long)(num))
-#define PrintChar(c)    printf("%c",  (char)(c))
-#define PrintNewLine()  printf("\n")
-#define PrintLine(str)  printf(str "\n")
-#define PrintStrNumLine(str, num)  printf(str "%ld" "\n", (long)num)
+#ifdef PLATFORM_LINUX
 
-#ifdef DEBUG
-  #define PrintDebug(str)             PrintLine("[DEBUG] " str)
-  #define PrintDebugStrNum(str, num)  PrintStrNumLine("[DEBUG] " str, num)
-#else
-  #define PrintDebug(str)
-  #define PrintDebugStrNum(str, num)
+  #define Print(str)      fputs(str, stdout)
+  #define PrintNum(num)   printf("%ld", (long)(num))
+  #define PrintChar(c)    printf("%c",  (char)(c))
+  #define PrintNewLine()  printf("\n")
+  #define PrintLine(str) \
+    do { Print(str); PrintNewLine(); } while (0)
+  #define PrintStrNum(str, num) \
+    do { Print(str); PrintNum(num); PrintNewLine(); } while (0)
+
+  #ifdef DEBUG
+    #define PrintDebug(str) \
+      do { Print("[DEBUG] "); Print(str); PrintNewLine(); } while (0)
+    #define PrintDebugStrNum(str, num) \
+      do { Print("[DEBUG] "); Print(str); PrintNum(num); PrintNewLine(); } while (0)
+  #else
+    #define PrintDebug(str)
+    #define PrintDebugStrNum(str, num)
+  #endif
+
+#endif
+
+#ifdef PLATFORM_ARDUINO
+
+  #define serial Serial
+
+  #define Print(str)      serial.print(str)
+  #define PrintNum(num)   serial.print(num)
+  #define PrintChar(c)    serial.print(c)
+  #define PrintNewLine()  serial.print('\n')
+  #define PrintLine(str) \
+    do { Print(str); PrintNewLine(); } while (0)
+  #define PrintStrNum(str, num) \
+    do { Print(str); PrintNum(num); PrintNewLine(); } while (0)
+
+  #ifdef DEBUG
+    #define PrintDebug(str)             PrintLine(str)
+    #define PrintDebugStrNum(str, num)  PrintStrNum(str, num)
+  #else
+    #define PrintDebug(str)
+    #define PrintDebugStrNum(str, num)
+  #endif
+
 #endif
 
 // MEMORY TRACKING ---------------------------------------------
@@ -87,8 +124,8 @@ Basic data types and functions.
 
   void PrintMemStat()
   {
-    Print("MemAlloc: "); PrintNum(GMemAllocCounter); PrintLine("");
-    Print("MemFree:  "); PrintNum(GMemFreeCounter);  PrintLine("");
+    Print("MemAlloc: "); PrintNum(GMemAllocCounter); PrintNewLine();
+    Print("MemFree:  "); PrintNum(GMemFreeCounter);  PrintNewLine();
   }
 
 #else
@@ -98,6 +135,14 @@ Basic data types and functions.
   #define PrintMemStat()
 
 #endif
+
+/*
+int freeRam () {
+  extern int __heap_start, *__brkval;
+  int v;
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+}
+*/
 
 // C STRING FUNCTIONS ------------------------------------------
 
@@ -140,15 +185,27 @@ void PrintBinaryULong(unsigned long n)
     PrintChar(n & (1L << i) ? '1' : '0');
     //printf("%c", n & (((unsigned long)i) << 1) ? '1' : '0');
   }
-  PrintLine("");
+  PrintNewLine();
 }
 
 // ERROR HANDLING ----------------------------------------------
 
-#define GuruMeditation(num) \
-  do { PrintStrNumLine("[GURU_MEDITATION] ", num); exit(0); } while (0)
+#include "gurumeditation_gen.h"
+
+#ifdef GURUMEDITATION_STRINGS
+  #define GuruMeditation(num) \
+    do { Print("[GURU_MEDITATION: "); PrintNum(num); Print("] "); \
+      PrintLine(GuruMeditationTable[num]); exit(0); } while (0)
+#else
+  #define GuruMeditation(num) \
+    do { PrintChar('G'); PrintChar('U'); PrintChar('R'); \
+      PrintChar('U'); PrintChar(':'); PrintNum(num); PrintNewLine(); \
+    } while (0)
+#endif
 
 // UNIT TEST HELPER -------------------------------------------
 
-#define ShouldHold(description, condition) \
-  do { if (!condition) PrintLine("[SHOULD_HOLD] " description); } while(0)
+#ifndef MINIMAL
+  #define ShouldHold(description, condition) \
+    do { if (!condition) PrintLine("[SHOULD_HOLD] " description); } while(0)
+#endif

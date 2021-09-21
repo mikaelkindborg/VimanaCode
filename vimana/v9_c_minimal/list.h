@@ -23,12 +23,15 @@ typedef struct __VList
   VSize        length;       // Current number of items
   VSize        maxLength;    // Max number of items
   VSize        itemSize;     // Size of a list item
+  #ifdef PLATFORM_ARDUINO
+    VByte        padding;
+  #endif
   VByte*       items;        // Array of items
 }
 VList;
 
 // Initial list array size and how much to grow on each reallocation.
-#define ListGrowIncrement 5
+#define ListGrowIncrement 8
 
 // ListLength --------------------------------------------------
 
@@ -88,7 +91,7 @@ void ListGrow(VList* list, VSize newSize)
 
   // Make space for more items.
   size_t newArraySize = newSize * list->itemSize;
-  //PrintStrNumLine("ListGrow new size: ", newArraySize);
+  //PrintStrNum("ListGrow new size: ", newArraySize);
   VByte* newArray = realloc(list->items, newArraySize);
   if (NULL == newArray)
     GuruMeditation(LISTGROW_OUT_OF_MEMORY);

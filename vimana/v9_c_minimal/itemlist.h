@@ -178,7 +178,7 @@ void ItemIncrRefCount(VItem* item)
   if (IsObj(item)) 
   {
     ++ ItemObjHeader(item)->refCount;
-    //PrintStrNumLine("INCR_REF_COUNT: ", ItemObjHeader(item)->refCount);
+    //PrintStrNum("INCR_REF_COUNT: ", ItemObjHeader(item)->refCount);
   }
 }
 
@@ -204,7 +204,7 @@ void ObjGC(VObj* obj)
 {
   -- obj->refCount;
 
-  //PrintStrNumLine("DECR_REF_COUNT: ", obj->refCount);
+  //PrintStrNum("DECR_REF_COUNT: ", obj->refCount);
 
   if (obj->refCount <= 0)
   {
@@ -220,8 +220,7 @@ void ObjGC(VObj* obj)
     }
     else
     {
-      PrintLine("ALERT - UNKNOWN TYPE IN ObjGC");
-      exit(0);
+      GuruMeditation(OBJGC_UNKNOWN_TYPE);
     }
   }
 }

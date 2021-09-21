@@ -15,6 +15,9 @@ typedef struct __VContext
 {
   VList* codeList;
   VIndex codePointer;
+  #ifdef PLATFORM_ARDUINO
+    VByte  padding;
+  #endif
 }
 VContext;
 
@@ -66,6 +69,7 @@ VInterp* InterpCreate()
 
 void InterpFree(VInterp* interp)
 {
+#ifdef DEBUG
   Print("STACK:");
   PrintList(InterpStack(interp));
   PrintNewLine();
@@ -75,6 +79,7 @@ void InterpFree(VInterp* interp)
   PrintLine("CONTEXT CALLS:");
   PrintNum(interp->numContextCalls);
   PrintNewLine();
+#endif
 
   // Free lists.
   ListGC(InterpGlobalVars(interp));

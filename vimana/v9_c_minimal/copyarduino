@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cp base.h ~/Documents/Arduino/Vimana/
+cp codeparser.h ~/Documents/Arduino/Vimana/
+cp contextlist_gen.h ~/Documents/Arduino/Vimana/
+cp gurumeditation_gen.h ~/Documents/Arduino/Vimana/
+cp interp.h ~/Documents/Arduino/Vimana/
+cp item.h ~/Documents/Arduino/Vimana/
+cp itemlist_gen.h ~/Documents/Arduino/Vimana/
+cp itemlist.h ~/Documents/Arduino/Vimana/
+cp itemprint.h ~/Documents/Arduino/Vimana/
+cp list.h ~/Documents/Arduino/Vimana/
+cp string_gen.h ~/Documents/Arduino/Vimana/
+cp string.h ~/Documents/Arduino/Vimana/
+cp vimana.h ~/Documents/Arduino/Vimana/

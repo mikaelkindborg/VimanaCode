@@ -28,7 +28,9 @@ Usage: php gengurumeditation.php > gurumeditation.h
 #define PARSESTRING_BUFFER_OVERFLOW 18
 #define PARSETOKEN_BUFFER_OVERFLOW 19
 #define SYMBOL_UNKNOWN_TYPE 20
+#define OBJGC_UNKNOWN_TYPE 21
 
+#ifdef GURUMEDITATION_STRINGS
 char* GuruMeditationTable[] = { 
 "Guru Meditation"
 ,"ItemSetNumber: Number is too large"
@@ -51,4 +53,6 @@ char* GuruMeditationTable[] = {
 ,"ParseString: Buffer overflow"
 ,"ParseToken: Buffer overflow"
 ,"Print: Unknown symbol type"
+,"ObjGC: ALERT - UNKNOWN TYPE"
 }; 
+#endif

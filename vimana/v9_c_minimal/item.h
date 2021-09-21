@@ -28,8 +28,10 @@ VItem;
 #define TypeBitMask       7
 #define TypeObj           0 // Used for VList and VString
 #define TypeNumber        1
-#define TypeSymbol        2
-#define TypePrimFun       4
+//#define TypeSymbol        2
+//#define TypePrimFun       4
+#define TypeSymbol        3
+#define TypePrimFun       7
 
 // OBJECT TYPES
 
@@ -40,8 +42,10 @@ VItem;
 // ITEM TYPE CHECKING ------------------------------------------
 
 #define IsVirgin(item)    ((item)->value.bits == 0)
-#define IsObj(item)       (((item)->value.bits & TypeBitMask) == TypeObj)
-#define IsNumber(item)    (((item)->value.bits & 1) == TypeNumber)
+//#define IsObj(item)       (((item)->value.bits & TypeBitMask) == TypeObj)
+#define IsObj(item)       (((item)->value.bits & 1) == TypeObj)
+//#define IsNumber(item)    (((item)->value.bits & 1) == TypeNumber)
+#define IsNumber(item)    (((item)->value.bits & TypeBitMask) == TypeNumber)
 #define IsBool(item)      IsNumber(item)
 #define IsSymbol(item)    (((item)->value.bits & TypeBitMask) == TypeSymbol)
 #define IsPrimFun(item)   (((item)->value.bits & TypeBitMask) == TypePrimFun)
@@ -66,11 +70,18 @@ void ItemSetObj(VItem* item, void* obj)
   item->value.obj = obj;
 }
 
-void ItemSetNumber(VItem* item, VNumber number)
+void orig_ItemSetNumber(VItem* item, VNumber number)
 {
   if (((number << 1) >> 1) != number) 
     GuruMeditation(ITEM_NUMBER_TOO_LARGE);
   item->value.number = (number << 1) | TypeNumber;
+}
+
+void ItemSetNumber(VItem* item, VNumber number)
+{
+  if (((number << 3) >> 3) != number) 
+    GuruMeditation(ITEM_NUMBER_TOO_LARGE);
+  item->value.number = (number << 3) | TypeNumber;
 }
 
 #define ItemSetBool(item, booleanValue) \
@@ -90,22 +101,13 @@ void ItemSetPrimFun(VItem* item, VNumber primFunId)
   item->value.number = (primFunId << 3) | TypePrimFun;
 }
 
-/*
-// The item takes ownership of the string buffer.
-// TODO: Take ownership or copy?
-void ItemSetString(VItem* item, char* pBuf)
-{
-  item->value.bits = (VUNumber)pBuf | TypeString;
-}
-*/
-
 // ACCESS ITEMS ------------------------------------------------
 
 VNumber ItemNumber(VItem* item)
 {
   if (!IsNumber(item)) 
     GuruMeditation(ITEM_NOT_NUMBER);
-  return item->value.number >> 1;
+  return item->value.number >> 3;
 }
 
 VNumber ItemBool(VItem* item)

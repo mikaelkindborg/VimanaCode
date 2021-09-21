@@ -6,6 +6,8 @@
 int main(int numargs, char* args[])
 {
   VBool runREPL = FALSE;
+  VBool genSym = FALSE;
+  VBool evalFile = FALSE;
   char* fileName = NULL;
 
   if (numargs > 4)
@@ -18,10 +20,25 @@ int main(int numargs, char* args[])
     if (StrEquals(args[i], "--repl"))
     {
       runREPL = TRUE;
+      break;
+    }
+    else
+    if (StrEquals(args[i], "--gensym"))
+    {
+      if (numargs < i + 2)
+      {
+        PrintLine("--gensym needs a filename");
+        return 0;
+      } 
+      genSym = TRUE;
+      fileName = args[i + 1];
+      break;
     }
     else
     {
+      evalFile = TRUE;
       fileName = args[i];
+      break;
     }
   }
 
@@ -32,7 +49,7 @@ int main(int numargs, char* args[])
   // Eval file
   if (fileName)
   {
-    char buf[100000]; // Host, host (Swedish joke).
+    char buf[100000]; // Hepp.
     char* p = buf;
     int c;
     FILE* file = fopen(fileName, "r");
@@ -45,8 +62,18 @@ int main(int numargs, char* args[])
       *p = 0;
       fclose(file);
 
-      VList* code = ParseSourceCode(buf, dict);
-      InterpRun(interp, code);
+      if (evalFile)
+      {
+        VList* code = ParseSourceCode(buf, dict);
+        InterpRun(interp, code);
+      }
+      else
+      if (genSym)
+      {
+        char* symbolicCode = GenerateSymbolicCode(buf, dict);
+        PrintLine(symbolicCode);
+        free(symbolicCode);
+      }
     }
   }
   else

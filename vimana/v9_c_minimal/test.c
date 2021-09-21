@@ -80,7 +80,7 @@ void PrintIntList(VList* list)
     PrintNum(*((int*)(ListGet(list, i)))); 
     Print(" ");
   }
-  PrintLine("");
+  PrintNewLine();
 }
 
 void TestList()

@@ -1,5 +1,4 @@
 #include "base.h"
-#include "gurumeditation_gen.h"
 #include "item.h"
 #include "list.h"
 #include "string.h"
@@ -26,7 +25,7 @@ void TestList()
   PrintList(list);
   PrintNewLine();
   while (ListLength(list) > 0) 
-    PrintStrNumLine("item: ", ItemNumber(ItemList_Pop(list)));
+    PrintStrNum("item: ", ItemNumber(ItemList_Pop(list)));
   ListFree(list);
 }
 
@@ -44,7 +43,7 @@ void TestList2()
   PrintList(list);
   PrintNewLine();
   while (ListLength(list) > 0) 
-    PrintStrNumLine("item: ", ItemNumber(ItemList_Pop(list)));
+    PrintStrNum("item: ", ItemNumber(ItemList_Pop(list)));
   ListFree(list);
 }
 
@@ -142,20 +141,19 @@ void TestInterpreter3()
   InterpRun(interp, code);
 
   // WORKS with refcount gc.
-  // This should crash without refcount or gc.
+  // This should crash without gc.
   code = ParseSourceCode("foobar foobar print", dict);
   PrintList(code); 
   PrintNewLine();
   InterpRun(interp, code);
 
   // WORKS with refcount gc.
-  // This should crash without refcount or gc.
+  // This should crash without gc.
   code = ParseSourceCode("foobar (foobar2) setglobal foobar2 print", dict);
   PrintList(code); 
   PrintNewLine();
   InterpRun(interp, code);
 
-  // This should work.
   code = ParseSourceCode("foobar print", dict);
   PrintList(code); 
   PrintNewLine();

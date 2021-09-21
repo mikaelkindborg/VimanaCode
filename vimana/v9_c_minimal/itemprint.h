@@ -14,7 +14,7 @@ void PrintList(VList* list)
   {
     VItem* item = ItemList_Get(list, i);
     PrintItem(item);
-    if (i < ListLength(list) - 1) Print(" ");
+    if (i < ListLength(list) - 1) PrintChar(' ');
   }
   PrintChar(')');
 }
@@ -51,6 +51,7 @@ void PrintItem(VItem* item)
   else
   if (IsList(item))
   {
+    PrintChar('L');
     PrintList(ItemObj(item));
   }
   else
@@ -60,6 +61,8 @@ void PrintItem(VItem* item)
   }
   else
   {
+    PrintChar('X');
+    PrintBinaryULong(item->value.bits);
     GuruMeditation(SYMBOL_UNKNOWN_TYPE);
   }
 }

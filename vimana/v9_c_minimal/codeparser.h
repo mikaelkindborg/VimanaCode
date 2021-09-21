@@ -56,7 +56,7 @@ char* CodeParserWorker(char* p, VList* codeList)
   
   while (!IsEndOfString(*p))
   {
-    //printf("%c", *p);
+    //PrintChar(*p);
 
     if (IsWhiteSpace(*p))
     {
@@ -70,6 +70,7 @@ char* CodeParserWorker(char* p, VList* codeList)
       childList = ItemList_Create();
       p = CodeParserWorker(p + 1, childList);
       item = ListPushRaw(codeList);
+      //item->value.bits = 0;
       ItemSetObj(item, childList);
     }
     else

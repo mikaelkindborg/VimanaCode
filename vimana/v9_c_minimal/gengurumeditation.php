@@ -37,6 +37,7 @@ GuruMeditation("PARSESTRING_BUFFER_OVERFLOW", "ParseString: Buffer overflow");
 GuruMeditation("PARSETOKEN_BUFFER_OVERFLOW", "ParseToken: Buffer overflow");
 
 GuruMeditation("SYMBOL_UNKNOWN_TYPE", "Print: Unknown symbol type");
+GuruMeditation("OBJGC_UNKNOWN_TYPE", "ObjGC: ALERT - UNKNOWN TYPE");
 
 GenerateGuruMeditationSymbols();
 
@@ -67,6 +68,8 @@ function GenerateGuruMeditationTable()
 {
   global $GuruMeditationTable;
 
+  echo "#ifdef GURUMEDITATION_STRINGS\n";
+
   echo "char* GuruMeditationTable[] = { \n";
 
   foreach ($GuruMeditationTable as $index => $entry):
@@ -77,4 +80,6 @@ function GenerateGuruMeditationTable()
   endforeach;
 
   echo "}; \n";
+
+  echo "#endif\n";
 }
