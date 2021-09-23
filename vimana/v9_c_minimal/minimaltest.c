@@ -22,12 +22,12 @@ void TestInterpreter()
   code = ParseSymbolicCode("(S0)(P17N2P8(P17N1P4S0P20N2P4S0P3)P13)P2(S1)(P17P10(P16P16)(P20P17P11P20N1P4S1)P14)P2(N32S0P0)N5S1");
   PrintList(code);
   PrintNewLine();
-  InterpRun(interp, code);
+  InterpEval(interp, code);
 
   code = ParseSymbolicCode("'FOO HEJ HOPP' P0");
   PrintList(code);
   PrintNewLine();
-  InterpRun(interp, code);
+  InterpEval(interp, code);
 
   InterpFree(interp);
 }

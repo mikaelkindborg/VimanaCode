@@ -32,6 +32,7 @@ typedef struct __VInterp
   VList*  callstack;         // Callstack with context frames
   VIndex  callstackIndex;    // Index of current frame
   VBool   run;               // Run flag
+  long    wakeUpTime;        // Time to wake up after sleep
   long    numContextCalls;
 }
 VInterp;
@@ -157,13 +158,27 @@ void InterpSetGlobalVar(VInterp* interp, VIndex index, VItem* newItem)
   #define InterpStackItemIncrRefCount(interp, stackIndex)
 #endif
 
+void InterpClearStack(VInterp* interp)
+{
+  // With refcount gc:
+  while (ListLength(InterpStack(interp)) > 0) 
+    InterpPop(interp);
+
+  // With mark/sweep gc you can do:
+  //ListLength(InterpStack(interp)) = 0;
+}
+
 // CONTEXT HANDLING --------------------------------------------
 
-void InterpInit(VInterp* interp)
+// Free code list with: ListGC(codeList)
+void InterpInit(VInterp* interp, VList* codeList)
 {
-  interp->run = TRUE;
-  InterpCallStackIndex(interp) = -1;
   ListLength(InterpCallStack(interp)) = 0;
+  ListPushRaw(InterpCallStack(interp));
+  InterpCallStackIndex(interp) = 0;
+  InterpCodeList(interp) = codeList;
+  InterpCodePointer(interp) = -1;
+  //PrintDebugStrNum("ENTER ROOT CONTEXT: ", InterpCallStackIndex(interp));
 }
 
 void InterpPushContext(VInterp* interp, VList* codeList)
@@ -189,32 +204,51 @@ void InterpPushContext(VInterp* interp, VList* codeList)
   InterpCodePointer(interp) = -1;
 }
 
-void InterpPushRootContext(VInterp* interp, VList* codeList)
-{
-  ListPushRaw(InterpCallStack(interp));
-  ++ InterpCallStackIndex(interp);
-  InterpCodeList(interp) = codeList;
-  InterpCodePointer(interp) = -1;
-  //PrintDebugStrNum("ENTER CONTEXT: ", InterpCallStackIndex(interp));
-}
-
 #define InterpPopContext(interp) \
   (-- InterpCallStackIndex(interp))
 
 // INTERPRETER LOOP --------------------------------------------
 
-void InterpRun(register VInterp* interp, VList* codeList)
+VBool InterpEvalSlice(register VInterp* interp, VNumber sliceSize);
+
+void InterpEval(VInterp* interp, VList* codeList)
+{
+  InterpInit(interp, codeList);
+  InterpEvalSlice(interp, 0);
+  ListGC(codeList);
+}
+
+void InterpEvalTest(VInterp* interp, VList* codeList)
+{
+  InterpInit(interp, codeList);
+  while ( ! InterpEvalSlice(interp, 100) );
+  ListGC(codeList);
+}
+
+// Evaluate a slice of code. 
+// sliceSize specifies the number of instructions to execute.
+// sliceSize 0 means eval as one slice until program ends.
+// Returns done flag (TRUE = done, FALSE = not done).
+VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
 {
   register VItem*  element;
   register VItem*  symbolValue;
   register VIndex  primFun;
+  register VNumber sliceCounter = 0;
 
-  // Initialize interpreter state and create root context.
-  InterpInit(interp);
-  InterpPushRootContext(interp, codeList);
+  interp->run = TRUE;
 
   while (interp->run)
   {
+    // Track slices if a sliceSize is specified.
+    if (sliceSize)
+    {
+      if (sliceSize > sliceCounter)
+        ++ sliceCounter;
+      else
+        goto Exit;
+    }
+
     // Increment code pointer.
     ++ InterpCodePointer(interp);
     
@@ -277,9 +311,10 @@ void InterpRun(register VInterp* interp, VList* codeList)
 
     // If none of the above, push the element.
     InterpPush(interp, element);
+
 Next:;
   } // while
 
-  //PrintLine("--- GC codeList ---");
-  ListGC(codeList);
+Exit:
+  return ! interp->run;
 }
