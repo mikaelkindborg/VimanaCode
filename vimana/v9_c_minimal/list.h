@@ -32,7 +32,6 @@ VList;
 
 void ListInit_Internal(VList* list, VSize itemSize)
 {
-  list->header.type = TypeList;
 #ifdef GC_REFCOUNT
   list->header.refCount = 1;
 #endif

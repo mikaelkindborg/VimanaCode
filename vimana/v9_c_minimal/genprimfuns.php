@@ -34,7 +34,7 @@ $PrimFunTable = [];
 <?php PrimFunDef("def"); ?>
   VItem* funBody = InterpPop(interp);
   VItem* quotedSymbol = InterpPop(interp);
-  ItemList(funBody)->header.type = TypeFun;
+  ObjSetType(ItemList(funBody), ObjTypeFun);
   VIndex index = ItemSymbol(ItemList_Get(ItemObj(quotedSymbol), 0));
   InterpSetGlobalVar(interp, index, funBody);
 <?php PrimFunEnd(); ?>

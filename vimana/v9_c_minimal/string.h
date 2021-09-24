@@ -12,7 +12,7 @@ typedef struct __VList VString;
 VString* StringCreate()
 {
   VString* string = String_Create();
-  string->header.type = TypeString;
+  ObjSetType(string, ObjTypeString);
   return string;
 }
 

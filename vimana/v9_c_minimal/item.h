@@ -111,12 +111,6 @@ VItem;
 #define TypeSymbol        3 // Use TypeBitMask3
 #define TypePrimFun       7 // Use TypeBitMask3
 
-// OBJECT TYPES (VObj->type)
-
-#define TypeList          1
-#define TypeFun           2
-#define TypeString        3
-
 // ITEM TYPE CHECKING ------------------------------------------
 
 #define IsVirgin(item)    ((item)->value.bits == 0)
@@ -126,11 +120,11 @@ VItem;
 #define IsSymbol(item)    (((item)->value.bits & TypeBitMask3) == TypeSymbol)
 #define IsPrimFun(item)   (((item)->value.bits & TypeBitMask3) == TypePrimFun)
 #define IsList(item) \
-  ( (IsObj(item)) && (TypeList == ((VList*)((item)->value.obj))->header.type) )
+  ( (IsObj(item)) && (ObjType(ItemObj(item)) == ObjTypeList) )
 #define IsFun(item) \
-  ( (IsObj(item)) && (TypeFun == ((VList*)((item)->value.obj))->header.type) )
+  ( (IsObj(item)) && (ObjType(ItemObj(item)) == ObjTypeFun) )
 #define IsString(item) \
-  ( (IsObj(item)) && (TypeString == ((VList*)((item)->value.obj))->header.type) )
+  ( (IsObj(item)) && (ObjType(ItemObj(item)) == ObjTypeString) )
 
 // SET ITEMS ------------------------------------------------
 

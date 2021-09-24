@@ -47,7 +47,7 @@ void ObjGC(VObj* obj)
       StringFree((VString*) obj);
     }
     else
-    if (TypeList == obj->type || TypeFun == obj->type)
+    if (TypeItemList == obj->type)
     {
       ListGCChildren((VList*) obj);
       ListFree((VList*) obj);
