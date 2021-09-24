@@ -12,7 +12,7 @@ Abstract "base class" for Vimana objects (lists and strings).
 #define ObjTypeString        3 // Has no items as children
 
 #define ObjHasChildren(list) \
-  ( (VObjType(list) == TypeList) || (VObjType(list) == TypeFun) )
+  ( (ObjType(list) == ObjTypeList) || (ObjType(list) == ObjTypeFun) )
 
 // OBJECT HEADER -----------------------------------------------
 

@@ -9,7 +9,8 @@
 #include "itemprint.h"
 #ifdef GC_REFCOUNT
   #include "gc_refcount.h"
-#elseif GC_MARKSWEEP
+#endif
+#ifdef GC_MARKSWEEP
   #include "gc_marksweep.h"
 #endif
 #include "interp.h"
