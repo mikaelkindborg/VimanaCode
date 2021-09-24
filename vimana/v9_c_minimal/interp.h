@@ -82,6 +82,7 @@ void InterpFree(VInterp* interp)
   PrintNewLine();
 #endif
 
+#ifdef GC_REFCOUNT
   // Free lists.
   ListGC(InterpGlobalVars(interp));
   ListGC(InterpStack(interp));
@@ -89,6 +90,7 @@ void InterpFree(VInterp* interp)
 
   // Free interpreter struct.
   MemFree(interp);
+#endif
 }
 
 // GLOBAL VARIABLES --------------------------------------------
@@ -111,17 +113,19 @@ VItem* InterpGetGlobalVar(VInterp* interp, VIndex index)
 
 void InterpSetGlobalVar(VInterp* interp, VIndex index, VItem* newItem)
 {
+#ifdef GC_REFCOUNT
   VItem* oldItem = InterpGetGlobalVar(interp, index);
   if (NULL != oldItem) 
     ItemGC(oldItem);
   ItemIncrRefCount(newItem);
+#endif
   ItemList_Set(InterpGlobalVars(interp), index, newItem);
 }
 
 // DATA STACK --------------------------------------------------
 
 // Push an item onto the data stack.
-#ifdef GC_STACK
+#ifdef GC_REFCOUNT_STACK
   void InterpPush(VInterp* interp, VItem* item)
   {
     ItemIncrRefCount(item);
@@ -132,7 +136,7 @@ void InterpSetGlobalVar(VInterp* interp, VIndex index, VItem* newItem)
 #endif
 
 // Pop an item off the data stack.
-#ifdef GC_STACK
+#ifdef GC_REFCOUNT_STACK
   VItem* InterpPop(VInterp* interp)
   {
     VItem* item = ItemList_Pop(InterpStack(interp));
@@ -146,7 +150,7 @@ void InterpSetGlobalVar(VInterp* interp, VIndex index, VItem* newItem)
 // Increments the refcount of items indexed from the top of the stack.
 // That is the end of the list. 0 = last item, 1 = next last item.
 // Called from primfuns to maintain refcount.
-#ifdef GC_STACK
+#ifdef GC_REFCOUNT_STACK
   void InterpStackItemIncrRefCount(VInterp* interp, VIndex stackIndex)
   {
     VItem* item = ItemList_Get(
@@ -170,7 +174,7 @@ void InterpClearStack(VInterp* interp)
 
 // CONTEXT HANDLING --------------------------------------------
 
-// Free code list with: ListGC(codeList)
+// Free code list with: ListGC(codeList) (if using GC_REFCOUNT)
 void InterpInit(VInterp* interp, VList* codeList)
 {
   ListLength(InterpCallStack(interp)) = 0;
@@ -215,14 +219,18 @@ void InterpEval(VInterp* interp, VList* codeList)
 {
   InterpInit(interp, codeList);
   InterpEvalSlice(interp, 0);
+#ifdef GC_REFCOUNT
   ListGC(codeList);
+#endif
 }
 
 void InterpEvalTest(VInterp* interp, VList* codeList)
 {
   InterpInit(interp, codeList);
   while ( ! InterpEvalSlice(interp, 100) );
+#ifdef GC_REFCOUNT
   ListGC(codeList);
+#endif
 }
 
 // Evaluate a slice of code. 

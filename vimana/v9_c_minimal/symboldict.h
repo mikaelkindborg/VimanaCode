@@ -25,9 +25,11 @@ VSymbolDict* SymbolDictCreate()
 
 void SymbolDictFree(VSymbolDict* dict)
 {
+#ifdef GC_REFCOUNT
   ListGC(SymbolDictSymbols(dict));
   ListGC(SymbolDictPrimFuns(dict));
   MemFree(dict);
+#endif
 }
 
 char* SymbolDictLookupSymbolId(VSymbolDict* dict, VIndex symbolId)

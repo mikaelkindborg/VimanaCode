@@ -11,11 +11,13 @@ Basic data types and functions.
 #include <ctype.h>
 #include <limits.h>
 
-// FLAGS -------------------------------------------------------
+// BUILD FLAGS -------------------------------------------------
 
 #define PLATFORM_LINUX
 #define OPTIMIZE
-#define GC_STACK
+//#define GC_MARKSWEEP
+#define GC_REFCOUNT
+#define GC_REFCOUNT_STACK
 #define DEBUG
 //#define GURUMEDITATION_STRINGS
 #define TRACK_MEMORY_USAGE

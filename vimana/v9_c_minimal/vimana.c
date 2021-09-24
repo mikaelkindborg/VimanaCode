@@ -65,7 +65,7 @@ int main(int numargs, char* args[])
       if (evalFile)
       {
         VList* code = ParseSourceCode(buf, dict);
-        InterpRun(interp, code);
+        InterpEval(interp, code);
       }
       else
       if (genSym)
@@ -98,7 +98,7 @@ int main(int numargs, char* args[])
       }
 
       VList* code = ParseSourceCode(input, dict);
-      InterpRun(interp, code);
+      InterpEval(interp, code);
       Print("STACK: ");
       PrintList(InterpStack(interp));
     }
