@@ -25,10 +25,12 @@ VSymbolDict* SymbolDictCreate()
 
 void SymbolDictFree(VSymbolDict* dict)
 {
-#ifdef GC_REFCOUNT
+#ifdef X_GC_REFCOUNT
   ListGC(SymbolDictSymbols(dict));
   ListGC(SymbolDictPrimFuns(dict));
 #endif
+  ListFreeDeep(SymbolDictSymbols(dict));
+  ListFreeDeep(SymbolDictPrimFuns(dict));
   MemFree(dict);
 }
 

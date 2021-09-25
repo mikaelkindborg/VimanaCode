@@ -12,7 +12,7 @@ void ItemIncrRefCount(VItem* item)
   if (IsObj(item))
   {
     ObjIncrRefCount(ItemObj(item));
-    //PrintStrNum("INCR_REF_COUNT: ", ItemObj(item)->refCount);
+    //PrintStrNum("INCR_REF_COUNT: ", ObjGetRefCount(ItemObj(item)));
   }
 }
 
@@ -30,7 +30,6 @@ void ListGCChildren(VList* list)
 void ObjGC(VObj* obj)
 {
   ObjDecrRefCount(obj);
-
   //PrintStrNum("DECR_REF_COUNT: ", ObjGetRefCount(obj));
 
   if (ObjGetRefCount(obj) <= 0)

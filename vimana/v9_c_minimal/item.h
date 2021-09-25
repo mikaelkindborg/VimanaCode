@@ -122,9 +122,9 @@ VItem;
 #define IsList(item) \
   ( (IsObj(item)) && (ObjIsList(ItemObj(item))) )
 #define IsFun(item) \
-  ( (IsObj(item)) && (ObjIsString(ItemObj(item))) )
-#define IsString(item) \
   ( (IsObj(item)) && (ObjIsFun(ItemObj(item))) )
+#define IsString(item) \
+  ( (IsObj(item)) && (ObjIsString(ItemObj(item))) )
 
 // SET ITEMS ------------------------------------------------
 

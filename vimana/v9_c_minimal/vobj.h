@@ -71,7 +71,7 @@ static inline void ObjSetTypeImpl(VObj* obj, VType type)
 
   static inline void ObjSetRefCount(VObj* obj, VIndex count)
   {
-    obj->type = obj->type | (count << 2);
+    obj->type = (obj->type & 3) | (count << 2);
   }
 
   static inline void ObjIncrRefCount(VObj* obj)
