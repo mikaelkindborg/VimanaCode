@@ -34,6 +34,7 @@ typedef struct __VInterp
   VBool   run;               // Run flag
   long    wakeUpTime;        // Time to wake up after sleep
   long    numContextCalls;
+  // TODO: VGarbageCollector* gc;
 }
 VInterp;
 
@@ -86,11 +87,11 @@ void InterpFree(VInterp* interp)
   // Free lists.
   ListGC(InterpGlobalVars(interp));
   ListGC(InterpStack(interp));
+#endif
   ListFree(InterpCallStack(interp));
 
   // Free interpreter struct.
   MemFree(interp);
-#endif
 }
 
 // GLOBAL VARIABLES --------------------------------------------
@@ -307,7 +308,7 @@ VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
       // If it is a function, call it.
       if (IsFun(symbolValue))
       {
-        InterpPushContext(interp, ItemObj(symbolValue));
+        InterpPushContext(interp, ItemList(symbolValue));
         goto Next;
       }
 

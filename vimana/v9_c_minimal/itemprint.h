@@ -46,18 +46,18 @@ void PrintItem(VItem* item)
   if (IsFun(item))
   {
     PrintChar('F');
-    PrintList(ItemObj(item));
+    PrintList(ItemList(item));
   }
   else
   if (IsList(item))
   {
     PrintChar('L');
-    PrintList(ItemObj(item));
+    PrintList(ItemList(item));
   }
   else
   if (IsString(item))
   {
-    Print(StringGetStr(ItemObj(item)));
+    Print(StringGetStr(ItemPtr(item)));
   }
   else
   {

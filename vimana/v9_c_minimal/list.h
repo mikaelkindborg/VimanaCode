@@ -14,9 +14,6 @@ typedef struct __VList
   VSize        length;       // Current number of items
   VSize        maxLength;    // Max number of items
   VSize        itemSize;     // Size of a list item
-  #ifdef PLATFORM_ARDUINO
-    VByte        padding;
-  #endif
   VByte*       items;        // Array of items
 }
 VList;
@@ -33,8 +30,12 @@ VList;
 void ListInit_Internal(VList* list, VSize itemSize)
 {
 #ifdef GC_REFCOUNT
-  list->header.refCount = 1;
+  // Set initial refcount.
+  ObjSetRefCount(ObjCast(list), 1);
 #endif
+
+  // Set type.
+  ObjSetType(list, ObjTypeList);
 
   // Set inital values.
   size_t size = ListGrowIncrement;
@@ -50,6 +51,9 @@ void ListInit_Internal(VList* list, VSize itemSize)
   // Init list array.
   memset(itemArray, 0, arraySize);
 }
+
+struct __VGarbageCollector;
+VObj* GCAllocObj(struct __VGarbageCollector* gc, size_t size);
 
 VList* ListCreate_Internal(VSize itemSize)
 {

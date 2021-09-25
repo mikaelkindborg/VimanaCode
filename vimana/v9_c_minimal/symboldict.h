@@ -28,20 +28,20 @@ void SymbolDictFree(VSymbolDict* dict)
 #ifdef GC_REFCOUNT
   ListGC(SymbolDictSymbols(dict));
   ListGC(SymbolDictPrimFuns(dict));
-  MemFree(dict);
 #endif
+  MemFree(dict);
 }
 
 char* SymbolDictLookupSymbolId(VSymbolDict* dict, VIndex symbolId)
 {
   VItem* item = ItemList_Get(SymbolDictSymbols(dict), symbolId);
-  return StringGetStr(ItemObj(item));
+  return StringGetStr(ItemPtr(item));
 }
 
 char* SymbolDictLookupPrimFunId(VSymbolDict* dict, VIndex primfunId)
 {
   VItem* item = ItemList_Get(SymbolDictPrimFuns(dict), primfunId);
-  return StringGetStr(ItemObj(item));
+  return StringGetStr(ItemPtr(item));
 }
 
 // Returns -1 if symbol name is not found.

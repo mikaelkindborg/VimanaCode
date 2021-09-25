@@ -27,7 +27,7 @@ $PrimFunTable = [];
 <?php PrimFunDef("setglobal"); ?>
   VItem* quotedSymbol = InterpPop(interp);
   VItem* value = InterpPop(interp);
-  VIndex index = ItemSymbol(ItemList_Get(ItemObj(quotedSymbol), 0));
+  VIndex index = ItemSymbol(ItemList_Get(ItemList(quotedSymbol), 0));
   InterpSetGlobalVar(interp, index, value);
 <?php PrimFunEnd(); ?>
 
@@ -35,7 +35,7 @@ $PrimFunTable = [];
   VItem* funBody = InterpPop(interp);
   VItem* quotedSymbol = InterpPop(interp);
   ObjSetType(ItemList(funBody), ObjTypeFun);
-  VIndex index = ItemSymbol(ItemList_Get(ItemObj(quotedSymbol), 0));
+  VIndex index = ItemSymbol(ItemList_Get(ItemList(quotedSymbol), 0));
   InterpSetGlobalVar(interp, index, funBody);
 <?php PrimFunEnd(); ?>
 

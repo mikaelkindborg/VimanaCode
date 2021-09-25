@@ -27,6 +27,7 @@ VGarbageCollector* GCCreate()
   return gc;
 }
 
+/*
 VObj* GCAllocObj(VGarbageCollector* gc, size_t size)
 {
   GCEntry* entry = MemAlloc(sizeof(GCEntry));
@@ -36,6 +37,16 @@ VObj* GCAllocObj(VGarbageCollector* gc, size_t size)
   entry->next = gc->firstEntry;
   gc->firstEntry = entry;
   return obj;
+}
+*/
+
+//GCAddObj(gc, ObjCast(list));
+void GCAddObj(VGarbageCollector* gc, VObj* obj)
+{
+  GCEntry* entry = MemAlloc(sizeof(GCEntry));
+  entry->obj = obj;
+  entry->next = gc->firstEntry;
+  gc->firstEntry = entry;
 }
 
 void GCMarkChildren(VList* list);
@@ -48,7 +59,7 @@ void GCMarkObj(VObj* obj)
   ObjSetMark(obj);
   
   // Traverse children.
-  if (ObjHasChildren(obj))
+  if (ObjIsList(obj))
   {
     GCMarkChildren((VList*) obj);
   }
@@ -60,9 +71,9 @@ void GCMarkChildren(VList* list)
   for (int i = 0; i < ListLength(list); ++i)
   {
     VItem* item = ItemList_Get(list, i);
-    if (IsObj(item))
+    if (IsPtr(item))
     {
-      GCMarkObj(ItemObj(item));
+      GCMarkObj(ItemPtr(item));
     }
   }
 }

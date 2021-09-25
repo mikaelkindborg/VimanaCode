@@ -9,19 +9,12 @@ void ItemGC(VItem* item);
 
 void ItemIncrRefCount(VItem* item)
 {
-  if (IsObj(item)) 
+  if (IsPtr(item))
   {
-    ++ ItemObjHeader(item)->refCount;
-    //PrintStrNum("INCR_REF_COUNT: ", ItemObjHeader(item)->refCount);
+    ObjIncrRefCount(ItemObj(item));
+    //PrintStrNum("INCR_REF_COUNT: ", ItemObj(item)->refCount);
   }
 }
-
-/*
-void ItemDecrRefCount(VItem* item)
-{
-  if (IsObj(item)) -- ItemObjHeader(item)->refCount;
-}
-*/
 
 void ListGCChildren(VList* list)
 {
@@ -36,18 +29,18 @@ void ListGCChildren(VList* list)
 
 void ObjGC(VObj* obj)
 {
-  -- obj->refCount;
+  ObjDecrRefCount(obj);
 
-  //PrintStrNum("DECR_REF_COUNT: ", obj->refCount);
+  //PrintStrNum("DECR_REF_COUNT: ", ObjGetRefCount(obj));
 
-  if (obj->refCount <= 0)
+  if (ObjGetRefCount(obj) <= 0)
   {
-    if (TypeString == obj->type)
+    if (ObjIsString(obj))
     {
       StringFree((VString*) obj);
     }
     else
-    if (TypeItemList == obj->type)
+    if (ObjIsList(obj))
     {
       ListGCChildren((VList*) obj);
       ListFree((VList*) obj);
@@ -66,5 +59,5 @@ void ListGC(VList* list)
 
 void ItemGC(VItem* item)
 {
-  if (IsObj(item)) ObjGC(ItemObj(item));
+  if (IsPtr(item)) ObjGC(ItemObj(item));
 }

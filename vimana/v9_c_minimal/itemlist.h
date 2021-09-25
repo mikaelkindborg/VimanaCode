@@ -10,9 +10,8 @@ Also see generated file: itemlist_gen.h
 
 // ItemList Access ---------------------------------------------
 
-#define ItemList(item) ((VList*)ItemObj(item))
-
-#define ItemObjHeader(item) ((VObj*)ItemObj(item))
+#define ItemList(item) ((VList*)ItemPtr(item))
+#define ItemObj(item)  (ObjCast(ItemPtr(item)))
 
 // Forth Stack Operations --------------------------------------
 
@@ -150,7 +149,7 @@ VIndex ListLookupString(VList* list, char* strToFind)
   for (int index = 0; index < ListLength(list); ++ index)
   {
     VItem* item = ItemList_Get(list, index);
-    char* str = StringGetStr(ItemObj(item));
+    char* str = StringGetStr(ItemPtr(item));
     if (StrEquals(strToFind, str))
       return index; // Found it.
   }
@@ -165,6 +164,43 @@ VIndex ListAddString(VList* list, char* str)
   VString* string = StringCreate();
   StringWriteStr(string, str);
   VItem* item = ListPushRaw(list);
-  ItemSetObj(item, string);
+  ItemSetPtr(item, string);
   return ListLength(list) - 1;
+}
+
+// Free List Deep ----------------------------------------------
+
+void ListDeallocArrayBufDeep(VList* list);
+
+// Assumes that list contains VItem:s.
+// Does not work for circular lists.
+void ListFreeDeep(VList* list)
+{
+  // Free items.
+  ListDeallocArrayBufDeep(list);
+
+  // Free list object.
+  MemFree(list);
+}
+
+// Assumes that list contains VItem:s.
+// Does not deallocate the top-level list object.
+void ListDeallocArrayBufDeep(VList* list)
+{
+  for (VIndex i = 0; i < ListLength(list); ++i)
+  {
+    VItem* item = ItemList_Get(list, i);
+    if (IsString(item))
+    {
+      StringFree(ItemPtr(item));
+    }
+    else
+    if (IsList(item))
+    {
+      ListFreeDeep(ItemPtr(item));
+    }
+  }
+
+  // Free list array.
+  ListDeallocArrayBuf(list);
 }

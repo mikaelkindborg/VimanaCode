@@ -106,7 +106,7 @@ VItem;
 #define TypeBitMask1      1
 #define TypeBitMask2      3
 #define TypeBitMask3      7
-#define TypeObj           0 // Use TypeBitMask1
+#define TypePtr           0 // Use TypeBitMask1
 #define TypeNumber        1 // Use TypeBitMask2
 #define TypeSymbol        3 // Use TypeBitMask3
 #define TypePrimFun       7 // Use TypeBitMask3
@@ -114,17 +114,17 @@ VItem;
 // ITEM TYPE CHECKING ------------------------------------------
 
 #define IsVirgin(item)    ((item)->value.bits == 0)
-#define IsObj(item)       (((item)->value.bits & TypeBitMask1) == TypeObj)
+#define IsPtr(item)       (((item)->value.bits & TypeBitMask1) == TypePtr)
 #define IsNumber(item)    (((item)->value.bits & TypeBitMask2) == TypeNumber)
 #define IsBool(item)      IsNumber(item)
 #define IsSymbol(item)    (((item)->value.bits & TypeBitMask3) == TypeSymbol)
 #define IsPrimFun(item)   (((item)->value.bits & TypeBitMask3) == TypePrimFun)
 #define IsList(item) \
-  ( (IsObj(item)) && (ObjType(ItemObj(item)) == ObjTypeList) )
+  ( (IsPtr(item)) && (ObjIsList(ItemObj(item))) )
 #define IsFun(item) \
-  ( (IsObj(item)) && (ObjType(ItemObj(item)) == ObjTypeFun) )
+  ( (IsPtr(item)) && (ObjIsString(ItemObj(item))) )
 #define IsString(item) \
-  ( (IsObj(item)) && (ObjType(ItemObj(item)) == ObjTypeString) )
+  ( (IsPtr(item)) && (ObjIsFun(ItemObj(item))) )
 
 // SET ITEMS ------------------------------------------------
 
@@ -135,9 +135,9 @@ void ItemSetVirgin(VItem* item)
 }
 
 // The item takes ownership of the object.
-void ItemSetObj(VItem* item, void* obj)
+void ItemSetPtr(VItem* item, void* ptr)
 {
-  item->value.obj = obj;
+  item->value.obj = ptr;
 }
 
 void ItemSetNumber(VItem* item, VNumber number)
@@ -148,7 +148,7 @@ void ItemSetNumber(VItem* item, VNumber number)
 }
 
 #define ItemSetBool(item, booleanValue) \
-  ItemSetNumber(item, (VBool)booleanValue)
+  ItemSetNumber(item, booleanValue)
 
 void ItemSetSymbol(VItem* item, VNumber symbolId)
 {
@@ -189,9 +189,9 @@ VNumber ItemPrimFun(VItem* item)
   return item->value.number >> 3;
 }
 
-void* ItemObj(VItem* item)
+void* ItemPtr(VItem* item)
 {
-  if (!IsObj(item)) 
+  if (!IsPtr(item)) 
     GuruMeditation(ITEM_NOT_POINTER);
   return item->value.obj;
 }
