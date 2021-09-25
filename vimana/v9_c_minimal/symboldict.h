@@ -25,10 +25,7 @@ VSymbolDict* SymbolDictCreate()
 
 void SymbolDictFree(VSymbolDict* dict)
 {
-#ifdef X_GC_REFCOUNT
-  ListGC(SymbolDictSymbols(dict));
-  ListGC(SymbolDictPrimFuns(dict));
-#endif
+  // These lists are not handled by the garbage collector.
   ListFreeDeep(SymbolDictSymbols(dict));
   ListFreeDeep(SymbolDictPrimFuns(dict));
   MemFree(dict);

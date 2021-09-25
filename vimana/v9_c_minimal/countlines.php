@@ -5,8 +5,12 @@ function countlines($file)
   return count(file($file));
 }
 
+$numlines_gc_refcount = countlines("gc_refcount.h");
+$numlines_gc_marksweep = countlines("gc_marksweep.h");
+
 $numlines = 
   countlines("base.h") +
+  countlines("vobj.h") +
   countlines("gurumeditation_gen.h") +
   countlines("item.h") +
   countlines("list.h") +
@@ -14,19 +18,22 @@ $numlines =
   countlines("string.h") +
   countlines("itemlist_gen.h") +
   countlines("itemlist.h") +
-  countlines("itemprint.h") +
+  countlines("print.h") +
+  countlines("contextlist_gen.h") +
   countlines("interp.h") +
   countlines("primfuns_gen.h") +
   countlines("codeparser.h");
-  
-echo "BASE VERSION: ".$numlines." lines\n";
+
+echo "BASE VERSION: ". ($numlines + $numlines_gc_refcount) . " lines (ref count gc)\n";
+echo "BASE VERSION: ". ($numlines + $numlines_gc_marksweep) . " lines (mark sweep gc)\n";
 
 $numlines += 
   countlines("symboldict.h") +
   countlines("primfunsdict_gen.h") +
   countlines("sourceparser.h");
 
-echo "FULL VERSION: ".$numlines." lines\n";
+echo "FULL VERSION: " . ($numlines + $numlines_gc_refcount) . " lines (ref count gc)\n";
+echo "FULL VERSION: " . ($numlines + $numlines_gc_marksweep) . " lines (mark sweep gc)\n";
 
 /***
 
@@ -38,6 +45,11 @@ Version v9_minimal:
 210921 (reference counting gc):
   BASE VERSION: 1594 lines
   FULL VERSION: 1887 lines
+210925
+  BASE VERSION: 1963 lines (ref count gc)
+  FULL VERSION: 2257 lines (ref count gc)
+  BASE VERSION: 2058 lines (mark sweep gc)
+  FULL VERSION: 2352 lines (mark sweep gc)
 
 Version v8_minimal:
 

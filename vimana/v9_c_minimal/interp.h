@@ -34,7 +34,9 @@ typedef struct __VInterp
   VBool   run;               // Run flag
   long    wakeUpTime;        // Time to wake up after sleep
   long    numContextCalls;
+#ifdef GC_MARKSWEEP
   VGarbageCollector* gc;
+#endif
 }
 VInterp;
 
@@ -98,18 +100,21 @@ void InterpFree(VInterp* interp)
 #endif
 
   // Free callstack.
+  // This list is not handled by the garbage collector.
   ListFree(InterpCallStack(interp));
 
   // Free interpreter struct.
   MemFree(interp);
 }
 
+#ifdef GC_MARKSWEEP
 void InterpGC(VInterp* interp)
 {
   GCMarkChildren(InterpGlobalVars(interp));
   GCMarkChildren(InterpStack(interp));
   GCSweep(interp->gc);
 }
+#endif
 
 // GLOBAL VARIABLES --------------------------------------------
 
@@ -237,7 +242,7 @@ VBool InterpEvalSlice(register VInterp* interp, VNumber sliceSize);
 void InterpEval(VInterp* interp, VList* codeList)
 {
 #ifdef GC_MARKSWEEP
-  GCAddObjDeep(interp->gc, ObjCast(codeList));
+  GCAddObj(interp->gc, ObjCast(codeList));
 #endif
 
   InterpInit(interp, codeList);
@@ -255,11 +260,11 @@ void InterpEval(VInterp* interp, VList* codeList)
 void InterpEvalTest(VInterp* interp, VList* codeList)
 {
 #ifdef GC_MARKSWEEP
-  GCAddObjDeep(interp->gc, ObjCast(codeList));
+  GCAddObj(interp->gc, ObjCast(codeList));
 #endif
 
   InterpInit(interp, codeList);
-  while ( ! InterpEvalSlice(interp, 100) ) {};
+  while ( ! InterpEvalSlice(interp, 100) ) { };
 
 #ifdef GC_MARKSWEEP
    InterpGC(interp);

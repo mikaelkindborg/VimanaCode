@@ -6,7 +6,7 @@
 #include "list.h"
 #include "string.h"
 #include "itemlist.h"
-#include "itemprint.h"
+#include "print.h"
 #ifdef GC_REFCOUNT
   #include "gc_refcount.h"
 #endif

@@ -7,6 +7,8 @@ Based on this article by Bob Nystrom:
 https://journal.stuffwithstuff.com/2013/12/08/babys-first-garbage-collector/
 */
 
+// GARBAGE COLLECTOR STRUCTS -----------------------------------
+
 typedef struct __GCEntry 
 {
   VObj* obj;
@@ -20,6 +22,8 @@ typedef struct __VGarbageCollector
 }
 VGarbageCollector;
 
+// CREATE GARBAGE COLLECTOR ------------------------------------
+
 VGarbageCollector* GCCreate() 
 {
   VGarbageCollector* gc = MemAlloc(sizeof(VGarbageCollector));
@@ -27,32 +31,41 @@ VGarbageCollector* GCCreate()
   return gc;
 }
 
+// ADD OBJECTS -------------------------------------------------
+
+void GCAddChildren(VGarbageCollector* gc, VList* list);
+
 // Add an object to the garbage collector. 
 // The collector will now track and free this object.
 void GCAddObj(VGarbageCollector* gc, VObj* obj)
 {
+  // Create entry for the object.
   GCEntry* entry = MemAlloc(sizeof(GCEntry));
   entry->obj = obj;
   entry->next = gc->firstEntry;
   gc->firstEntry = entry;
+
+  // Add children.
+  if (ObjIsList(obj))
+  {
+    GCAddChildren(gc, (VList*) obj);
+  }
 }
 
 // Add a list and its children to the garbage collector.
-void GCAddObjDeep(VGarbageCollector* gc, VObj* obj)
+void GCAddChildren(VGarbageCollector* gc, VList* list)
 {
-  GCAddObj(gc, obj);
-
-  if (!ObjIsList(obj)) return;
-
-  for (int i = 0; i < ListLength((VList*)obj); ++i)
+  for (int i = 0; i < ListLength(list); ++i)
   {
-    VItem* item = ItemList_GetRaw((VList*)obj, i);
+    VItem* item = ItemList_GetRaw(list, i);
     if (IsObj(item))
     {
-      GCAddObjDeep(gc, ItemObj(item));
+      GCAddObj(gc, ItemObj(item));
     }
   }
 }
+
+// MARK OBJECTS ------------------------------------------------
 
 void GCMarkChildren(VList* list);
 
@@ -83,6 +96,8 @@ void GCMarkChildren(VList* list)
   }
 }
 
+// SWEEP OBJECTS -----------------------------------------------
+
 void GCSweep(VGarbageCollector* gc)
 { 
   PrintDebug("GCSweep BEGIN");
@@ -107,6 +122,7 @@ void GCSweep(VGarbageCollector* gc)
   PrintDebug("GCSweep END");
 }
 
+// Unused
 void GCSweepUnmarkAll(VGarbageCollector* gc)
 {
   GCEntry** entry = &(gc->firstEntry);
@@ -116,6 +132,8 @@ void GCSweepUnmarkAll(VGarbageCollector* gc)
     entry = &((*entry)->next);
   }
 }
+
+// DEBUGGING ---------------------------------------------------
 
 void GCPrintEntries(VGarbageCollector* gc)
 { 
@@ -128,7 +146,9 @@ void GCPrintEntries(VGarbageCollector* gc)
   }
 }
 
-// Free allocated objects.
+// FREE GARBAGE COLLECTOR --------------------------------------
+
+// Freed allocated objects.
 void GCFree(VGarbageCollector* gc) 
 {
   //GCSweepUnmarkAll(gc);
