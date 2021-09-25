@@ -27,26 +27,31 @@ VGarbageCollector* GCCreate()
   return gc;
 }
 
-/*
-VObj* GCAllocObj(VGarbageCollector* gc, size_t size)
-{
-  GCEntry* entry = MemAlloc(sizeof(GCEntry));
-  VObj* obj = MemAlloc(size);
-  obj->type = 0;
-  entry->obj = obj;
-  entry->next = gc->firstEntry;
-  gc->firstEntry = entry;
-  return obj;
-}
-*/
-
-//GCAddObj(gc, ObjCast(list));
+// Add an object to the garbage collector. 
+// The collector will now track and free this object.
 void GCAddObj(VGarbageCollector* gc, VObj* obj)
 {
   GCEntry* entry = MemAlloc(sizeof(GCEntry));
   entry->obj = obj;
   entry->next = gc->firstEntry;
   gc->firstEntry = entry;
+}
+
+// Add a list and its children to the garbage collector.
+void GCAddObjDeep(VGarbageCollector* gc, VObj* obj)
+{
+  GCAddObj(gc, obj);
+
+  if (!ObjIsList(obj)) return;
+
+  for (int i = 0; i < ListLength((VList*)obj); ++i)
+  {
+    VItem* item = ItemList_GetRaw((VList*)obj, i);
+    if (IsObj(item))
+    {
+      GCAddObjDeep(gc, ItemObj(item));
+    }
+  }
 }
 
 void GCMarkChildren(VList* list);

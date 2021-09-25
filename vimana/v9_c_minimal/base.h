@@ -15,7 +15,7 @@ Basic data types and functions.
 
 #define PLATFORM_LINUX
 #define OPTIMIZE
-//#define GC_MARKSWEEP
+#define GC_MARKSWEEP
 #ifndef GC_MARKSWEEP
   #define GC_REFCOUNT
   #define GC_REFCOUNT_STACK
