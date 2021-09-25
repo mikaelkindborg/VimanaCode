@@ -26,6 +26,9 @@ Basic data types and functions.
 #define INCLUDE_SOURCE_CODE_PARSER
 #ifdef PLATFORM_ARDUINO
   #undef PLATFORM_LINUX
+  #undef GC_MARKSWEEP
+  #define GC_REFCOUNT
+  #undef GC_REFCOUNT_STACK
 #endif
 #ifdef MINIMAL
   //#undef OPTIMIZE
@@ -122,9 +125,9 @@ Basic data types and functions.
   #define PrintChar(c)    serial.print(c)
   #define PrintNewLine()  serial.print('\n')
   #define PrintLine(str) \
-    do { Print(str); PrintNewLine(); } while (0)
+    Print(str); PrintNewLine();
   #define PrintStrNum(str, num) \
-    do { Print(str); PrintNum(num); PrintNewLine(); } while (0)
+    Print(str); PrintNum(num); PrintNewLine();
 
   #ifdef DEBUG
     #define PrintDebug(str)             PrintLine(str)

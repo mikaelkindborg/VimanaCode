@@ -32,8 +32,8 @@ typedef struct __VInterp
   VList*  callstack;         // Callstack with context frames
   VIndex  callstackIndex;    // Index of current frame
   VBool   run;               // Run flag
-  long    wakeUpTime;        // Time to wake up after sleep
-  long    numContextCalls;
+  //long    wakeUpTime;        // Time to wake up after sleep
+  //long    numContextCalls;
 #ifdef GC_MARKSWEEP
   VGarbageCollector* gc;
 #endif
@@ -67,7 +67,7 @@ VInterp* InterpCreate()
   InterpGlobalVars(interp) = ItemList_Create();
   InterpStack(interp) = ItemList_Create();
   InterpCallStack(interp) = ContextList_Create();
-  interp->numContextCalls = 0;
+  //interp->numContextCalls = 0;
 #ifdef GC_MARKSWEEP
   interp->gc = GCCreate();
 #endif
@@ -83,8 +83,8 @@ void InterpFree(VInterp* interp)
   Print("GLOBALS:");
   PrintList(InterpGlobalVars(interp));
   PrintNewLine();
-  PrintLine("CONTEXT CALLS:");
-  PrintNum(interp->numContextCalls);
+  //PrintLine("CONTEXT CALLS:");
+  //PrintNum(interp->numContextCalls);
   PrintNewLine();
 #endif
 
@@ -211,7 +211,7 @@ void InterpInit(VInterp* interp, VList* codeList)
 
 void InterpPushContext(VInterp* interp, VList* codeList)
 {
-  ++ interp->numContextCalls;
+  //++ interp->numContextCalls;
 
   VBool isTailCall = 
     (1 + InterpCodePointer(interp)) >= 

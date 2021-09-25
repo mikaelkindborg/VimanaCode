@@ -132,19 +132,19 @@ VItem;
 #define ItemSetString(item, string) ItemSetObj(item, (VObj*)string)
 #define ItemSetBool(item, boolean)  ItemSetNumber(item, boolean)
 
-// Create uninitialized value
+// Set uninitialized value.
 void ItemSetVirgin(VItem* item)
 {
   item->value.bits = 0;
 }
 
 // The item takes ownership of the object.
-void ItemSetObj(VItem* item, VObj* obj)
+static inline void ItemSetObj(VItem* item, VObj* obj)
 {
   item->value.obj = obj;
 }
 
-void ItemSetNumber(VItem* item, VNumber number)
+static inline void ItemSetNumber(VItem* item, VNumber number)
 {
   if (((number << 2) >> 2) != number) 
     GuruMeditation(ITEM_NUMBER_TOO_LARGE);
@@ -171,28 +171,28 @@ void ItemSetPrimFun(VItem* item, VNumber primFunId)
 #define ItemString(item) ((VString*)ItemObj(item))
 #define ItemBool(item)   ItemNumber(item)
 
-VNumber ItemNumber(VItem* item)
+static inline VNumber ItemNumber(VItem* item)
 {
   if (!IsNumber(item)) 
     GuruMeditation(ITEM_NOT_NUMBER);
   return item->value.number >> 2;
 }
 
-VNumber ItemSymbol(VItem* item)
+static inline VNumber ItemSymbol(VItem* item)
 {
   if (!IsSymbol(item)) 
     GuruMeditation(ITEM_NOT_SYMBOL);
   return item->value.number >> 3;
 }
 
-VNumber ItemPrimFun(VItem* item)
+static inline VNumber ItemPrimFun(VItem* item)
 {
   if (!IsPrimFun(item)) 
     GuruMeditation(ITEM_NOT_PRIMFUN);
   return item->value.number >> 3;
 }
 
-VObj* ItemObj(VItem* item)
+static inline VObj* ItemObj(VItem* item)
 {
   if (!IsObj(item)) 
     GuruMeditation(ITEM_NOT_POINTER);
