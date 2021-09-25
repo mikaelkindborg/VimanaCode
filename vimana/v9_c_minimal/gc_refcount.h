@@ -9,7 +9,7 @@ void ItemGC(VItem* item);
 
 void ItemIncrRefCount(VItem* item)
 {
-  if (IsPtr(item))
+  if (IsObj(item))
   {
     ObjIncrRefCount(ItemObj(item));
     //PrintStrNum("INCR_REF_COUNT: ", ItemObj(item)->refCount);
@@ -59,5 +59,5 @@ void ListGC(VList* list)
 
 void ItemGC(VItem* item)
 {
-  if (IsPtr(item)) ObjGC(ItemObj(item));
+  if (IsObj(item)) ObjGC(ItemObj(item));
 }

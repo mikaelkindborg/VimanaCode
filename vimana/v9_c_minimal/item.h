@@ -87,7 +87,7 @@ typedef struct __VItem
 {
   union
   {
-    void*     obj;
+    VObj*     obj;
     VNumber   number;
     VUNumber  bits;
   }
@@ -106,7 +106,7 @@ VItem;
 #define TypeBitMask1      1
 #define TypeBitMask2      3
 #define TypeBitMask3      7
-#define TypePtr           0 // Use TypeBitMask1
+#define TypeObj           0 // Use TypeBitMask1
 #define TypeNumber        1 // Use TypeBitMask2
 #define TypeSymbol        3 // Use TypeBitMask3
 #define TypePrimFun       7 // Use TypeBitMask3
@@ -114,19 +114,23 @@ VItem;
 // ITEM TYPE CHECKING ------------------------------------------
 
 #define IsVirgin(item)    ((item)->value.bits == 0)
-#define IsPtr(item)       (((item)->value.bits & TypeBitMask1) == TypePtr)
+#define IsObj(item)       (((item)->value.bits & TypeBitMask1) == TypeObj)
 #define IsNumber(item)    (((item)->value.bits & TypeBitMask2) == TypeNumber)
 #define IsBool(item)      IsNumber(item)
 #define IsSymbol(item)    (((item)->value.bits & TypeBitMask3) == TypeSymbol)
 #define IsPrimFun(item)   (((item)->value.bits & TypeBitMask3) == TypePrimFun)
 #define IsList(item) \
-  ( (IsPtr(item)) && (ObjIsList(ItemObj(item))) )
+  ( (IsObj(item)) && (ObjIsList(ItemObj(item))) )
 #define IsFun(item) \
-  ( (IsPtr(item)) && (ObjIsString(ItemObj(item))) )
+  ( (IsObj(item)) && (ObjIsString(ItemObj(item))) )
 #define IsString(item) \
-  ( (IsPtr(item)) && (ObjIsFun(ItemObj(item))) )
+  ( (IsObj(item)) && (ObjIsFun(ItemObj(item))) )
 
 // SET ITEMS ------------------------------------------------
+
+#define ItemSetList(item, list)     ItemSetObj(item, (VObj*)list)
+#define ItemSetString(item, string) ItemSetObj(item, (VObj*)string)
+#define ItemSetBool(item, boolean)  ItemSetNumber(item, boolean)
 
 // Create uninitialized value
 void ItemSetVirgin(VItem* item)
@@ -135,9 +139,9 @@ void ItemSetVirgin(VItem* item)
 }
 
 // The item takes ownership of the object.
-void ItemSetPtr(VItem* item, void* ptr)
+void ItemSetObj(VItem* item, VObj* obj)
 {
-  item->value.obj = ptr;
+  item->value.obj = obj;
 }
 
 void ItemSetNumber(VItem* item, VNumber number)
@@ -146,9 +150,6 @@ void ItemSetNumber(VItem* item, VNumber number)
     GuruMeditation(ITEM_NUMBER_TOO_LARGE);
   item->value.number = (number << 2) | TypeNumber;
 }
-
-#define ItemSetBool(item, booleanValue) \
-  ItemSetNumber(item, booleanValue)
 
 void ItemSetSymbol(VItem* item, VNumber symbolId)
 {
@@ -166,14 +167,16 @@ void ItemSetPrimFun(VItem* item, VNumber primFunId)
 
 // ACCESS ITEMS ------------------------------------------------
 
+#define ItemList(item)   ((VList*)ItemObj(item))
+#define ItemString(item) ((VString*)ItemObj(item))
+#define ItemBool(item)   ItemNumber(item)
+
 VNumber ItemNumber(VItem* item)
 {
   if (!IsNumber(item)) 
     GuruMeditation(ITEM_NOT_NUMBER);
   return item->value.number >> 2;
 }
-
-#define ItemBool(item) ItemNumber(item)
 
 VNumber ItemSymbol(VItem* item)
 {
@@ -189,9 +192,9 @@ VNumber ItemPrimFun(VItem* item)
   return item->value.number >> 3;
 }
 
-void* ItemPtr(VItem* item)
+VObj* ItemObj(VItem* item)
 {
-  if (!IsPtr(item)) 
+  if (!IsObj(item)) 
     GuruMeditation(ITEM_NOT_POINTER);
   return item->value.obj;
 }

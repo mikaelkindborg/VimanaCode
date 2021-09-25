@@ -8,11 +8,6 @@ Also see generated file: itemlist_gen.h
 
 #include "itemlist_gen.h"
 
-// ItemList Access ---------------------------------------------
-
-#define ItemList(item) ((VList*)ItemPtr(item))
-#define ItemObj(item)  (ObjCast(ItemPtr(item)))
-
 // Forth Stack Operations --------------------------------------
 
 // ITEM DROP ->
@@ -149,7 +144,7 @@ VIndex ListLookupString(VList* list, char* strToFind)
   for (int index = 0; index < ListLength(list); ++ index)
   {
     VItem* item = ItemList_Get(list, index);
-    char* str = StringGetStr(ItemPtr(item));
+    char* str = StringGetStr(ItemString(item));
     if (StrEquals(strToFind, str))
       return index; // Found it.
   }
@@ -164,7 +159,7 @@ VIndex ListAddString(VList* list, char* str)
   VString* string = StringCreate();
   StringWriteStr(string, str);
   VItem* item = ListPushRaw(list);
-  ItemSetPtr(item, string);
+  ItemSetString(item, string);
   return ListLength(list) - 1;
 }
 
@@ -192,12 +187,12 @@ void ListDeallocArrayBufDeep(VList* list)
     VItem* item = ItemList_Get(list, i);
     if (IsString(item))
     {
-      StringFree(ItemPtr(item));
+      StringFree(ItemString(item));
     }
     else
     if (IsList(item))
     {
-      ListFreeDeep(ItemPtr(item));
+      ListFreeDeep(ItemList(item));
     }
   }
 

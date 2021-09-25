@@ -74,31 +74,31 @@ $PrimFunTable = [];
 <?php PrimFunDef("eq"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
-  VBool booleanValue = ItemEquals(item1, item2);
-  ItemSetBool(item1, booleanValue);
+  VBool trueOrFalse = ItemEquals(item1, item2);
+  ItemSetBool(item1, trueOrFalse);
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("<"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
-  VBool booleanValue = ItemNumber(item1) < ItemNumber(item2);
-  ItemSetBool(item1, booleanValue);
+  VBool trueOrFalse = ItemNumber(item1) < ItemNumber(item2);
+  ItemSetBool(item1, trueOrFalse);
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef(">"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
-  VBool booleanValue = ItemNumber(item1) > ItemNumber(item2);
-  ItemSetBool(item1, booleanValue);
+  VBool trueOrFalse = ItemNumber(item1) > ItemNumber(item2);
+  ItemSetBool(item1, trueOrFalse);
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("iszero"); ?>
   VItem* item = InterpPop(interp);
-  VBool booleanValue = 0 == ItemNumber(item);
-  ItemSetBool(item, booleanValue);
+  VBool trueOrFalse = 0 == ItemNumber(item);
+  ItemSetBool(item, trueOrFalse);
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
@@ -109,23 +109,23 @@ $PrimFunTable = [];
 
 <?php PrimFunDef("iftrue"); ?>
   VItem* trueBlock = InterpPop(interp);
-  VItem* booleanValue = InterpPop(interp);
-  if (ItemBool(booleanValue))
+  VItem* trueOrFalse = InterpPop(interp);
+  if (ItemBool(trueOrFalse))
     InterpPushContext(interp, ItemList(trueBlock));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("iffalse"); ?>
   VItem* falseBlock = InterpPop(interp);
-  VItem* booleanValue = InterpPop(interp);
-  if (!ItemBool(booleanValue))
+  VItem* trueOrFalse = InterpPop(interp);
+  if (!ItemBool(trueOrFalse))
     InterpPushContext(interp, ItemList(falseBlock));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("ifelse"); ?>
   VItem* falseBlock = InterpPop(interp);
   VItem* trueBlock = InterpPop(interp);
-  VItem* booleanValue = InterpPop(interp);
-  if (ItemBool(booleanValue))
+  VItem* trueOrFalse = InterpPop(interp);
+  if (ItemBool(trueOrFalse))
     InterpPushContext(interp, ItemList(trueBlock));
   else
     InterpPushContext(interp, ItemList(falseBlock));

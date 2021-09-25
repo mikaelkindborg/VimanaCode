@@ -71,9 +71,9 @@ void GCMarkChildren(VList* list)
   for (int i = 0; i < ListLength(list); ++i)
   {
     VItem* item = ItemList_Get(list, i);
-    if (IsPtr(item))
+    if (IsObj(item))
     {
-      GCMarkObj(ItemPtr(item));
+      GCMarkObj(ItemObj(item));
     }
   }
 }

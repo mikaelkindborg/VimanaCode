@@ -35,13 +35,13 @@ void SymbolDictFree(VSymbolDict* dict)
 char* SymbolDictLookupSymbolId(VSymbolDict* dict, VIndex symbolId)
 {
   VItem* item = ItemList_Get(SymbolDictSymbols(dict), symbolId);
-  return StringGetStr(ItemPtr(item));
+  return StringGetStr(ItemString(item));
 }
 
 char* SymbolDictLookupPrimFunId(VSymbolDict* dict, VIndex primfunId)
 {
   VItem* item = ItemList_Get(SymbolDictPrimFuns(dict), primfunId);
-  return StringGetStr(ItemPtr(item));
+  return StringGetStr(ItemString(item));
 }
 
 // Returns -1 if symbol name is not found.

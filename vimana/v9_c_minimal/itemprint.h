@@ -57,7 +57,7 @@ void PrintItem(VItem* item)
   else
   if (IsString(item))
   {
-    Print(StringGetStr(ItemPtr(item)));
+    Print(StringGetStr(ItemString(item)));
   }
   else
   {

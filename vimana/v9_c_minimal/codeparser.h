@@ -71,7 +71,7 @@ char* CodeParserWorker(char* p, VList* codeList)
       p = CodeParserWorker(p + 1, childList);
       item = ListPushRaw(codeList);
       //item->value.bits = 0;
-      ItemSetPtr(item, childList);
+      ItemSetList(item, childList);
     }
     else
     if (IsRightParen(*p))
@@ -85,7 +85,7 @@ char* CodeParserWorker(char* p, VList* codeList)
       // Create string
       p = ParseString(p + 1, &string);
       item = ListPushRaw(codeList);
-      ItemSetPtr(item, string);
+      ItemSetString(item, string);
     }
     else
     {
