@@ -29,6 +29,7 @@ typedef struct __VInterp
   VList*  callstack;         // Callstack with context frames
   VIndex  callstackIndex;    // Index of current frame
   VBool   run;               // Run flag
+  VBool   contextSwitch;
   VGarbageCollector* gc;     // Garbage collector
   long    numContextCalls;   // Number of context pushes
   //long    wakeUpTime;        // Time to wake up after sleep
@@ -146,6 +147,8 @@ void InterpPushContext(VInterp* interp, VList* codeList)
 {
   ++ interp->numContextCalls;
 
+  interp->contextSwitch = TRUE;
+
   VBool isTailCall = 
     (1 + InterpCodePointer(interp)) >= 
     ListLength(InterpCodeList(interp));
@@ -202,8 +205,12 @@ VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
 {
   register VItem*  item;
   register VNumber sliceCounter = 0;
+  register VIndex  codePointer;
+  register VList*  code;
+  register VSize   codeLength;
 
   interp->run = TRUE;
+  interp->contextSwitch = TRUE;
 
   while (interp->run)
   {
@@ -216,16 +223,24 @@ VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
         goto Exit;
     }
 
+    if (interp->contextSwitch)
+    {
+      interp->contextSwitch = FALSE;
+      code = InterpCodeList(interp);
+      codeLength = ListLength(code);
+    }
+
     // Increment code pointer.
-    ++ InterpCodePointer(interp);
+    codePointer = ++ InterpCodePointer(interp);
     
     //PrintDebugStrNum("CODE POINTER: ", InterpCodePointer(interp));
 
     // Call item function if not end of list. 
-    if (InterpCodePointer(interp) < ListLength(InterpCodeList(interp)))
+    if (codePointer < codeLength)
     {
       // Call current item in the code list.
-      item = InterpCurrentCodeItem(interp);
+      //item = InterpCurrentCodeItem(interp);
+      item = ItemList_Get(code, codePointer);
       ItemFun(item)(interp, item);
     }
     else
@@ -235,6 +250,7 @@ VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
 
       // Pop stackframe.
       InterpPopContext(interp);
+      interp->contextSwitch = TRUE;
 
       // Exit interpreter loop if this was the last stackframe.
       if (InterpCallStackIndex(interp) < 0) 

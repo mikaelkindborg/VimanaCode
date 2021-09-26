@@ -25,12 +25,16 @@ void ContextList_Set(VList* list, VIndex index, VContext* item)
   ContextList_SetRaw(list, index, item);
 }
 
-VContext* ContextList_Get(VList* list, VIndex index)
-{
-  if (index >= ListLength(list) || index < 0)
-    GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
-  return ContextList_GetRaw(list, index);
-}
+#ifdef OPTIMIZE
+  #define ContextList_Get(list, index) ContextList_GetRaw(list, index)
+#else
+  VContext* ContextList_Get(VList* list, VIndex index)
+  {
+    if (index >= ListLength(list) || index < 0)
+      GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
+    return ContextList_GetRaw(list, index);
+  }
+#endif
 
 // Push and Pop ------------------------------------------------
 

@@ -25,12 +25,16 @@ void String_Set(VList* list, VIndex index, char* item)
   String_SetRaw(list, index, item);
 }
 
-char* String_Get(VList* list, VIndex index)
-{
-  if (index >= ListLength(list) || index < 0)
-    GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
-  return String_GetRaw(list, index);
-}
+#ifdef OPTIMIZE
+  #define String_Get(list, index) String_GetRaw(list, index)
+#else
+  char* String_Get(VList* list, VIndex index)
+  {
+    if (index >= ListLength(list) || index < 0)
+      GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
+    return String_GetRaw(list, index);
+  }
+#endif
 
 // Push and Pop ------------------------------------------------
 

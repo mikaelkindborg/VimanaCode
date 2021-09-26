@@ -83,39 +83,45 @@ VFunPtr GInterpStringFun;
 
 // SET ITEMS ------------------------------------------------
 
-void ItemSetVirgin(VItem* item)
+static inline void ItemSetVirgin(VItem* item)
 {
   ItemFun(item) = 0;
   ItemObj(item) = 0;
 }
 
-void ItemSetList(VItem* item, VList* list)
+static inline void ItemSetList(VItem* item, VList* list)
 {
   ItemFun(item) = GInterpListFun;
   ItemObj(item) = (VObj*)list;
 }
 
-void ItemSetString(VItem* item, VString* string)
+static inline void ItemSetString(VItem* item, VString* string)
 {
   ItemFun(item) = GInterpStringFun;
   ItemObj(item) = (VObj*)string;
 }
 
-void ItemSetNumber(VItem* item, VNumber number)
+/*
+static inline void ItemSetNumber(VItem* item, VNumber number)
 {
   ItemFun(item) = GInterpNumberFun;
   ItemNumber(item) = number;
 }
+*/
+
+#define ItemSetNumber(item, number) \
+  ItemFun(item) = GInterpNumberFun; \
+  ItemNumber(item) = number
 
 #define ItemSetBool(item, boolean) ItemSetNumber(item, boolean)
 
-void ItemSetSymbol(VItem* item, VIndex symbolId)
+static inline void ItemSetSymbol(VItem* item, VIndex symbolId)
 {
   ItemFun(item) = GInterpSymbolFun;
   ItemSymbol(item) = symbolId;
 }
 
-void ItemSetPrimFun(VItem* item, VFunPtr fun, VIndex primFunId)
+static inline void ItemSetPrimFun(VItem* item, VFunPtr fun, VIndex primFunId)
 {
   ItemFun(item) = fun;
   ItemSymbol(item) = primFunId;

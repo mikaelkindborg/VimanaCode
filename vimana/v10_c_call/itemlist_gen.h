@@ -25,12 +25,16 @@ void ItemList_Set(VList* list, VIndex index, VItem* item)
   ItemList_SetRaw(list, index, item);
 }
 
-VItem* ItemList_Get(VList* list, VIndex index)
-{
-  if (index >= ListLength(list) || index < 0)
-    GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
-  return ItemList_GetRaw(list, index);
-}
+#ifdef OPTIMIZE
+  #define ItemList_Get(list, index) ItemList_GetRaw(list, index)
+#else
+  VItem* ItemList_Get(VList* list, VIndex index)
+  {
+    if (index >= ListLength(list) || index < 0)
+      GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
+    return ItemList_GetRaw(list, index);
+  }
+#endif
 
 // Push and Pop ------------------------------------------------
 

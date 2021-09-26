@@ -47,9 +47,6 @@ void ListInit_Internal(VList* list, VSize itemSize)
   memset(itemArray, 0, arraySize);
 }
 
-struct __VGarbageCollector;
-VObj* GCAllocObj(struct __VGarbageCollector* gc, size_t size);
-
 VList* ListCreate_Internal(VSize itemSize)
 {
   VList* list = MemAlloc(sizeof(VList));
@@ -97,13 +94,21 @@ void ListGrow(VList* list, VSize newSize)
 
   //PrintDebug("REALLOC successful in ListGrow");
 }
-
+/*
 #define ListCheckCapacity(list, index) \
 do { \
   if ((index) < 0) GuruMeditation(LISTCHECKCAPACITY_LESS_THAN_ZERO); \
   if ((index) > VINDEXMAX) GuruMeditation(LISTCHECKCAPACITY_VINDEXMAX_EXCEEDED); \
   if ((index) >= (list)->maxLength) ListGrow(list, (index) + ListGrowIncrement); \
 } while (0)
+*/
+
+static inline void ListCheckCapacity(VList* list, VIndex index)
+{
+  //if ((index) < 0) GuruMeditation(LISTCHECKCAPACITY_LESS_THAN_ZERO);
+  //if ((index) > VINDEXMAX) GuruMeditation(LISTCHECKCAPACITY_VINDEXMAX_EXCEEDED);
+  if ((index) >= (list)->maxLength) ListGrow(list, (index) + ListGrowIncrement);
+}
 
 // Generic Pointer-Based Functions -----------------------------
 

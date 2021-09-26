@@ -93,7 +93,9 @@ char* CodeParserWorker(char* p, VList* codeList)
       p = ParseNumber(p + 1, &number);
       item = ListPushRaw(codeList);
       if ('N' == c)
+      {
         ItemSetNumber(item, number);
+      }
       else
       if ('P' == c)
       {
@@ -102,9 +104,13 @@ char* CodeParserWorker(char* p, VList* codeList)
       }
       else
       if ('S' == c)
+      {
         ItemSetSymbol(item, number);
+      }
       else
+      {
         ItemSetVirgin(item);
+      }
     }
   }
 

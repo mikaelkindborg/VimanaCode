@@ -25,12 +25,16 @@ void ListType_Set(VList* list, VIndex index, ItemType* item)
   ListType_SetRaw(list, index, item);
 }
 
-ItemType* ListType_Get(VList* list, VIndex index)
-{
-  if (index >= ListLength(list) || index < 0)
-    GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
-  return ListType_GetRaw(list, index);
-}
+#ifdef OPTIMIZE
+  #define ListType_Get(list, index) ListType_GetRaw(list, index)
+#else
+  ItemType* ListType_Get(VList* list, VIndex index)
+  {
+    if (index >= ListLength(list) || index < 0)
+      GuruMeditation(LISTGET_INDEX_OUT_OF_BOUNDS);
+    return ListType_GetRaw(list, index);
+  }
+#endif
 
 // Push and Pop ------------------------------------------------
 
