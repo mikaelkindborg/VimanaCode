@@ -14,24 +14,47 @@ Interpreter core.
 typedef struct __VContext
 {
   VList* codeList;
-  VIndex codePointer;
+  VIndex codePointer;  
+  struct __VContext* next;
+  struct __VContext* prev;
 }
 VContext;
 
-#include "contextlist_gen.h"
+// CONTEXT CREATE/FREE -----------------------------------------
+
+VContext* ContextCreate()
+{
+  VContext* context = MemAlloc(sizeof(VContext));
+  context->codeList = NULL;
+  context->codePointer = -1;
+  context->next = NULL;
+  context->prev = NULL;
+  return context;
+}
+
+// Free self and all children.
+void ContextFree(VContext* context)
+{
+  VContext* next = context->next;
+  if (next)
+  {
+    ContextFree(next);
+  }
+  MemFree(context);
+}
 
 // INTERPRETER -------------------------------------------------
 
 typedef struct __VInterp
 {
-  VList*  globalVars;        // List of global variable values
-  VList*  stack;             // The data stack
-  VList*  callstack;         // Callstack with context frames
-  VIndex  callstackIndex;    // Index of current frame
-  VBool   run;               // Run flag
-  VBool   contextSwitch;
-  VGarbageCollector* gc;     // Garbage collector
-  long    numContextCalls;   // Number of context pushes
+  VList*     globalVars;        // List of global variable values
+  VList*     stack;             // The data stack
+  VContext*  callstack;         // Callstack context
+  VContext*  currentContext;
+  VBool      run;               // Run flag
+  VBool      contextSwitch;
+  VGarbageCollector* gc;        // Garbage collector
+  long       numContextCalls;   // Number of context pushes
   //long    wakeUpTime;        // Time to wake up after sleep
 }
 VInterp;
@@ -44,16 +67,8 @@ VInterp;
   ((interp)->stack)
 #define InterpCallStack(interp) \
   ((interp)->callstack)
-#define InterpCallStackIndex(interp) \
-  ((interp)->callstackIndex)
-#define InterpContext(interp) \
-  (ContextList_Get(InterpCallStack(interp), InterpCallStackIndex(interp)))
-#define InterpCodeList(interp) \
-  (InterpContext(interp)->codeList)
-#define InterpCodePointer(interp) \
-  (InterpContext(interp)->codePointer)
-#define InterpCurrentCodeItem(interp) \
-  (ItemList_Get(InterpCodeList(interp), InterpCodePointer(interp)))
+#define InterpCurrentContext(interp) \
+  ((interp)->currentContext)
 
 // CREATE/FREE FUNCTIONS ---------------------------------------
 
@@ -62,7 +77,7 @@ VInterp* InterpCreate()
   VInterp* interp = MemAlloc(sizeof(VInterp));
   InterpGlobalVars(interp) = ItemList_Create();
   InterpStack(interp) = ItemList_Create();
-  InterpCallStack(interp) = ContextList_Create();
+  InterpCallStack(interp) = ContextCreate();
   interp->gc = GCCreate();
   interp->numContextCalls = 0;
   return interp;
@@ -85,13 +100,14 @@ void InterpFree(VInterp* interp)
   // Free non-gc managed objects.
   ListFree(InterpGlobalVars(interp));
   ListFree(InterpStack(interp));
-  ListFree(InterpCallStack(interp));
+  ContextFree(InterpCallStack(interp));
   GCFree(interp->gc);
 
   // Free interpreter struct.
   MemFree(interp);
 }
 
+// Run garbage collector.
 void InterpGC(VInterp* interp)
 {
   GCMarkChildren(InterpGlobalVars(interp));
@@ -132,45 +148,43 @@ void InterpClearStack(VInterp* interp)
 
 // CONTEXT HANDLING --------------------------------------------
 
-// Push root context with codeList.
 void InterpInit(VInterp* interp, VList* codeList)
 {
-  ListLength(InterpCallStack(interp)) = 0;
-  ListPushRaw(InterpCallStack(interp));
-  InterpCallStackIndex(interp) = 0;
-  InterpCodeList(interp) = codeList;
-  InterpCodePointer(interp) = -1;
-  //PrintDebugStrNum("ENTER ROOT CONTEXT: ", InterpCallStackIndex(interp));
+  VContext* context = InterpCallStack(interp);
+  InterpCurrentContext(interp) = context;
+  context->codeList = codeList;
+  context->codePointer = -1;
 }
 
 void InterpPushContext(VInterp* interp, VList* codeList)
 {
-  //++ interp->numContextCalls;
+#ifdef DEBUG
+  ++ interp->numContextCalls;
+#endif
 
   interp->contextSwitch = TRUE;
 
+  VContext* currentContext = InterpCurrentContext(interp);
+
   VBool isTailCall = 
-    (1 + InterpCodePointer(interp)) >= 
-    ListLength(InterpCodeList(interp));
+    (1 + currentContext->codePointer) >= 
+    ListLength(currentContext->codeList);
 
-  if (isTailCall)
+  if (!isTailCall)
   {
-    //PrintDebugStrNum("TAILCALL CONTEXT: ", InterpCallStackIndex(interp));
-  }
-  else
-  {
-    ++ InterpCallStackIndex(interp);
-    if (InterpCallStackIndex(interp) >= ListLength(InterpCallStack(interp)))
-      ListPushRaw(InterpCallStack(interp));
-    //PrintDebugStrNum("ENTER CONTEXT: ", InterpCallStackIndex(interp));
+    if (!currentContext->next)
+    {
+      currentContext->next = ContextCreate();
+      currentContext->next->prev = currentContext;
+    }
+    
+    currentContext = currentContext->next;
+    InterpCurrentContext(interp) = currentContext;
   }
 
-  InterpCodeList(interp) = codeList;
-  InterpCodePointer(interp) = -1;
+  currentContext->codeList = codeList;
+  currentContext->codePointer = -1;
 }
-
-#define InterpPopContext(interp) \
-  (-- InterpCallStackIndex(interp))
 
 // INTERPRETER LOOP --------------------------------------------
 
@@ -197,18 +211,18 @@ void InterpEvalTest(VInterp* interp, VList* codeList)
   InterpGC(interp);
 }
 
-/*
 // Evaluate a slice of code. 
 // sliceSize specifies the number of instructions to execute.
 // sliceSize 0 means eval as one slice until program ends.
 // Returns done flag (TRUE = done, FALSE = not done).
 VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
 {
-  register VItem*  item;
-  register VNumber sliceCounter = 0;
-  register VIndex  codePointer;
-  register VList*  code;
-  register VSize   codeLength;
+  register VItem*    item;
+  register VNumber   sliceCounter = 0;
+  register VContext* currentContext;
+  register VIndex    codePointer;
+  register VList*    codeList;
+  register VSize     codeLength;
 
   interp->run = TRUE;
   interp->contextSwitch = TRUE;
@@ -227,138 +241,35 @@ VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
     if (interp->contextSwitch)
     {
       interp->contextSwitch = FALSE;
-      code = InterpCodeList(interp);
-      codeLength = ListLength(code);
+      currentContext = InterpCurrentContext(interp);
+      codeList = currentContext->codeList;
+      codeLength = ListLength(codeList);
     }
 
     // Increment code pointer.
-    codePointer = ++ InterpCodePointer(interp);
+    codePointer = ++ currentContext->codePointer;
     
-    //PrintDebugStrNum("CODE POINTER: ", InterpCodePointer(interp));
-
-    // Call item function if not end of list. 
+    // Call item function if not end of list.
     if (codePointer < codeLength)
     {
-      // Call current item in the code list.
-      //item = InterpCurrentCodeItem(interp);
-      item = ItemList_Get(code, codePointer);
-      if (IsPrimFun(item)) 
-      {
-        ItemFun(item)(interp, item);
-        goto Next;
-      }
-
-      if (IsSymbol(item))
-      {
-        // Find symbol value in global env.
-        // Symbols evaluate to themselves if unbound.
-        VIndex index = ItemSymbol(item);
-        VItem* symbolValue = InterpGetGlobalVar(interp, index);
-        if (NULL == symbolValue)
-        {
-          // Symbol is unbound, push the symbol itself.
-          InterpPush(interp, item);
-          goto Next;
-        }
-
-        // If it is a function, call it.
-        if (IsFun(symbolValue))
-        {
-          InterpPushContext(interp, ItemList(symbolValue));
-          goto Next;
-        }
-
-        //PrintDebug("PUSH SYMBOL VALUE");
-        // If not a function, push the symbol value.
-        InterpPush(interp, symbolValue);
-        goto Next;
-      }
-
-      InterpPush(interp, item);
-      goto Next;
-    }
-    else
-    // Exit stackframe.
-    {
-      //PrintDebugStrNum("EXIT CONTEXT: ", InterpCallStackIndex(interp));
-
-      // Pop stackframe.
-      InterpPopContext(interp);
-      interp->contextSwitch = TRUE;
-
-      // Exit interpreter loop if this was the last stackframe.
-      if (InterpCallStackIndex(interp) < 0) 
-        interp->run = FALSE;
-      
-      //goto Next;
-    }
-    Next:;
-  } 
-  // while
-
-Exit:
-  return ! interp->run;
-}
-*/
-
-// Evaluate a slice of code. 
-// sliceSize specifies the number of instructions to execute.
-// sliceSize 0 means eval as one slice until program ends.
-// Returns done flag (TRUE = done, FALSE = not done).
-VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
-{
-  register VItem*  item;
-  register VNumber sliceCounter = 0;
-  register VIndex  codePointer;
-  register VList*  code;
-  register VSize   codeLength;
-
-  interp->run = TRUE;
-  interp->contextSwitch = TRUE;
-
-  while (interp->run)
-  {
-    // Track slices if a sliceSize is specified.
-    if (sliceSize)
-    {
-      if (sliceSize > sliceCounter)
-        ++ sliceCounter;
-      else
-        goto Exit;
-    }
-
-    if (interp->contextSwitch)
-    {
-      interp->contextSwitch = FALSE;
-      code = InterpCodeList(interp);
-      codeLength = ListLength(code);
-    }
-
-    // Increment code pointer.
-    codePointer = ++ InterpCodePointer(interp);
-    
-    //PrintDebugStrNum("CODE POINTER: ", InterpCodePointer(interp));
-
-    // Call item function if not end of list. 
-    if (codePointer < codeLength)
-    {
-      // Call current item in the code list.
-      //item = InterpCurrentCodeItem(interp);
-      item = ItemList_Get(code, codePointer);
+      item = ItemList_Get(codeList, codePointer);
       ItemFun(item)(interp, item);
     }
     else
-    // Exit stackframe.
+    // Otherwise exit stackframe.
     {
-      //PrintDebugStrNum("EXIT CONTEXT: ", InterpCallStackIndex(interp));
-
-      // Pop stackframe.
-      InterpPopContext(interp);
-      interp->contextSwitch = TRUE;
-
-      // Exit interpreter loop if this was the last stackframe.
-      if (InterpCallStackIndex(interp) < 0) 
+      currentContext = currentContext->prev;
+      if (currentContext)
+      {
+        InterpCurrentContext(interp) = currentContext;
+        codeList = currentContext->codeList;
+        codeLength = ListLength(codeList);
+      }
+      else
+      {
+        // Exit interpreter loop if this was the last stackframe.
         interp->run = FALSE;
+      }
     }
   } 
   // while

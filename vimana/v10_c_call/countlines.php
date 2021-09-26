@@ -5,9 +5,6 @@ function countlines($file)
   return count(file($file));
 }
 
-$numlines_gc_refcount = countlines("gc_refcount.h");
-$numlines_gc_marksweep = countlines("gc_marksweep.h");
-
 $numlines = 
   countlines("base.h") +
   countlines("vobj.h") +
@@ -19,25 +16,33 @@ $numlines =
   countlines("itemlist_gen.h") +
   countlines("itemlist.h") +
   countlines("print.h") +
-  countlines("contextlist_gen.h") +
+  countlines("gc_marksweep.h") +
   countlines("interp.h") +
   countlines("primfuns_gen.h") +
+  countlines("primfun_table_gen.h") +
   countlines("codeparser.h");
 
-echo "BASE VERSION: ". ($numlines + $numlines_gc_refcount) . " lines (ref count gc)\n";
-echo "BASE VERSION: ". ($numlines + $numlines_gc_marksweep) . " lines (mark sweep gc)\n";
+echo "BASE VERSION: ". ($numlines) . " lines (mark sweep gc)\n";
 
 $numlines += 
   countlines("symboldict.h") +
-  countlines("primfunsdict_gen.h") +
+  countlines("primfun_names_gen.h") +
   countlines("sourceparser.h");
 
-echo "FULL VERSION: " . ($numlines + $numlines_gc_refcount) . " lines (ref count gc)\n";
-echo "FULL VERSION: " . ($numlines + $numlines_gc_marksweep) . " lines (mark sweep gc)\n";
+echo "FULL VERSION: " . ($numlines) . " lines (mark sweep gc)\n";
 
 /***
 
-Version v9_minimal:
+Version v10_c_code:
+
+210926:
+  BASE VERSION: 1972 lines (mark sweep gc)
+  FULL VERSION: 2267 lines (mark sweep gc)
+210926 (removed commented out code):  
+  BASE VERSION: 1866 lines (mark sweep gc)
+  FULL VERSION: 2161 lines (mark sweep gc)
+
+Version v9_c_minimal:
 
 210920 (it has grown bigger with generated code for typed list):
   BASE VERSION: 1467 lines
@@ -51,7 +56,7 @@ Version v9_minimal:
   BASE VERSION: 2058 lines (mark sweep gc)
   FULL VERSION: 2352 lines (mark sweep gc)
 
-Version v8_minimal:
+Version v8_c_minimal:
 
 210903: 662 lines (first working prototype)
 210904: 821 lines (parsning and printing)

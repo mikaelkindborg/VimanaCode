@@ -1,7 +1,7 @@
-(fib)
+(fib) 
   (dup 2 < (dup sub1 fib swap 2 - fib +) iffalse) def
 
-(times) 
+(times)
   (dup iszero 
     (drop drop) 
     (swap dup eval swap sub1 times) 

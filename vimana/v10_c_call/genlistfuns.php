@@ -14,6 +14,3 @@ file_put_contents("itemlist_gen.h", $code);
 
 $code = ReplaceTemplateTags("String_", "char", $templateCode);
 file_put_contents("string_gen.h", $code);
-
-$code = ReplaceTemplateTags("ContextList_", "VContext", $templateCode);
-file_put_contents("contextlist_gen.h", $code);

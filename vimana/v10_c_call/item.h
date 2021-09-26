@@ -101,17 +101,11 @@ static inline void ItemSetString(VItem* item, VString* string)
   ItemObj(item) = (VObj*)string;
 }
 
-/*
 static inline void ItemSetNumber(VItem* item, VNumber number)
 {
   ItemFun(item) = GInterpNumberFun;
   ItemNumber(item) = number;
 }
-*/
-
-#define ItemSetNumber(item, number) \
-  ItemFun(item) = GInterpNumberFun; \
-  ItemNumber(item) = number
 
 #define ItemSetBool(item, boolean) ItemSetNumber(item, boolean)
 

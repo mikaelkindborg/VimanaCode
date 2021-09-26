@@ -74,8 +74,10 @@ void ListFree(VList* list)
 
 void ListGrow(VList* list, VSize newSize)
 {
+#ifndef OPTIMIZE
   if (newSize > VINDEXMAX)
     GuruMeditation(LISTGROW_VINDEXMAX_EXCEEDED);
+#endif
 
   // Make space for more items.
   size_t newArraySize = newSize * list->itemSize;
@@ -94,19 +96,13 @@ void ListGrow(VList* list, VSize newSize)
 
   //PrintDebug("REALLOC successful in ListGrow");
 }
-/*
-#define ListCheckCapacity(list, index) \
-do { \
-  if ((index) < 0) GuruMeditation(LISTCHECKCAPACITY_LESS_THAN_ZERO); \
-  if ((index) > VINDEXMAX) GuruMeditation(LISTCHECKCAPACITY_VINDEXMAX_EXCEEDED); \
-  if ((index) >= (list)->maxLength) ListGrow(list, (index) + ListGrowIncrement); \
-} while (0)
-*/
 
 static inline void ListCheckCapacity(VList* list, VIndex index)
 {
-  //if ((index) < 0) GuruMeditation(LISTCHECKCAPACITY_LESS_THAN_ZERO);
-  //if ((index) > VINDEXMAX) GuruMeditation(LISTCHECKCAPACITY_VINDEXMAX_EXCEEDED);
+#ifndef OPTIMIZE
+  if ((index) < 0) GuruMeditation(LISTCHECKCAPACITY_LESS_THAN_ZERO);
+  if ((index) > VINDEXMAX) GuruMeditation(LISTCHECKCAPACITY_VINDEXMAX_EXCEEDED);
+#endif
   if ((index) >= (list)->maxLength) ListGrow(list, (index) + ListGrowIncrement);
 }
 

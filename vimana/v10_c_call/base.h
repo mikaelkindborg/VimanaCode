@@ -16,7 +16,7 @@ Basic data types and functions.
 #define PLATFORM_LINUX
 #define OPTIMIZE
 //#define DEBUG
-//#define GURUMEDITATION_STRINGS
+#define GURUMEDITATION_STRINGS
 //#define TRACK_MEMORY_USAGE
 #define INCLUDE_SOURCE_CODE_PARSER
 

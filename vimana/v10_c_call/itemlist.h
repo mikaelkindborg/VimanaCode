@@ -22,7 +22,7 @@ Also see generated file: itemlist_gen.h
 
 #else
 
-  void ItemListDrop(VList* list)
+  static inline void ItemListDrop(VList* list)
   {
     if (ListLength(list) < 1)
       GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
@@ -42,7 +42,7 @@ Also see generated file: itemlist_gen.h
 
 #else
 
-  void ItemListDup(VList* list)
+  static inline void ItemListDup(VList* list)
   {
     void* item = ItemList_Get(list, ListLength(list) - 1);
     ItemList_Push(list, item);
@@ -64,7 +64,7 @@ Also see generated file: itemlist_gen.h
 
 #else
 
-  void ItemList2Dup(VList* list)
+  static inline void ItemList2Dup(VList* list)
   {
     void* item;
     item = ItemList_Get(list, ListLength(list) - 2);
@@ -86,7 +86,7 @@ Also see generated file: itemlist_gen.h
 
 #else
 
-  void ItemListOver(VList* list)
+  static inline void ItemListOver(VList* list)
   {
     void* item = ItemList_Get(list, ListLength(list) - 2);
     ItemList_Push(list, item);
@@ -109,7 +109,7 @@ Also see generated file: itemlist_gen.h
 
 #else
 
-  void ItemListSwap(VList* list)
+  static inline void ItemListSwap(VList* list)
   {
     VItem temp;
     VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1);
