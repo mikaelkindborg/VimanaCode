@@ -145,7 +145,7 @@ void InterpInit(VInterp* interp, VList* codeList)
 
 void InterpPushContext(VInterp* interp, VList* codeList)
 {
-  ++ interp->numContextCalls;
+  //++ interp->numContextCalls;
 
   interp->contextSwitch = TRUE;
 
@@ -196,6 +196,110 @@ void InterpEvalTest(VInterp* interp, VList* codeList)
 
   InterpGC(interp);
 }
+
+/*
+// Evaluate a slice of code. 
+// sliceSize specifies the number of instructions to execute.
+// sliceSize 0 means eval as one slice until program ends.
+// Returns done flag (TRUE = done, FALSE = not done).
+VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
+{
+  register VItem*  item;
+  register VNumber sliceCounter = 0;
+  register VIndex  codePointer;
+  register VList*  code;
+  register VSize   codeLength;
+
+  interp->run = TRUE;
+  interp->contextSwitch = TRUE;
+
+  while (interp->run)
+  {
+    // Track slices if a sliceSize is specified.
+    if (sliceSize)
+    {
+      if (sliceSize > sliceCounter)
+        ++ sliceCounter;
+      else
+        goto Exit;
+    }
+
+    if (interp->contextSwitch)
+    {
+      interp->contextSwitch = FALSE;
+      code = InterpCodeList(interp);
+      codeLength = ListLength(code);
+    }
+
+    // Increment code pointer.
+    codePointer = ++ InterpCodePointer(interp);
+    
+    //PrintDebugStrNum("CODE POINTER: ", InterpCodePointer(interp));
+
+    // Call item function if not end of list. 
+    if (codePointer < codeLength)
+    {
+      // Call current item in the code list.
+      //item = InterpCurrentCodeItem(interp);
+      item = ItemList_Get(code, codePointer);
+      if (IsPrimFun(item)) 
+      {
+        ItemFun(item)(interp, item);
+        goto Next;
+      }
+
+      if (IsSymbol(item))
+      {
+        // Find symbol value in global env.
+        // Symbols evaluate to themselves if unbound.
+        VIndex index = ItemSymbol(item);
+        VItem* symbolValue = InterpGetGlobalVar(interp, index);
+        if (NULL == symbolValue)
+        {
+          // Symbol is unbound, push the symbol itself.
+          InterpPush(interp, item);
+          goto Next;
+        }
+
+        // If it is a function, call it.
+        if (IsFun(symbolValue))
+        {
+          InterpPushContext(interp, ItemList(symbolValue));
+          goto Next;
+        }
+
+        //PrintDebug("PUSH SYMBOL VALUE");
+        // If not a function, push the symbol value.
+        InterpPush(interp, symbolValue);
+        goto Next;
+      }
+
+      InterpPush(interp, item);
+      goto Next;
+    }
+    else
+    // Exit stackframe.
+    {
+      //PrintDebugStrNum("EXIT CONTEXT: ", InterpCallStackIndex(interp));
+
+      // Pop stackframe.
+      InterpPopContext(interp);
+      interp->contextSwitch = TRUE;
+
+      // Exit interpreter loop if this was the last stackframe.
+      if (InterpCallStackIndex(interp) < 0) 
+        interp->run = FALSE;
+      
+      //goto Next;
+    }
+    Next:;
+  } 
+  // while
+
+Exit:
+  return ! interp->run;
+}
+*/
 
 // Evaluate a slice of code. 
 // sliceSize specifies the number of instructions to execute.

@@ -1,10 +1,10 @@
 (fib)
-  (dup 2 < (dup 1 - fib swap 2 - fib +) iffalse) def
+  (dup 2 < (dup sub1 fib swap 2 - fib +) iffalse) def
 
 (times) 
   (dup iszero 
     (drop drop) 
-    (swap dup eval swap 1 - times) 
+    (swap dup eval swap sub1 times) 
   ifelse) def
 
 (32 fib print) 5 times

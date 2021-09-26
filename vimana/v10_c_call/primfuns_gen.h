@@ -83,8 +83,16 @@ void PrimFun_6(VInterp* interp, VItem* primFunItem)
   ++ ListLength(InterpStack(interp));
 }
 
-// eq
+// sub1
 void PrimFun_7(VInterp* interp, VItem* primFunItem)
+{
+  VItem* item = InterpPop(interp);
+  ItemSetNumber(item,  ItemNumber(item) - 1);
+  ++ ListLength(InterpStack(interp));
+}
+
+// eq
+void PrimFun_8(VInterp* interp, VItem* primFunItem)
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -94,7 +102,7 @@ void PrimFun_7(VInterp* interp, VItem* primFunItem)
 }
 
 // <
-void PrimFun_8(VInterp* interp, VItem* primFunItem)
+void PrimFun_9(VInterp* interp, VItem* primFunItem)
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -104,7 +112,7 @@ void PrimFun_8(VInterp* interp, VItem* primFunItem)
 }
 
 // >
-void PrimFun_9(VInterp* interp, VItem* primFunItem)
+void PrimFun_10(VInterp* interp, VItem* primFunItem)
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -114,7 +122,7 @@ void PrimFun_9(VInterp* interp, VItem* primFunItem)
 }
 
 // iszero
-void PrimFun_10(VInterp* interp, VItem* primFunItem)
+void PrimFun_11(VInterp* interp, VItem* primFunItem)
 {
   VItem* item = InterpPop(interp);
   VBool trueOrFalse = 0 == ItemNumber(item);
@@ -123,14 +131,14 @@ void PrimFun_10(VInterp* interp, VItem* primFunItem)
 }
 
 // eval
-void PrimFun_11(VInterp* interp, VItem* primFunItem)
+void PrimFun_12(VInterp* interp, VItem* primFunItem)
 {
   VItem* item = InterpPop(interp);
   InterpPushContext(interp, ItemList(item));
 }
 
 // iftrue
-void PrimFun_12(VInterp* interp, VItem* primFunItem)
+void PrimFun_13(VInterp* interp, VItem* primFunItem)
 {
   VItem* trueBlock = InterpPop(interp);
   VItem* trueOrFalse = InterpPop(interp);
@@ -139,7 +147,7 @@ void PrimFun_12(VInterp* interp, VItem* primFunItem)
 }
 
 // iffalse
-void PrimFun_13(VInterp* interp, VItem* primFunItem)
+void PrimFun_14(VInterp* interp, VItem* primFunItem)
 {
   VItem* falseBlock = InterpPop(interp);
   VItem* trueOrFalse = InterpPop(interp);
@@ -148,7 +156,7 @@ void PrimFun_13(VInterp* interp, VItem* primFunItem)
 }
 
 // ifelse
-void PrimFun_14(VInterp* interp, VItem* primFunItem)
+void PrimFun_15(VInterp* interp, VItem* primFunItem)
 {
   VItem* falseBlock = InterpPop(interp);
   VItem* trueBlock = InterpPop(interp);
@@ -160,7 +168,7 @@ void PrimFun_14(VInterp* interp, VItem* primFunItem)
 }
 
 // not
-void PrimFun_15(VInterp* interp, VItem* primFunItem)
+void PrimFun_16(VInterp* interp, VItem* primFunItem)
 {
   VItem* item = InterpPop(interp);
   ItemSetBool(item, !ItemBool(item));
@@ -168,38 +176,38 @@ void PrimFun_15(VInterp* interp, VItem* primFunItem)
 }
 
 // drop
-void PrimFun_16(VInterp* interp, VItem* primFunItem)
+void PrimFun_17(VInterp* interp, VItem* primFunItem)
 {
   // ItemListDrop(InterpStack(interp));
   InterpPop(interp);
 }
 
 // dup
-void PrimFun_17(VInterp* interp, VItem* primFunItem)
+void PrimFun_18(VInterp* interp, VItem* primFunItem)
 {
   ItemListDup(InterpStack(interp));
 }
 
 // 2dup
-void PrimFun_18(VInterp* interp, VItem* primFunItem)
+void PrimFun_19(VInterp* interp, VItem* primFunItem)
 {
   ItemList2Dup(InterpStack(interp));
 }
 
 // over
-void PrimFun_19(VInterp* interp, VItem* primFunItem)
+void PrimFun_20(VInterp* interp, VItem* primFunItem)
 {
   ItemListOver(InterpStack(interp));
 }
 
 // swap
-void PrimFun_20(VInterp* interp, VItem* primFunItem)
+void PrimFun_21(VInterp* interp, VItem* primFunItem)
 {
   ItemListSwap(InterpStack(interp));
 }
 
 // printstack
-void PrimFun_21(VInterp* interp, VItem* primFunItem)
+void PrimFun_22(VInterp* interp, VItem* primFunItem)
 {
   Print("STACK:");
   PrintList(InterpStack(interp));
