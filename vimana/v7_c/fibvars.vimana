@@ -1,0 +1,45 @@
+(
+INITIAL TEST
+28 fib 5 times:
+./vimana fib.vimana  0.37s user 0.00s system 98% cpu 0.379 total
+
+TEST 210814
+32 fib 5 times:
+./vimana fib.vimana  2.09s user 0.00s system 99% cpu 2.107 total
+Using SUB1:
+./vimana fib.vimana  2.06s user 0.00s system 99% cpu 2.068 total
+./vimana fib.vimana  2.05s user 0.00s system 99% cpu 2.064 total
+./vimana fib.vimana  2.03s user 0.00s system 99% cpu 2.048 total
+)
+DOC
+
+(
+(FIB) ((N) => 
+  COUNTER 1 + (COUNTER) SETGLOBAL
+  N 2 < (N) (N 1 - FIB N 2 - FIB +) IFELSE) DEF
+
+(FIB) ((N) => 
+  N 2 < (N) (N 1 - FIB N 2 - FIB +) IFELSE) DEF
+
+(TIMESDO) ((L N) => 
+  N ISZERO (L EVAL L N 1 - TIMESDO) IFFALSE) DEF
+
+0 (COUNTER) SETGLOBAL
+
+(32 FIB PRINT) 5 TIMESDO
+
+COUNTER PRINT
+)
+DOC
+
+
+(FIB) ((N) => 
+  N 2 < 
+    (N) 
+    (N SUB1 FIB N 2 - FIB +) 
+  IFELSE) DEF
+
+(TIMESDO) ((L N) => 
+  N ISZERO (L EVAL L N SUB1 TIMESDO) IFFALSE) DEF
+
+(32 FIB PRINT) 5 TIMESDO

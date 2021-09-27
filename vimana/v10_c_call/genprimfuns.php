@@ -147,12 +147,22 @@ $GPrimFunTable = [];
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("drop"); ?>
-  // ItemListDrop(InterpStack(interp));
-  InterpPop(interp);
+  //ItemListDrop(InterpStack(interp));
+  //InterpPop(interp);
+  VList* list = InterpStack(interp);
+  if (ListLength(list) < 1)
+    GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
+  -- ListLength(list);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("dup"); ?>
-  ItemListDup(InterpStack(interp));
+  //ItemListDup(InterpStack(interp));
+  VList* list = InterpStack(interp);
+  VItem* item = ItemList_Get(list, ListLength(list) - 1);
+  VIndex index = ListLength(list);
+  ListCheckCapacity(list, index);
+  ++ ListLength(list);
+  ItemList_SetRaw(list, index, item);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("2dup"); ?>
@@ -164,7 +174,13 @@ $GPrimFunTable = [];
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("swap"); ?>
-  ItemListSwap(InterpStack(interp));
+  //ItemListSwap(InterpStack(interp));
+  VList* list = InterpStack(interp);
+  VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1);
+  VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2);
+  VItem temp = *item1;
+  *item1 = *item2;
+  *item2 = temp;
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("printstack"); ?>

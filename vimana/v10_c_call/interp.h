@@ -14,7 +14,7 @@ Interpreter core.
 typedef struct __VContext
 {
   VList* codeList;
-  VIndex codePointer;  
+  VIndex codePointer;
   struct __VContext* next;
   struct __VContext* prev;
 }

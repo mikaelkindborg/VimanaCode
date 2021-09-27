@@ -2,7 +2,8 @@
 File: gc_marksweep.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Mark and sweep memory allocator and garbage collector.
+Mark and sweep garbage collector.
+
 Based on this article by Bob Nystrom:
 https://journal.stuffwithstuff.com/2013/12/08/babys-first-garbage-collector/
 */
