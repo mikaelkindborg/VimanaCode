@@ -22,11 +22,18 @@ Operations:
 - If statements
 */
 
-#define TEST_FUNPTR
+//#define TEST_FUNPTR
+// -Ofast
 // ./a.out  3.86s user 0.20s system 95% cpu 4.252 total
 // ./a.out  3.89s user 0.20s system 93% cpu 4.391 total
 // ./a.out  3.90s user 0.20s system 92% cpu 4.451 total
 // ./a.out  3.87s user 0.21s system 99% cpu 4.092 total
+// No opt
+// ./a.out  4.53s user 0.23s system 92% cpu 5.168 tota
+// No opt rand fun selection
+// ./a.out  6.95s user 0.22s system 95% cpu 7.480 total
+// Opt rand fun sel
+// ./a.out  5.26s user 0.21s system 94% cpu 5.815 total
 
 //#define TEST_FUNPTR_LOOPPTR
 // ./a.out  3.86s user 0.20s system 90% cpu 4.466 total
@@ -44,14 +51,20 @@ Operations:
 // Without if:
 // ./a.out  3.99s user 0.20s system 93% cpu 4.495 total
 // ./a.out  4.04s user 0.21s system 93% cpu 4.533 total
+// No opt
+// ./a.out  3.97s user 0.18s system 92% cpu 4.462 total
 
-//#define TEST_PLAIN_WITH_IF
+#define TEST_PLAIN_WITH_IF
 // With 6 ifs
 // ./a.out  4.07s user 0.20s system 85% cpu 4.979 total
 // With 16 ifs
 // ./a.out  5.08s user 0.20s system 94% cpu 5.605 total
 // ./a.out  5.10s user 0.20s system 99% cpu 5.311 total
 // ./a.out  5.44s user 0.21s system 94% cpu 5.975 total
+// With opt
+// ./a.out  5.61s user 0.20s system 94% cpu 6.159 total
+// No opt
+// ./a.out  10.14s user 0.21s system 97% cpu 10.661 total
 
 // Total: 500 000 000 iterations --> 4s 
 // 20 fact 10 000 000 times = 200 000 000 --> 9s * 2.5 = 22.5s
@@ -81,6 +94,12 @@ void RandomUpdate_Item128(void* p)
   item->value += (rand() % 11) - 5;
 }
 
+void RandomUpdate_Item128_2(void* p)
+{
+  Item128* item = p;
+  item->value += (rand() % 3) - 2;
+}
+
 Item128 RandomUpdate_Item128_CopyItem(Item128 item)
 {
   item.value += (rand() % 11) - 5;
@@ -96,7 +115,10 @@ void* CreateArray_Item128()
 #ifdef TEST_FUNPTR_COPYITEM
     items[i].ptr = RandomUpdate_Item128_CopyItem;
 #else
-    items[i].ptr = RandomUpdate_Item128;
+    if ((rand() % 10) > 4)
+      items[i].ptr = RandomUpdate_Item128;
+    else
+      items[i].ptr = RandomUpdate_Item128_2;
 #endif
     items[i].value = (rand() % 11) - 5;
   }
