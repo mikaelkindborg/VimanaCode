@@ -22,18 +22,22 @@ Operations:
 - If statements
 */
 
-//#define TEST_FUNPTR
+#define TEST_FUNPTR
+// No rand function selection:
 // -Ofast
 // ./a.out  3.86s user 0.20s system 95% cpu 4.252 total
 // ./a.out  3.89s user 0.20s system 93% cpu 4.391 total
 // ./a.out  3.90s user 0.20s system 92% cpu 4.451 total
 // ./a.out  3.87s user 0.21s system 99% cpu 4.092 total
 // No opt
-// ./a.out  4.53s user 0.23s system 92% cpu 5.168 tota
-// No opt rand fun selection
+// ./a.out  4.53s user 0.23s system 92% cpu 5.168 total
+// With randpm function selection:
+// No opt - rand function selection
 // ./a.out  6.95s user 0.22s system 95% cpu 7.480 total
-// Opt rand fun sel
+// Opt - rand function selection
 // ./a.out  5.26s user 0.21s system 94% cpu 5.815 total
+// With 20000000 items 10 loops: 
+// ./a.out  2.12s user 0.09s system 99% cpu 2.221 total
 
 //#define TEST_FUNPTR_LOOPPTR
 // ./a.out  3.86s user 0.20s system 90% cpu 4.466 total
@@ -42,6 +46,14 @@ Operations:
 //#define TEST_FUNPTR_COPYITEM
 // ./a.out  3.95s user 0.21s system 91% cpu 4.546 total
 // ./a.out  3.97s user 0.21s system 99% cpu 4.193 total
+// New test 210928:
+// No opt: ./a.out  4.15s user 0.22s system 99% cpu 4.379 total
+// Opt:    ./a.out  3.94s user 0.21s system 91% cpu 4.541 total
+
+//#define TEST_FUNPTR_COPYITEM_FASTER
+// New test 210928:
+// No opt: ./a.out  4.15s user 0.22s system 93% cpu 4.676 total
+// Opt:    ./a.out  3.94s user 0.22s system 91% cpu 4.552 total 
 
 //#define TEST_PLAIN_WITHOUT_IF_ITEM64
 // Without if:
@@ -54,7 +66,7 @@ Operations:
 // No opt
 // ./a.out  3.97s user 0.18s system 92% cpu 4.462 total
 
-#define TEST_PLAIN_WITH_IF
+//#define TEST_PLAIN_WITH_IF
 // With 6 ifs
 // ./a.out  4.07s user 0.20s system 85% cpu 4.979 total
 // With 16 ifs
@@ -66,8 +78,9 @@ Operations:
 // No opt
 // ./a.out  10.14s user 0.21s system 97% cpu 10.661 total
 
-// Total: 500 000 000 iterations --> 4s 
-// 20 fact 10 000 000 times = 200 000 000 --> 9s * 2.5 = 22.5s
+// Rand funs: 500 000 000 iterations --> 5.27s 
+// Rand funs: 200 000 000 iterations --> 2.12s 
+// Vimana:    20 fact 10 000 000 times = 200 000 000 --> 9s
 
 #define NUM_ITEMS 50000000
 #define NUM_LOOPS 10
@@ -112,7 +125,7 @@ void* CreateArray_Item128()
 
   for (long i = 0; i < NUM_ITEMS; ++i)
   {
-#ifdef TEST_FUNPTR_COPYITEM
+#if defined(TEST_FUNPTR_COPYITEM) || defined(TEST_FUNPTR_COPYITEM_FASTER)
     items[i].ptr = RandomUpdate_Item128_CopyItem;
 #else
     if ((rand() % 10) > 4)
@@ -295,7 +308,7 @@ void Interpret_Item128_CallFun_CopyItem(Item128* items)
     for (long i = 0; i < NUM_ITEMS; ++i)
     {
       FunItem128 fun = items[i].ptr;
-      items[i] = fun(items[i]);;
+      items[i] = fun(items[i]);
       tally += items[i].value;
     }
     printf("LOOP COMPLETED: %ld\n", j);
@@ -303,6 +316,25 @@ void Interpret_Item128_CallFun_CopyItem(Item128* items)
   printf("TALLY: %ld\n", tally);
 }
 
+void Interpret_Item128_CallFun_CopyItem_Faster(Item128* items)
+{
+  printf("TEST FUNPTR COPYITEM FASTER\n");
+
+  long tally = 0;
+
+  for (long j = 0; j < NUM_LOOPS; ++j)
+  {
+    for (long i = 0; i < NUM_ITEMS; ++i)
+    {
+      Item128* item = items + i;
+      FunItem128 fun = item->ptr;
+      *item = fun(*item);
+      tally += item->value;
+    }
+    printf("LOOP COMPLETED: %ld\n", j);
+  }
+  printf("TALLY: %ld\n", tally);
+}
 int main()
 {
   time_t t;
@@ -336,6 +368,10 @@ int main()
 
 #ifdef TEST_FUNPTR_COPYITEM
   Interpret_Item128_CallFun_CopyItem(items);
+#endif
+
+#ifdef TEST_FUNPTR_COPYITEM_FASTER
+  Interpret_Item128_CallFun_CopyItem_Faster(items);
 #endif
 
   return 0;
