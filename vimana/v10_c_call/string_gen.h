@@ -13,8 +13,13 @@ VList* String_Create()
 #define String_SetRaw(list, index, item) \
   ( ((char*)((list)->items))[index] = *(item) )
 
+//#define String_GetRaw(list, index) \
+//  ( & (((char*)((list)->items))[index]) )
+
 #define String_GetRaw(list, index) \
-  ( & (((char*)((list)->items))[index]) )
+  ( ((char*)((list)->items)) + (index) )
+
+#define ListItemPtr(list, index) ((list)->items + (index))
 
 void String_Set(VList* list, VIndex index, char* item)
 {

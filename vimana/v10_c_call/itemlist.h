@@ -99,10 +99,9 @@ Also see generated file: itemlist_gen.h
 
   #define ItemListSwap(list) \
     do { \
-      VItem temp; \
       VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1); \
       VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2); \
-      temp = *item1; \
+      VTemp temp = *item1; \
       *item1 = *item2; \
       *item2 = temp; \
     } while (0)
@@ -111,10 +110,9 @@ Also see generated file: itemlist_gen.h
 
   static inline void ItemListSwap(VList* list)
   {
-    VItem temp;
     VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1);
     VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2);
-    temp = *item1;
+    VItem temp = *item1;
     *item1 = *item2;
     *item2 = temp;
   }

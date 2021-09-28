@@ -1,0 +1,69 @@
+# BENCHMARKS
+
+## Machine
+
+    MacBook Air (Retina, 13-inch, 2020)
+    Processor 1,1 GHz Dual-Core Intel Core i3
+    macOS Big Sur 11.5.2
+
+## Tests 210928
+
+### Version v10_c_call build 210929
+
+    (32 fib print) 5 times
+    ./vimana fib.vimana  1.42s user 0.00s system 99% cpu 1.426 total
+    ./vimana fib.vimana  1.41s user 0.00s system 99% cpu 1.424 total
+    ./vimana fib.vimana  1.44s user 0.01s system 99% cpu 1.452 total
+
+    (20 fact drop) 10000000 times
+    ./vimana fact.vimana  8.54s user 0.01s system 99% cpu 8.552 total
+    ./vimana fact.vimana  8.44s user 0.01s system 99% cpu 8.457 total
+    ./vimana fact.vimana  8.39s user 0.01s system 99% cpu 8.409 total
+
+    (10 fact drop) 10000000 times
+    ./vimana fact.vimana  4.89s user 0.00s system 99% cpu 4.900 total
+    ./vimana fact.vimana  4.90s user 0.01s system 99% cpu 4.932 total
+    
+### Version v7_c build 210928
+
+    (32 fib print) 5 times
+    ./vimana fib.vimana  --lowercase  1.33s user 0.00s system 99% cpu 1.342 total
+    ./vimana fib.vimana  --lowercase  1.32s user 0.00s system 99% cpu 1.329 total
+
+    (20 fact drop) 10000000 times
+    ./vimana fact.vimana --lowercase  8.42s user 0.01s system 99% cpu 8.432 total
+    ./vimana fact.vimana --lowercase  8.47s user 0.01s system 99% cpu 8.486 total
+    
+    (10 fact drop) 10000000 times
+    ./vimana fact.vimana --lowercase  4.73s user 0.01s system 99% cpu 4.744 total
+    ./vimana fact.vimana --lowercase  4.71s user 0.01s system 99% cpu 4.723 total
+    
+## Comparative Tests 210814
+
+Tests using other languages.
+
+### Fibonacci
+
+    32 fib 5 times:
+    php benchmarks/fib.php     1.04s user 0.02s system 99% cpu 1.068 total
+    ruby benchmarks/fib.rb     1.09s user 0.06s system 97% cpu 1.180 total
+    python benchmarks/fib.py   2.75s user 0.07s system 97% cpu 2.899 total
+    python3 benchmarks/fib.py  3.87s user 0.03s system 84% cpu 4.632 total
+    ./vimana fibstack.vimana   1.37s user 0.00s system 99% cpu 1.385 total
+
+### Factorial
+
+    20 factorial 10000000 times:
+    php fact.php      6.14s user 0.03s system 99% cpu 6.218 total
+    ruby fact.rb      6.38s user 0.03s system 99% cpu 6.425 total
+    python fact.py   20.33s user 0.04s system 99% cpu 20.400 total
+    python3 fact.py  31.47s user 0.06s system 97% cpu 32.201 total
+    
+### Versions
+
+    ruby 2.6.3p62 (2019-04-16 revision 67580) [universal.x86_64-darwin20]
+    PHP 7.3.24 (built: Jun 17 2021 21:41:15) Zend Engine v3.3.24
+    Python 2.7.16 (default, Jun 18 2021, 03:23:53)
+    Python 3.9.5 (v3.9.5:0a7dcbdb13, May 3 2021, 13:05:53)
+    Vimana v7_c 210814
+    
