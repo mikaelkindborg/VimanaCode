@@ -269,11 +269,12 @@ VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
       {
         // Exit interpreter loop if this was the last stackframe.
         interp->run = FALSE;
+        goto Exit;
       }
     }
   } 
   // while
-
+  
 Exit:
   return ! interp->run;
 }
@@ -307,22 +308,19 @@ void InterpSymbolFun(VInterp* interp, VItem* item)
     {
       // Symbol is unbound, push the symbol itself.
       InterpPush(interp, item);
-      goto Exit;
     }
-
-    // If it is a function, call it.
+    else
     if (IsFun(symbolValue))
     {
+      // If it is a function, call it.
       InterpPushContext(interp, ItemList(symbolValue));
-      goto Exit;
     }
-
-    //PrintDebug("PUSH SYMBOL VALUE");
-    // If not a function, push the symbol value.
-    InterpPush(interp, symbolValue);
-    goto Exit;
+    else
+    {
+      // If not a function, push the symbol value.
+      InterpPush(interp, symbolValue);
+    }
   }
-Exit:;
 }
 
 VFunPtr GInterpNumberFun = InterpNumberFun;

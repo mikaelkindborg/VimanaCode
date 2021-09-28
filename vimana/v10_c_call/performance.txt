@@ -23,6 +23,14 @@
     (10 fact drop) 10000000 times
     ./vimana fact.vimana  4.89s user 0.00s system 99% cpu 4.900 total
     ./vimana fact.vimana  4.90s user 0.01s system 99% cpu 4.932 total
+
+Using while(TRUE) in interpeter loop:
+
+    (32 fib print) 5 times
+    ./vimana fib.vimana  1.38s user 0.00s system 99% cpu 1.391 total
+
+    (20 fact drop) 10000000 times
+    ./vimana fact.vimana  8.32s user 0.01s system 99% cpu 8.333 total
     
 ### Version v7_c build 210928
 
