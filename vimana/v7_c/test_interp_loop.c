@@ -22,8 +22,8 @@ Operations:
 - If statements
 */
 
-#define TEST_FUNPTR
-// No rand function selection:
+//#define TEST_FUNPTR
+// No random function selection:
 // -Ofast
 // ./a.out  3.86s user 0.20s system 95% cpu 4.252 total
 // ./a.out  3.89s user 0.20s system 93% cpu 4.391 total
@@ -34,7 +34,7 @@ Operations:
 // With randpm function selection:
 // No opt - rand function selection
 // ./a.out  6.95s user 0.22s system 95% cpu 7.480 total
-// Opt - rand function selection
+// Opt - random function selection
 // ./a.out  5.26s user 0.21s system 94% cpu 5.815 total
 // With 20000000 items 10 loops: 
 // ./a.out  2.12s user 0.09s system 99% cpu 2.221 total
@@ -78,9 +78,18 @@ Operations:
 // No opt
 // ./a.out  10.14s user 0.21s system 97% cpu 10.661 total
 
+#define TEST_FUNPTR_NOARRAYTRAVERSAL
+// With -Ofast
+// ./a.out  7.77s user 0.21s system 97% cpu 8.183 total
+// It is much slower to not precompute function calls.
+// With precomputed functions (test case TEST_FUNPTR):
+// ./a.out  5.25s user 0.21s system 96% cpu 5.679 total
+// With random function selection commented out:
+// ./a.out  4.31s user 0.22s system 94% cpu 4.815 total
+
 // Rand funs: 500 000 000 iterations --> 5.27s 
 // Rand funs: 200 000 000 iterations --> 2.12s 
-// Vimana:    20 fact 10 000 000 times = 200 000 000 --> 9s
+// Vimana:    20 fact 10 000 000 times = 200 000 000 --> 8.5s
 
 #define NUM_ITEMS 50000000
 #define NUM_LOOPS 10
@@ -335,6 +344,30 @@ void Interpret_Item128_CallFun_CopyItem_Faster(Item128* items)
   }
   printf("TALLY: %ld\n", tally);
 }
+
+void Interpret_Item128_NoArrayTraversal(Item128* items)
+{
+  printf("TEST FUNPTR NO ARRAY TRAVERSAL\n");
+
+  long tally = 0;
+  Item128 item;
+  item.value = 0;
+
+  for (long j = 0; j < NUM_LOOPS; ++j)
+  {
+    for (long i = 0; i < NUM_ITEMS; ++i)
+    {
+      //if ((rand() % 10) > 4)
+        RandomUpdate_Item128(&item);
+      //else
+      //  RandomUpdate_Item128_2(&item);
+      tally += item.value;
+    }
+    printf("LOOP COMPLETED: %ld\n", j);
+  }
+  printf("TALLY: %ld\n", tally);
+}
+
 int main()
 {
   time_t t;
@@ -346,6 +379,10 @@ int main()
   void* items = CreateArray_Item128();
 #endif
 
+  Item128* p = items;
+  p = p + (rand() % 1000000);
+  printf("RANDOM ARRAY ITEM: %ld\n", p->value);
+  
 #ifdef TEST_PLAIN_WITHOUT_IF
   Interpret_Item128_WithoutIf(items);
 #endif
@@ -374,5 +411,7 @@ int main()
   Interpret_Item128_CallFun_CopyItem_Faster(items);
 #endif
 
-  return 0;
+#ifdef TEST_FUNPTR_NOARRAYTRAVERSAL
+  Interpret_Item128_NoArrayTraversal(items);
+#endif
 }

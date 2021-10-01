@@ -15,9 +15,9 @@ typedef struct __VContext
 {
   VList* codeList;
   VIndex codePointer;
-  #ifdef PLATFORM_ARDUINO
-    VByte  padding;
-  #endif
+#ifdef PLATFORM_ARDUINO
+  VByte  padding;
+#endif
 }
 VContext;
 
