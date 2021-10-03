@@ -41,6 +41,9 @@ Version v10_c_code:
 210926 (removed commented out code):  
   BASE VERSION: 1866 lines (mark sweep gc)
   FULL VERSION: 2161 lines (mark sweep gc)
+211003:
+  BASE VERSION: 1827 lines (mark sweep gc)
+  FULL VERSION: 2079 lines (mark sweep gc)
 
 Version v9_c_minimal:
 
