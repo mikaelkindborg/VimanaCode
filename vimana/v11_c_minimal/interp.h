@@ -70,7 +70,7 @@ void InterpFree(VInterp* interp)
 {
 #ifdef DEBUG
   PrintLine("DEALLOCATING INTERPETER:");
-  Print("STACK:");
+  PrintLine("STACK:");
   PrintList(InterpStack(interp));
   PrintNewLine();
   Print("GLOBALS:");
@@ -78,13 +78,9 @@ void InterpFree(VInterp* interp)
   PrintNewLine();
 #endif
 
-#ifdef GC_REFCOUNT
+  // Free globals, data stack and callstack.
+  // Data stack and callstack are not handled by the garbage collector.
   ListGC(InterpGlobalVars(interp));
-#endif
-
-PrintLine("DEALLOCK DATA STACK");
-  // Free data stack and callstack.
-  // These lists are not handled by the garbage collector.
   ListFree(InterpStack(interp));
   ListFree(InterpCallStack(interp));
 
@@ -109,12 +105,10 @@ VItem* InterpGetGlobalVar(VInterp* interp, VIndex index)
 
 void InterpSetGlobalVar(VInterp* interp, VIndex index, VItem* newItem)
 {
-#ifdef GC_REFCOUNT
   VItem* oldItem = InterpGetGlobalVar(interp, index);
   if (NULL != oldItem) 
     ItemGC(oldItem);
   ItemIncrRefCount(newItem);
-#endif
   ItemList_Set(InterpGlobalVars(interp), index, newItem);
 }
 
@@ -134,7 +128,7 @@ void InterpClearStack(VInterp* interp)
 // CONTEXT HANDLING --------------------------------------------
 
 // Push root context with codeList.
-// Free code list with: ListGC(codeList) (if using GC_REFCOUNT)
+// Free code list with: ListGC(codeList)
 void InterpInit(VInterp* interp, VList* codeList)
 {
   ListLength(InterpCallStack(interp)) = 0;
@@ -178,20 +172,14 @@ void InterpEval(VInterp* interp, VList* codeList)
 {
   InterpInit(interp, codeList);
   InterpEvalSlice(interp, 0);
-
-#ifdef GC_REFCOUNT
   ListGC(codeList);
-#endif
 }
 
 void InterpEvalTest(VInterp* interp, VList* codeList)
 {
   InterpInit(interp, codeList);
   while ( ! InterpEvalSlice(interp, 100) ) { };
-
-#ifdef GC_REFCOUNT
   ListGC(codeList);
-#endif
 }
 
 // Evaluate a slice of code. 

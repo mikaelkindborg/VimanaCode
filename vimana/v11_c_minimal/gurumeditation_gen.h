@@ -29,6 +29,7 @@ Usage: php gengurumeditation.php > gurumeditation.h
 #define PARSETOKEN_BUFFER_OVERFLOW 19
 #define SYMBOL_UNKNOWN_TYPE 20
 #define OBJGC_UNKNOWN_TYPE 21
+#define SYMBOL_DICT_CURRENT_IS_NULL 22
 
 #ifdef GURUMEDITATION_STRINGS
 char* GuruMeditationTable[] = { 
@@ -54,5 +55,6 @@ char* GuruMeditationTable[] = {
 ,"ParseToken: Buffer overflow"
 ,"Print: Unknown symbol type"
 ,"ObjGC: ALERT - UNKNOWN TYPE"
+,"Current Symbol Dictionary is NULL"
 }; 
 #endif

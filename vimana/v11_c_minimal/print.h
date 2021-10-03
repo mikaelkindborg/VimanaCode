@@ -5,6 +5,11 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Print items.
 */
 
+#ifdef INCLUDE_SOURCE_CODE_PARSER
+char* SymbolDictCurrentLookupSymbolName(VIndex symbolId);
+char* SymbolDictCurrentLookupPrimFunName(VIndex primFunId);
+#endif
+
 void PrintItem(VItem* item);
 
 void PrintList(VList* list)
@@ -17,13 +22,20 @@ void PrintList(VList* list)
     if (i < ListLength(list) - 1) PrintChar(' ');
   }
   PrintChar(')');
+#ifdef DEBUG
+  PrintNum(ObjGetRefCount(list));
+#endif
 }
 
 void PrintItem(VItem* item)
 {
   if (IsVirgin(item))
   {
+#ifdef INCLUDE_SOURCE_CODE_PARSER
+    Print("[VIRGIN]");
+#else
     PrintChar('V');
+#endif
   }
   else
   if (IsNumber(item))
@@ -33,8 +45,12 @@ void PrintItem(VItem* item)
   else
   if (IsSymbol(item))
   {
+#ifdef INCLUDE_SOURCE_CODE_PARSER
+    Print(SymbolDictCurrentLookupSymbolName(ItemSymbol(item)));
+#else
     PrintChar('S');
     PrintNum(ItemSymbol(item));
+#endif
   }
   else
   if (IsPrimFun(item))

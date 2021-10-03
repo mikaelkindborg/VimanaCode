@@ -104,7 +104,7 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
       else
       {
         // Token is primfun or symbol.
-        id = SymbolDictLookupPrimFunName(dict, token);
+        id = SymbolDictLookupPrimFun(dict, token);
         if (id > -1)
         {
           // Write primfun
@@ -113,11 +113,11 @@ void SourceParserWorker(char* p, VPrintStream* stream, VSymbolDict* dict)
         else
         {
           // Lookup the symbol
-          id = SymbolDictLookupSymbolName(dict, token);
+          id = SymbolDictLookupSymbol(dict, token);
           if (id < 0)
           {
             // Symbol does not exist, add it to dictionary
-            id = SymbolDictAddSymbolName(dict, token);
+            id = SymbolDictAddSymbol(dict, token);
           }
           
           // Write symbol

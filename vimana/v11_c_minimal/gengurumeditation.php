@@ -38,6 +38,7 @@ GuruMeditation("PARSETOKEN_BUFFER_OVERFLOW", "ParseToken: Buffer overflow");
 
 GuruMeditation("SYMBOL_UNKNOWN_TYPE", "Print: Unknown symbol type");
 GuruMeditation("OBJGC_UNKNOWN_TYPE", "ObjGC: ALERT - UNKNOWN TYPE");
+GuruMeditation("SYMBOL_DICT_CURRENT_IS_NULL", "Current Symbol Dictionary is NULL");
 
 GenerateGuruMeditationSymbols();
 

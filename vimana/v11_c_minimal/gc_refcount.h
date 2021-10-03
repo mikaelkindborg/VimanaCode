@@ -12,9 +12,18 @@ void ItemIncrRefCount(VItem* item)
   if (IsObj(item))
   {
     ObjIncrRefCount(ItemObj(item));
-    //PrintStrNum("INCR_REF_COUNT: ", ObjGetRefCount(ItemObj(item)));
   }
 }
+
+/*
+void ItemDecrRefCount(VItem* item)
+{
+  if (IsObj(item))
+  {
+    ObjDecrRefCount(ItemObj(item));
+  }
+}
+*/
 
 void ListGCChildren(VList* list)
 {
@@ -55,8 +64,5 @@ void ListGC(VList* list)
 
 void ItemGC(VItem* item)
 {
-  Print("ITEM GC: ");
-  PrintItem(item);
-  PrintNewLine();
   if (IsObj(item)) ObjGC(ItemObj(item));
 }

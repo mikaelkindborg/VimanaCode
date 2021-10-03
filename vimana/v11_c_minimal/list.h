@@ -29,10 +29,8 @@ VList;
 
 void ListInit_Internal(VList* list, VSize itemSize)
 {
-#ifdef GC_REFCOUNT
   // Set initial refcount.
   ObjSetRefCount(AsObj(list), 1);
-#endif
 
   // Set type.
   ObjSetType(list, ObjTypeList);

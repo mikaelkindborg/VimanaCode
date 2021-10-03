@@ -42,9 +42,11 @@ int main(int numargs, char* args[])
     }
   }
 
-  VInterp* interp = InterpCreate();
   VSymbolDict* dict = SymbolDictCreate();
+  SymbolDictSetCurrentDict(dict);
   SymbolDictAddPrimFuns(dict);
+
+  VInterp* interp = InterpCreate();
 
   // Eval file
   if (fileName)
@@ -101,6 +103,7 @@ int main(int numargs, char* args[])
       InterpEval(interp, code);
       Print("STACK: ");
       PrintList(InterpStack(interp));
+      PrintNewLine();
     }
   }
   else
@@ -117,8 +120,8 @@ int main(int numargs, char* args[])
     PrintLine("------------------------------------------------------");
   }
 
-  SymbolDictFree(dict);
   InterpFree(interp);
+  SymbolDictFree(dict);
 
   PrintMemStat();
 }

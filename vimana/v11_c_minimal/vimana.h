@@ -7,9 +7,7 @@
 #include "string.h"
 #include "itemlist.h"
 #include "print.h"
-#ifdef GC_REFCOUNT
-  #include "gc_refcount.h"
-#endif
+#include "gc_refcount.h"
 #include "interp.h"
 #include "codeparser.h"
 #ifdef INCLUDE_SOURCE_CODE_PARSER

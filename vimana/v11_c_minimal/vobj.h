@@ -55,23 +55,19 @@ static inline void ObjSetFunFlagImpl(VObj* obj, VType value)
   obj->type = (obj->type & ~ObjTypeFunMask) | value;
 }
 
-#ifdef GC_REFCOUNT
+#define ObjGetRefCount(obj) ((AsObj(obj)->type) >> ObjRefCountShift)
 
-  #define ObjGetRefCount(obj) ((AsObj(obj)->type) >> ObjRefCountShift)
+static inline void ObjSetRefCount(VObj* obj, VIndex count)
+{
+  obj->type = (obj->type & ObjRefCountTypeMask) | (count << ObjRefCountShift);
+}
 
-  static inline void ObjSetRefCount(VObj* obj, VIndex count)
-  {
-    obj->type = (obj->type & ObjRefCountTypeMask) | (count << ObjRefCountShift);
-  }
+static inline void ObjIncrRefCount(VObj* obj)
+{
+  ObjSetRefCount(obj, ObjGetRefCount(obj) + 1);
+}
 
-  static inline void ObjIncrRefCount(VObj* obj)
-  {
-    ObjSetRefCount(obj, ObjGetRefCount(obj) + 1);
-  }
-
-  static inline void ObjDecrRefCount(VObj* obj)
-  {
-    ObjSetRefCount(obj, ObjGetRefCount(obj) - 1);
-  }
-
-#endif
+static inline void ObjDecrRefCount(VObj* obj)
+{
+  ObjSetRefCount(obj, ObjGetRefCount(obj) - 1);
+}
