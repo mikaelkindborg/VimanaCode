@@ -7,4 +7,4 @@
     (swap dup eval swap sub1 times) 
   ifelse) def
 
-(20 fact drop) 10000000 times
+(10 fact drop) 10000000 times

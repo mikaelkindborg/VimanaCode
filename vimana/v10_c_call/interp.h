@@ -86,6 +86,7 @@ VInterp* InterpCreate()
 void InterpFree(VInterp* interp)
 {
 #ifdef DEBUG
+  PrintLine("DEALLOCATING INTERPETER:");
   Print("STACK:");
   PrintList(InterpStack(interp));
   PrintNewLine();

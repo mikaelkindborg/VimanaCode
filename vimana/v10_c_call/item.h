@@ -26,16 +26,6 @@ typedef struct __VItem
 }
 VItem;
 
-// ACCESS ITEMS ------------------------------------------------
-
-#define ItemObj(item)    ((item)->value.obj)
-#define ItemList(item)   ((VList*)ItemObj(item))
-#define ItemString(item) ((VString*)ItemObj(item))
-#define ItemNumber(item) ((item)->value.number)
-#define ItemBool(item)   ItemNumber(item)
-#define ItemSymbol(item) ((item)->value.symbolId)
-#define ItemFun(item)    ((item)->fun)
-
 // ITEM TYPES --------------------------------------------------
 
 // The item dispatch function is used to determine the object type.
@@ -60,6 +50,16 @@ VFunPtr GInterpStringFun;
 #define IsFun(item)       (IsList(item) && ObjIsFun(ItemObj(item)))
 #define IsPrimFun(item) \
   ( !IsVirgin(item) && !IsNumber(item) && !IsSymbol(item) && !IsObj(item) )
+
+// ACCESS ITEMS ------------------------------------------------
+
+#define ItemObj(item)     ((item)->value.obj)
+#define ItemList(item)    ((VList*)ItemObj(item))
+#define ItemString(item)  ((VString*)ItemObj(item))
+#define ItemNumber(item)  ((item)->value.number)
+#define ItemBool(item)    ItemNumber(item)
+#define ItemSymbol(item)  ((item)->value.symbolId)
+#define ItemFun(item)     ((item)->fun)
 
 // SET ITEMS ------------------------------------------------
 
