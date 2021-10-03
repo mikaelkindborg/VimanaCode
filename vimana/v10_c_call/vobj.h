@@ -26,36 +26,35 @@ Bit   Meaning
 
 // OBJECT TYPES ------------------------------------------------
 
-#define ObjTypeMask   7
-#define ObjTypeList   1
-#define ObjTypeString 2
-#define ObjTypeFun    4
-#define ObjGCMark     8
+#define ObjTypeMask           7
+#define ObjTypeList           1
+#define ObjTypeString         2
+#define ObjTypeFun            4
+#define ObjGCMark             8
 
-#define ObjIsList(obj)    ( (ObjType(obj) & ObjTypeList)   == ObjTypeList )
-#define ObjIsString(obj)  ( (ObjType(obj) & ObjTypeString) == ObjTypeString )
-#define ObjIsFun(obj)     ( (ObjType(obj) & ObjTypeFun)    == ObjTypeFun )
+#define ObjIsList(obj)        ( (ObjType(obj) & ObjTypeList)   == ObjTypeList )
+#define ObjIsString(obj)      ( (ObjType(obj) & ObjTypeString) == ObjTypeString )
+#define ObjIsFun(obj)         ( (ObjType(obj) & ObjTypeFun)    == ObjTypeFun )
 
-#define AsObj(obj)            ((VObj*)(obj))
-#define ObjType(obj)          ((AsObj(obj)->type) & ObjTypeMask)
-#define ObjSetType(obj, type) (ObjSetTypeImpl(AsObj(obj), type))
+#define AsObj(obj)            ( (VObj*)(obj) )
+#define ObjType(obj)          ( (AsObj(obj)->type) & ObjTypeMask )
+#define ObjSetType(obj, type) ( ObjSetTypeImpl(AsObj(obj), type) )
 
-#define ObjIsMarked(obj)  ((AsObj(obj)->type) & ObjGCMark)
-#define ObjSetMark(obj)   (ObjSetMarkImpl(AsObj(obj)))
-#define ObjClearMark(obj) (ObjClearMarkImpl(AsObj(obj)))
+#define ObjIsMarked(obj)      ( (AsObj(obj)->type) & ObjGCMark )
+#define ObjSetMark(obj)       ( ObjSetMarkImpl(AsObj(obj)) )
+#define ObjClearMark(obj)     ( ObjClearMarkImpl(AsObj(obj)) )
 
-void ObjSetTypeImpl(VObj* obj, VType type)
+static inline void ObjSetTypeImpl(VObj* obj, VType type)
 {
   obj->type = obj->type | type;
 }
 
-void ObjSetMarkImpl(VObj* obj)
+static inline void ObjSetMarkImpl(VObj* obj)
 {
-  obj->type = obj->type | ObjGCMark; // Set bit 8
+  obj->type = obj->type | ObjGCMark;
 }
 
-void ObjClearMarkImpl(VObj* obj)
+static inline void ObjClearMarkImpl(VObj* obj)
 {
-  obj->type = obj->type & ~ObjGCMark; // Clear bit 8
-  //obj->type = obj->type & ObjTypeMask; // Clear bit 7 and above
+  obj->type = obj->type & ~ObjGCMark;
 }

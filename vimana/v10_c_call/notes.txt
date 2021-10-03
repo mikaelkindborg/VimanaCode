@@ -1,5 +1,23 @@
 # NOTES
 
+## Interpreter
+
+    InterpRun -> InterpEval
+    - do not free code list automatically
+
+    InterpCallFun(VInterp* interp, VIndex symbolId)
+    - Use predefined symbols, like loop (like primfuns)
+
+    Schedule(VScheduler* scheduler, VInterp* interp)
+
+    InterpEval(VInterp* interp, VList* code)
+
+    InterpEvalPrepare/Setup(VInterp* interp, VList* code)
+    InterpEvalSlice(VInterp* interp, VNumber numSteps)
+    InterpClearStack(VInterp* interp)
+
+    Primfun: millis suspend
+
 ## Parser 
 
 The parser takes a source string and outputs a symbolic string.

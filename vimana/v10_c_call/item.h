@@ -5,26 +5,6 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Items are objects that hold values. They are used in lists and on the data stack.
 */
 
-/*
-
-InterpRun -> InterpEval
-- do not free code list automatically
-
-InterpCallFun(VInterp* interp, VIndex symbolId)
-- Use predefined symbols, like loop (like primfuns)
-
-Schedule(VScheduler* scheduler, VInterp* interp)
-
-InterpEval(VInterp* interp, VList* code)
-
-InterpEvalPrepare/Setup(VInterp* interp, VList* code)
-InterpEvalSlice(VInterp* interp, VNumber numSteps)
-InterpClearStack(VInterp* interp)
-
-Primfun: millis suspend
-
-*/
-
 // ITEM STRUCT -------------------------------------------------
 
 // Data item used in lists. Holds function pointer and data value.

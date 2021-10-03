@@ -10,7 +10,7 @@ A table of primfun functions is generated in file primfun_table_gen.h.
 
 Usage: php genprimfuns.php > primfuns_gen.h 
 
-Note to myself. How to install PHP on Raspberry Pi:
+How to install PHP on Raspberry Pi:
 https://lindevs.com/install-php-8-0-on-raspberry-pi/
 */
 
@@ -178,8 +178,6 @@ void PrimFun_16(VInterp* interp, VItem* primFunItem)
 // drop
 void PrimFun_17(VInterp* interp, VItem* primFunItem)
 {
-  //ItemListDrop(InterpStack(interp));
-  //InterpPop(interp);
   VList* list = InterpStack(interp);
   if (ListLength(list) < 1)
     GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
@@ -189,7 +187,6 @@ void PrimFun_17(VInterp* interp, VItem* primFunItem)
 // dup
 void PrimFun_18(VInterp* interp, VItem* primFunItem)
 {
-  //ItemListDup(InterpStack(interp));
   VList* list = InterpStack(interp);
   VItem* item = ItemList_Get(list, ListLength(list) - 1);
   VIndex index = ListLength(list);
@@ -213,7 +210,6 @@ void PrimFun_20(VInterp* interp, VItem* primFunItem)
 // swap
 void PrimFun_21(VInterp* interp, VItem* primFunItem)
 {
-  //ItemListSwap(InterpStack(interp));
   VList* list = InterpStack(interp);
   VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1);
   VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2);

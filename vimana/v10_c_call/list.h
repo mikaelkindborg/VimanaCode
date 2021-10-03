@@ -81,7 +81,6 @@ void ListGrow(VList* list, VSize newSize)
 
   // Make space for more items.
   size_t newArraySize = newSize * list->itemSize;
-  //PrintStrNum("ListGrow new size: ", newArraySize);
   VByte* newArray = realloc(list->items, newArraySize);
   if (NULL == newArray)
     GuruMeditation(LISTGROW_OUT_OF_MEMORY);
@@ -97,14 +96,8 @@ void ListGrow(VList* list, VSize newSize)
   //PrintDebug("REALLOC successful in ListGrow");
 }
 
-static inline void ListCheckCapacity(VList* list, VIndex index)
-{
-#ifndef OPTIMIZE
-  if ((index) < 0) GuruMeditation(LISTCHECKCAPACITY_LESS_THAN_ZERO);
-  if ((index) > VINDEXMAX) GuruMeditation(LISTCHECKCAPACITY_VINDEXMAX_EXCEEDED);
-#endif
-  if ((index) >= (list)->maxLength) ListGrow(list, (index) + ListGrowIncrement);
-}
+#define ListCheckCapacity(list, index) \
+  if ((index) >= (list)->maxLength) { ListGrow(list, (index) + ListGrowIncrement); }
 
 // Generic Pointer-Based Functions -----------------------------
 

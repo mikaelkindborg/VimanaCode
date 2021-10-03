@@ -218,11 +218,11 @@ void InterpEvalTest(VInterp* interp, VList* codeList)
 VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
 {
   register VItem*    item;
-  register VNumber   sliceCounter = 0;
   register VContext* currentContext;
   register VIndex    codePointer;
   register VList*    codeList;
   register VSize     codeLength;
+  register VNumber   sliceCounter = 0;
 
   interp->run = TRUE;
   interp->contextSwitch = TRUE;

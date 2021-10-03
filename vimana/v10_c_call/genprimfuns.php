@@ -11,13 +11,13 @@ A table of primfun functions is generated in file primfun_table_gen.h.
 
 Usage: php genprimfuns.php > primfuns_gen.h 
 
-Note to myself. How to install PHP on Raspberry Pi:
+How to install PHP on Raspberry Pi:
 https://lindevs.com/install-php-8-0-on-raspberry-pi/
 */
 
 <?php
-$GPrimFunCounter = -1;
-$GPrimFunTable = [];
+$PrimFunCounter = -1;
+$PrimFunTable = [];
 ?>
 <?php PrimFunsHeader(); ?>
 
@@ -147,8 +147,6 @@ $GPrimFunTable = [];
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("drop"); ?>
-  //ItemListDrop(InterpStack(interp));
-  //InterpPop(interp);
   VList* list = InterpStack(interp);
   if (ListLength(list) < 1)
     GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
@@ -156,7 +154,6 @@ $GPrimFunTable = [];
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("dup"); ?>
-  //ItemListDup(InterpStack(interp));
   VList* list = InterpStack(interp);
   VItem* item = ItemList_Get(list, ListLength(list) - 1);
   VIndex index = ListLength(list);
@@ -174,7 +171,6 @@ $GPrimFunTable = [];
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("swap"); ?>
-  //ItemListSwap(InterpStack(interp));
   VList* list = InterpStack(interp);
   VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1);
   VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2);
@@ -209,20 +205,20 @@ function PrimFunsFooter()
 
 function PrimFunDef($name)
 {
-  global $GPrimFunCounter;
-  global $GPrimFunTable;
+  global $PrimFunCounter;
+  global $PrimFunTable;
 
-  ++ $GPrimFunCounter;
+  ++ $PrimFunCounter;
 
   array_push(
-    $GPrimFunTable, 
+    $PrimFunTable, 
     [
       "name" => $name, 
-      "id" => $GPrimFunCounter,
-      "fun" => "PrimFun_$GPrimFunCounter",
+      "id" => $PrimFunCounter,
+      "fun" => "PrimFun_$PrimFunCounter",
     ]);
 
-  echo "// $name\nvoid PrimFun_$GPrimFunCounter(VInterp* interp, VItem* primFunItem)\n{\n";
+  echo "// $name\nvoid PrimFun_$PrimFunCounter(VInterp* interp, VItem* primFunItem)\n{\n";
 }
 
 function PrimFunEnd()
@@ -232,7 +228,7 @@ function PrimFunEnd()
 
 function GenerateSymbolDict($filename)
 {
-  global $GPrimFunTable;
+  global $PrimFunTable;
 
   $contents = <<<FILEHEADER
 /*
@@ -245,7 +241,7 @@ void SymbolDictAddPrimFuns(VSymbolDict* dict)
 {\n
 FILEHEADER;
 
-  foreach ($GPrimFunTable as $primfun):
+  foreach ($PrimFunTable as $primfun):
     $contents .= "  SymbolDictAddPrimFunName(dict, \"".$primfun["name"]."\");\n";
   endforeach;
 
@@ -256,7 +252,7 @@ FILEHEADER;
 
 function GeneratePrimFunTable($filename)
 {
-  global $GPrimFunTable;
+  global $PrimFunTable;
 
   $contents = <<<FILEHEADER
 /*
@@ -269,7 +265,7 @@ VFunPtr GInterpPrimFunTable[] =
 {\n
 FILEHEADER;
 
-  foreach ($GPrimFunTable as $primfun):
+  foreach ($PrimFunTable as $primfun):
     $contents .= "  {$primfun["fun"]},\n";
   endforeach;
 

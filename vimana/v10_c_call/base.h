@@ -161,7 +161,7 @@ void StrToLower(char* s)
 
 // ERROR HANDLING ----------------------------------------------
 
-// TODO: Make function that displays the interpreter state.
+// TODO: Make function that displays interpreter state.
 
 #include "gurumeditation_gen.h"
 

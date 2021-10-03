@@ -12,47 +12,38 @@ Also see generated file: itemlist_gen.h
 
 // ITEM DROP ->
 #ifdef OPTIMIZE
-
   #define ItemListDrop(list) \
     do { \
       if (ListLength(list) < 1) \
         GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST); \
       -- ListLength(list); \
     } while (0)
-
 #else
-
-  static inline void ItemListDrop(VList* list)
+  void ItemListDrop(VList* list)
   {
     if (ListLength(list) < 1)
       GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
     -- ListLength(list);
   }
-
 #endif
 
 // ITEM DUP -> ITEM ITEM
 #ifdef OPTIMIZE
-
   #define ItemListDup(list) \
     do { \
       void* item = ItemList_Get(list, ListLength(list) - 1); \
       ItemList_Push(list, item); \
     } while (0)
-
 #else
-
-  static inline void ItemListDup(VList* list)
+  void ItemListDup(VList* list)
   {
     void* item = ItemList_Get(list, ListLength(list) - 1);
     ItemList_Push(list, item);
   }
-
 #endif
 
 // ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
 #ifdef OPTIMIZE
-
   #define ItemList2Dup(list) \
     do { \
       void* item; \
@@ -61,10 +52,8 @@ Also see generated file: itemlist_gen.h
       item = ItemList_Get(list, ListLength(list) - 2); \
       ItemList_Push(list, item); \
     } while (0)
-
 #else
-
-  static inline void ItemList2Dup(VList* list)
+  void ItemList2Dup(VList* list)
   {
     void* item;
     item = ItemList_Get(list, ListLength(list) - 2);
@@ -72,43 +61,35 @@ Also see generated file: itemlist_gen.h
     item = ItemList_Get(list, ListLength(list) - 2);
     ItemList_Push(list, item);
   }
-
 #endif
 
 // ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
 #ifdef OPTIMIZE
-
   #define ItemListOver(list) \
     do { \
       void* item = ItemList_Get(list, ListLength(list) - 2); \
       ItemList_Push(list, item); \
     } while (0)
-
 #else
-
-  static inline void ItemListOver(VList* list)
+  void ItemListOver(VList* list)
   {
     void* item = ItemList_Get(list, ListLength(list) - 2);
     ItemList_Push(list, item);
   }
-
 #endif
 
 // ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
 #ifdef OPTIMIZE
-
   #define ItemListSwap(list) \
     do { \
       VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1); \
       VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2); \
-      VTemp temp = *item1; \
+      VItem temp = *item1; \
       *item1 = *item2; \
       *item2 = temp; \
     } while (0)
-
 #else
-
-  static inline void ItemListSwap(VList* list)
+  void ItemListSwap(VList* list)
   {
     VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1);
     VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2);
@@ -116,7 +97,6 @@ Also see generated file: itemlist_gen.h
     *item1 = *item2;
     *item2 = temp;
   }
-
 #endif
 
 // List Search -------------------------------------------------

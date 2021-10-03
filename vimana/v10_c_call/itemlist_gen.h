@@ -13,13 +13,8 @@ VList* ItemList_Create()
 #define ItemList_SetRaw(list, index, item) \
   ( ((VItem*)((list)->items))[index] = *(item) )
 
-//#define ItemList_GetRaw(list, index) \
-//  ( & (((VItem*)((list)->items))[index]) )
-
 #define ItemList_GetRaw(list, index) \
   ( ((VItem*)((list)->items)) + (index) )
-
-#define ListItemPtr(list, index) ((list)->items + (index))
 
 void ItemList_Set(VList* list, VIndex index, VItem* item)
 {

@@ -13,13 +13,8 @@ VList* ListType_Create()
 #define ListType_SetRaw(list, index, item) \
   ( ((ItemType*)((list)->items))[index] = *(item) )
 
-//#define ListType_GetRaw(list, index) \
-//  ( & (((ItemType*)((list)->items))[index]) )
-
 #define ListType_GetRaw(list, index) \
   ( ((ItemType*)((list)->items)) + (index) )
-
-#define ListItemPtr(list, index) ((list)->items + (index))
 
 void ListType_Set(VList* list, VIndex index, ItemType* item)
 {
