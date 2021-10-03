@@ -1,0 +1,10 @@
+(fact) 
+  (dup iszero (drop 1) (dup sub1 fact *) ifelse) def
+
+(times) 
+  (dup iszero 
+    (drop drop) 
+    (swap dup eval swap sub1 times) 
+  ifelse) def
+
+(10 fact drop) 10000000 times)
