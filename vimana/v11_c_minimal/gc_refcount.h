@@ -2,7 +2,7 @@
 File: gc_refcount.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Reference counting GC.
+Minimalistic reference counting garbage collection.
 */
 
 void ItemGC(VItem* item);
@@ -14,16 +14,6 @@ void ItemIncrRefCount(VItem* item)
     ObjIncrRefCount(ItemObj(item));
   }
 }
-
-/*
-void ItemDecrRefCount(VItem* item)
-{
-  if (IsObj(item))
-  {
-    ObjDecrRefCount(ItemObj(item));
-  }
-}
-*/
 
 void ListGCChildren(VList* list)
 {

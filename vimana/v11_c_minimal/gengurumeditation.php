@@ -30,7 +30,7 @@ GuruMeditation("LISTCHECKCAPACITY_LESS_THAN_ZERO", "ListCheckCapacity: Index < 0
 GuruMeditation("LISTCHECKCAPACITY_VINDEXMAX_EXCEEDED", "ListCheckCapacity: VINDEXMAX exceeded");
 GuruMeditation("LISTGET_INDEX_OUT_OF_BOUNDS", "ListGet: Index out of bounds");
 GuruMeditation("LISTPOP_CANNOT_POP_EMPTY_LIST", "ListPop: Cannot pop empty list");
-GuruMeditation("LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST", "ListDrop: Cannot drop from list of length < 0");
+GuruMeditation("PRIMFUN_DROP_CANNOT_DROP_FROM_EMPTY_LIST", "PrimFun drop: Cannot drop from empty list");
 GuruMeditation("ITEMOBJASLIST_NOT_POINTER", "ItemObjAsList: Not a pointer!");
 
 GuruMeditation("PARSESTRING_BUFFER_OVERFLOW", "ParseString: Buffer overflow");

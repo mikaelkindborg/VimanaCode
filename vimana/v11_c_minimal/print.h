@@ -23,6 +23,7 @@ void PrintList(VList* list)
   }
   PrintChar(')');
 #ifdef DEBUG
+  PrintChar(':');
   PrintNum(ObjGetRefCount(list));
 #endif
 }
@@ -55,8 +56,12 @@ void PrintItem(VItem* item)
   else
   if (IsPrimFun(item))
   {
+#ifdef INCLUDE_SOURCE_CODE_PARSER
+    Print(SymbolDictCurrentLookupPrimFunName(ItemPrimFun(item)));
+#else
     PrintChar('P');
     PrintNum(ItemPrimFun(item));
+#endif
   }
   else
   if (IsFun(item))

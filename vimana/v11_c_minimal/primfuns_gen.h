@@ -176,31 +176,51 @@ break;
 
 case 17: // drop
 {
-  ItemListDrop(InterpStack(interp));
+  // ITEM DROP ->
+  VList* list = InterpStack(interp);
+  if (ListLength(list) < 1)
+    GuruMeditation(PRIMFUN_DROP_CANNOT_DROP_FROM_EMPTY_LIST);
+  -- ListLength(list);
 }
 break;
 
 case 18: // dup
 {
-  ItemListDup(InterpStack(interp));
+  // ITEM DUP -> ITEM ITEM
+  VList* list = InterpStack(interp);
+  ItemList_Push(list, ItemList_Get(list, ListLength(list) - 1));
 }
 break;
 
 case 19: // 2dup
 {
-  ItemList2Dup(InterpStack(interp));
+  // ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
+  VList* list = InterpStack(interp);
+  VItem* item;
+  item = ItemList_Get(list, ListLength(list) - 2);
+  ItemList_Push(list, item);
+  item = ItemList_Get(list, ListLength(list) - 2);
+  ItemList_Push(list, item);
 }
 break;
 
 case 20: // over
 {
-  ItemListOver(InterpStack(interp));
+  // ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
+  VList* list = InterpStack(interp);
+  ItemList_Push(list, ItemList_Get(list, ListLength(list) - 2));
 }
 break;
 
 case 21: // swap
 {
-  ItemListSwap(InterpStack(interp));
+  // ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
+  VList* list = InterpStack(interp);
+  VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1);
+  VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2);
+  VItem temp = *item1;
+  *item1 = *item2;
+  *item2 = temp;
 }
 break;
 

@@ -140,21 +140,16 @@ void InterpInit(VInterp* interp, VList* codeList)
 
 void InterpPushContext(VInterp* interp, VList* codeList)
 {
-  //++ interp->numContextCalls;
-
   VBool isTailCall = 
     (1 + InterpCodePointer(interp)) >= 
     ListLength(InterpCodeList(interp));
-  if (isTailCall)
-  {
-    //PrintDebugStrNum("TAILCALL CONTEXT: ", InterpCallStackIndex(interp));
-  }
-  else
+  if (!isTailCall)
   {
     ++ InterpCallStackIndex(interp);
     if (InterpCallStackIndex(interp) >= ListLength(InterpCallStack(interp)))
+    {
       ListPushRaw(InterpCallStack(interp));
-    //PrintDebugStrNum("ENTER CONTEXT: ", InterpCallStackIndex(interp));
+    }
   }
 
   InterpCodeList(interp) = codeList;
@@ -173,6 +168,8 @@ void InterpEval(VInterp* interp, VList* codeList)
   InterpInit(interp, codeList);
   InterpEvalSlice(interp, 0);
   ListGC(codeList);
+  // TODO: Meditate if stack contains object references 
+  // (the data stack is not reference counted)
 }
 
 void InterpEvalTest(VInterp* interp, VList* codeList)
@@ -209,20 +206,17 @@ VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
     // Increment code pointer.
     ++ InterpCodePointer(interp);
     
-    //PrintDebugStrNum("CODE POINTER: ", InterpCodePointer(interp));
-
-    // Exit stackframe if the code in the current 
-    // context has finished executing.
+    // Exit stackframe if the current context has finished executing.
     if (InterpCodePointer(interp) >= ListLength(InterpCodeList(interp)))
     {
-      //PrintDebugStrNum("EXIT CONTEXT: ", InterpCallStackIndex(interp));
-
       // Pop stackframe.
       InterpPopContext(interp);
 
       // Exit run loop if this was the last stackframe.
-      if (InterpCallStackIndex(interp) < 0) 
+      if (InterpCallStackIndex(interp) < 0)
+      {
         interp->run = FALSE;
+      }
 
       goto Next;
     }

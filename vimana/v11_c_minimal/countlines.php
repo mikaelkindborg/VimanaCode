@@ -38,6 +38,9 @@ Version v11_c_minimal:
 211003:
   BASE VERSION: 1766 lines (ref count gc)
   FULL VERSION: 2018 lines (ref count gc)
+211004 (removed unused duplicated code):
+  BASE VERSION: 1657 lines (ref count gc)
+  FULL VERSION: 1931 lines (ref count gc)
 
 Version v9_minimal:
 
