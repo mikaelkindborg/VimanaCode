@@ -5,8 +5,6 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Interpreter core.
 */
 
-// DECLARATIONS ------------------------------------------------
-
 // CONTEXT -----------------------------------------------------
 
 // A context is a stackframe on the callstack.
@@ -93,9 +91,7 @@ void InterpFree(VInterp* interp)
   Print("GLOBALS:");
   PrintList(InterpGlobalVars(interp));
   PrintNewLine();
-  PrintLine("CONTEXT CALLS:");
-  PrintNum(interp->numContextCalls);
-  PrintNewLine();
+  PrintStrNum("CONTEXT CALLS: ", interp->numContextCalls);
 #endif
 
   // Free non-gc managed objects.

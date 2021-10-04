@@ -147,13 +147,15 @@ $PrimFunTable = [];
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("drop"); ?>
+  // ITEM DROP ->
   VList* list = InterpStack(interp);
   if (ListLength(list) < 1)
-    GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
+    GuruMeditation(PRIMFUN_DROP_CANNOT_DROP_FROM_EMPTY_LIST);
   -- ListLength(list);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("dup"); ?>
+  // ITEM DUP -> ITEM ITEM
   VList* list = InterpStack(interp);
   VItem* item = ItemList_Get(list, ListLength(list) - 1);
   VIndex index = ListLength(list);
@@ -163,14 +165,23 @@ $PrimFunTable = [];
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("2dup"); ?>
-  ItemList2Dup(InterpStack(interp));
+  // ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
+  VList* list = InterpStack(interp);
+  VItem* item;
+  item = ItemList_Get(list, ListLength(list) - 2);
+  ItemList_Push(list, item);
+  item = ItemList_Get(list, ListLength(list) - 2);
+  ItemList_Push(list, item);
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("over"); ?>
-  ItemListOver(InterpStack(interp));
+  // ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
+  VList* list = InterpStack(interp);
+  ItemList_Push(list, ItemList_Get(list, ListLength(list) - 2));
 <?php PrimFunEnd(); ?>
 
 <?php PrimFunDef("swap"); ?>
+  // ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
   VList* list = InterpStack(interp);
   VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1);
   VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2);

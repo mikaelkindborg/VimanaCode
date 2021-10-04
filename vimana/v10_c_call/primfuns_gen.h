@@ -178,15 +178,17 @@ void PrimFun_16(VInterp* interp, VItem* primFunItem)
 // drop
 void PrimFun_17(VInterp* interp, VItem* primFunItem)
 {
+  // ITEM DROP ->
   VList* list = InterpStack(interp);
   if (ListLength(list) < 1)
-    GuruMeditation(LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST);
+    GuruMeditation(PRIMFUN_DROP_CANNOT_DROP_FROM_EMPTY_LIST);
   -- ListLength(list);
 }
 
 // dup
 void PrimFun_18(VInterp* interp, VItem* primFunItem)
 {
+  // ITEM DUP -> ITEM ITEM
   VList* list = InterpStack(interp);
   VItem* item = ItemList_Get(list, ListLength(list) - 1);
   VIndex index = ListLength(list);
@@ -198,18 +200,27 @@ void PrimFun_18(VInterp* interp, VItem* primFunItem)
 // 2dup
 void PrimFun_19(VInterp* interp, VItem* primFunItem)
 {
-  ItemList2Dup(InterpStack(interp));
+  // ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
+  VList* list = InterpStack(interp);
+  VItem* item;
+  item = ItemList_Get(list, ListLength(list) - 2);
+  ItemList_Push(list, item);
+  item = ItemList_Get(list, ListLength(list) - 2);
+  ItemList_Push(list, item);
 }
 
 // over
 void PrimFun_20(VInterp* interp, VItem* primFunItem)
 {
-  ItemListOver(InterpStack(interp));
+  // ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
+  VList* list = InterpStack(interp);
+  ItemList_Push(list, ItemList_Get(list, ListLength(list) - 2));
 }
 
 // swap
 void PrimFun_21(VInterp* interp, VItem* primFunItem)
 {
+  // ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
   VList* list = InterpStack(interp);
   VItem* item1 = ItemList_GetRaw(list, ListLength(list) - 1);
   VItem* item2 = ItemList_GetRaw(list, ListLength(list) - 2);

@@ -23,7 +23,7 @@ Usage: php gengurumeditation.php > gurumeditation.h
 #define LISTCHECKCAPACITY_VINDEXMAX_EXCEEDED 13
 #define LISTGET_INDEX_OUT_OF_BOUNDS 14
 #define LISTPOP_CANNOT_POP_EMPTY_LIST 15
-#define LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST 16
+#define PRIMFUN_DROP_CANNOT_DROP_FROM_EMPTY_LIST 16
 #define ITEMOBJASLIST_NOT_POINTER 17
 #define PARSESTRING_BUFFER_OVERFLOW 18
 #define PARSETOKEN_BUFFER_OVERFLOW 19
@@ -48,7 +48,7 @@ char* GuruMeditationTable[] = {
 ,"ListCheckCapacity: VINDEXMAX exceeded"
 ,"ListGet: Index out of bounds"
 ,"ListPop: Cannot pop empty list"
-,"ListDrop: Cannot drop from list of length < 0"
+,"PrimFun drop: Cannot drop from empty list"
 ,"ItemObjAsList: Not a pointer!"
 ,"ParseString: Buffer overflow"
 ,"ParseToken: Buffer overflow"

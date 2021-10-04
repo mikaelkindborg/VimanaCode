@@ -13,7 +13,6 @@ $GuruMeditationCounter = 0;
 $GuruMeditationTable = [];
 
 GuruMeditation("GURU_MEDITATION", "Guru Meditation");
-
 GuruMeditation("ITEM_NUMBER_TOO_LARGE", "ItemSetNumber: Number is too large"); 
 GuruMeditation("ITEM_SYMBOL_TOO_LARGE", "ItemSetSymbol: Symbol id is too large"); 
 GuruMeditation("ITEM_PRIMFUNID_TOO_LARGE", "ItemSetPrimFun: Primfun id is too large");
@@ -23,24 +22,20 @@ GuruMeditation("ITEM_NOT_SYMBOL", "ItemSymbol: Not a symbol!");
 GuruMeditation("ITEM_NOT_PRIMFUN", "ItemPrimFun: Not a primfun!");
 GuruMeditation("ITEM_NOT_POINTER", "ItemObj: Not a pointer!");
 GuruMeditation("ITEM_NOT_STRING", "ItemString: Not a string!");
-
 GuruMeditation("LISTGROW_OUT_OF_MEMORY", "ListGrow: Out of memory");
 GuruMeditation("LISTGROW_VINDEXMAX_EXCEEDED", "ListGrow: VINDEXMAX exceeded");
 GuruMeditation("LISTCHECKCAPACITY_LESS_THAN_ZERO", "ListCheckCapacity: Index < 0");
 GuruMeditation("LISTCHECKCAPACITY_VINDEXMAX_EXCEEDED", "ListCheckCapacity: VINDEXMAX exceeded");
 GuruMeditation("LISTGET_INDEX_OUT_OF_BOUNDS", "ListGet: Index out of bounds");
 GuruMeditation("LISTPOP_CANNOT_POP_EMPTY_LIST", "ListPop: Cannot pop empty list");
-GuruMeditation("LISTDROP_CANNOT_DROP_FROM_EMPTY_LIST", "ListDrop: Cannot drop from list of length < 0");
+GuruMeditation("PRIMFUN_DROP_CANNOT_DROP_FROM_EMPTY_LIST", "PrimFun drop: Cannot drop from empty list");
 GuruMeditation("ITEMOBJASLIST_NOT_POINTER", "ItemObjAsList: Not a pointer!");
-
 GuruMeditation("PARSESTRING_BUFFER_OVERFLOW", "ParseString: Buffer overflow");
 GuruMeditation("PARSETOKEN_BUFFER_OVERFLOW", "ParseToken: Buffer overflow");
-
 GuruMeditation("SYMBOL_UNKNOWN_TYPE", "Print: Unknown symbol type");
 GuruMeditation("OBJGC_UNKNOWN_TYPE", "ObjGC: ALERT - UNKNOWN TYPE");
 
 GenerateGuruMeditationSymbols();
-
 GenerateGuruMeditationTable();
 
 function GuruMeditation($name, $text)

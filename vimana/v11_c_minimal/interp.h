@@ -5,8 +5,6 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Interpreter core.
 */
 
-// DECLARATIONS ------------------------------------------------
-
 // CONTEXT -----------------------------------------------------
 
 // A context is a stackframe on the callstack.
@@ -224,12 +222,9 @@ VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
     // Get current element in the code list.
     element = InterpCurrentElement(interp);
 
-    //PrintBinaryULong(element->value.bits);
-
     if (IsPrimFun(element))
     {
       primFun = ItemPrimFun(element);
-      //PrintDebugStrNum("PrimFun: ", primFun);
       #include "primfuns_gen.h"
       goto Next;
     }
@@ -254,7 +249,6 @@ VBool InterpEvalSlice(register VInterp* interp, register VNumber sliceSize)
         goto Next;
       }
 
-      //PrintDebug("PUSH SYMBOL VALUE");
       // If not a function, push the symbol value.
       InterpPush(interp, symbolValue);
       goto Next;
