@@ -101,6 +101,7 @@ int main(int numargs, char* args[])
       InterpEval(interp, code);
       Print("STACK: ");
       PrintList(InterpStack(interp));
+      PrintNewLine();
     }
   }
   else

@@ -143,14 +143,14 @@ VIndex ListAddString(VList* list, char* str)
 
 // Free List Deep ----------------------------------------------
 
-void ListDeallocArrayBufDeep(VList* list);
+void ListFreeChildren(VList* list);
 
 // Assumes that list contains VItem:s.
 // Does not work for circular lists.
 void ListFreeDeep(VList* list)
 {
   // Free items.
-  ListDeallocArrayBufDeep(list);
+  ListFreeChildren(list);
 
   // Free list object.
   MemFree(list);
@@ -158,7 +158,7 @@ void ListFreeDeep(VList* list)
 
 // Assumes that list contains VItem:s.
 // Does not deallocate the top-level list object.
-void ListDeallocArrayBufDeep(VList* list)
+void ListFreeChildren(VList* list)
 {
   for (VIndex i = 0; i < ListLength(list); ++i)
   {
@@ -170,10 +170,10 @@ void ListDeallocArrayBufDeep(VList* list)
     else
     if (IsList(item))
     {
-      ListFreeDeep(ItemList(item));
+      ListFreeChildren(ItemList(item));
     }
   }
 
   // Free list array.
-  ListDeallocArrayBuf(list);
+  ListFreeArrayBuf(list);
 }

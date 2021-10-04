@@ -54,7 +54,7 @@ VList* ListCreate_Internal(VSize itemSize)
   return list;
 }
 
-void ListDeallocArrayBuf(VList* list)
+void ListFreeArrayBuf(VList* list)
 {
   MemFree(list->items);
 }
@@ -62,7 +62,7 @@ void ListDeallocArrayBuf(VList* list)
 void ListFree(VList* list)
 {
   // Free item array.
-  ListDeallocArrayBuf(list);
+  ListFreeArrayBuf(list);
 
   // Free list object.
   MemFree(list);

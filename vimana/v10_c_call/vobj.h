@@ -19,8 +19,8 @@ The field "type" has the following bits:
 Bit   Meaning
 ----------------------------------------------------------------
 0     List flag
-1     String flag
-2     Function flag
+1     Function flag (a function is also a list)
+2     String flag
 3     GC mark (0 or 1)
 */
 
@@ -28,8 +28,8 @@ Bit   Meaning
 
 #define ObjTypeMask           7
 #define ObjTypeList           1
-#define ObjTypeString         2
-#define ObjTypeFun            4
+#define ObjTypeFun            3 // Bit 0 and 1
+#define ObjTypeString         4
 #define ObjGCMark             8
 
 #define ObjIsList(obj)        ( (ObjType(obj) & ObjTypeList)   == ObjTypeList )
@@ -46,7 +46,8 @@ Bit   Meaning
 
 static inline void ObjSetTypeImpl(VObj* obj, VType type)
 {
-  obj->type = obj->type | type;
+  // Clear ObjTypeMask and set type
+  obj->type = (obj->type  & ~ObjTypeMask) | type;
 }
 
 static inline void ObjSetMarkImpl(VObj* obj)
