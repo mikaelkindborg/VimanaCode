@@ -82,7 +82,15 @@ case 6: // /
 }
 break;
 
-case 7: // sub1
+case 7: // add1
+{
+  VItem* item = InterpPop(interp);
+  ItemSetNumber(item,  ItemNumber(item) + 1);
+  ++ ListLength(InterpStack(interp));
+}
+break;
+
+case 8: // sub1
 {
   VItem* item = InterpPop(interp);
   ItemSetNumber(item,  ItemNumber(item) - 1);
@@ -90,7 +98,7 @@ case 7: // sub1
 }
 break;
 
-case 8: // eq
+case 9: // eq
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -100,7 +108,7 @@ case 8: // eq
 }
 break;
 
-case 9: // <
+case 10: // <
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -110,7 +118,7 @@ case 9: // <
 }
 break;
 
-case 10: // >
+case 11: // >
 {
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);
@@ -120,7 +128,7 @@ case 10: // >
 }
 break;
 
-case 11: // iszero
+case 12: // iszero
 {
   VItem* item = InterpPop(interp);
   VBool trueOrFalse = 0 == ItemNumber(item);
@@ -129,14 +137,14 @@ case 11: // iszero
 }
 break;
 
-case 12: // eval
+case 13: // eval
 {
   VItem* item = InterpPop(interp);
   InterpPushContext(interp, ItemList(item));
 }
 break;
 
-case 13: // iftrue
+case 14: // iftrue
 {
   VItem* trueBlock = InterpPop(interp);
   VItem* trueOrFalse = InterpPop(interp);
@@ -145,7 +153,7 @@ case 13: // iftrue
 }
 break;
 
-case 14: // iffalse
+case 15: // iffalse
 {
   VItem* falseBlock = InterpPop(interp);
   VItem* trueOrFalse = InterpPop(interp);
@@ -154,7 +162,7 @@ case 14: // iffalse
 }
 break;
 
-case 15: // ifelse
+case 16: // ifelse
 {
   VItem* falseBlock = InterpPop(interp);
   VItem* trueBlock = InterpPop(interp);
@@ -166,7 +174,7 @@ case 15: // ifelse
 }
 break;
 
-case 16: // not
+case 17: // not
 {
   VItem* item = InterpPop(interp);
   ItemSetBool(item, !ItemBool(item));
@@ -174,7 +182,7 @@ case 16: // not
 }
 break;
 
-case 17: // drop
+case 18: // drop
 {
   // ITEM DROP ->
   VList* list = InterpStack(interp);
@@ -184,7 +192,7 @@ case 17: // drop
 }
 break;
 
-case 18: // dup
+case 19: // dup
 {
   // ITEM DUP -> ITEM ITEM
   VList* list = InterpStack(interp);
@@ -192,7 +200,7 @@ case 18: // dup
 }
 break;
 
-case 19: // 2dup
+case 20: // 2dup
 {
   // ITEM1 ITEM2 2DUP -> ITEM1 ITEM2 ITEM1 ITEM2
   VList* list = InterpStack(interp);
@@ -204,7 +212,7 @@ case 19: // 2dup
 }
 break;
 
-case 20: // over
+case 21: // over
 {
   // ITEM1 ITEM2 OVER -> ITEM1 ITEM2 ITEM1
   VList* list = InterpStack(interp);
@@ -212,7 +220,7 @@ case 20: // over
 }
 break;
 
-case 21: // swap
+case 22: // swap
 {
   // ITEM1 ITEM2 SWAP -> ITEM2 ITEM1
   VList* list = InterpStack(interp);
@@ -224,13 +232,80 @@ case 21: // swap
 }
 break;
 
-case 22: // printstack
+case 23: // printstack
 {
   Print("STACK:");
   PrintList(InterpStack(interp));
   PrintNewLine();
 }
 break;
+
+// Arduino primitives
+#ifdef PLATFORM_ARDUINO
+
+case 24: // LED_BUILTIN
+{
+  // -> LED_BUILTIN
+  VItem item;
+  ItemSetNumber(&item, LED_BUILTIN);
+  ItemList_Push(InterpStack(interp), &item);
+}
+break;
+
+case 25: // OUTPUT
+{
+  // -> OUTPUT
+  VItem item;
+  ItemSetNumber(&item, OUTPUT);
+  ItemList_Push(InterpStack(interp), &item);
+}
+break;
+
+case 26: // HIGH
+{
+  // -> HIGH
+  VItem item;
+  ItemSetNumber(&item, HIGH);
+  ItemList_Push(InterpStack(interp), &item);
+}
+break;
+
+case 27: // LOW
+{
+  // -> LOW
+  VItem item;
+  ItemSetNumber(&item, LOW);
+  ItemList_Push(InterpStack(interp), &item);
+}
+break;
+
+case 28: // pinMode
+{
+  // pin mode pinMode ->
+  VItem* mode = InterpPop(interp);
+  VItem* pin = InterpPop(interp);
+  pinMode(ItemNumber(pin), ItemNumber(mode));
+}
+break;
+
+case 29: // digitalWrite
+{
+  // pin value digitalWrite ->
+  VItem* value = InterpPop(interp);
+  VItem* pin = InterpPop(interp);
+  pinMode(ItemNumber(pin), ItemNumber(value));
+}
+break;
+
+case 30: // delay
+{
+  // ms delay ->
+  VItem* millis = InterpPop(interp);
+  delay(ItemNumber(pin));
+}
+break;
+
+#endif // PLATFORM_ARDUINO
 
 } // End of switch
 

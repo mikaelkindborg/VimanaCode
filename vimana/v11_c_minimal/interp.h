@@ -161,6 +161,23 @@ void InterpPushContext(VInterp* interp, VList* codeList)
 
 VBool InterpEvalSlice(register VInterp* interp, VNumber sliceSize);
 
+void InterpCallFun(VInterp* interp, VIndex funIndex)
+{
+  //0(loop)setglobal
+  //(loop) ('HiWorld' print 2000 delay) def
+  VItem* item = InterpGetGlobalVar(interp, funIndex);
+  if (!IsFun(item))
+  {
+    // TODO: Meditate or wait and try again.
+    PrintLine("You have lost badly");
+    exit(0);
+  }
+
+  VList* codeList = ItemList(index);
+  InterpInit(interp, codeList);
+  InterpEvalSlice(interp, 0);
+}
+
 void InterpEval(VInterp* interp, VList* codeList)
 {
   InterpInit(interp, codeList);

@@ -88,3 +88,8 @@ char* SymbolDictCurrentLookupPrimFunName(VIndex primFunId)
     GuruMeditation(SYMBOL_DICT_CURRENT_IS_NULL);
   return SymbolDictLookupPrimFunName(CurrentSymbolDict, primFunId);
 }
+
+void SymbolDictAddPredefinedSymbols(VSymbolDict* dict)
+{
+  SymbolDictAddSymbol(dict, "loop");
+}

@@ -13,6 +13,7 @@ void SymbolDictAddPrimFuns(VSymbolDict* dict)
   SymbolDictAddPrimFunName(dict, "-");
   SymbolDictAddPrimFunName(dict, "*");
   SymbolDictAddPrimFunName(dict, "/");
+  SymbolDictAddPrimFunName(dict, "add1");
   SymbolDictAddPrimFunName(dict, "sub1");
   SymbolDictAddPrimFunName(dict, "eq");
   SymbolDictAddPrimFunName(dict, "<");
@@ -29,4 +30,11 @@ void SymbolDictAddPrimFuns(VSymbolDict* dict)
   SymbolDictAddPrimFunName(dict, "over");
   SymbolDictAddPrimFunName(dict, "swap");
   SymbolDictAddPrimFunName(dict, "printstack");
+  SymbolDictAddPrimFunName(dict, "LED_BUILTIN");
+  SymbolDictAddPrimFunName(dict, "OUTPUT");
+  SymbolDictAddPrimFunName(dict, "HIGH");
+  SymbolDictAddPrimFunName(dict, "LOW");
+  SymbolDictAddPrimFunName(dict, "pinMode");
+  SymbolDictAddPrimFunName(dict, "digitalWrite");
+  SymbolDictAddPrimFunName(dict, "delay");
 }

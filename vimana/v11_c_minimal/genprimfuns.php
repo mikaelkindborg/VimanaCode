@@ -73,6 +73,12 @@ $PrimFunTable = [];
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
+<?php PrimFunDef("add1"); ?>
+  VItem* item = InterpPop(interp);
+  ItemSetNumber(item,  ItemNumber(item) + 1);
+  ++ ListLength(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
 <?php PrimFunDef("sub1"); ?>
   VItem* item = InterpPop(interp);
   ItemSetNumber(item,  ItemNumber(item) - 1);
@@ -190,6 +196,59 @@ $PrimFunTable = [];
   PrintList(InterpStack(interp));
   PrintNewLine();
 <?php PrimFunEnd(); ?>
+
+// Arduino primitives
+#ifdef PLATFORM_ARDUINO
+
+<?php PrimFunDef("LED_BUILTIN"); ?>
+  // -> LED_BUILTIN
+  VItem item;
+  ItemSetNumber(&item, LED_BUILTIN);
+  ItemList_Push(InterpStack(interp), &item);
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("OUTPUT"); ?>
+  // -> OUTPUT
+  VItem item;
+  ItemSetNumber(&item, OUTPUT);
+  ItemList_Push(InterpStack(interp), &item);
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("HIGH"); ?>
+  // -> HIGH
+  VItem item;
+  ItemSetNumber(&item, HIGH);
+  ItemList_Push(InterpStack(interp), &item);
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("LOW"); ?>
+  // -> LOW
+  VItem item;
+  ItemSetNumber(&item, LOW);
+  ItemList_Push(InterpStack(interp), &item);
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("pinMode"); ?>
+  // pin mode pinMode ->
+  VItem* mode = InterpPop(interp);
+  VItem* pin = InterpPop(interp);
+  pinMode(ItemNumber(pin), ItemNumber(mode));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("digitalWrite"); ?>
+  // pin value digitalWrite ->
+  VItem* value = InterpPop(interp);
+  VItem* pin = InterpPop(interp);
+  pinMode(ItemNumber(pin), ItemNumber(value));
+<?php PrimFunEnd(); ?>
+
+<?php PrimFunDef("delay"); ?>
+  // ms delay ->
+  VItem* millis = InterpPop(interp);
+  delay(ItemNumber(pin));
+<?php PrimFunEnd(); ?>
+
+#endif // PLATFORM_ARDUINO
 
 <?php PrimFunsFooter(); ?>
 

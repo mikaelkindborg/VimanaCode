@@ -29,6 +29,9 @@ VItem;
 // Symbols  have  011 in the low bits
 // PrimFuns have  111 in the low bits
 
+// On Arduino Uno (PLATFORM_MINIMAL) numbers are 14 bits
+// which can represent integers from -8192 to +8191
+
 #define TypeBitMask1      1
 #define TypeBitMask2      3
 #define TypeBitMask3      7

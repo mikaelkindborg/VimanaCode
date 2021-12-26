@@ -21,11 +21,8 @@ Basic data types and functions.
 #define INCLUDE_SOURCE_CODE_PARSER
 
 #ifdef PLATFORM_ARDUINO
-  #undef PLATFORM_LINUX
   #define PLATFORM_MINIMAL
-#endif
-
-#ifdef PLATFORM_MINIMAL
+  #undef PLATFORM_LINUX
   #undef TRACK_MEMORY_USAGE
   #undef GURUMEDITATION_STRINGS
   #undef INCLUDE_SOURCE_CODE_PARSER
