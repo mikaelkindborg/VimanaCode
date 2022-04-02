@@ -30,33 +30,33 @@ typedef struct __VItem
 }
 VItem;
 
-typedef struct __VItemMem
+typedef struct __VMem
 {
-  VAddr size;
   VAddr firstFree;
+  VAddr size;
   void* end;
   void* start;
 }
-VItemMem;
+VMem;
 
-VItemMem* ItemMemNew()
+VMem* MemNew()
 {
-  VAddr size = 10000;
-  VItemMem* itemMem = malloc(size);
-  itemMem->size = size;
-  itemMem->firstFree = 0;
-  itemMem->start = itemMem + sizeof(VItemMem);
-  itemMem->end = itemMem->start;
-  return itemMem;
+  VAddr size = 1000;
+  VMem* mem = malloc(size);
+  mem->firstFree = 0;
+  mem->size = size - sizeof(VMem);
+  mem->start = mem + sizeof(VMem);
+  mem->end = mem->start;
+  return mem;
 }
 
-void ItemMemFree(VItemMem* itemMem)
+void MemFree(VMem* mem)
 {
-  free(itemMem);
+  free(mem);
 }
 
-#define ItemMemItemAddr(itemMem, item)    ( ( ((void*)(item)) - (itemMem)->start ) + 1 ) 
-#define ItemMemItemPointer(itemMem, addr) ( (VItem*) ((itemMem)->start + addr - 1) ) 
+#define MemItemAddr(mem, item)    ( ( ((void*)(item)) - (mem)->start ) + 1 ) 
+#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + addr - 1) ) 
 
 #define ItemGCMark(item) ( ((item)->type) &  1 )
 #define ItemType(item)   ( ((item)->type) >> 1 )
@@ -73,25 +73,35 @@ static inline void ItemSetType(VItem* item, VFlag type)
   item->type = (type << 1) | (item->type & 1);
 }
 
-void ItemMemCons(VItemMem* itemMem, VItem* item1, VItem* item2)
+void MemCons(VMem* mem, VItem* item1, VItem* item2)
 {
-  item1->next = ItemMemItemAddr(itemMem, item2);
+  item1->next = MemItemAddr(mem, item2);
 }
 
-VItem* ItemMemAllocItem(VItemMem* itemMem)
+VItem* MemAllocItem(VMem* mem)
 {
   VItem* item;
 
-  if (itemMem->firstFree)
+  if (mem->firstFree)
   {
     printf("Free item available\n");
-    item = ItemMemItemPointer(itemMem, itemMem->firstFree);
-    itemMem->firstFree = item->next;
+    item = MemItemPointer(mem, mem->firstFree);
+    mem->firstFree = item->next;
   }
   else
   {
-    item = itemMem->end;
-    itemMem->end += sizeof(VItem);
+    VAddr memUsed = mem->end - mem->start;
+    //printf("memUsed: %i\n", memUsed);
+    //printf("mem->size: %i\n", mem->size);
+    if (!(memUsed < (mem->size + sizeof(VItem))))
+    {
+      printf("[GURU_MEDITATION: -1] OUT OF MEMORY\n");
+      //exit(0); 
+      return NULL;
+    }
+    printf("Free space available\n");
+    item = mem->end;
+    mem->end += sizeof(VItem);
   }
 
   item->data = 0;
@@ -101,10 +111,10 @@ VItem* ItemMemAllocItem(VItemMem* itemMem)
   return item;
 }
 
-void ItemMemDeallocItem(VItemMem* itemMem, VItem* item)
+void MemDeallocItem(VMem* mem, VItem* item)
 {
-  item->next = itemMem->firstFree;
-  itemMem->firstFree = ItemMemItemAddr(itemMem, item);
+  item->next = mem->firstFree;
+  mem->firstFree = MemItemAddr(mem, item);
 }
 
 int main()
@@ -114,29 +124,88 @@ int main()
   PrintBinaryUInt(0x1 << 1);
   //PrintBinaryUInt(0x1 >> 1);
 
-  VItemMem* mem = ItemMemNew();
+  VMem* mem = MemNew();
 
-  VItem* item = ItemMemAllocItem(mem);
+  VItem* item = MemAllocItem(mem);
   ItemSetGCMark(item, 1);
   ItemSetType(item, 42);
   PrintBinaryUInt(item->type);
   printf("Type: %i\n", ItemType(item));
   printf("Mark: %i\n", ItemGCMark(item));
 
-  VItem* item2 = ItemMemAllocItem(mem);
+  VItem* item2 = MemAllocItem(mem);
   ItemSetType(item2, 44);
 
-  ItemMemCons(mem, item, item2);
+  MemCons(mem, item, item2);
 
-  VItem* next = ItemMemItemPointer(mem, item->next);
+  VItem* next = MemItemPointer(mem, item->next);
   printf("Type: %i\n", ItemType(next));
 
-  printf("ItemMemFirstFree: %i\n", mem->firstFree);
-  ItemMemDeallocItem(mem, item);
-  printf("ItemMemFirstFree: %i\n", mem->firstFree);
+  printf("MemFirstFree: %i\n", mem->firstFree);
+  MemDeallocItem(mem, item);
+  printf("MemFirstFree: %i\n", mem->firstFree);
 
-  item = ItemMemAllocItem(mem);
+  item = MemAllocItem(mem);
   printf("Type: %i\n", ItemType(item));
 
-  ItemMemFree(mem);
+  // Build list
+  VItem* first = item;
+  first->data = 1;
+  first->next = 0;
+  while (1)
+  {
+    next = MemAllocItem(mem);
+    if (NULL == next) break;
+    next->data = item->data + 1;
+    MemCons(mem, item, next);
+    //printf("Next addr: %i\n", item->next);
+    //item->next = MemItemAddr(mem, item2);
+    item = next;
+  }
+
+  // Print list items
+  item = first;
+  while (item->next)
+  {
+    printf("FIRST LIST: %i\n", (int)item->data);
+    item = MemItemPointer(mem, item->next);
+  }
+
+  // Dealloc list items
+  item = first;
+  while (item->next)
+  {
+    VItem* next = MemItemPointer(mem, item->next);
+    printf("DEALLOC: %i\n", (int)item->data);
+    MemDeallocItem(mem, item);
+    item = next;
+  }
+
+  // Build list
+  first = MemAllocItem(mem);
+  first->data = 1;
+  first->next = 0;
+  item = first;
+  while (1)
+  {
+    next = MemAllocItem(mem);
+    if (NULL == next) break;
+    next->data = item->data + 1;
+    MemCons(mem, item, next);
+    //printf("Next addr: %i\n", item->next);
+    //item->next = MemItemAddr(mem, item2);
+    item = next;
+  }
+
+  // Print list items
+  item = first;
+  while (item->next)
+  {
+    printf("SECOND LIST: %i\n", (int)item->data);
+    item = MemItemPointer(mem, item->next);
+  }
+
+  MemFree(mem);
+
+  printf("DONE\n");
 }
