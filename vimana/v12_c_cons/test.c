@@ -84,7 +84,7 @@ VItem* MemAllocItem(VMem* mem)
 
   if (mem->firstFree)
   {
-    printf("Free item available\n");
+    //printf("Free item available\n");
     item = MemItemPointer(mem, mem->firstFree);
     mem->firstFree = item->next;
   }
@@ -99,7 +99,7 @@ VItem* MemAllocItem(VMem* mem)
       //exit(0); 
       return NULL;
     }
-    printf("Free space available\n");
+    //printf("Free space available\n");
     item = mem->end;
     mem->end += sizeof(VItem);
   }
@@ -114,6 +114,7 @@ VItem* MemAllocItem(VMem* mem)
 void MemDeallocItem(VMem* mem, VItem* item)
 {
   item->next = mem->firstFree;
+
   mem->firstFree = MemItemAddr(mem, item);
 }
 
@@ -125,7 +126,7 @@ int main()
   //PrintBinaryUInt(0x1 >> 1);
 
   VMem* mem = MemNew();
-
+/*
   VItem* item = MemAllocItem(mem);
   ItemSetGCMark(item, 1);
   ItemSetType(item, 42);
@@ -147,11 +148,16 @@ int main()
 
   item = MemAllocItem(mem);
   printf("Type: %i\n", ItemType(item));
+*/
 
   // Build list
-  VItem* first = item;
+  VItem* item;
+  VItem* next;
+  VItem* first;
+  
+  first = MemAllocItem(mem);
   first->data = 1;
-  first->next = 0;
+  item = first;
   while (1)
   {
     next = MemAllocItem(mem);
@@ -173,18 +179,22 @@ int main()
 
   // Dealloc list items
   item = first;
-  while (item->next)
+  while (item)
   {
-    VItem* next = MemItemPointer(mem, item->next);
+    VAddr nextAddr = item->next;
     printf("DEALLOC: %i\n", (int)item->data);
     MemDeallocItem(mem, item);
-    item = next;
+    item = NULL;
+    if (nextAddr)
+    {
+      VItem* next = MemItemPointer(mem, nextAddr);
+      item = next;
+    }
   }
 
-  // Build list
+  // Build list again
   first = MemAllocItem(mem);
   first->data = 1;
-  first->next = 0;
   item = first;
   while (1)
   {
@@ -198,11 +208,12 @@ int main()
   }
 
   // Print list items
-  item = first;
-  while (item->next)
+  VAddr addr = MemItemAddr(mem, first);
+  while (addr)
   {
+    VItem* item = MemItemPointer(mem, addr);
     printf("SECOND LIST: %i\n", (int)item->data);
-    item = MemItemPointer(mem, item->next);
+    addr = item->next;
   }
 
   MemFree(mem);
