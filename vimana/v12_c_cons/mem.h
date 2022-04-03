@@ -60,6 +60,18 @@ void MemCons(VMem* mem, VItem* item1, VItem* item2)
   item1->next = MemItemAddr(mem, item2);
 }
 
+VItem* MemItemNext(VMem* mem, VItem* item)
+{
+  if (ItemNext(item))
+  {
+    return MemItemPointer(mem, ItemNext(item));
+  }
+  else
+  {
+    return NULL;
+  }
+}
+
 VItem* MemAllocItem(VMem* mem)
 {
   VItem* item;

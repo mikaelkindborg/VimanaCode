@@ -57,7 +57,7 @@ void DeallocItems(VItem* first, VMem* mem)
   }
 }
 
-void PrintItems(VItem* first, VMem* mem)
+void xPrintItems(VItem* first, VMem* mem)
 {
   VAddr addr = MemItemAddr(mem, first);
   while (addr)
@@ -65,6 +65,16 @@ void PrintItems(VItem* first, VMem* mem)
     VItem* item = MemItemPointer(mem, addr);
     printf("%i\n", (int)item->data);
     addr = item->next;
+  }
+}
+
+void PrintItems(VItem* first, VMem* mem)
+{
+  VItem* item = first;
+  while (item)
+  {
+    printf("%i\n", (int)item->data);
+    item = MemItemNext(mem, item);
   }
 }
 
@@ -140,8 +150,8 @@ int main()
   printf("Hi World\n");
 
   /*TestPrintBinary();
-  TestItemAttributes();
-  TestAllocDealloc();*/
+  TestItemAttributes();*/
+  TestAllocDealloc();
   TestParseSymbolicCode();
 
   printf("DONE\n");
