@@ -1,222 +1,150 @@
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <limits.h>
+#define TRACK_MEMORY_USAGE
 
-#define PrintChar(c)    printf("%c",  (char)(c))
-#define PrintNewLine()  printf("\n")
+#include "vimana.h"
 
-void PrintBinaryUInt(unsigned int n)
+void TestPrintBinary()
 {
-  int numBits = sizeof(unsigned int) * 8;
-  for (long i = numBits - 1 ; i >= 0; --i) 
-  {
-    PrintChar(n & (1L << i) ? '1' : '0');
-  }
-  PrintNewLine();
-}
-
-typedef unsigned long VData;
-typedef unsigned int  VFlag;
-typedef unsigned int  VAddr;
-
-typedef struct __VItem
-{
-  VData  data;  // value  (number or pointer)
-  VFlag  type;  // type info and gc mark bit
-  VAddr  next;  // "address" of next item
-}
-VItem;
-
-typedef struct __VMem
-{
-  VAddr firstFree;
-  VAddr size;
-  void* end;
-  void* start;
-}
-VMem;
-
-VMem* MemNew()
-{
-  VAddr size = 1000;
-  VMem* mem = malloc(size);
-  mem->firstFree = 0;
-  mem->size = size - sizeof(VMem);
-  mem->start = mem + sizeof(VMem);
-  mem->end = mem->start;
-  return mem;
-}
-
-void MemFree(VMem* mem)
-{
-  free(mem);
-}
-
-#define MemItemAddr(mem, item)    ( ( ((void*)(item)) - (mem)->start ) + 1 ) 
-#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + addr - 1) ) 
-
-#define ItemGCMark(item) ( ((item)->type) &  1 )
-#define ItemType(item)   ( ((item)->type) >> 1 )
-#define ItemNext(item)   ( (item)->next )
-#define ItemData(item)   ( (item)->data )
-
-static inline void ItemSetGCMark(VItem* item, VFlag mark)
-{
-  item->type = (item->type & ~1) | (mark & 1);
-}
-
-static inline void ItemSetType(VItem* item, VFlag type)
-{
-  item->type = (type << 1) | (item->type & 1);
-}
-
-void MemCons(VMem* mem, VItem* item1, VItem* item2)
-{
-  item1->next = MemItemAddr(mem, item2);
-}
-
-VItem* MemAllocItem(VMem* mem)
-{
-  VItem* item;
-
-  if (mem->firstFree)
-  {
-    //printf("Free item available\n");
-    item = MemItemPointer(mem, mem->firstFree);
-    mem->firstFree = item->next;
-  }
-  else
-  {
-    VAddr memUsed = mem->end - mem->start;
-    //printf("memUsed: %i\n", memUsed);
-    //printf("mem->size: %i\n", mem->size);
-    if (!(memUsed < (mem->size + sizeof(VItem))))
-    {
-      printf("[GURU_MEDITATION: -1] OUT OF MEMORY\n");
-      //exit(0); 
-      return NULL;
-    }
-    //printf("Free space available\n");
-    item = mem->end;
-    mem->end += sizeof(VItem);
-  }
-
-  item->data = 0;
-  item->type = 0;
-  item->next = 0;
-
-  return item;
-}
-
-void MemDeallocItem(VMem* mem, VItem* item)
-{
-  item->next = mem->firstFree;
-
-  mem->firstFree = MemItemAddr(mem, item);
-}
-
-int main()
-{
-  printf("Hi World\n");
   PrintBinaryUInt(0x80000000);
   PrintBinaryUInt(0x1 << 1);
-  //PrintBinaryUInt(0x1 >> 1);
+  PrintBinaryUInt(0x2 >> 1);
+}
 
-  VMem* mem = MemNew();
-/*
+void TestItemAttributes()
+{
+  VMem* mem = MemNew(100);
+
   VItem* item = MemAllocItem(mem);
   ItemSetGCMark(item, 1);
   ItemSetType(item, 42);
   PrintBinaryUInt(item->type);
   printf("Type: %i\n", ItemType(item));
   printf("Mark: %i\n", ItemGCMark(item));
-
-  VItem* item2 = MemAllocItem(mem);
-  ItemSetType(item2, 44);
-
-  MemCons(mem, item, item2);
-
-  VItem* next = MemItemPointer(mem, item->next);
-  printf("Type: %i\n", ItemType(next));
-
-  printf("MemFirstFree: %i\n", mem->firstFree);
+  ShouldHold("Item type should be equal", 42 == ItemType(item));
+  ShouldHold("Item gc mark should be set", 1 == ItemGCMark(item));
   MemDeallocItem(mem, item);
-  printf("MemFirstFree: %i\n", mem->firstFree);
-
-  item = MemAllocItem(mem);
-  printf("Type: %i\n", ItemType(item));
-*/
-
-  // Build list
-  VItem* item;
-  VItem* next;
-  VItem* first;
   
-  first = MemAllocItem(mem);
+  MemFree(mem);
+}
+
+VItem* AllocMaxItems(VMem* mem)
+{
+  // Alloc and cons items until out of memory
+  VItem* first = MemAllocItem(mem);
   first->data = 1;
-  item = first;
+  VItem* item = first;
   while (1)
   {
-    next = MemAllocItem(mem);
+    VItem* next = MemAllocItem(mem);
     if (NULL == next) break;
     next->data = item->data + 1;
     MemCons(mem, item, next);
-    //printf("Next addr: %i\n", item->next);
-    //item->next = MemItemAddr(mem, item2);
     item = next;
   }
+  return first;
+}
 
-  // Print list items
-  item = first;
-  while (item->next)
+void DeallocItems(VItem* first, VMem* mem)
+{
+  VItem* item = first;
+  while (1)
   {
-    printf("FIRST LIST: %i\n", (int)item->data);
-    item = MemItemPointer(mem, item->next);
-  }
-
-  // Dealloc list items
-  item = first;
-  while (item)
-  {
-    VAddr nextAddr = item->next;
     printf("DEALLOC: %i\n", (int)item->data);
+    VAddr nextAddr = item->next;
     MemDeallocItem(mem, item);
-    item = NULL;
-    if (nextAddr)
-    {
-      VItem* next = MemItemPointer(mem, nextAddr);
-      item = next;
-    }
+    if (0 == nextAddr) break;
+    item = MemItemPointer(mem, nextAddr);
   }
+}
 
-  // Build list again
-  first = MemAllocItem(mem);
-  first->data = 1;
-  item = first;
-  while (1)
-  {
-    next = MemAllocItem(mem);
-    if (NULL == next) break;
-    next->data = item->data + 1;
-    MemCons(mem, item, next);
-    //printf("Next addr: %i\n", item->next);
-    //item->next = MemItemAddr(mem, item2);
-    item = next;
-  }
-
-  // Print list items
+void PrintItems(VItem* first, VMem* mem)
+{
   VAddr addr = MemItemAddr(mem, first);
   while (addr)
   {
     VItem* item = MemItemPointer(mem, addr);
-    printf("SECOND LIST: %i\n", (int)item->data);
+    printf("%i\n", (int)item->data);
     addr = item->next;
   }
+}
+
+int CountItems(VItem* first, VMem* mem)
+{
+  int counter = 0;
+  VAddr addr = MemItemAddr(mem, first);
+  while (addr)
+  {
+    ++ counter;
+    VItem* item = MemItemPointer(mem, addr);
+    addr = item->next;
+  }
+  return counter;
+}
+
+void TestAllocDealloc()
+{
+  VMem* mem = MemNew(100);
+
+  VItem* first = AllocMaxItems(mem);
+  PrintItems(first, mem);
+  int numItems = CountItems(first, mem);
+  printf("Num items: %i\n", numItems);
+
+  DeallocItems(first, mem);
+
+  first = AllocMaxItems(mem);
+  PrintItems(first, mem);
+  int numItems2 = CountItems(first, mem);
+  printf("Num items: %i\n", numItems2);
+  DeallocItems(first, mem);
+
+  ShouldHold("Allocated items should be equal", numItems == numItems2);
 
   MemFree(mem);
+}
+
+void PrintList(VItem* first, VMem* mem)
+{
+  printf("(");
+  VAddr addr = MemItemAddr(mem, first);
+  int printSpace = FALSE;
+  while (addr)
+  {
+    if (printSpace) printf(" ");
+    VItem* item = MemItemPointer(mem, addr);
+    //printf("type: %i ", ItemType(item));
+    if (TypeList == ItemType(item))
+      PrintList(MemItemPointer(mem, ItemData(item)), mem);
+    else if (TypeIntNum == ItemType(item))
+      printf("N%i", (int)ItemData(item));
+    else if (TypePrimFun == ItemType(item))
+      printf("P%i", (int)ItemData(item));
+    addr = ItemNext(item);
+    printSpace = TRUE;
+  }
+  printf(")");
+}
+
+void TestParseSymbolicCode()
+{
+  VMem* mem = MemNew(1000);
+  char* code = "N-42 N44 (P1 N2 (N3 (P4)) N5 N6) N0 (((N88";
+  VItem* first = ParseSymbolicCode(code, mem);
+  PrintList(first, mem);
+  printf("\n");
+  MemFree(mem);
+}
+
+int main()
+{
+  printf("Hi World\n");
+
+  /*TestPrintBinary();
+  TestItemAttributes();
+  TestAllocDealloc();*/
+  TestParseSymbolicCode();
 
   printf("DONE\n");
+
+  PrintMemStat();
 }
