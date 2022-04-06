@@ -7,6 +7,7 @@
 #include "mem.h"
 #include "gurumeditation.h"
 #include "codeparser.h"
+#include "interp.h"
 
 #ifdef INCLUDE_SOURCE_CODE_PARSER
   #include "symboldict.h"

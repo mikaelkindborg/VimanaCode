@@ -10,98 +10,106 @@ typedef struct __VContext
   struct __VContext* prev;
   VItem* code;
   VItem* instruction;
-  VItem* localVars;
+  // VItem* localVars;
 }
 VContext;
 
 typedef struct __VInterp
 {
   int       run; 
-  VMem*     memory;
-  VItem*    stack;
-  VContext* context;
-  int       callstackSize;
-  void*     callstack;
+
+  VMem*     itemMem;
+
+  int       dataStackSize;
+  int       dataStackTop;
+  VItem**   dataStack;
+
+  int       callStackByteSize;
+  VContext* callStackTop;
+  void*     callStack;
 }
 VInterp;
 
-VInterp* InterpNew(int callstackSize, int memSize)
+VInterp* InterpNew(int dataStackSize, int callStackByteSize, int memByteSize)
 {
-  VInterp* interp = SysAlloc(sizeof(VInterp) + callstackSize);
-  interp->callstack = interp + sizeof(VInterp);
-  interp->callstackSize = callstackSize;
-  interp->memory = MemNew(memSize);
-  interp->stack = NULL;
-  interp->context = NULL;
+  int dataStackByteSize = dataStackSize * sizeof(VItem*);
+  VInterp* interp = SysAlloc(sizeof(VInterp) + dataStackByteSize + callStackByteSize);
+
+  interp->dataStack = (void*)interp + sizeof(VInterp);
+  interp->dataStackSize = dataStackSize;
+  interp->dataStackTop = -1;
+
+  interp->callStack = interp + sizeof(VInterp) + dataStackByteSize;
+  interp->callStackByteSize = callStackByteSize;
+  interp->callStackTop = NULL;
+
+  interp->itemMem = MemNew(memByteSize);
+
   return interp;
 }
 
 void InterpFree(VInterp* interp)
 {
-  MemFree(interp->memory);
+  MemFree(interp->itemMem);
   SysFree(interp);
 }
 
 void InterpPush(VInterp* interp, VItem* item)
 {
-  if (NULL == interp->stack)
+  ++ interp->dataStackTop;
+
+  if (interp->dataStackTop >= interp->dataStackSize)
   {
-    interp->stack = item;
-    ItemSetNext(item, 0);
+    GuruMeditation(DATA_STACK_OVERFLOW);
   }
-  else
-  {
-    MemCons(interp->memory, item, interp->stack);
-  }
+  
+  interp->dataStack[interp->dataStackTop] = item;
 }
 
-void InterpPop(VInterp* interp)
+VItem* InterpPop(VInterp* interp)
 {
-  if (NULL != interp->stack)
+  if (interp->dataStackTop < 0)
   {
-    if (ItemNext(interp->stack))
-    {
-      VItem* next = MemItemAddr(interp->memory, ItemNext(interp->stack));
-      interp->stack = next;
-    }
-    else
-    {
-      interp->stack = NULL;
-    }
+    GuruMeditation(DATA_STACK_IS_EMPTY);
   }
+
+  return interp->dataStack[interp->dataStackTop--];
 }
 
 void InterpPushContext(VInterp* interp, VItem* code)
 {
-  if (NULL == interp->context)
+  if (NULL == interp->callStackTop)
   {
-    interp->context = interp->callstack;
-    interp->context->prev = NULL;
+    interp->callStackTop = interp->callStack;
+    interp->callStackTop->prev = NULL;
   }
   else
   {
-    VContext* nextContext = interp->contex + sizeof(VContext);
-    if (nextContext + sizeof(VContext) > callstackSize)
+    VContext* next = (void*)interp->callStackTop + sizeof(VContext);
+    void* maxSize = interp->callStack + interp->callStackByteSize;
+    if ((void*)next + sizeof(VContext) >= maxSize)
     {
-      printf("OUT OF STACK MEMORY\n");
-      exit(0);
+      GuruMeditation(CALL_STACK_OVERFLOW);
     }
-    nextContext->prev = interp->contex;
-    interp->contex = nextContext;
+    next->prev = interp->callStackTop;
+    interp->callStackTop = next;
   }
 
-  interp->contex->code = code;
-  interp->contex->instruction = code;
+  interp->callStackTop->code = code;
+  interp->callStackTop->instruction = code;
 }
 
 void InterpPopContext(VInterp* interp)
 {
-  if (NULL != interp->context)
+  if (NULL == interp->callStackTop)
   {
-    interp->contex = interp->context->prevContext;
+    GuruMeditation(CALL_STACK_IS_EMPTY);
   }
+
+  interp->callStackTop = interp->callStackTop->prev;
 }
 
+/*
 int InterpEvalSlice(register VInterp* interp, register int sliceSize);
 
 void InterpEval(VInterp* interp, VItem* code)
@@ -195,3 +203,4 @@ Next:
 Exit:
   return ! interp->run;
 }
+*/
