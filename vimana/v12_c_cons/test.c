@@ -57,6 +57,7 @@ void DeallocItems(VItem* first, VMem* mem)
   }
 }
 
+/*
 void xPrintItems(VItem* first, VMem* mem)
 {
   VAddr addr = MemItemAddr(mem, first);
@@ -67,6 +68,7 @@ void xPrintItems(VItem* first, VMem* mem)
     addr = item->next;
   }
 }
+*/
 
 void PrintItems(VItem* first, VMem* mem)
 {
@@ -118,7 +120,7 @@ void TestParseSymbolicCode()
   VMem* mem = MemNew(1000);
   char* code = "N-42 N44 (P1 N2 (N3 (P4)) N5 N6) N0 (((N88";
   VItem* first = ParseSymbolicCode(code, mem);
-  PrintList(first, mem);
+  MemPrintList(mem, first);
   printf("\n");
   MemFree(mem);
 }
@@ -127,9 +129,12 @@ void TestInterp()
 {
   // Create interpreter
   int dataStackSize = 100;
+  int globalVarsSize = 100;
   int callStackSize = 100;
   int memSize = 1000;
-  VInterp* interp = InterpNew(dataStackSize, callStackSize, memSize);
+  VInterp* interp = InterpNew(
+    dataStackSize, globalVarsSize,
+    callStackSize, memSize);
 
   // Test data stack
   VItem* item = MemAllocItem(interp->itemMem);
@@ -176,13 +181,16 @@ void TestInterpEval()
 
   // Create interpreter
   int dataStackSize = 100;
+  int globalVarsSize = 100;
   int callStackSize = 100;
   int memSize = 1000;
-  VInterp* interp = InterpNew(dataStackSize, callStackSize, memSize);
+  VInterp* interp = InterpNew(
+    dataStackSize, globalVarsSize,
+    callStackSize, memSize);
 
   char* code = "N42 P1";
   VItem* first = ParseSymbolicCode(code, interp->itemMem);
-  PrintList(first, interp->itemMem);
+  MemPrintList(interp->itemMem, first);
   printf("\n");
 
   InterpEval(interp, first);
@@ -193,6 +201,48 @@ void TestInterpEval()
   InterpFree(interp);
 }
 
+void TestSymbols()
+{
+  VMem* mem = MemNew(10000);
+
+  char* s1 = "First";
+  char* s2 = "Second";
+  char* s3 = "Third";
+
+  VItem* symbols = MemAllocItem(mem);
+  
+  SymbolFindAdd(symbols, s1, mem);
+  SymbolFindAdd(symbols, s2, mem);
+  SymbolFindAdd(symbols, s3, mem);
+
+  int index = SymbolFindAdd(symbols, s3, mem);
+  char* s = SymbolGetString(symbols, 1, mem);
+
+  printf("Symbol index: %i %s\n", index, s);
+
+  MemFree(mem);
+}
+
+/*
+#define PROGMEM 
+
+//const 
+typedef struct __VPrimFunEntry 
+{
+  char *name;
+  int index;
+  int x;
+} 
+VPrimFunEntry;
+
+VPrimFunEntry primFuns[] PROGMEM = 
+{
+  { "Item_one", 0, 1 },
+  { "Item_two", 1, 1 },
+  { "Item_three", 2, 1},
+  { "Item_four", 3, 1 }
+};
+*/
 int main()
 {
   printf("Hi World\n");
@@ -200,11 +250,106 @@ int main()
   /*TestPrintBinary();
   TestItemAttributes();
   TestAllocDealloc();
-  TestParseSymbolicCode();*/
+  TestParseSymbolicCode();
   TestInterp();
-  TestInterpEval();
+  TestInterpEval();*/
+  TestSymbols();
+
+  //printf ("primfun: %s\n", primFuns[3].name);
 
   printf("DONE\n");
 
   PrintMemStat();
 }
+
+/*
+int hash = 7;
+for (int i = 0; i < strlen; i++) {
+    hash = hash*31 + charAt(i);
+}
+
+unsigned int DJBHash(char* str, unsigned int len)
+{
+   unsigned int hash = 5381;
+   unsigned int i    = 0;
+
+   for(i = 0; i < len; str++, i++)
+   {   
+      hash = ((hash << 5) + hash) + (*str);
+   }   
+
+   return hash;
+}
+unsigned long hash = 5381;
+int c;
+
+while (c = *str++)
+    hash = ((hash << 5) + hash) + c; // hash * 33 + c
+
+http://www.cse.yorku.ca/~oz/hash.html
+*/
+
+/*
+https://forum.arduino.cc/t/call-function-pointer-from-progmem/338748
+
+boolean fun1() {
+  Serial.println(F("Function 1"));
+}
+boolean fun2() {
+  Serial.println(F("Function 2"));
+}
+boolean fun3() {
+  Serial.println(F("Function 3"));
+}
+boolean fun4() {
+  Serial.println(F("Function 4"));
+}
+
+typedef boolean (*Item_Function)();
+
+const typedef struct MenuItem_t {
+  char *text;
+  Item_Function func;
+} MenuItem;
+
+MenuItem firstList[4] PROGMEM = {
+  { "Item_one", &fun1 }, // need to have reference to the function
+  { "Item_two", &fun2 },
+  { "Item_three", &fun3},
+  { "Item_four", &fun4 }
+};
+
+MenuItem* itemPtr = firstList;
+
+void setup() {
+
+  // Here I want to use the itemPtr to call the function from the
+  //      struct instance it is currently pointing to.
+  // In this case it should call fun1()
+
+  boolean (*function)(void); // function buffer
+
+  Serial.begin(115200);
+  for (byte i = 0; i < 4; i++)
+  {
+    Serial.println((char*)pgm_read_word(&(firstList[i].text)));
+    function = (Item_Function)pgm_read_word(&(firstList[i].func)); // this needs to be assigned to another function pointer in order to use it.
+
+    function(); // run the function.
+    Serial.println();
+  }
+
+}
+void loop() {}
+
+
+https://www.arduino.cc/reference/en/language/variables/utilities/progmem/
+
+https://cexamples.com/examples/using-function-pointer-from-struct-in-progmem-in-c-on-arduino
+
+http://www.nongnu.org/avr-libc/user-manual/group__avr__pgmspace.html
+
+https://www.arduino.cc/en/pmwiki.php?n=Reference/PROGMEM
+
+https://www.e-tinkers.com/2020/05/do-you-know-arduino-progmem-demystified/
+*/

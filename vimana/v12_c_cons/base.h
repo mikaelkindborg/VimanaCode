@@ -13,8 +13,3 @@ Basic data types and functions.
 
 #define FALSE 0
 #define TRUE  1
-
-#define Print(str)      fputs(str, stdout)
-#define PrintNum(num)   printf("%ld", (long)(num))
-#define PrintChar(c)    printf("%c",  (char)(c))
-#define PrintNewLine()  printf("\n")

@@ -2,12 +2,15 @@
 #define __VIMANA_H___
 
 #include "base.h"
+#include "print.h"
+#include "alloc.h"
+#include "string.h"
 #include "item.h"
 #include "mem.h"
-#include "print.h"
 #include "gurumeditation.h"
-#include "codeparser.h"
 #include "interp.h"
+#include "codeparser.h"
+#include "symbols.h"
 
 #ifdef INCLUDE_SOURCE_CODE_PARSER
   #include "symboldict.h"

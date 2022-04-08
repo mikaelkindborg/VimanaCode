@@ -5,28 +5,6 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Memory manager for linked items.
 */
 
-#ifdef TRACK_MEMORY_USAGE
-
-int GMemAllocCounter = 0;
-int GMemFreeCounter = 0;
-
-#define SysAlloc(size) malloc(size); ++ GMemAllocCounter
-#define SysFree(obj) free(obj); ++ GMemFreeCounter
-
-void PrintMemStat()
-{
-  Print("SysAlloc: "); PrintNum(GMemAllocCounter); PrintNewLine();
-  Print("SysFree:  "); PrintNum(GMemFreeCounter);  PrintNewLine();
-}
-
-#else
-
-#define SysAlloc(size) malloc(size)
-#define SysFree(obj) free(obj)
-#define PrintMemStat()
-
-#endif
-
 typedef struct __VMem
 {
   VAddr firstFree;
@@ -99,9 +77,7 @@ VItem* MemAllocItem(VMem* mem)
     mem->end += sizeof(VItem);
   }
 
-  item->data = 0;
-  item->type = 0;
-  item->next = 0;
+  ItemInit(item);
 
   return item;
 }
@@ -111,4 +87,37 @@ void MemDeallocItem(VMem* mem, VItem* item)
   item->next = mem->firstFree;
 
   mem->firstFree = MemItemAddr(mem, item);
+}
+
+void MemPrintList(VMem* mem, VItem* first);
+
+void MemPrintItem(VMem* mem, VItem* item)
+{
+  //printf("type: %i ", ItemType(item));
+  if (TypeList == ItemType(item))
+    MemPrintList(mem, MemItemPointer(mem, ItemData(item)));
+  else if (TypeIntNum == ItemType(item))
+    printf("N%i", (int)ItemData(item));
+  else if (TypePrimFun == ItemType(item))
+    printf("P%i", (int)ItemData(item));
+}
+
+void MemPrintList(VMem* mem, VItem* first)
+{
+  printf("(");
+
+  VItem* item = first;
+  //VAddr addr = MemItemAddr(mem, first);
+  int printSpace = FALSE;
+  //while (addr)
+  while (item)
+  {
+    if (printSpace) printf(" ");
+    //VItem* item = MemItemPointer(mem, addr);
+    MemPrintItem(mem, item);
+    //addr = ItemNext(item);
+    item = MemItemNext(mem, item);
+    printSpace = TRUE;
+  }
+  printf(")");
 }

@@ -26,24 +26,37 @@ typedef struct __VInterp
   int       dataStackTop;
   VItem*    dataStack;
 
+  int       globalVarsSize;
+  VItem*    globalVars;
+
   int       callStackSize;
   VContext* callStackTop;
   void*     callStack;
 }
 VInterp;
 
-VInterp* InterpNew(int dataStackSize, int callStackSize, int memSize)
+typedef void (*VPrimFunPtr) (VInterp*, VItem*);
+
+VInterp* InterpNew(
+  int dataStackSize, int globalVarsSize, 
+  int callStackSize, int memSize)
 {
   int dataStackByteSize = dataStackSize * sizeof(VItem);
+  int globalVarsByteSize = globalVarsSize * sizeof(VItem);
   int callStackByteSize = callStackSize * sizeof(VContext);
 
-  VInterp* interp = SysAlloc(sizeof(VInterp) + dataStackByteSize + callStackByteSize);
+  VInterp* interp = SysAlloc(
+    sizeof(VInterp) + dataStackByteSize + 
+    globalVarsByteSize + callStackByteSize);
 
   interp->dataStack = (void*)interp + sizeof(VInterp);
   interp->dataStackSize = dataStackSize;
   interp->dataStackTop = -1;
 
-  interp->callStack = (void*)interp + sizeof(VInterp) + dataStackByteSize;
+  interp->globalVars = (void*)interp->dataStack + dataStackByteSize;
+  interp->globalVarsSize = globalVarsSize;
+
+  interp->callStack = (void*)interp->globalVars + globalVarsByteSize;
   interp->callStackSize = callStackSize;
   interp->callStackTop = NULL;
 
@@ -169,6 +182,9 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
       if (TypePrimFun == ItemType(instruction))
       {
         printf("primfun\n");
+        int primfunId = ItemData(instruction);
+        //VPrimFunPtr fun = 
+        //fun(interp, instruction);
       }
 
       /*
