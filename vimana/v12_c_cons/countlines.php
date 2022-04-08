@@ -11,7 +11,8 @@ $numlines =
   countlines("print.h") +
   countlines("mem.h") +
   countlines("gurumeditation.h") +
-  countlines("codeparser.h");
+  countlines("codeparser.h") +
+  countlines("interp.h");
 
 echo "BASE VERSION: ". ($numlines) . " lines\n";
 
@@ -28,6 +29,8 @@ Version v12_c_cons:
 
 220403:
   BASE VERSION: 412 lines (symbolic parser)
+220408:
+  BASE VERSION: 654 lines (work-in-progress in interpreter)
 
 Version v11_c_minimal:
 

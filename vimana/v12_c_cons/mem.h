@@ -38,7 +38,8 @@ VMem;
 
 VMem* MemNew(int memSize)
 {
-  VAddr size = memSize;
+  int memByteSize = memSize * sizeof(VItem);
+  VAddr size = memByteSize;
   VMem* mem = SysAlloc(size);
   mem->firstFree = 0;
   mem->size = size - sizeof(VMem);

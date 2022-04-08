@@ -14,6 +14,8 @@ typedef struct __VContext
 }
 VContext;
 
+// Mind control for hackers
+
 typedef struct __VInterp
 {
   int       run; 
@@ -22,28 +24,30 @@ typedef struct __VInterp
 
   int       dataStackSize;
   int       dataStackTop;
-  VItem**   dataStack;
+  VItem*    dataStack;
 
-  int       callStackByteSize;
+  int       callStackSize;
   VContext* callStackTop;
   void*     callStack;
 }
 VInterp;
 
-VInterp* InterpNew(int dataStackSize, int callStackByteSize, int memByteSize)
+VInterp* InterpNew(int dataStackSize, int callStackSize, int memSize)
 {
-  int dataStackByteSize = dataStackSize * sizeof(VItem*);
+  int dataStackByteSize = dataStackSize * sizeof(VItem);
+  int callStackByteSize = callStackSize * sizeof(VContext);
+
   VInterp* interp = SysAlloc(sizeof(VInterp) + dataStackByteSize + callStackByteSize);
 
   interp->dataStack = (void*)interp + sizeof(VInterp);
   interp->dataStackSize = dataStackSize;
   interp->dataStackTop = -1;
 
-  interp->callStack = interp + sizeof(VInterp) + dataStackByteSize;
-  interp->callStackByteSize = callStackByteSize;
+  interp->callStack = (void*)interp + sizeof(VInterp) + dataStackByteSize;
+  interp->callStackSize = callStackSize;
   interp->callStackTop = NULL;
 
-  interp->itemMem = MemNew(memByteSize);
+  interp->itemMem = MemNew(memSize);
 
   return interp;
 }
@@ -63,7 +67,8 @@ void InterpPush(VInterp* interp, VItem* item)
     GuruMeditation(DATA_STACK_OVERFLOW);
   }
   
-  interp->dataStack[interp->dataStackTop] = item;
+  // Copy item
+  interp->dataStack[interp->dataStackTop] = *item;
 }
 
 VItem* InterpPop(VInterp* interp)
@@ -73,7 +78,7 @@ VItem* InterpPop(VInterp* interp)
     GuruMeditation(DATA_STACK_IS_EMPTY);
   }
 
-  return interp->dataStack[interp->dataStackTop--];
+  return & (interp->dataStack[interp->dataStackTop --]);
 }
 
 void InterpPushContext(VInterp* interp, VItem* code)
@@ -86,7 +91,7 @@ void InterpPushContext(VInterp* interp, VItem* code)
   else
   {
     VContext* next = (void*)interp->callStackTop + sizeof(VContext);
-    void* maxSize = interp->callStack + interp->callStackByteSize;
+    void* maxSize = interp->callStack + (interp->callStackSize * sizeof(VContext));
     if ((void*)next + sizeof(VContext) >= maxSize)
     {
       GuruMeditation(CALL_STACK_OVERFLOW);
@@ -110,6 +115,17 @@ void InterpPopContext(VInterp* interp)
 }
 
 /*
+primitive_add()
+{
+  VObj* num2 = InterpPop();
+  VObj* num1 = InterpPop();
+  VObj* result = InterpAlloc();
+  int sum = num1->data + num2->data;
+  ObjSetIntNum(result, sum);
+  InterpPush(result);
+}
+*/
+
 int InterpEvalSlice(register VInterp* interp, register int sliceSize);
 
 void InterpEval(VInterp* interp, VItem* code)
@@ -123,12 +139,12 @@ void InterpEval(VInterp* interp, VItem* code)
 // sliceSize specifies the number of instructions to execute.
 // sliceSize 0 means eval as one slice until program ends.
 // Returns done flag (TRUE = done, FALSE = not done).
-int InterpEvalSlice(register VInterp* interp, register int sliceSize)
+int InterpEvalSlice(VInterp* interp, int sliceSize)
 {
-  register VItem*  instruction;
-  register VItem*  symbolValue;
-  register VIndex  primFun;
-  register VNumber sliceCounter = 0;
+  VItem*  instruction;
+  VItem*  symbolValue;
+  int     primFun;
+  int     sliceCounter = 0;
 
   interp->run = TRUE;
 
@@ -143,64 +159,71 @@ int InterpEvalSlice(register VInterp* interp, register int sliceSize)
         goto Exit;
     }
 
-    // Exit stackframe if the current context has finished executing.
-    if (NULL == ItemNext(interp->context->instruction))
+    // Evaluate current instruction.
+    instruction = interp->callStackTop->instruction;
+
+    if (NULL != instruction)
     {
+      InterpPush(interp, instruction);
+
+      if (TypePrimFun == ItemType(instruction))
+      {
+        printf("primfun\n");
+      }
+
+      /*
+      if (TypePrimFun == ItemType(instruction))
+      {
+        primFun = ItemData(instruction);
+        #include "primfuns_gen.h"
+        goto Next;
+      }
+
+      if (TypeSymbol == ItemType(instruction))
+      {
+        HÄR ÄR JAG
+        // Find symbol value in global env.
+        // Symbols evaluate to themselves if unbound.
+        VIndex index = ItemSymbol(element);
+        symbolValue = InterpGetGlobalVar(interp, index);
+        if (NULL == symbolValue)
+        {
+          // Symbol is unbound, push the symbol itself.
+          InterpPush(interp, element);
+          goto Next;
+        }
+
+        // If it is a function, call it.
+        if (IsFun(symbolValue))
+        {
+          InterpPushContext(interp, ItemList(symbolValue));
+          goto Next;
+        }
+
+        // If not a function, push the symbol value.
+        InterpPush(interp, symbolValue);
+      }
+      */
+    }
+    else
+    {
+      // Pop stackframe.
       InterpPopContext(interp);
 
-      // Exit run loop if this was the last stackframe.
-      if (NULL == interp->context)
+      // Exit if this was the last stackframe.
+      if (NULL == interp->callStackTop)
       {
         interp->run = FALSE;
+        goto Exit;
       }
-
-      goto Next;
     }
-
-    // Get current instruction.
-    instruction = interp->context->instruction;
-
-    if (TypePrimFun == ItemType(instruction))
-    {
-      primFun = ItemData(instruction);
-      #include "primfuns_gen.h"
-      goto Next;
-    }
-
-    if (TypeSymbol == ItemType(instruction))
-    {
-      HÄR ÄR JAG
-      // Find symbol value in global env.
-      // Symbols evaluate to themselves if unbound.
-      VIndex index = ItemSymbol(element);
-      symbolValue = InterpGetGlobalVar(interp, index);
-      if (NULL == symbolValue)
-      {
-        // Symbol is unbound, push the symbol itself.
-        InterpPush(interp, element);
-        goto Next;
-      }
-
-      // If it is a function, call it.
-      if (IsFun(symbolValue))
-      {
-        InterpPushContext(interp, ItemList(symbolValue));
-        goto Next;
-      }
-
-      // If not a function, push the symbol value.
-      InterpPush(interp, symbolValue);
-      goto Next;
-    }
-
-    // If none of the above, push the element.
-    InterpPush(interp, element);
 
 Next:
-    interp->context->instruction = MemItemNext(interp->memory, instruction); // TODO
-  } // while
+    interp->callStackTop->instruction = 
+      MemItemNext(interp->itemMem, instruction);
+  }
+  // while
 
 Exit:
   return ! interp->run;
 }
-*/

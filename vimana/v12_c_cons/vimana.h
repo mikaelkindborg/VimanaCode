@@ -3,8 +3,8 @@
 
 #include "base.h"
 #include "item.h"
-#include "print.h"
 #include "mem.h"
+#include "print.h"
 #include "gurumeditation.h"
 #include "codeparser.h"
 #include "interp.h"
