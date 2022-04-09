@@ -21,14 +21,14 @@ these are like environments/contexts
 call stack is a memory block with stackframes (VStackMem)
 
 stackframe
-  first cell
-  current cell (instr pointer)
+  first item
+  current item (instr pointer)
   num slots
   register slots, dynamically allocated
 
 data stack is a memory block (VStackMem)
 
-list space consists of cells in one memory block (VListMem)
+list space consists of items in one memory block (VListMem)
 
 strings are malloc allocated buffers (VBufMem)
 
@@ -251,30 +251,30 @@ typedef unsigned long VFlags;
 typedef unsigned long VData;
 
 /*
-// 32 bits per cell on Arduino
-// 128 bits per cell on 64 bit machines
-typedef struct __VCell
+// 32 bits per item on Arduino
+// 128 bits per item on 64 bit machines
+typedef struct __VItem
 {
   VData            data;  // data + type bit
-  struct __VCell*  next;  // next ptr + mark bit
+  struct __VItem*  next;  // next ptr + mark bit
 }
-VCell;
+VItem;
 
 4 bytes 
 
-512 cells
+512 items
 */
 
-typedef struct __VCell
+typedef struct __VItem
 {
   VFlags           flags; // mark bit, 0 flag = objptr, 1 flag = other type
   VData            data;  // data
-  struct __VCell*  next;  // next cell
+  struct __VItem*  next;  // next item
 }
-VCell;
+VItem;
 
 //#define MALLOC
-#define CELLMEM
+#define ITEMMEM
 
 #ifdef MALLOC
 void MemInit()
@@ -283,117 +283,117 @@ void MemInit()
 void MemFree()
 {
 }
-VCell* CellAlloc()
+VItem* ItemAlloc()
 {
-  return (VCell*) malloc(sizeof(VCell));
+  return (VItem*) malloc(sizeof(VItem));
 }
-void CellFree(VCell* cell)
+void ItemFree(VItem* item)
 {
-  free(cell);
+  free(item);
 }
 #endif
 
-#ifdef CELLMEM
+#ifdef ITEMMEM
 
-VCell* CellMem;
-long CellMemSize = 50000010;
-long CellMemOffset = 0;
-VCell* FreeList = NULL;
+VItem* ItemMem;
+long ItemMemSize = 50000010;
+long ItemMemOffset = 0;
+VItem* FreeList = NULL;
 
 void MemInit()
 {
-  CellMem = malloc(sizeof(VCell) * CellMemSize);
+  ItemMem = malloc(sizeof(VItem) * ItemMemSize);
 }
 
 void MemFree()
 {
-  free(CellMem);
+  free(ItemMem);
 }
 
-VCell* CellAlloc()
+VItem* ItemAlloc()
 {
-  VCell* cell;
+  VItem* item;
   if (FreeList)
   {
-    cell = FreeList;
-    FreeList = cell->next;
+    item = FreeList;
+    FreeList = item->next;
   }
   else
   {
-    cell = CellMem + CellMemOffset;
-    ++ CellMemOffset;
+    item = ItemMem + ItemMemOffset;
+    ++ ItemMemOffset;
   }
-  return cell;
+  return item;
 }
 
-void CellFree(VCell* cell)
+void ItemFree(VItem* item)
 {
-  cell->next = FreeList;
-  FreeList = cell;
+  item->next = FreeList;
+  FreeList = item;
 }
 #endif
 
-void TestCellAlloc()
+void TestItemAlloc()
 {
-  VCell* cell = CellAlloc();
-  cell->data = 44;
-  printf("cell.data: %lu\n", cell->data);
-  CellFree(cell);
+  VItem* item = ItemAlloc();
+  item->data = 44;
+  printf("item.data: %lu\n", item->data);
+  ItemFree(item);
 }
 
-VCell* CreateCellList()
+VItem* CreateItemList()
 {
-  VCell* first = CellAlloc();
-  VCell* cell = first;
+  VItem* first = ItemAlloc();
+  VItem* item = first;
   long i;
   for (i = 0; i < 50000000; ++i)
   {
-    cell->data = i + 1;
-    VCell* next = CellAlloc();
-    cell->next = next;
-    cell = next;
+    item->data = i + 1;
+    VItem* next = ItemAlloc();
+    item->next = next;
+    item = next;
   }
-  cell->data = i + 1;
-  cell->next = NULL;
+  item->data = i + 1;
+  item->next = NULL;
 
   return first;
 }
 
-void PrintCellList(VCell* cell)
+void PrintItemList(VItem* item)
 {
-  while (cell)
+  while (item)
   {
-    long n = cell->data;
+    long n = item->data;
     if (n % 1000000 == 0)
     {
-      printf("%lu\n", cell->data);
+      printf("%lu\n", item->data);
     }
-    cell = cell->next;
+    item = item->next;
   }
 }
 
-void DeallocCellList(VCell* cell)
+void DeallocItemList(VItem* item)
 {
-  while (cell)
+  while (item)
   {
-    VCell* next = cell->next;
-    CellFree(cell);
-    cell = next;
+    VItem* next = item->next;
+    ItemFree(item);
+    item = next;
   }
 }
 
-void TestCellList()
+void TestItemList()
 {
-  VCell* cell = CreateCellList();
-  PrintCellList(cell);
-  DeallocCellList(cell);
+  VItem* item = CreateItemList();
+  PrintItemList(item);
+  DeallocItemList(item);
 }
 
 int main()
 {
   printf("Hi World\n");
   MemInit();
-  TestCellAlloc();
-  TestCellList();
+  TestItemAlloc();
+  TestItemList();
   MemFree();
 }

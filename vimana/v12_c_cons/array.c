@@ -1,9 +1,6 @@
 /*
-File: item.h
+File: array.h
 Author: Mikael Kindborg (mikael@kindborg.com)
-
-Items are like cons cells in Lisp. They hold a value and an address
-to the next item.
 */
 
 int ArrayGet(VItem* array, int index)

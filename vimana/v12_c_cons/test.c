@@ -38,10 +38,27 @@ VItem* AllocMaxItems(VMem* mem)
     VItem* next = MemAllocItem(mem);
     if (NULL == next) break;
     next->data = item->data + 1;
-    MemCons(mem, item, next);
+    MemItemSetNext(mem, item, next);
     item = next;
   }
   return first;
+}
+
+VItem* AllocMaxItemsUsingCons(VMem* mem)
+{
+  // Alloc and cons items until out of memory
+  VItem* first = MemAllocItem(mem);
+  int counter = 1;
+  VItem* list = NULL;
+  while (1)
+  {
+    VItem item;
+    ItemSetIntNum(&item, counter ++);
+    VItem* cons = MemCons(mem, &item, list);
+    if (NULL == cons) break;
+    list = cons;
+  }
+  return list;
 }
 
 void DeallocItems(VItem* first, VMem* mem)
@@ -115,6 +132,32 @@ void TestAllocDealloc()
   MemFree(mem);
 }
 
+void TestConsDealloc()
+{
+  VMem* mem = MemNew(100);
+
+  VItem* first = AllocMaxItemsUsingCons(mem);
+  printf("ONE\n");
+  printf("ONE NEXT: %i\n", (int)first->next);
+  printf("ONE DATA: %i\n", (int)first->data);
+  PrintItems(first, mem);
+  int numItems = CountItems(first, mem);
+  printf("Num items: %i\n", numItems);
+
+  DeallocItems(first, mem);
+
+  first = AllocMaxItems(mem);
+  PrintItems(first, mem);
+  int numItems2 = CountItems(first, mem);
+  printf("Num items: %i\n", numItems2);
+  DeallocItems(first, mem);
+
+  ShouldHold("Allocated items should be equal", numItems == numItems2);
+
+  MemFree(mem);
+}
+
+/*
 void TestParseSymbolicCode()
 {
   VMem* mem = MemNew(1000);
@@ -122,6 +165,46 @@ void TestParseSymbolicCode()
   VItem* first = ParseSymbolicCode(code, mem);
   MemPrintList(mem, first);
   printf("\n");
+  MemFree(mem);
+}
+*/
+
+void TestParseSourceCode()
+{
+  VMem* mem = MemNew(1000);
+  VItem* list;
+
+  char* code = "1 2 (((3 4) 5))";
+  list = ParseSourceCode(code, mem);
+  MemPrintItem(mem, list);
+  printf("\n");
+
+  char* empty = "";
+  list = ParseSourceCode(empty, mem);
+  MemPrintItem(mem, list);
+  printf("\n");
+  //ShouldHold("first should be NULL", NULL == first);
+
+  char* empty2 = "()";
+  list = ParseSourceCode(empty2, mem);
+  MemPrintItem(mem, list);
+  printf("\n");
+
+  char* empty3 = "   (( ( ) ))   ";
+  list = ParseSourceCode(empty3, mem);
+  MemPrintItem(mem, list);
+  printf("\n");
+
+  char* string = "'Hi World'";
+  list = ParseSourceCode(string, mem);
+  MemPrintItem(mem, list);
+  printf("\n");
+
+  char* string2 = "('Hi foo') 'foo bar'";
+  list = ParseSourceCode(string2, mem);
+  MemPrintItem(mem, list);
+  printf("\n");
+
   MemFree(mem);
 }
 
@@ -175,6 +258,7 @@ void TestInterp()
   InterpFree(interp);
 }
 
+/*
 void TestInterpEval()
 {
   printf("TestInterpEval\n");
@@ -200,6 +284,7 @@ void TestInterpEval()
   // Free interpreter
   InterpFree(interp);
 }
+*/
 
 void TestSymbols()
 {
@@ -223,26 +308,6 @@ void TestSymbols()
   MemFree(mem);
 }
 
-/*
-#define PROGMEM 
-
-//const 
-typedef struct __VPrimFunEntry 
-{
-  char *name;
-  int index;
-  int x;
-} 
-VPrimFunEntry;
-
-VPrimFunEntry primFuns[] PROGMEM = 
-{
-  { "Item_one", 0, 1 },
-  { "Item_two", 1, 1 },
-  { "Item_three", 2, 1},
-  { "Item_four", 3, 1 }
-};
-*/
 int main()
 {
   printf("Hi World\n");
@@ -250,12 +315,14 @@ int main()
   /*TestPrintBinary();
   TestItemAttributes();
   TestAllocDealloc();
+  TestConsDealloc();
   TestParseSymbolicCode();
   TestInterp();
   TestInterpEval();*/
-  TestSymbols();
+  
+  //TestSymbols();
 
-  //printf ("primfun: %s\n", primFuns[3].name);
+  TestParseSourceCode();
 
   printf("DONE\n");
 
@@ -287,6 +354,29 @@ while (c = *str++)
     hash = ((hash << 5) + hash) + c; // hash * 33 + c
 
 http://www.cse.yorku.ca/~oz/hash.html
+*/
+
+/*
+#define PROGMEM 
+
+//const 
+typedef struct __VPrimFunEntry 
+{
+  char *name;
+  int index;
+  int x;
+} 
+VPrimFunEntry;
+
+VPrimFunEntry primFuns[] PROGMEM = 
+{
+  { "Item_one", 0, 1 },
+  { "Item_two", 1, 1 },
+  { "Item_three", 2, 1},
+  { "Item_four", 3, 1 }
+};
+
+  //printf ("primfun: %s\n", primFuns[3].name);
 */
 
 /*
@@ -352,4 +442,11 @@ http://www.nongnu.org/avr-libc/user-manual/group__avr__pgmspace.html
 https://www.arduino.cc/en/pmwiki.php?n=Reference/PROGMEM
 
 https://www.e-tinkers.com/2020/05/do-you-know-arduino-progmem-demystified/
+*/
+
+/*
+https://justine.lol/sectorlisp2/lisp.c
+https://justine.lol/sectorlisp2/
+https://github.com/technoblogy/ulisp/blob/master/ulisp.ino
+http://www.newlisp.org/index.cgi?page=Differences_to_Other_LISPs
 */

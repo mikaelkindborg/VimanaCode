@@ -2,8 +2,8 @@
 File: item.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Items are like cons cells in Lisp. They hold a value and an address
-to the next item.
+Items are like conses in Lisp. They hold a value and 
+an address to the next item.
 */
 
 typedef unsigned long    VData;
@@ -14,7 +14,7 @@ typedef          double  VDecNum;
 
 typedef struct __VItem
 {
-  VData  data;  // value  (number or pointer to list of string)
+  VData  data;  // value  (number or pointer)
   VType  type;  // type info and gc mark bit
   VAddr  next;  // "address" of next item
 }
@@ -95,7 +95,7 @@ void ItemSetString(VItem* item, char* string)
 
 void ItemInit(VItem* item)
 {
-  ItemSetData(item, 0);
-  ItemSetType(item, TypeNone);
-  ItemSetNext(item, 0);
+  item->data = 0;
+  item->type = 0;
+  item->next = 0;
 }

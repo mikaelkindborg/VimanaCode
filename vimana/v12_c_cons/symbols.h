@@ -6,18 +6,12 @@ Lookup table for symbols. Used for parsing and printing.
 */
 
 // Adds or finds a symbol and returns symbol list and symbol index
-int SymbolFindAdd(VItem* item, char* symbol, VMem* mem)
+int SymbolFindAdd(VItem* list, char* symbol, VMem* mem)
 {
-  // Check if this the initial empty item
-  if (TypeNone == ItemType(item))
-  {
-    ItemSetString(item, symbol);
-    printf("Add: %s\n", (char*)ItemData(item));
-    return 0;
-  }
+  VItem* prev;
 
   int index = 0;
-  VItem* prev;
+  VItem* item = MemItemFirst(mem, list);
 
   while (item)
   {
@@ -31,10 +25,15 @@ int SymbolFindAdd(VItem* item, char* symbol, VMem* mem)
     ++ index;
   }
 
-  // Add symbol
+  // Symbol not found, add it
   item = MemAllocItem(mem);
   ItemSetString(item, symbol);
-  MemCons(mem, prev, item);
+
+  if (MemItemFirst(mem, list))
+    MemItemSetNext(mem, prev, item);
+  else
+    MemItemSetFirst(mem, list, item);
+
   printf("Add: %s\n", (char*)ItemData(item));
 
   return index;
@@ -43,7 +42,7 @@ int SymbolFindAdd(VItem* item, char* symbol, VMem* mem)
 // Returns symbol string 
 char* SymbolGetString(VItem* list, int index, VMem* mem)
 {
-  VItem* item = list;
+  VItem* item = MemItemFirst(mem, list);
   int n = 0;
 
   while (item)

@@ -7,12 +7,15 @@ function countlines($file)
 
 $numlines = 
   countlines("base.h") +
-  countlines("item.h") +
   countlines("print.h") +
+  countlines("alloc.h") +
+  countlines("string.h") +
+  countlines("item.h") +
   countlines("mem.h") +
   countlines("gurumeditation.h") +
-  countlines("codeparser.h") +
   countlines("interp.h");
+  countlines("symbols.h") +
+  countlines("parser.h");
 
 echo "BASE VERSION: ". ($numlines) . " lines\n";
 
@@ -31,6 +34,8 @@ Version v12_c_cons:
   BASE VERSION: 412 lines (symbolic parser)
 220408:
   BASE VERSION: 654 lines (work-in-progress in interpreter)
+220409:
+  BASE VERSION: 652 lines (work-in-progress, new parser, symbol lookup)
 
 Version v11_c_minimal:
 

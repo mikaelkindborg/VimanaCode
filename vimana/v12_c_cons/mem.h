@@ -14,6 +14,8 @@ typedef struct __VMem
 }
 VMem;
 
+#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + addr - 1) ) 
+
 VMem* MemNew(int memSize)
 {
   int memByteSize = memSize * sizeof(VItem);
@@ -31,10 +33,28 @@ void MemFree(VMem* mem)
   SysFree(mem);
 }
 
-#define MemItemAddr(mem, item)    ( ( ((void*)(item)) - (mem)->start ) + 1 ) 
-#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + addr - 1) ) 
+VAddr MemItemAddr(VMem* mem, VItem* item)
+{
+  if (NULL != item)
+    return ( ((void*)(item)) - (mem)->start ) + 1;
+  else
+    return 0;
+}     
 
-void MemCons(VMem* mem, VItem* item1, VItem* item2)
+void MemItemSetFirst(VMem* mem, VItem* list, VItem* item)
+{
+  ItemSetList(list, MemItemAddr(mem, item));
+}
+
+VItem* MemItemFirst(VMem* mem, VItem* list)
+{
+  if (ItemData(list))
+    return MemItemPointer(mem, ItemData(list));
+  else
+    return NULL;
+}
+
+void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
 {
   item1->next = MemItemAddr(mem, item2);
 }
@@ -82,6 +102,20 @@ VItem* MemAllocItem(VMem* mem)
   return item;
 }
 
+// Conses value into list (another item)
+// Allocs and returns a new item
+VItem* MemCons(VMem* mem, VItem* value, VItem* list)
+{
+  VItem* item = MemAllocItem(mem);
+  if (!item) return NULL;
+  *item = *value;
+  if (NULL == list)
+    item->next = 0;
+  else
+    item->next = MemItemAddr(mem, list);
+  return item;
+}
+
 void MemDeallocItem(VMem* mem, VItem* item)
 {
   item->next = mem->firstFree;
@@ -93,31 +127,33 @@ void MemPrintList(VMem* mem, VItem* first);
 
 void MemPrintItem(VMem* mem, VItem* item)
 {
-  //printf("type: %i ", ItemType(item));
+  //printf("[T%i]", ItemType(item));
   if (TypeList == ItemType(item))
-    MemPrintList(mem, MemItemPointer(mem, ItemData(item)));
+    MemPrintList(mem, item);
   else if (TypeIntNum == ItemType(item))
     printf("N%i", (int)ItemData(item));
   else if (TypePrimFun == ItemType(item))
     printf("P%i", (int)ItemData(item));
+  else if (TypeSymbol == ItemType(item))
+    printf("S%i", (int)ItemData(item));
+  else if (TypeString == ItemType(item))
+    printf("'%s'", (char*)ItemData(item));
 }
 
-void MemPrintList(VMem* mem, VItem* first)
+void MemPrintList(VMem* mem, VItem* list)
 {
   printf("(");
 
-  VItem* item = first;
-  //VAddr addr = MemItemAddr(mem, first);
   int printSpace = FALSE;
-  //while (addr)
+  VItem* item = MemItemFirst(mem, list);
+
   while (item)
   {
     if (printSpace) printf(" ");
-    //VItem* item = MemItemPointer(mem, addr);
     MemPrintItem(mem, item);
-    //addr = ItemNext(item);
     item = MemItemNext(mem, item);
     printSpace = TRUE;
   }
+
   printf(")");
 }

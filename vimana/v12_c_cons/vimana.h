@@ -9,13 +9,9 @@
 #include "mem.h"
 #include "gurumeditation.h"
 #include "interp.h"
-#include "codeparser.h"
 #include "symbols.h"
+#include "parser.h"
 
-#ifdef INCLUDE_SOURCE_CODE_PARSER
-  #include "symboldict.h"
-  #include "primfun_names_gen.h"
-  #include "sourceparser.h"
-#endif
+//#include "primfun_names_gen.h"
 
 #endif

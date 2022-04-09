@@ -88,7 +88,7 @@ char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
       if (NULL == *first) 
         *first = item;
       else
-        MemCons(mem, prev, item);
+        MemItemSetNext(mem, prev, item);
 
       if (IsLeftParen(*p))
       {
