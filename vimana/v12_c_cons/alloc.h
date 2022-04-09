@@ -17,7 +17,7 @@ void* SysAlloc(int size)
 }
 
 void SysFree(void* obj)
-{ 
+{
   ++ GMemFreeCounter; 
   free(obj);
 }

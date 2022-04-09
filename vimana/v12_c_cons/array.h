@@ -13,6 +13,9 @@ VItem* ArrayGet(VItem* array, int index)
 
 void ArraySet(VItem* array, int index, VItem* value)
 {
+  if (index + 1 > ArrayLength(array))
+    ArrayLength(array) = index + 1;
+  
   array[index + 1] = *value;
 }
 
@@ -26,11 +29,12 @@ VItem* ArrayNew(int size)
 
 VItem* ArrayGrow(VItem* array, int newSize)
 {
-  if (newSize >= array->data)
+  if (newSize >= ArrayMaxSize(array))
   {
     array = realloc(array, (newSize + 1) * sizeof(VItem));
     ArrayMaxSize(array) = newSize;
   }
+
   return array;
 }
 

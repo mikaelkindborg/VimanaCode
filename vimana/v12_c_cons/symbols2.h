@@ -9,9 +9,11 @@ Lookup table for symbols. Used for parsing and printing.
 int SymbolFindAdd(VItem* array, char* string, VMem* mem)
 {
   VItem* item;
-  int index = 0;
+  int    index;
 
-  for (int i = 0; i < ArrayLength(array); ++ index)
+  //printf("array length: %i\n", ArrayLength(array));
+
+  for (index = 0; index < ArrayLength(array); ++ index)
   {
     item = ArrayGet(array, index);
     char* str = (char*) MemItemString(mem, item);
@@ -19,7 +21,6 @@ int SymbolFindAdd(VItem* array, char* string, VMem* mem)
     {
       return index; // Found existing symbol
     }
-    ++ index;
   }
 
   // Symbol not found, add it
@@ -27,7 +28,7 @@ int SymbolFindAdd(VItem* array, char* string, VMem* mem)
   MemItemSetString(mem, item, string);
   ArraySet(array, index, item);
   
-  printf("Added to symbol table: %s\n", (char*)MemItemString(mem, item));
+  //printf("Added to symbol table: %s\n", (char*)MemItemString(mem, item));
 
   return index;
 }

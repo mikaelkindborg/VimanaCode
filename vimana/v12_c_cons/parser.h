@@ -1,8 +1,6 @@
 /*
 File: parser.h
 Author: Mikael Kindborg (mikael@kindborg.com)
-
-Parser for source code.
 */
 
 #define IsWhiteSpace(c) \
@@ -10,12 +8,12 @@ Parser for source code.
 #define IsLeftParen(c) ('(' == (c))
 #define IsRightParen(c) (')' == (c))
 #define IsParen(c) (IsLeftParen(c) || IsRightParen(c))
-
 #define IsStringSeparator(c) ('\'' == (c))
 #define IsEndOfString(c) ('\0' == (c))
-
 #define IsWhiteSpaceOrSeparatorOrEndOfString(c) \
   (IsWhiteSpace(c) || IsParen(c) || IsStringSeparator(c) || IsEndOfString(c))
+
+char GTokenBuffer[512];
 
 char* ParseString(char* p, char** next)
 {
@@ -42,8 +40,7 @@ char* ParseString(char* p, char** next)
 
 char* GetNextToken(char* p, char** next)
 {
-  static char buf[512];
-  char* pbuf = buf;
+  char* pbuf = GTokenBuffer;
 
   while (!IsWhiteSpaceOrSeparatorOrEndOfString(*p))
   {
@@ -54,9 +51,7 @@ char* GetNextToken(char* p, char** next)
 
   *next = p;
 
-  //printf("C:%c\n", (char)buf[0]);
-
-  return buf;
+  return GTokenBuffer;
 }
 
 VType TokenType(char* token)
@@ -132,7 +127,6 @@ VItem* ParseToken(char* token, VMem* mem)
   return item;
 }
 
-// Returns a list item
 VItem* ParseCode(char* code, char** next, VMem* mem)
 {
   VItem* first = NULL;
@@ -154,7 +148,6 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
     else
     if (IsLeftParen(*p))
     {
-      printf("parse child\n");
       // Parse child list
       item = ParseCode(p + 1, &p, mem);
     }
@@ -169,15 +162,13 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
     else
     if (IsStringSeparator(*p))
     {
-      printf("parse string\n");
       char* string = ParseString(p + 1, &p);
-      printf("string: %s\n", string);
       item = MemAllocItem(mem);
       MemItemSetString(mem, item, string);
+      SysFree(string);
     }
     else
     {
-      printf("parse token\n");
       char* token = GetNextToken(p, &p);
       item = ParseToken(token, mem);
     }

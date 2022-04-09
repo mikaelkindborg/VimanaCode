@@ -174,6 +174,8 @@ void TestParseSourceCode()
   VMem* mem = MemNew(1000);
   VItem* list;
 
+  GSymbolTable = ArrayNew(20);
+
   char* code = "1 2 (((3 4) 5))";
   list = ParseSourceCode(code, mem);
   MemPrintItem(mem, list);
@@ -205,13 +207,23 @@ void TestParseSourceCode()
   MemPrintItem(mem, list);
   printf("\n");
 
+  char* code2 = "1 2 3 foo bar sayHi";
+  list = ParseSourceCode(code2, mem);
+  MemPrintItem(mem, list);
+  printf("\n");
+
+  /*
   MemMark(mem, list);
   MemSweep(mem);
   MemMark(mem, list);
+  MemSweep(mem);
+  */
   MemSweep(mem);
   MemSweep(mem);
 
   MemFree(mem);
+
+  ArrayFree(GSymbolTable);
 }
 
 void TestInterp()
@@ -292,6 +304,7 @@ void TestInterpEval()
 }
 */
 
+/*
 void TestSymbols()
 {
   VMem* mem = MemNew(10000);
@@ -313,6 +326,90 @@ void TestSymbols()
 
   MemFree(mem);
 }
+*/
+
+void TestSymbols2()
+{
+  VMem* mem = MemNew(1000);
+
+  char* s1 = "First";
+  char* s2 = "Second";
+  char* s3 = "Third";
+
+  VItem* symbols = ArrayNew(10);
+  
+  SymbolFindAdd(symbols, s1, mem);
+  SymbolFindAdd(symbols, s2, mem);
+  SymbolFindAdd(symbols, s3, mem);
+
+  int index = SymbolFindAdd(symbols, s3, mem);
+  char* s = SymbolGetString(symbols, 1, mem);
+
+  printf("Symbol index: %i %s\n", index, s);
+
+  ArrayFree(symbols);
+  MemSweep(mem);
+  MemFree(mem);
+}
+
+void TestArray()
+{
+  VItem item;
+
+  VItem* array = ArrayNew(5);
+
+  for (int i = 0; i < 20; ++ i)
+  {
+    item.data = i + 1;
+    array = ArrayGrow(array, i + 5);
+    ArraySet(array, i, &item);
+  }
+
+  for (int i = 0; i < ArrayLength(array); ++ i)
+  {
+    VItem* item = ArrayGet(array, i);
+    printf("value: %i\n", (int)item->data);
+  }
+
+  ArrayFree(array);
+}
+
+void TestArrayWithStrings()
+{
+  VMem* mem = MemNew(1000);
+
+  VItem* item;
+
+  VItem* array = ArrayNew(5);
+
+  for (int i = 0; i < 20; ++ i)
+  {
+    array = ArrayGrow(array, i + 5);
+
+    char* str = "Hej";
+    item = MemAllocItem(mem);
+    MemItemSetString(mem, item, str);
+
+    ArraySet(array, i, item);
+  }
+
+  for (int i = 0; i < ArrayLength(array); ++ i)
+  {
+    VItem* item = ArrayGet(array, i);
+    printf("value: %s\n", MemItemString(mem, item));
+  }
+
+  MemMark(mem, & array[1]);
+  MemMark(mem, & array[2]);
+  MemMark(mem, & array[3]);
+  MemSweep(mem);
+  MemSweep(mem);
+
+  ArrayFree(array);
+
+  MemFree(mem);
+}
+
 
 int main()
 {
@@ -327,8 +424,12 @@ int main()
   TestInterpEval();*/
   
   //TestSymbols();
+  //TestSymbols2();
 
   TestParseSourceCode();
+
+  //TestArray();
+  //TestArrayWithStrings();
 
   printf("DONE\n");
 

@@ -109,8 +109,9 @@ void MemDeallocItem(VMem* mem, VItem* item)
 
   -- GAllocCounter;
 
-  if (IsTypeString(item))
+  if (IsTypeStringHolder(item))
   {
+    //printf("free string: %s\n", (char*) item->data);
     SysFree((void*)ItemData(item));
   }
 
@@ -154,8 +155,10 @@ VItem* MemItemNext(VMem* mem, VItem* item)
 // Allocates a new item to hold the string
 void MemItemSetString(VMem* mem, VItem* item, char* string)
 {
+  char* s = SysAlloc(strlen(string) + 1);
+  strcpy(s, string);
   VItem* holder = MemAllocItem(mem);
-  ItemSetData(holder, (VData)string);
+  ItemSetData(holder, (VData)s);
   ItemSetType(holder, TypeStringHolder);
 
   ItemSetType(item, TypeString);
@@ -185,9 +188,10 @@ void MemMark(VMem* mem, VItem* item)
       return;
     }
 
+    //printf("mark item\n");
     ItemSetGCMark(item, 1);
 
-    if (IsTypeList(item))
+    if (IsTypeList(item) || IsTypeString(item))
     {
       VItem* child = MemItemFirst(mem, item);
       MemMark(mem, child);
