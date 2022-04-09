@@ -234,9 +234,9 @@ void MemPrintItem(VMem* mem, VItem* item)
   if (IsTypeList(item))
     MemPrintList(mem, item);
   else if (IsTypeIntNum(item))
-    printf("N%li", item->intNum);
+    printf("%li", item->intNum);
   else if (IsTypeDecNum(item))
-    printf("D%g", item->decNum);
+    printf("%g", item->decNum);
   else if (IsTypePrimFun(item))
     printf("P%li", ItemData(item));
   else if (IsTypeSymbol(item))

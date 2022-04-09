@@ -49,6 +49,8 @@ char* GetNextToken(char* p, char** next)
     ++ p;
   }
 
+  *pbuf = 0;
+
   *next = p;
 
   return GTokenBuffer;
@@ -58,6 +60,8 @@ VType TokenType(char* token)
 {
   char* p = token;
   int   dec = 0;
+
+  //printf("Token: %s\n", token);
 
   VType type = TypeSymbol;
 
@@ -83,6 +87,7 @@ VType TokenType(char* token)
     type = TypeDecNum;
 
 Exit:
+  //printf("TokenType: %i\n", type);
   return type;
 }
 

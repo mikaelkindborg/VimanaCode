@@ -242,13 +242,13 @@ void TestInterp()
   ItemSetIntNum(item, 42);
   printf("item value 1: %i\n", (int)ItemData(item));
 
-  InterpPush(interp, item);
-  VItem* item2 = InterpPop(interp);
-  printf("item value 2: %i\n", (int)ItemData(item2));
+  InterpPush(interp, *item);
+  VItem item2 = InterpPop(interp);
+  printf("item value 2: %i\n", (int)ItemData(&item2));
 
   // Tests for underflow/overflow
   // InterpPop(interp);
-  // while (1) InterpPush(interp, item);
+  // while (1) InterpPush(interp, *item);
 
   // Test callstack
   InterpPushContext(interp, item);
@@ -276,7 +276,6 @@ void TestInterp()
   InterpFree(interp);
 }
 
-/*
 void TestInterpEval()
 {
   printf("TestInterpEval\n");
@@ -290,19 +289,18 @@ void TestInterpEval()
     dataStackSize, globalVarsSize,
     callStackSize, memSize);
 
-  char* code = "N42 P1";
-  VItem* first = ParseSymbolicCode(code, interp->itemMem);
-  MemPrintList(interp->itemMem, first);
+  char* source = "1 2 3 sayHi 1 2 3 + + + + + print";
+  VItem* code = ParseSourceCode(source, interp->itemMem);
+  MemPrintList(interp->itemMem, code);
   printf("\n");
 
-  InterpEval(interp, first);
+  InterpEval(interp, code);
 
   ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
 
   // Free interpreter
   InterpFree(interp);
 }
-*/
 
 /*
 void TestSymbols()
@@ -421,15 +419,18 @@ int main()
   TestConsDealloc();
   TestParseSymbolicCode();
   TestInterp();
-  TestInterpEval();*/
+  */
   
   //TestSymbols();
   //TestSymbols2();
 
-  TestParseSourceCode();
+  //TestParseSourceCode();
 
   //TestArray();
   //TestArrayWithStrings();
+
+  //TestInterp();
+  TestInterpEval();
 
   printf("DONE\n");
 

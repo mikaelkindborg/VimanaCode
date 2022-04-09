@@ -36,6 +36,7 @@ typedef struct __VInterp
 VInterp;
 
 typedef void (*VPrimFunPtr) (VInterp*);
+VPrimFunPtr LookupPrimFunPtr(int index);
 
 VItem* GSymbolTable;
 
@@ -71,8 +72,10 @@ VInterp* InterpNew(
 
 void InterpFree(VInterp* interp)
 {
+  MemSweep(interp->itemMem);
   MemFree(interp->itemMem);
   SysFree(interp);
+  ArrayFree(GSymbolTable);
 }
 
 void InterpGC()
@@ -83,7 +86,7 @@ void InterpGC()
   //MemMark(callstack); // Walk from top and mark localvars
 }
 
-void InterpPush(VInterp* interp, VItem* item)
+void InterpPush(VInterp* interp, VItem item)
 {
   ++ interp->dataStackTop;
 
@@ -93,17 +96,18 @@ void InterpPush(VInterp* interp, VItem* item)
   }
   
   // Copy item
-  interp->dataStack[interp->dataStackTop] = *item;
+  interp->dataStack[interp->dataStackTop] = item;
 }
 
-VItem* InterpPop(VInterp* interp)
+VItem InterpPop(VInterp* interp)
 {
   if (interp->dataStackTop < 0)
   {
     GuruMeditation(DATA_STACK_IS_EMPTY);
   }
 
-  return & (interp->dataStack[interp->dataStackTop --]);
+  //return & (interp->dataStack[interp->dataStackTop --]);
+  return interp->dataStack[interp->dataStackTop --];
 }
 
 void InterpPushContext(VInterp* interp, VItem* code)
@@ -155,7 +159,7 @@ int InterpEvalSlice(register VInterp* interp, register int sliceSize);
 
 void InterpEval(VInterp* interp, VItem* code)
 {
-  InterpPushContext(interp, code);
+  InterpPushContext(interp, MemItemFirst(interp->itemMem, code));
   InterpEvalSlice(interp, 0);
   // TODO: GC
 }
@@ -189,14 +193,15 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
 
     if (NULL != instruction)
     {
-      InterpPush(interp, instruction);
-
       if (IsTypePrimFun(instruction))
       {
-        printf("primfun\n");
         int primfunId = ItemData(instruction);
-        //VPrimFunPtr fun = 
-        //fun(interp, instruction);
+        VPrimFunPtr fun = LookupPrimFunPtr(primfunId);
+        fun(interp);
+      }
+      else
+      {
+        InterpPush(interp, *instruction);
       }
 
       /*
