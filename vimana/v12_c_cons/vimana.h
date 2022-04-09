@@ -7,11 +7,11 @@
 #include "string.h"
 #include "item.h"
 #include "mem.h"
+#include "array.h"
 #include "gurumeditation.h"
 #include "interp.h"
-#include "symbols.h"
+#include "primfuns.h"
+#include "symbols2.h"
 #include "parser.h"
-
-//#include "primfun_names_gen.h"
 
 #endif

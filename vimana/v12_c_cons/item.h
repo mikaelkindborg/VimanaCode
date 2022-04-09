@@ -33,15 +33,26 @@ VItem;
   ( (ItemType(item) == ItemType(item)) && \
     (ItemData(item) == ItemData(item)) )
 
-#define TypeNone      0
-#define TypeList      1
-#define TypeSymbol    2
-#define TypePrimFun   3
-#define TypeIntNum    4
-#define TypeDecNum    5
-#define TypeString    6
+#define TypeNone         0
+#define TypeList         1
+#define TypeIntNum       2
+#define TypeDecNum       3
+#define TypeString       4
+#define TypeSymbol       5
+#define TypePrimFun      6
+#define TypeStringHolder 7
 
-#define IsPushableValue(item) (ItemType(item) < TypeSymbol)
+// Items that can be pushed without being evaluated
+#define IsPushableItem(item) (ItemType(item) < TypeSymbol)
+
+#define IsTypeNone(item)    (TypeNone == ItemType(item))
+#define IsTypeList(item)    (TypeList == ItemType(item))
+#define IsTypeIntNum(item)  (TypeIntNum == ItemType(item))
+#define IsTypeDecNum(item)  (TypeDecNum == ItemType(item))
+#define IsTypeString(item)  (TypeString == ItemType(item))
+#define IsTypeSymbol(item)  (TypeSymbol == ItemType(item))
+#define IsTypePrimFun(item) (TypePrimFun == ItemType(item))
+#define IsTypeStringHolder(item) (TypeStringHolder == ItemType(item))
 
 void ItemSetGCMark(VItem* item, VType mark)
 {
@@ -56,17 +67,6 @@ void ItemSetType(VItem* item, VType type)
 void ItemSetData(VItem* item, VData data)
 {
   item->data = data;
-}
-
-void ItemSetNext(VItem* item, VAddr addr)
-{
-  item->next = addr;
-}
-
-void ItemSetList(VItem* item, VAddr addr)
-{
-  ItemSetData(item, addr);
-  ItemSetType(item, TypeList);
 }
 
 void ItemSetSymbol(VItem* item, VIntNum symbol)
@@ -87,10 +87,10 @@ void ItemSetIntNum(VItem* item, VIntNum number)
   ItemSetType(item, TypeIntNum);
 }
 
-void ItemSetString(VItem* item, char* string)
+void ItemSetDecNum(VItem* item, VDecNum number)
 {
-  ItemSetData(item, (VData)string);
-  ItemSetType(item, TypeString);
+  ItemSetData(item, number);
+  ItemSetType(item, TypeDecNum);
 }
 
 void ItemInit(VItem* item)

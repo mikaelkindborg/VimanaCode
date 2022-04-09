@@ -17,25 +17,6 @@ Parser for source code.
 #define IsWhiteSpaceOrSeparatorOrEndOfString(c) \
   (IsWhiteSpace(c) || IsParen(c) || IsStringSeparator(c) || IsEndOfString(c))
 
-int ParseToken(char* p, char** next)
-{
-  char buf[512];
-  char* pBuf = buf;
-
-  while (!IsWhiteSpaceOrSeparatorOrEndOfString(*p))
-  {
-    *pBuf = *p;
-    ++ pBuf;
-    ++ p;
-  }
-
-  *next = p;
-
-  printf("C:%c\n", (char)buf[0]);
-
-  return (int) buf[0];
-}
-
 char* ParseString(char* p, char** next)
 {
   int   length = 0;
@@ -59,13 +40,107 @@ char* ParseString(char* p, char** next)
   return buf;
 }
 
+char* GetNextToken(char* p, char** next)
+{
+  static char buf[512];
+  char* pbuf = buf;
+
+  while (!IsWhiteSpaceOrSeparatorOrEndOfString(*p))
+  {
+    *pbuf = *p;
+    ++ pbuf;
+    ++ p;
+  }
+
+  *next = p;
+
+  //printf("C:%c\n", (char)buf[0]);
+
+  return buf;
+}
+
+VType TokenType(char* token)
+{
+  char* p = token;
+  int   dec = 0;
+
+  VType type = TypeSymbol;
+
+  // Single minus sign is not a number
+  if ( ('-' == *p) && (1 == strlen(token)) ) goto Exit;
+
+  while (!IsEndOfString(*p))
+  {
+    if (!isdigit(*p))
+    {
+      if ('.' == *p)
+        ++ dec;
+      else
+        goto Exit;
+    }
+    ++ p;
+  }
+
+  if (0 == dec)
+    type = TypeIntNum;
+  else
+  if (1 == dec)
+    type = TypeDecNum;
+
+Exit:
+  return type;
+}
+
+VItem* ParseToken(char* token, VMem* mem)
+{
+  VItem* item = MemAllocItem(mem);
+
+  VType type = TokenType(token);
+
+  if (TypeIntNum == type)
+  {
+    int intNum = strtol(token, NULL, 10);
+    ItemSetIntNum(item, intNum);
+  }
+  else
+  if (TypeDecNum == type)
+  {
+    double decNum = strtod(token, NULL);
+    ItemSetDecNum(item, decNum);
+  }
+  else
+  if (TypeSymbol == type)
+  {
+    int primFunId = LookupPrimFun(token);
+    if (primFunId > -1)
+    {
+      ItemSetPrimFun(item, primFunId);
+    }
+    else
+    {
+      GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable) + 10);
+      int symbol = SymbolFindAdd(GSymbolTable, token, mem);
+      ItemSetSymbol(item, symbol);
+    }
+  }
+  else
+  {
+    printf("Parser error\n");
+    exit(1);
+  }
+
+  return item;
+}
+
 // Returns a list item
 VItem* ParseCode(char* code, char** next, VMem* mem)
 {
   VItem* first = NULL;
-  VItem* item = NULL;
+  VItem* item  = NULL;
   VItem* prev;
-  VItem* list;
+
+  VItem* list = MemAllocItem(mem);
+  ItemSetType(list, TypeList);
   
   char* p = code;
 
@@ -98,15 +173,13 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
       char* string = ParseString(p + 1, &p);
       printf("string: %s\n", string);
       item = MemAllocItem(mem);
-      ItemSetString(item, string);
+      MemItemSetString(mem, item, string);
     }
     else
     {
       printf("parse token\n");
-      // Get next token
-      int num = ParseToken(p, &p);
-      item = MemAllocItem(mem);
-      ItemSetIntNum(item, num);
+      char* token = GetNextToken(p, &p);
+      item = ParseToken(token, mem);
     }
 
     // Add item to list
@@ -123,7 +196,6 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
   }
 
 Exit:
-  list = MemAllocItem(mem);
   MemItemSetFirst(mem, list, first);
   return list;
 }

@@ -35,7 +35,9 @@ typedef struct __VInterp
 }
 VInterp;
 
-typedef void (*VPrimFunPtr) (VInterp*, VItem*);
+typedef void (*VPrimFunPtr) (VInterp*);
+
+VItem* GSymbolTable;
 
 VInterp* InterpNew(
   int dataStackSize, int globalVarsSize, 
@@ -62,6 +64,8 @@ VInterp* InterpNew(
 
   interp->itemMem = MemNew(memSize);
 
+  GSymbolTable = ArrayNew(20);
+
   return interp;
 }
 
@@ -69,6 +73,14 @@ void InterpFree(VInterp* interp)
 {
   MemFree(interp->itemMem);
   SysFree(interp);
+}
+
+void InterpGC()
+{
+  //MemMark(interp->itemMem, GSymbolTable);
+  //MemMark(datastack);
+  //MemMark(globavars);
+  //MemMark(callstack); // Walk from top and mark localvars
 }
 
 void InterpPush(VInterp* interp, VItem* item)
@@ -179,7 +191,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     {
       InterpPush(interp, instruction);
 
-      if (TypePrimFun == ItemType(instruction))
+      if (IsTypePrimFun(instruction))
       {
         printf("primfun\n");
         int primfunId = ItemData(instruction);

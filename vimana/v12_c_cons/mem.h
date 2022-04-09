@@ -5,6 +5,10 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Memory manager for linked items.
 */
 
+// -------------------------------------------------------------
+// VMem struct
+// -------------------------------------------------------------
+
 typedef struct __VMem
 {
   VAddr firstFree;
@@ -13,6 +17,8 @@ typedef struct __VMem
   void* start;
 }
 VMem;
+
+static int GAllocCounter = 0;
 
 #define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + addr - 1) ) 
 
@@ -31,6 +37,8 @@ VMem* MemNew(int memSize)
 void MemFree(VMem* mem)
 {
   SysFree(mem);
+
+  printf("GAllocCounter: %i\n", GAllocCounter);
 }
 
 VAddr MemItemAddr(VMem* mem, VItem* item)
@@ -41,39 +49,15 @@ VAddr MemItemAddr(VMem* mem, VItem* item)
     return 0;
 }     
 
-void MemItemSetFirst(VMem* mem, VItem* list, VItem* item)
-{
-  ItemSetList(list, MemItemAddr(mem, item));
-}
-
-VItem* MemItemFirst(VMem* mem, VItem* list)
-{
-  if (ItemData(list))
-    return MemItemPointer(mem, ItemData(list));
-  else
-    return NULL;
-}
-
-void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
-{
-  item1->next = MemItemAddr(mem, item2);
-}
-
-VItem* MemItemNext(VMem* mem, VItem* item)
-{
-  if (ItemNext(item))
-  {
-    return MemItemPointer(mem, ItemNext(item));
-  }
-  else
-  {
-    return NULL;
-  }
-}
+// -------------------------------------------------------------
+// Alloc/dealloc
+// -------------------------------------------------------------
 
 VItem* MemAllocItem(VMem* mem)
 {
   VItem* item;
+
+  ++ GAllocCounter;
 
   if (mem->firstFree)
   {
@@ -118,30 +102,115 @@ VItem* MemCons(VMem* mem, VItem* value, VItem* list)
 
 void MemDeallocItem(VMem* mem, VItem* item)
 {
-  if (TypeString == ItemType(item))
+  if (IsTypeNone(item))
+  {
+    return;
+  }
+
+  -- GAllocCounter;
+
+  if (IsTypeString(item))
   {
     SysFree((void*)ItemData(item));
   }
+
+  ItemSetType(item, TypeNone);
 
   item->next = mem->firstFree;
 
   mem->firstFree = MemItemAddr(mem, item);
 }
 
+// -------------------------------------------------------------
+// Item access
+// -------------------------------------------------------------
+
+void MemItemSetFirst(VMem* mem, VItem* item, VItem* first)
+{
+  ItemSetData(item, MemItemAddr(mem, first));
+}
+
+VItem* MemItemFirst(VMem* mem, VItem* item)
+{
+  if (ItemData(item))
+    return MemItemPointer(mem, ItemData(item));
+  else
+    return NULL;
+}
+
+void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
+{
+  item1->next = MemItemAddr(mem, item2);
+}
+
+VItem* MemItemNext(VMem* mem, VItem* item)
+{
+  if (ItemNext(item))
+    return MemItemPointer(mem, ItemNext(item));
+  else
+    return NULL;
+}
+
+// Allocates a new item to hold the string
+void MemItemSetString(VMem* mem, VItem* item, char* string)
+{
+  VItem* holder = MemAllocItem(mem);
+  ItemSetData(holder, (VData)string);
+  ItemSetType(holder, TypeStringHolder);
+
+  ItemSetType(item, TypeString);
+  MemItemSetFirst(mem, item, holder);
+}
+
+char* MemItemString(VMem* mem, VItem* item)
+{
+  VItem* holder = MemItemFirst(mem, item);
+
+  if (NULL == holder) return NULL;
+  if (!IsTypeStringHolder(holder)) return NULL;
+
+  return (char*)holder->data;
+}
+
+// -------------------------------------------------------------
+// GC
+// -------------------------------------------------------------
+
+void MemMark(VMem* mem, VItem* item)
+{
+  while (item)
+  {
+    if (ItemGCMark(item))
+    {
+      return;
+    }
+
+    ItemSetGCMark(item, 1);
+
+    if (IsTypeList(item))
+    {
+      VItem* child = MemItemFirst(mem, item);
+      MemMark(mem, child);
+    }
+
+    item = MemItemNext(mem, item);
+  }
+}
+
 void MemSweep(VMem* mem)
 {
   VItem* item = mem->start;
-  
+
   while ((void*)item < mem->end)
   {
     if (ItemGCMark(item))
     {
-      printf("unmark\n");
+      //printf("unmark\n");
       ItemSetGCMark(item, 0);
     }
     else
     {
-      printf("dealloc\n");
+      //printf("dealloc\n");
       MemDeallocItem(mem, item);
     }
 
@@ -149,21 +218,25 @@ void MemSweep(VMem* mem)
   }
 }
 
+// -------------------------------------------------------------
+// Print items
+// -------------------------------------------------------------
+
 void MemPrintList(VMem* mem, VItem* first);
 
 void MemPrintItem(VMem* mem, VItem* item)
 {
   //printf("[T%i]", ItemType(item));
-  if (TypeList == ItemType(item))
+  if (IsTypeList(item))
     MemPrintList(mem, item);
-  else if (TypeIntNum == ItemType(item))
+  else if (IsTypeIntNum(item))
     printf("N%i", (int)ItemData(item));
-  else if (TypePrimFun == ItemType(item))
+  else if (IsTypePrimFun(item))
     printf("P%i", (int)ItemData(item));
-  else if (TypeSymbol == ItemType(item))
+  else if (IsTypeSymbol(item))
     printf("S%i", (int)ItemData(item));
-  else if (TypeString == ItemType(item))
-    printf("'%s'", (char*)ItemData(item));
+  else if (IsTypeString(item))
+    printf("'%s'", (char*)MemItemString(mem, item));
 }
 
 void MemPrintList(VMem* mem, VItem* list)

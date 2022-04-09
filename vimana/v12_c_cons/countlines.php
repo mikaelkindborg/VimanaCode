@@ -12,19 +12,14 @@ $numlines =
   countlines("string.h") +
   countlines("item.h") +
   countlines("mem.h") +
+  countlines("array.h") +
   countlines("gurumeditation.h") +
-  countlines("interp.h");
-  countlines("symbols.h") +
+  countlines("interp.h") + 
+  countlines("primfuns.h") +
+  countlines("symbols2.h") +
   countlines("parser.h");
 
 echo "BASE VERSION: ". ($numlines) . " lines\n";
-
-/*$numlines += 
-  countlines("symboldict.h") +
-  countlines("primfun_names_gen.h") +
-  countlines("sourceparser.h");
-
-echo "FULL VERSION: " . ($numlines) . " lines\n";*/
 
 /***
 
@@ -36,6 +31,7 @@ Version v12_c_cons:
   BASE VERSION: 654 lines (work-in-progress in interpreter)
 220409:
   BASE VERSION: 652 lines (work-in-progress, new parser, symbol lookup)
+  BASE VERSION: 1092 lines
 
 Version v11_c_minimal:
 
