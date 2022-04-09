@@ -14,7 +14,12 @@ typedef          double  VDecNum;
 
 typedef struct __VItem
 {
-  VData  data;  // value  (number or pointer)
+  union
+  {
+    VData  data;  // value  (number or pointer)
+    double decNum;
+    long   intNum;
+  };
   VType  type;  // type info and gc mark bit
   VAddr  next;  // "address" of next item
 }
@@ -83,13 +88,13 @@ void ItemSetPrimFun(VItem* item, VIntNum primFun)
 
 void ItemSetIntNum(VItem* item, VIntNum number)
 {
-  ItemSetData(item, number);
+  item->intNum = number;
   ItemSetType(item, TypeIntNum);
 }
 
 void ItemSetDecNum(VItem* item, VDecNum number)
 {
-  ItemSetData(item, number);
+  item->decNum = number;
   ItemSetType(item, TypeDecNum);
 }
 

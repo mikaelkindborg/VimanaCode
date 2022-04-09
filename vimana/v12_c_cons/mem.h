@@ -234,11 +234,13 @@ void MemPrintItem(VMem* mem, VItem* item)
   if (IsTypeList(item))
     MemPrintList(mem, item);
   else if (IsTypeIntNum(item))
-    printf("N%i", (int)ItemData(item));
+    printf("N%li", item->intNum);
+  else if (IsTypeDecNum(item))
+    printf("D%g", item->decNum);
   else if (IsTypePrimFun(item))
-    printf("P%i", (int)ItemData(item));
+    printf("P%li", ItemData(item));
   else if (IsTypeSymbol(item))
-    printf("S%i", (int)ItemData(item));
+    printf("S%li", ItemData(item));
   else if (IsTypeString(item))
     printf("'%s'", (char*)MemItemString(mem, item));
 }

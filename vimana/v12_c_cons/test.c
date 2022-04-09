@@ -207,7 +207,7 @@ void TestParseSourceCode()
   MemPrintItem(mem, list);
   printf("\n");
 
-  char* code2 = "1 2 3 foo bar sayHi";
+  char* code2 = "1 2 3.33 foo bar bar sayHi";
   list = ParseSourceCode(code2, mem);
   MemPrintItem(mem, list);
   printf("\n");
