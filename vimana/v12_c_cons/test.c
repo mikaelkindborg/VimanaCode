@@ -205,6 +205,8 @@ void TestParseSourceCode()
   MemPrintItem(mem, list);
   printf("\n");
 
+  MemSweep(mem);
+
   MemFree(mem);
 }
 

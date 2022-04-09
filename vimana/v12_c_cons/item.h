@@ -43,7 +43,7 @@ VItem;
 
 #define IsPushableValue(item) (ItemType(item) < TypeSymbol)
 
-static inline void ItemSetGCMark(VItem* item, VType mark)
+void ItemSetGCMark(VItem* item, VType mark)
 {
   item->type = (item->type & ~1) | (mark & 1);
 }

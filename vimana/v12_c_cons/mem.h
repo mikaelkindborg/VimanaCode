@@ -118,9 +118,35 @@ VItem* MemCons(VMem* mem, VItem* value, VItem* list)
 
 void MemDeallocItem(VMem* mem, VItem* item)
 {
+  if (TypeString == ItemType(item))
+  {
+    SysFree((void*)ItemData(item));
+  }
+
   item->next = mem->firstFree;
 
   mem->firstFree = MemItemAddr(mem, item);
+}
+
+void MemSweep(VMem* mem)
+{
+  VItem* item = mem->start;
+  
+  while ((void*)item < mem->end)
+  {
+    if (ItemGCMark(item))
+    {
+      printf("unmark\n");
+      ItemSetGCMark(item, 0);
+    }
+    else
+    {
+      printf("dealloc\n");
+      MemDeallocItem(mem, item);
+    }
+
+    ++ item;
+  }
 }
 
 void MemPrintList(VMem* mem, VItem* first);
