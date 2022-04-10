@@ -5,37 +5,77 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Lookup table for symbols. Used for parsing and printing.
 */
 
-// Finds or adds a symbol and returns symbol list and symbol index
-int SymbolFindAdd(VItem* array, char* string, VMem* mem)
+VItem* SymbolTableNew()
 {
-  VItem* item;
-  int    index;
+  return ArrayNew(20);
+}
 
-  //printf("array length: %i\n", ArrayLength(array));
+void SymbolTableFree(VItem* array)
+{
+  for (int i = 0; i < ArrayLength(array); ++ i)
+  {
+    VItem* item = ArrayGet(array, i);
+    StrFree(item->string);
+  }
+
+  ArrayFree(array);
+}
+
+// Finds or adds a symbol and returns symbol list and symbol index
+int SymbolTableFindAdd(VItem* array, char* string)
+{
+  int index;
 
   for (index = 0; index < ArrayLength(array); ++ index)
   {
-    item = ArrayGet(array, index);
-    char* str = (char*) MemItemString(mem, item);
-    if (StrEquals(string, str))
+    VItem* item = ArrayGet(array, index);
+    if (StrEquals(item->string, string))
     {
       return index; // Found existing symbol
     }
   }
 
   // Symbol not found, add it
-  item = MemAllocItem(mem);
-  MemItemSetString(mem, item, string);
-  ArraySet(array, index, item);
+  VItem newItem;
+  newItem.string = StrCopy(string);
+  ArraySet(array, index, &newItem);
   
-  //printf("Added to symbol table: %s\n", (char*)MemItemString(mem, item));
-
   return index;
 }
 
 // Returns symbol string 
-char* SymbolGetString(VItem* array, int index, VMem* mem)
+char* SymbolTableGetString(VItem* array, int index)
 {
   VItem* item = ArrayGet(array, index);
-  return MemItemString(mem, item);
+  return item->string;
+}
+
+// Global symbol table
+
+VItem* GSymbolTable = NULL;
+
+void GSymbolTableInit()
+{
+  if (NULL == GSymbolTable) GSymbolTable = SymbolTableNew();
+}
+
+void GSymbolTableFree()
+{
+  if (NULL != GSymbolTable)
+  {
+    SymbolTableFree(GSymbolTable);
+    GSymbolTable = NULL;
+  }
+}
+
+int GSymbolTableFindAdd(char* string)
+{
+  GSymbolTableInit();
+  GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable) + 10);
+  return SymbolTableFindAdd(GSymbolTable, string);
+}
+
+char* GSymbolTableGetString(int index)
+{
+  return SymbolTableGetString(GSymbolTable, index);
 }

@@ -118,15 +118,13 @@ VItem* ParseToken(char* token, VMem* mem)
     }
     else
     {
-      GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable) + 10);
-      int symbol = SymbolFindAdd(GSymbolTable, token, mem);
+      int symbol = GSymbolTableFindAdd(token);
       ItemSetSymbol(item, symbol);
     }
   }
   else
   {
-    printf("Parser error\n");
-    exit(1);
+    GURU(PARSER_TOKEN_TYPE_ERROR);
   }
 
   return item;

@@ -9,7 +9,7 @@ Basic string functions.
 
 char* StrCopy(char* str)
 {
-  char* newStr = SysAlloc(strlen(str + 1));
+  char* newStr = SysAlloc(strlen(str) + 1);
   strcpy(newStr, str);
   return newStr;
 }

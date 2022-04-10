@@ -11,7 +11,7 @@ void PrimFun_sayHi(VInterp* interp)
 void PrimFun_print(VInterp* interp)
 {
   VItem item = InterpPop(interp);
-  MemPrintItem(interp->itemMem, &item);
+  MemPrintItem(interp->mem, &item);
   PrintNewLine();
 }
 
@@ -20,11 +20,23 @@ void PrimFun_printStack(VInterp* interp)
   printf("print stack!\n");
 }
 
+/*
+primitive_add()
+{
+  VObj* num2 = InterpPop();
+  VObj* num1 = InterpPop();
+  VObj* result = InterpAlloc();
+  int sum = num1->intNum + num2->intNum;
+  ObjSetIntNum(result, sum);
+  InterpPush(result);
+}
+*/
+
 void PrimFun_plus(VInterp* interp)
 {
   VItem b = InterpPop(interp);
   VItem a = InterpPop(interp);
-  a.data += b.data;
+  a.intNum += b.intNum;
   InterpPush(interp, a);
 }
 

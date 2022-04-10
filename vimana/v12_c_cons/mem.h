@@ -72,8 +72,8 @@ VItem* MemAllocItem(VMem* mem)
     //printf("mem->size: %i\n", mem->size);
     if (!(memUsed < (mem->size + sizeof(VItem))))
     {
-      printf("[GURU_MEDITATION: -1] OUT OF MEMORY\n");
-      //exit(0); 
+      printf("[GURU_MEDITATION: -1] MEM OUT OF MEMORY\n");
+      // GURU(MEM_OUT_OF_MEMORY);
       return NULL;
     }
     //printf("Free space available\n");
@@ -111,8 +111,7 @@ void MemDeallocItem(VMem* mem, VItem* item)
 
   if (IsTypeStringHolder(item))
   {
-    //printf("free string: %s\n", (char*) item->data);
-    SysFree((void*)ItemData(item));
+    StrFree(item->string);
   }
 
   ItemSetType(item, TypeNone);
@@ -128,13 +127,13 @@ void MemDeallocItem(VMem* mem, VItem* item)
 
 void MemItemSetFirst(VMem* mem, VItem* item, VItem* first)
 {
-  ItemSetData(item, MemItemAddr(mem, first));
+  item->addr = MemItemAddr(mem, first);
 }
 
 VItem* MemItemFirst(VMem* mem, VItem* item)
 {
-  if (ItemData(item))
-    return MemItemPointer(mem, ItemData(item));
+  if (item->addr)
+    return MemItemPointer(mem, item->addr);
   else
     return NULL;
 }
@@ -155,10 +154,9 @@ VItem* MemItemNext(VMem* mem, VItem* item)
 // Allocates a new item to hold the string
 void MemItemSetString(VMem* mem, VItem* item, char* string)
 {
-  char* s = SysAlloc(strlen(string) + 1);
-  strcpy(s, string);
+  char* s = StrCopy(string);
   VItem* holder = MemAllocItem(mem);
-  ItemSetData(holder, (VData)s);
+  holder->string = s;
   ItemSetType(holder, TypeStringHolder);
 
   ItemSetType(item, TypeString);
@@ -172,7 +170,7 @@ char* MemItemString(VMem* mem, VItem* item)
   if (NULL == holder) return NULL;
   if (!IsTypeStringHolder(holder)) return NULL;
 
-  return (char*)holder->data;
+  return holder->string;
 }
 
 // -------------------------------------------------------------
@@ -238,9 +236,9 @@ void MemPrintItem(VMem* mem, VItem* item)
   else if (IsTypeDecNum(item))
     printf("%g", item->decNum);
   else if (IsTypePrimFun(item))
-    printf("P%li", ItemData(item));
+    printf("P%li", item->intNum);
   else if (IsTypeSymbol(item))
-    printf("S%li", ItemData(item));
+    printf("S%li", item->intNum);
   else if (IsTypeString(item))
     printf("'%s'", (char*)MemItemString(mem, item));
 }

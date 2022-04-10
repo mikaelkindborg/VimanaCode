@@ -20,7 +20,7 @@ typedef struct __VInterp
 {
   int       run; 
 
-  VMem*     itemMem;
+  VMem*     mem;
 
   int       dataStackSize;
   int       dataStackTop;
@@ -38,9 +38,9 @@ VInterp;
 typedef void (*VPrimFunPtr) (VInterp*);
 VPrimFunPtr LookupPrimFunPtr(int index);
 
-VItem* GSymbolTable;
+//#define InterpMem(interp) ((interp)->mem)
 
-VInterp* InterpNew(
+VInterp* InterpNewWithSize(
   int dataStackSize, int globalVarsSize, 
   int callStackSize, int memSize)
 {
@@ -63,24 +63,31 @@ VInterp* InterpNew(
   interp->callStackSize = callStackSize;
   interp->callStackTop = NULL;
 
-  interp->itemMem = MemNew(memSize);
-
-  GSymbolTable = ArrayNew(20);
+  interp->mem = MemNew(memSize);
 
   return interp;
 }
 
+VInterp* InterpNew()
+{
+  return InterpNewWithSize(
+    100, // dataStackSize, 
+    100, // globalVarsSize,
+    100, // callStackSize
+    1000 // memSize
+  );
+}
+
 void InterpFree(VInterp* interp)
 {
-  MemSweep(interp->itemMem);
-  MemFree(interp->itemMem);
+  MemSweep(interp->mem);
+  MemFree(interp->mem);
   SysFree(interp);
-  ArrayFree(GSymbolTable);
 }
 
 void InterpGC()
 {
-  //MemMark(interp->itemMem, GSymbolTable);
+  //MemMark(interp->mem, GSymbolTable);
   //MemMark(datastack);
   //MemMark(globavars);
   //MemMark(callstack); // Walk from top and mark localvars
@@ -92,7 +99,7 @@ void InterpPush(VInterp* interp, VItem item)
 
   if (interp->dataStackTop >= interp->dataStackSize)
   {
-    GuruMeditation(DATA_STACK_OVERFLOW);
+    GURU(DATA_STACK_OVERFLOW);
   }
   
   // Copy item
@@ -103,7 +110,7 @@ VItem InterpPop(VInterp* interp)
 {
   if (interp->dataStackTop < 0)
   {
-    GuruMeditation(DATA_STACK_IS_EMPTY);
+    GURU(DATA_STACK_IS_EMPTY);
   }
 
   //return & (interp->dataStack[interp->dataStackTop --]);
@@ -123,7 +130,7 @@ void InterpPushContext(VInterp* interp, VItem* code)
     void* maxSize = interp->callStack + (interp->callStackSize * sizeof(VContext));
     if ((void*)next + sizeof(VContext) >= maxSize)
     {
-      GuruMeditation(CALL_STACK_OVERFLOW);
+      GURU(CALL_STACK_OVERFLOW);
     }
     next->prev = interp->callStackTop;
     interp->callStackTop = next;
@@ -137,29 +144,27 @@ void InterpPopContext(VInterp* interp)
 {
   if (NULL == interp->callStackTop)
   {
-    GuruMeditation(CALL_STACK_IS_EMPTY);
+    GURU(CALL_STACK_IS_EMPTY);
   }
 
   interp->callStackTop = interp->callStackTop->prev;
 }
 
-/*
-primitive_add()
+void InterpSetGlobalVar(VInterp* interp, int index, VItem* item)
 {
-  VObj* num2 = InterpPop();
-  VObj* num1 = InterpPop();
-  VObj* result = InterpAlloc();
-  int sum = num1->data + num2->data;
-  ObjSetIntNum(result, sum);
-  InterpPush(result);
+  if (index < interp->globalVarsSize)
+    (interp->globalVars)[index] = *item;
+  else
+    GURU(GLOBALVARS_OVERFLOW);
 }
-*/
+
+#define InterpGetGlobalVar(interp,index) (((interp)->globalVars)[index])
 
 int InterpEvalSlice(register VInterp* interp, register int sliceSize);
 
 void InterpEval(VInterp* interp, VItem* code)
 {
-  InterpPushContext(interp, MemItemFirst(interp->itemMem, code));
+  InterpPushContext(interp, MemItemFirst(interp->mem, code));
   InterpEvalSlice(interp, 0);
   // TODO: GC
 }
@@ -193,9 +198,10 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
 
     if (NULL != instruction)
     {
+     // IsPushableItem(item)
       if (IsTypePrimFun(instruction))
       {
-        int primfunId = ItemData(instruction);
+        int primfunId = instruction->intNum;
         VPrimFunPtr fun = LookupPrimFunPtr(primfunId);
         fun(interp);
       }
@@ -205,13 +211,6 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
       }
 
       /*
-      if (TypePrimFun == ItemType(instruction))
-      {
-        primFun = ItemData(instruction);
-        #include "primfuns_gen.h"
-        goto Next;
-      }
-
       if (TypeSymbol == ItemType(instruction))
       {
         HÄR ÄR JAG
@@ -253,7 +252,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
 
 Next:
     interp->callStackTop->instruction = 
-      MemItemNext(interp->itemMem, instruction);
+      MemItemNext(interp->mem, instruction);
   }
   // while
 

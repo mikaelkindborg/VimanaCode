@@ -131,7 +131,7 @@ char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
           ItemSetSymbol(item, number);
         }
         else
-          GuruMeditation(CODE_PARSER_UNDEFINED_TYPE);
+          GURU(CODE_PARSER_UNDEFINED_TYPE);
       }
 
       prev = item;
