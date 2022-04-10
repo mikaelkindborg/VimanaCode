@@ -31,16 +31,16 @@ VItem* AllocMaxItems(VMem* mem)
 {
   // Alloc and cons items until out of memory
 
-  printf("Alloc max 1\n");
+  printf("Alloc max items\n");
   VItem* first = MemAllocItem(mem);
-  first->intNum = 1;
+  ItemSetIntNum(first, 1);
   VItem* item = first;
   while (1)
   {
   printf("Alloc loop\n");
     VItem* next = MemAllocItem(mem);
     if (NULL == next) break;
-    next->intNum = item->intNum + 1;
+    ItemSetIntNum(next, item->intNum + 1);
     MemItemSetNext(mem, item, next);
     item = next;
   }
@@ -378,8 +378,8 @@ int main()
   TestPrintBinary();
   TestItemAttributes();
   */
-  TestAllocDealloc();
-  //TestConsDealloc();
+  //TestAllocDealloc();
+  TestConsDealloc();
 
   //TestParseSymbolicCode();
   
