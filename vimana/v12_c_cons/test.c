@@ -37,7 +37,6 @@ VItem* AllocMaxItems(VMem* mem)
   VItem* item = first;
   while (1)
   {
-  printf("Alloc loop\n");
     VItem* next = MemAllocItem(mem);
     if (NULL == next) break;
     ItemSetIntNum(next, item->intNum + 1);
@@ -50,21 +49,21 @@ VItem* AllocMaxItems(VMem* mem)
 VItem* AllocMaxItemsUsingCons(VMem* mem)
 {
   // Alloc and cons items until out of memory
-  VItem* first = MemAllocItem(mem);
   int counter = 1;
-  VItem* list = NULL;
+  VItem* first = NULL;
   while (1)
   {
     VItem item;
     ItemSetIntNum(&item, counter ++);
-    VItem* cons = MemCons(mem, &item, list);
+    VItem* cons = MemCons(mem, &item, first);
     if (NULL == cons) break;
-    list = cons;
+    first = cons;
   }
-  return list;
+  return first;
 }
 
-void DeallocItems(VItem* first, VMem* mem)
+/*
+void X_DeallocItems(VItem* first, VMem* mem)
 {
   VItem* item = first;
   while (1)
@@ -77,7 +76,6 @@ void DeallocItems(VItem* first, VMem* mem)
   }
 }
 
-/*
 void xPrintItems(VItem* first, VMem* mem)
 {
   VAddr addr = MemItemAddr(mem, first);
@@ -115,6 +113,8 @@ int CountItems(VItem* first, VMem* mem)
 
 void TestAllocDealloc()
 {
+  printf("--- TestAllocDealloc\n");
+
   VMem* mem = MemNew(10);
 
   printf("Alloc max\n");
@@ -123,14 +123,15 @@ void TestAllocDealloc()
   int numItems = CountItems(first, mem);
   printf("Num items: %i\n", numItems);
 
-  DeallocItems(first, mem);
+  MemSweep(mem);
 
   printf("Alloc max again\n");
   first = AllocMaxItems(mem);
   PrintItems(first, mem);
   int numItems2 = CountItems(first, mem);
   printf("Num items: %i\n", numItems2);
-  DeallocItems(first, mem);
+
+  MemSweep(mem);
 
   ShouldHold("Allocated items should be equal", numItems == numItems2);
 
@@ -139,7 +140,9 @@ void TestAllocDealloc()
 
 void TestConsDealloc()
 {
-  VMem* mem = MemNew(100);
+  printf("--- TestConsDealloc\n");
+
+  VMem* mem = MemNew(10);
 
   VItem* first = AllocMaxItemsUsingCons(mem);
   printf("ONE\n");
@@ -149,13 +152,14 @@ void TestConsDealloc()
   int numItems = CountItems(first, mem);
   printf("Num items: %i\n", numItems);
 
-  DeallocItems(first, mem);
+  MemSweep(mem);
 
   first = AllocMaxItems(mem);
   PrintItems(first, mem);
   int numItems2 = CountItems(first, mem);
   printf("Num items: %i\n", numItems2);
-  DeallocItems(first, mem);
+
+  MemSweep(mem);
 
   ShouldHold("Allocated items should be equal", numItems == numItems2);
 

@@ -57,8 +57,6 @@ VItem* MemAllocItem(VMem* mem)
 {
   VItem* item;
 
-  ++ GAllocCounter;
-
   if (mem->firstFree)
   {
     //printf("Free item available\n");
@@ -83,20 +81,10 @@ VItem* MemAllocItem(VMem* mem)
 
   ItemInit(item);
 
-  return item;
-}
+  ++ GAllocCounter;
 
-// Conses value into list (another item)
-// Allocs and returns a new item
-VItem* MemCons(VMem* mem, VItem* value, VItem* list)
-{
-  VItem* item = MemAllocItem(mem);
-  if (!item) return NULL;
-  *item = *value;
-  if (NULL == list)
-    item->next = 0;
-  else
-    item->next = MemItemAddr(mem, list);
+  printf("MemAllocItem: GAllocCounter: %i\n", GAllocCounter);
+
   return item;
 }
 
@@ -104,10 +92,13 @@ void MemDeallocItem(VMem* mem, VItem* item)
 {
   if (IsTypeNone(item))
   {
+    printf("MemDeallocItem: IsTypeNone\n");
     return;
   }
 
   -- GAllocCounter;
+
+  printf("MemDeallocItem: GAllocCounter: %i\n", GAllocCounter);
 
   if (IsTypeStringHolder(item))
   {
@@ -119,6 +110,20 @@ void MemDeallocItem(VMem* mem, VItem* item)
   item->next = mem->firstFree;
 
   mem->firstFree = MemItemAddr(mem, item);
+}
+
+// Conses value into list (another item)
+// Allocs and returns a new item
+VItem* MemCons(VMem* mem, VItem* value, VItem* next)
+{
+  VItem* item = MemAllocItem(mem);
+  if (!item) return NULL;
+  *item = *value;
+  if (NULL == next)
+    item->next = 0;
+  else
+    item->next = MemItemAddr(mem, next);
+  return item;
 }
 
 // -------------------------------------------------------------
