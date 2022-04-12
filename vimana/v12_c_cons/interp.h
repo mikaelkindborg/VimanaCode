@@ -93,7 +93,7 @@ void InterpGC()
   //MemMark(callstack); // Walk from top and mark localvars
 }
 
-void InterpPush(VInterp* interp, VItem item)
+void InterpPush(VInterp* interp, VItem *item)
 {
   ++ interp->dataStackTop;
 
@@ -103,18 +103,17 @@ void InterpPush(VInterp* interp, VItem item)
   }
   
   // Copy item
-  interp->dataStack[interp->dataStackTop] = item;
+  interp->dataStack[interp->dataStackTop] = *item;
 }
 
-VItem InterpPop(VInterp* interp)
+VItem* InterpPop(VInterp* interp)
 {
   if (interp->dataStackTop < 0)
   {
     GURU(DATA_STACK_IS_EMPTY);
   }
 
-  //return & (interp->dataStack[interp->dataStackTop --]);
-  return interp->dataStack[interp->dataStackTop --];
+  return & (interp->dataStack[interp->dataStackTop --] );
 }
 
 void InterpPushContext(VInterp* interp, VItem* code)
@@ -142,6 +141,8 @@ void InterpPushContext(VInterp* interp, VItem* code)
 
 void InterpPopContext(VInterp* interp)
 {
+  printf("POP CONTEXT\n");
+
   if (NULL == interp->callStackTop)
   {
     GURU(CALL_STACK_IS_EMPTY);
@@ -158,7 +159,7 @@ void InterpSetGlobalVar(VInterp* interp, int index, VItem* item)
     GURU(GLOBALVARS_OVERFLOW);
 }
 
-#define InterpGetGlobalVar(interp,index) (((interp)->globalVars)[index])
+#define InterpGetGlobalVar(interp, index) (& (((interp)->globalVars)[index]))
 
 int InterpEvalSlice(register VInterp* interp, register int sliceSize);
 
@@ -198,7 +199,6 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
 
     if (NULL != instruction)
     {
-     // IsPushableItem(item)
       if (IsTypePrimFun(instruction))
       {
         int primfunId = instruction->intNum;
@@ -206,53 +206,57 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         fun(interp);
       }
       else
+      if (IsTypePushable(instruction))
       {
-        InterpPush(interp, *instruction);
+        InterpPush(interp, instruction);
       }
-
-      /*
-      if (TypeSymbol == ItemType(instruction))
+      else
+      if (IsTypeSymbol(instruction))
       {
-        HÄR ÄR JAG
-        // Find symbol value in global env.
-        // Symbols evaluate to themselves if unbound.
-        VIndex index = ItemSymbol(element);
-        symbolValue = InterpGetGlobalVar(interp, index);
-        if (NULL == symbolValue)
+        VItem* value = InterpGetGlobalVar(interp, instruction->intNum);
+        //if (!IsTypeNone(value))
+        if (IsTypeFun(value))
         {
-          // Symbol is unbound, push the symbol itself.
-          InterpPush(interp, element);
+          InterpPushContext(interp, MemItemFirst(interp->mem, value));
           goto Next;
         }
-
-        // If it is a function, call it.
-        if (IsFun(symbolValue))
+        else
         {
-          InterpPushContext(interp, ItemList(symbolValue));
-          goto Next;
+          InterpPush(interp, value);
         }
-
-        // If not a function, push the symbol value.
-        InterpPush(interp, symbolValue);
       }
-      */
+      else
+      {
+        printf("Instruction type: %i\n", ItemType(instruction)); 
+        GURU(INTERP_UNEXPECTED_TYPE);
+      }
     }
     else
     {
-      // Pop stackframe.
       InterpPopContext(interp);
 
       // Exit if this was the last stackframe.
       if (NULL == interp->callStackTop)
       {
+        printf("EXIT INTERP LOOP\n");
         interp->run = FALSE;
         goto Exit;
       }
     }
 
-Next:
+    printf("STACK: ");
+    for (int i = 0; i <= interp->dataStackTop; ++ i)
+    {
+      MemPrintItem(interp->mem, &(interp->dataStack[i]));
+      printf(" ");
+    }
+    printf("\n");
+
     interp->callStackTop->instruction = 
-      MemItemNext(interp->mem, instruction);
+      MemItemNext(interp->mem, interp->callStackTop->instruction);
+
+Next:;
+
   }
   // while
 

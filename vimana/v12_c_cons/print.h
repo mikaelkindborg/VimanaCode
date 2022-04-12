@@ -5,10 +5,11 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Print functions.
 */
 
-#define Print(str)      fputs(str, stdout)
-#define PrintNum(num)   printf("%ld", (long)(num))
-#define PrintChar(c)    printf("%c",  (char)(c))
-#define PrintNewLine()  printf("\n")
+#define Print(str)        fputs(str, stdout)
+#define PrintNum(num)     printf("%ld", (long)(num))
+#define PrintDecNum(num)  printf("%g", (double)(num))
+#define PrintChar(c)      printf("%c",  (char)(c))
+#define PrintNewLine()    printf("\n")
 
 void PrintBinaryUInt(unsigned int n)
 {

@@ -10,8 +10,8 @@ void PrimFun_sayHi(VInterp* interp)
 
 void PrimFun_print(VInterp* interp)
 {
-  VItem item = InterpPop(interp);
-  MemPrintItem(interp->mem, &item);
+  VItem* item = InterpPop(interp);
+  MemPrintItem(interp->mem, item);
   PrintNewLine();
 }
 
@@ -34,10 +34,27 @@ primitive_add()
 
 void PrimFun_plus(VInterp* interp)
 {
-  VItem b = InterpPop(interp);
-  VItem a = InterpPop(interp);
-  a.intNum += b.intNum;
-  InterpPush(interp, a);
+  VItem* b = InterpPop(interp);
+  VItem* a = InterpPop(interp);
+  VItem result;
+  ItemInit(&result);
+  result.intNum = a->intNum + b->intNum;
+  ItemSetType(&result, TypeIntNum);
+  InterpPush(interp, &result);
+}
+
+void PrimFun_setglobal(VInterp* interp)
+{
+  VItem* list = InterpPop(interp);
+  VItem* value = InterpPop(interp);
+  VItem* symbol = MemItemFirst(interp->mem, list);
+  InterpSetGlobalVar(interp, symbol->intNum, value);
+}
+
+void PrimFun_funify(VInterp* interp)
+{
+  VItem* list = & (interp->dataStack[interp->dataStackTop]);
+  ItemSetType(list, TypeFun);
 }
 
 typedef struct __PrimFunEntry
@@ -53,6 +70,8 @@ PrimFunEntry GPrimFunTable[] =
   { "print", PrimFun_print },
   { "printStack", PrimFun_printStack },
   { "+", PrimFun_plus },
+  { "setglobal", PrimFun_setglobal },
+  { "funify", PrimFun_funify },
   { "__sentinel__", NULL }
 };
 

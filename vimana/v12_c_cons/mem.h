@@ -83,7 +83,7 @@ VItem* MemAllocItem(VMem* mem)
 
   ++ GAllocCounter;
 
-  printf("MemAllocItem: GAllocCounter: %i\n", GAllocCounter);
+  //printf("MemAllocItem: GAllocCounter: %i\n", GAllocCounter);
 
   return item;
 }
@@ -98,7 +98,7 @@ void MemDeallocItem(VMem* mem, VItem* item)
 
   -- GAllocCounter;
 
-  printf("MemDeallocItem: GAllocCounter: %i\n", GAllocCounter);
+  //printf("MemDeallocItem: GAllocCounter: %i\n", GAllocCounter);
 
   if (IsTypeStringHolder(item))
   {
@@ -194,7 +194,7 @@ void MemMark(VMem* mem, VItem* item)
     //printf("mark item\n");
     ItemSetGCMark(item, 1);
 
-    if (IsTypeList(item) || IsTypeString(item))
+    if (IsTypeList(item) || IsTypeFun(item) || IsTypeString(item))
     {
       VItem* child = MemItemFirst(mem, item);
       MemMark(mem, child);
@@ -246,6 +246,11 @@ void MemPrintItem(VMem* mem, VItem* item)
     printf("S%li", item->intNum);
   else if (IsTypeString(item))
     printf("'%s'", (char*)MemItemString(mem, item));
+  else if (IsTypeFun(item))
+  {
+    printf("[FUN] ");
+    MemPrintList(mem, item);
+  }
 }
 
 void MemPrintList(VMem* mem, VItem* list)

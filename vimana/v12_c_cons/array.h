@@ -44,3 +44,11 @@ void ArraySet(VItem* array, int index, VItem* value)
   
   array[index + 1] = *value;
 }
+
+void ArrayPrint(VItem* array, VMem* mem)
+{
+  for (int i = 0; i < ArrayLength(array); ++ i)
+  {
+    MemPrintItem(mem, ArrayGet(array, i));
+  }
+}

@@ -33,6 +33,8 @@ Version v12_c_cons:
   BASE VERSION: 652 lines (work-in-progress, new parser, symbol lookup)
   BASE VERSION: 1092 lines
   BASE VERSION: 1132 lines (interpeter can add and print numbers)
+220412:
+  BASE VERSION: 1221 lines (global variables, print stack)
 
 Version v11_c_minimal:
 

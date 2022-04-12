@@ -5,6 +5,8 @@
 
 void TestPrintBinary()
 {
+  printf("---> TestPrintBinary\n");
+
   PrintBinaryUInt(0x80000000);
   PrintBinaryUInt(0x1 << 1);
   PrintBinaryUInt(0x2 >> 1);
@@ -12,6 +14,8 @@ void TestPrintBinary()
 
 void TestItemAttributes()
 {
+  printf("---> TestItemAttributes\n");
+
   VMem* mem = MemNew(100);
 
   VItem* item = MemAllocItem(mem);
@@ -113,7 +117,7 @@ int CountItems(VItem* first, VMem* mem)
 
 void TestAllocDealloc()
 {
-  printf("--- TestAllocDealloc\n");
+  printf("---> TestAllocDealloc\n");
 
   VMem* mem = MemNew(10);
 
@@ -140,7 +144,7 @@ void TestAllocDealloc()
 
 void TestConsDealloc()
 {
-  printf("--- TestConsDealloc\n");
+  printf("---> TestConsDealloc\n");
 
   VMem* mem = MemNew(10);
 
@@ -180,6 +184,8 @@ void TestParseSymbolicCode()
 
 void TestParseSourceCode()
 {
+  printf("---> TestParseSourceCode\n");
+
   VMem* mem = MemNew(1000);
   VItem* list;
 
@@ -233,71 +239,10 @@ void TestParseSourceCode()
   GSymbolTableFree();
 }
 
-void TestInterp()
-{
-  VInterp* interp = InterpNew();
-
-  // Test data stack
-  VItem* item = MemAllocItem(interp->mem);
-  ItemSetIntNum(item, 42);
-  printf("item value 1: %li\n", item->intNum);
-
-  InterpPush(interp, *item);
-  VItem item2 = InterpPop(interp);
-  printf("item value 2: %li\n", item2.intNum);
-
-  // Tests for underflow/overflow
-  // InterpPop(interp);
-  // while (1) InterpPush(interp, *item);
-
-  // Test callstack
-  InterpPushContext(interp, item);
-  printf("code : %li\n", interp->callStackTop->code->intNum);
-  printf("instr: %li\n", interp->callStackTop->instruction->intNum);
-
-  InterpPushContext(interp, item);
-  printf("code : %li\n", interp->callStackTop->code->intNum);
-  printf("instr: %li\n", interp->callStackTop->instruction->intNum);
-
-  InterpPopContext(interp);
-  ShouldHold("CALLSTACK TOP SHOULD NOT BE NULL", NULL != interp->callStackTop);
-
-  printf("code : %li\n", interp->callStackTop->code->intNum);
-  printf("instr: %li\n", interp->callStackTop->instruction->intNum);
-
-  InterpPopContext(interp);
-  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
-
-  // Tests for underflow/overflow
-  // InterpPopContext(interp);
-  // while (1) InterpPushContext(interp, item);
-
-  // Free interpreter
-  InterpFree(interp);
-}
-
-void TestInterpEval()
-{
-  printf("TestInterpEval\n");
-
-  VInterp* interp = InterpNew();
-
-  char* source = "FOO 1 2 3 sayHi 1 2 3 + + + + + print";
-  VItem* code = ParseSourceCode(source, interp->mem);
-  MemPrintList(interp->mem, code);
-  printf("\n");
-
-  InterpEval(interp, code);
-
-  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
-
-  InterpFree(interp);
-
-  GSymbolTableFree();
-}
-
 void TestSymbols()
 {
+  printf("---> TestSymbols\n");
+
   char* s1 = "First";
   char* s2 = "Second";
   char* s3 = "Third";
@@ -318,6 +263,8 @@ void TestSymbols()
 
 void TestArray()
 {
+  printf("---> TestArray\n");
+
   VItem item;
 
   VItem* array = ArrayNew(5);
@@ -340,6 +287,8 @@ void TestArray()
 
 void TestArrayWithStrings()
 {
+  printf("---> TestArrayWithStrings\n");
+
   VMem* mem = MemNew(1000);
 
   VItem* item;
@@ -374,27 +323,109 @@ void TestArrayWithStrings()
   MemFree(mem);
 }
 
+void TestInterp()
+{
+  printf("---> TestInterp\n");
+
+  VInterp* interp = InterpNew();
+
+  // Test data stack
+  VItem* item = MemAllocItem(interp->mem);
+  ItemSetIntNum(item, 42);
+  printf("item value 1: %li\n", item->intNum);
+
+  InterpPush(interp, item);
+  VItem* item2 = InterpPop(interp);
+  printf("item value 2: %li\n", item2->intNum);
+
+  // Tests for underflow/overflow
+  // InterpPop(interp);
+  // while (1) InterpPush(interp, *item);
+
+  // Test callstack
+  InterpPushContext(interp, item);
+  printf("code : %li\n", interp->callStackTop->code->intNum);
+  printf("instr: %li\n", interp->callStackTop->instruction->intNum);
+
+  InterpPushContext(interp, item);
+  printf("code : %li\n", interp->callStackTop->code->intNum);
+  printf("instr: %li\n", interp->callStackTop->instruction->intNum);
+
+  InterpPopContext(interp);
+  ShouldHold("CALLSTACK TOP SHOULD NOT BE NULL", NULL != interp->callStackTop);
+
+  printf("code : %li\n", interp->callStackTop->code->intNum);
+  printf("instr: %li\n", interp->callStackTop->instruction->intNum);
+
+  InterpPopContext(interp);
+  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
+
+  // Tests for underflow/overflow
+  // InterpPopContext(interp);
+  // while (1) InterpPushContext(interp, item);
+
+  // Free interpreter
+  InterpFree(interp);
+}
+
+void TestInterpEval()
+{
+  printf("---> TestInterpEval\n");
+
+  VInterp* interp = InterpNew();
+
+  char* source = "1 2 3 sayHi 1 2 3 + + + + + (SUM)setglobal SUM print";
+  VItem* code = ParseSourceCode(source, interp->mem);
+  MemPrintList(interp->mem, code);
+  printf("\n");
+
+  InterpEval(interp, code);
+
+  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
+
+  InterpFree(interp);
+
+  GSymbolTableFree();
+}
+
+void TestInterpEvalFun()
+{
+  printf("---> TestInterpEvalFun\n");
+
+  VInterp* interp = InterpNew();
+
+  char* source = "(+ print)funify(ADD)setglobal 1 2 ADD sayHi ('My name is Ruma' print)funify(RUMA)setglobal (RUMA RUMA)funify(RUMA2)setglobal RUMA2";
+  VItem* code = ParseSourceCode(source, interp->mem);
+  MemPrintList(interp->mem, code);
+  printf("\n");
+
+  InterpEval(interp, code);
+
+  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
+
+  InterpFree(interp);
+
+  GSymbolTableFree();
+}
 
 int main()
 {
-  printf("Hi World\n");
+  printf("Welcome to the wonderful world of Vimana\n");
 /*
   TestPrintBinary();
   TestItemAttributes();
-  */
-  //TestAllocDealloc();
+  TestAllocDealloc();
   TestConsDealloc();
-
   //TestParseSymbolicCode();
-  
-  /*
   TestSymbols();
   TestParseSourceCode();
   TestArray();
   TestArrayWithStrings();
   TestInterp();
+  */
   TestInterpEval();
-*/
+  TestInterpEvalFun();
+
   printf("DONE\n");
 
   PrintMemStat();
