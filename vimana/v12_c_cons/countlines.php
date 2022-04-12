@@ -35,6 +35,7 @@ Version v12_c_cons:
   BASE VERSION: 1132 lines (interpeter can add and print numbers)
 220412:
   BASE VERSION: 1221 lines (global variables, print stack)
+  BASE VERSION: 1240 lines (functions, tail calls)
 
 Version v11_c_minimal:
 

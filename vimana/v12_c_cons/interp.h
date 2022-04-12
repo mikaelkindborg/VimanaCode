@@ -116,14 +116,15 @@ VItem* InterpPop(VInterp* interp)
   return & (interp->dataStack[interp->dataStackTop --] );
 }
 
-void InterpPushContext(VInterp* interp, VItem* code)
+void InterpPushContext(VInterp* interp, VItem* code, int newContext)
 {
   if (NULL == interp->callStackTop)
   {
     interp->callStackTop = interp->callStack;
     interp->callStackTop->prev = NULL;
   }
-  else
+  else 
+  if (newContext)
   {
     VContext* next = (void*)interp->callStackTop + sizeof(VContext);
     void* maxSize = interp->callStack + (interp->callStackSize * sizeof(VContext));
@@ -165,7 +166,7 @@ int InterpEvalSlice(register VInterp* interp, register int sliceSize);
 
 void InterpEval(VInterp* interp, VItem* code)
 {
-  InterpPushContext(interp, MemItemFirst(interp->mem, code));
+  InterpPushContext(interp, MemItemFirst(interp->mem, code), 1);
   InterpEvalSlice(interp, 0);
   // TODO: GC
 }
@@ -217,7 +218,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         //if (!IsTypeNone(value))
         if (IsTypeFun(value))
         {
-          InterpPushContext(interp, MemItemFirst(interp->mem, value));
+          InterpPushContext(interp, MemItemFirst(interp->mem, value), instruction->next);
           goto Next;
         }
         else

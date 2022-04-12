@@ -343,11 +343,11 @@ void TestInterp()
   // while (1) InterpPush(interp, *item);
 
   // Test callstack
-  InterpPushContext(interp, item);
+  InterpPushContext(interp, item, 1);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
-  InterpPushContext(interp, item);
+  InterpPushContext(interp, item, 1);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
@@ -362,7 +362,7 @@ void TestInterp()
 
   // Tests for underflow/overflow
   // InterpPopContext(interp);
-  // while (1) InterpPushContext(interp, item);
+  // while (1) InterpPushContext(interp, item, 1);
 
   // Free interpreter
   InterpFree(interp);
@@ -408,6 +408,26 @@ void TestInterpEvalFun()
   GSymbolTableFree();
 }
 
+void TestInterpEvalFunInfiniteTail()
+{
+  printf("---> TestInterpEvalFunInfiniteTail\n");
+
+  VInterp* interp = InterpNew();
+
+  char* source = "('Hi Ruma' print RUMA)funify(RUMA)setglobal RUMA";
+  VItem* code = ParseSourceCode(source, interp->mem);
+  MemPrintList(interp->mem, code);
+  printf("\n");
+
+  InterpEval(interp, code);
+
+  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
+
+  InterpFree(interp);
+
+  GSymbolTableFree();
+}
+
 int main()
 {
   printf("Welcome to the wonderful world of Vimana\n");
@@ -423,8 +443,9 @@ int main()
   TestArrayWithStrings();
   TestInterp();
   */
-  TestInterpEval();
-  TestInterpEvalFun();
+  //TestInterpEval();
+  //TestInterpEvalFun();
+  TestInterpEvalFunInfiniteTail();
 
   printf("DONE\n");
 
