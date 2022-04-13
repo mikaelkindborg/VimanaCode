@@ -24,8 +24,8 @@ void SysFree(void* obj)
 
 void PrintMemStat()
 {
-  Print("SysAlloc: "); PrintNum(GMemAllocCounter); PrintNewLine();
-  Print("SysFree:  "); PrintNum(GMemFreeCounter);  PrintNewLine();
+  Print("SysAlloc: "); PrintIntNum(GMemAllocCounter); PrintNewLine();
+  Print("SysFree:  "); PrintIntNum(GMemFreeCounter);  PrintNewLine();
 }
 
 #else

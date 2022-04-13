@@ -34,9 +34,13 @@ VItem;
 #define ItemGCMark(item) ( ((item)->type) &  1 )
 #define ItemNext(item)   ( (item)->next )
 
+// Fix for double
 #define ItemEquals(item1, item2) \
-  ( (ItemType(item) == ItemType(item)) && \
-    (ItemIntNum(item) == ItemIntNum(item)) )
+  ( (ItemType(item1) == ItemType(item2)) && \
+    (ItemIntNum(item1) == ItemIntNum(item2)) )
+
+// Y danderyd 11 maj 12.30 arbterapeut
+// 08 123 567 72
 
 #define TypeNone          0
 #define TypeList          1

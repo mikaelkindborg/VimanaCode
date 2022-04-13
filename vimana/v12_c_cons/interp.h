@@ -116,6 +116,11 @@ VItem* InterpPop(VInterp* interp)
   return & (interp->dataStack[interp->dataStackTop --] );
 }
 
+VItem* InterpTop(VInterp* interp)
+{
+  return & (interp->dataStack[interp->dataStackTop] );
+}
+
 void InterpPushContext(VInterp* interp, VItem* code, int newContext)
 {
   if (NULL == interp->callStackTop)

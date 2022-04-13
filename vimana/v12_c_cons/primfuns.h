@@ -6,19 +6,47 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 void PrimFun_sayHi(VInterp* interp)
 {
   printf("Hi World!\n");
-}
+}//
 
 void PrimFun_print(VInterp* interp)
 {
   VItem* item = InterpPop(interp);
   MemPrintItem(interp->mem, item);
   PrintNewLine();
-}
+}//
 
 void PrimFun_printStack(VInterp* interp)
 {
   printf("print stack!\n");
-}
+}//
+
+void PrimFun_eval(VInterp* interp)
+{
+  // pop list
+  // push context with env flag
+}//
+
+void PrimFun_setglobal(VInterp* interp)
+{
+  VItem* list = InterpPop(interp);
+  VItem* value = InterpPop(interp);
+  VItem* symbol = MemItemFirst(interp->mem, list);
+  InterpSetGlobalVar(interp, symbol->intNum, value);
+}//
+
+void PrimFun_funify(VInterp* interp)
+{
+  VItem* list = & (interp->dataStack[interp->dataStackTop]);
+  ItemSetType(list, TypeFun);
+}//
+
+void PrimFun_loadfile(VInterp* interp)
+{
+  // pop string
+  // data = read file
+  // list = parse data
+  // eval list (in own context)
+}//
 
 /*
 primitive_add()
@@ -31,8 +59,8 @@ primitive_add()
   InterpPush(result);
 }
 */
-
-void PrimFun_plus(VInterp* interp)
+/*
+PrimFun_plus(VInterp* interp)
 {
   VItem* b = InterpPop(interp);
   VItem* a = InterpPop(interp);
@@ -42,20 +70,43 @@ void PrimFun_plus(VInterp* interp)
   ItemSetType(&result, TypeIntNum);
   InterpPush(interp, &result);
 }
+*/
 
-void PrimFun_setglobal(VInterp* interp)
+void PrimFun_plus(VInterp* interp)
 {
-  VItem* list = InterpPop(interp);
-  VItem* value = InterpPop(interp);
-  VItem* symbol = MemItemFirst(interp->mem, list);
-  InterpSetGlobalVar(interp, symbol->intNum, value);
-}
+  VItem* b = InterpPop(interp);
+  VItem* a = InterpTop(interp);
+  a->intNum += b->intNum;
+}//
 
-void PrimFun_funify(VInterp* interp)
+void PrimFun_minus(VInterp* interp)
 {
-  VItem* list = & (interp->dataStack[interp->dataStackTop]);
-  ItemSetType(list, TypeFun);
-}
+  VItem* b = InterpPop(interp);
+  VItem* a = InterpTop(interp);
+  a->intNum -= b->intNum;
+}//
+
+void PrimFun_times(VInterp* interp)
+{
+  VItem* b = InterpPop(interp);
+  VItem* a = InterpTop(interp);
+  a->intNum *= b->intNum;
+}//
+
+void PrimFun_div(VInterp* interp)
+{
+  VItem* b = InterpPop(interp);
+  VItem* a = InterpTop(interp);
+  a->intNum /= b->intNum;
+}//
+
+void PrimFun_eq(VInterp* interp)
+{
+  VItem* b = InterpPop(interp);
+  VItem* a = InterpTop(interp);
+  a->intNum = ItemEquals(a, b);
+  ItemSetType(a, TypeIntNum);
+}//
 
 typedef struct __PrimFunEntry
 {
@@ -66,13 +117,7 @@ PrimFunEntry;
 
 PrimFunEntry GPrimFunTable[] = 
 {
-  { "sayHi", PrimFun_sayHi },
-  { "print", PrimFun_print },
-  { "printStack", PrimFun_printStack },
-  { "+", PrimFun_plus },
-  { "setglobal", PrimFun_setglobal },
-  { "funify", PrimFun_funify },
-  { "__sentinel__", NULL }
+  #include "primfuntable.h"
 };
 
 int LookupPrimFun(char* name)
