@@ -10,6 +10,7 @@ Memory allocation tracking.
 int GMemAllocCounter = 0;
 int GMemFreeCounter = 0;
 
+// TODO: Zero-initialize allocated buffer
 void* SysAlloc(int size)
 {
   ++ GMemAllocCounter;

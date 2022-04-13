@@ -121,28 +121,32 @@ VItem* InterpTop(VInterp* interp)
   return & (interp->dataStack[interp->dataStackTop] );
 }
 
-void InterpPushContext(VInterp* interp, VItem* code, int newContext)
+void InterpPushContext(VInterp* interp, VItem* code)
 {
   if (NULL == interp->callStackTop)
   {
     interp->callStackTop = interp->callStack;
     interp->callStackTop->prev = NULL;
   }
-  else 
-  if (newContext)
+  else
   {
-    VContext* next = (void*)interp->callStackTop + sizeof(VContext);
-    void* maxSize = interp->callStack + (interp->callStackSize * sizeof(VContext));
-    if ((void*)next + sizeof(VContext) >= maxSize)
+    // Push new context if this is not the last instruction
+    if (interp->callStackTop->instruction)
     {
-      GURU(CALL_STACK_OVERFLOW);
+      VContext* next = (void*)interp->callStackTop + sizeof(VContext);
+      void* maxSize = interp->callStack + (interp->callStackSize * sizeof(VContext));
+      if ((void*)next + sizeof(VContext) >= maxSize)
+      {
+        GURU(CALL_STACK_OVERFLOW);
+      }
+      next->prev = interp->callStackTop;
+      interp->callStackTop = next;
     }
-    next->prev = interp->callStackTop;
-    interp->callStackTop = next;
   }
 
+  // Set first instruction in new frame
   interp->callStackTop->code = code;
-  interp->callStackTop->instruction = code;
+  interp->callStackTop->instruction = MemItemFirst(interp->mem, code);
 }
 
 void InterpPopContext(VInterp* interp)
@@ -171,7 +175,7 @@ int InterpEvalSlice(register VInterp* interp, register int sliceSize);
 
 void InterpEval(VInterp* interp, VItem* code)
 {
-  InterpPushContext(interp, MemItemFirst(interp->mem, code), 1);
+  InterpPushContext(interp, code);
   InterpEvalSlice(interp, 0);
   // TODO: GC
 }
@@ -205,6 +209,10 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
 
     if (NULL != instruction)
     {
+      // Advance instruction for next loop
+      interp->callStackTop->instruction = 
+        MemItemNext(interp->mem, interp->callStackTop->instruction);
+
       if (IsTypePrimFun(instruction))
       {
         int primfunId = instruction->intNum;
@@ -223,8 +231,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         //if (!IsTypeNone(value))
         if (IsTypeFun(value))
         {
-          InterpPushContext(interp, MemItemFirst(interp->mem, value), instruction->next);
-          goto Next;
+          InterpPushContext(interp, value);
         }
         else
         {
@@ -258,8 +265,6 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     }
     printf("\n");
 
-    interp->callStackTop->instruction = 
-      MemItemNext(interp->mem, interp->callStackTop->instruction);
 
 Next:;
 

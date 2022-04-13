@@ -22,8 +22,27 @@ void PrimFun_printStack(VInterp* interp)
 
 void PrimFun_eval(VInterp* interp)
 {
-  // pop list
-  // push context with env flag
+  VItem* codeBlock = InterpPop(interp);
+  InterpPushContext(interp, codeBlock);
+}//
+
+void PrimFun_iftrue(VInterp* interp)
+{
+  VItem* trueBlock = InterpPop(interp);
+  VItem* trueOrFalse = InterpPop(interp);
+  if (trueOrFalse->intNum)
+    InterpPushContext(interp, trueBlock);
+}//
+
+void PrimFun_ifelse(VInterp* interp)
+{
+  VItem* falseBlock = InterpPop(interp);
+  VItem* trueBlock = InterpPop(interp);
+  VItem* trueOrFalse = InterpPop(interp);
+  if (trueOrFalse->intNum)
+    InterpPushContext(interp, trueBlock);
+  else
+    InterpPushContext(interp, falseBlock);
 }//
 
 void PrimFun_setglobal(VInterp* interp)
@@ -98,6 +117,12 @@ void PrimFun_div(VInterp* interp)
   VItem* b = InterpPop(interp);
   VItem* a = InterpTop(interp);
   a->intNum /= b->intNum;
+}//
+
+void PrimFun_not(VInterp* interp)
+{
+  VItem* a = InterpTop(interp);
+  a->intNum = ! a->intNum;
 }//
 
 void PrimFun_eq(VInterp* interp)

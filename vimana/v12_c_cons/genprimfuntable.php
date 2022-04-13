@@ -3,6 +3,23 @@
 // The generated is included in file "primfuns.h"
 // The table is a lookup table for primfuns.
 
+function SubstituteName($name)
+{
+  $subst =
+  [
+    "plus" => "+",
+    "minus" => "-",
+    "times" => "*",
+    "div" => "/",
+  ];
+
+  if (isset($subst[$name])):
+    return $subst[$name];
+  else:
+    return $name;
+  endif;
+}
+
 function ReadCode()
 {
   return file_get_contents(__DIR__ . "/primfuns.h");
@@ -17,10 +34,10 @@ function GenerateTable($code)
 {
   $table = "";
 
-  preg_match_all('/PrimFun_(.+)\(VInterp/', $code, $result);
+  preg_match_all('/void PrimFun_(.+)\(VInterp/', $code, $result);
 
   foreach ($result[1] as $name):
-    $table .= '  { "' . $name . '", PrimFun_' . $name .  " },\n";
+    $table .= '  { "' . SubstituteName($name) . '", PrimFun_' . $name .  " },\n";
   endforeach;
   $table .= '  { "__sentinel__", NULL }' . "\n";
 

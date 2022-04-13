@@ -343,11 +343,11 @@ void TestInterp()
   // while (1) InterpPush(interp, *item);
 
   // Test callstack
-  InterpPushContext(interp, item, 1);
+  InterpPushContext(interp, item);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
-  InterpPushContext(interp, item, 1);
+  InterpPushContext(interp, item);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
@@ -362,7 +362,7 @@ void TestInterp()
 
   // Tests for underflow/overflow
   // InterpPopContext(interp);
-  // while (1) InterpPushContext(interp, item, 1);
+  // while (1) InterpPushContext(interp, item);
 
   // Free interpreter
   InterpFree(interp);
@@ -394,7 +394,8 @@ void TestInterpEvalFun()
 
   VInterp* interp = InterpNew();
 
-  char* source = "(+ print)funify(ADD)setglobal 1 2 ADD sayHi ('My name is Ruma' print)funify(RUMA)setglobal (RUMA RUMA)funify(RUMA2)setglobal RUMA2";
+  //char* source = "(+ print)funify(ADD)setglobal 1 2 ADD sayHi ('My name is Ruma' print)funify(RUMA)setglobal (RUMA RUMA)funify(RUMA2)setglobal RUMA2";
+  char* source = "(88 print 1 2 + print) eval";
   VItem* code = ParseSourceCode(source, interp->mem);
   MemPrintList(interp->mem, code);
   printf("\n");
@@ -444,8 +445,8 @@ int main()
   TestInterp();
   */
   //TestInterpEval();
-  //TestInterpEvalFun();
-  TestInterpEvalFunInfiniteTail();
+  TestInterpEvalFun();
+  //TestInterpEvalFunInfiniteTail();
 
   printf("DONE\n");
 
