@@ -9,14 +9,16 @@ $numlines =
   countlines("base.h") +
   countlines("print.h") +
   countlines("alloc.h") +
+  countlines("file.h") +
   countlines("string.h") +
   countlines("item.h") +
   countlines("mem.h") +
   countlines("array.h") +
   countlines("gurumeditation.h") +
+  countlines("symbols2.h") +
   countlines("interp.h") + 
   countlines("primfuns.h") +
-  countlines("symbols2.h") +
+  countlines("primfuntable.h") +
   countlines("parser.h");
 
 echo "BASE VERSION: ". ($numlines) . " lines\n";
@@ -36,6 +38,9 @@ Version v12_c_cons:
 220412:
   BASE VERSION: 1221 lines (global variables, print stack)
   BASE VERSION: 1240 lines (functions, tail calls)
+220414:
+  BASE VERSION: 1334 lines (very nice interpeter, more primitives)
+  BASE VERSION: 1389 lines (with file functions)
 
 Version v11_c_minimal:
 

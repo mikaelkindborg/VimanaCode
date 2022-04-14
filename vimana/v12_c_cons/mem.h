@@ -255,7 +255,7 @@ void MemPrintItem(VMem* mem, VItem* item)
 
 void MemPrintList(VMem* mem, VItem* list)
 {
-  printf("(");
+  PrintChar('(');
 
   int printSpace = FALSE;
   VItem* item = MemItemFirst(mem, list);
@@ -268,5 +268,14 @@ void MemPrintList(VMem* mem, VItem* list)
     printSpace = TRUE;
   }
 
-  printf(")");
+  PrintChar(')');
+}
+
+void MemPrintArray(VMem* mem, VItem* array, int numItems)
+{
+  for (int i = 0; i < numItems; ++ i)
+  {
+    MemPrintItem(mem, &(array[i]));
+    PrintChar(' ');
+  }
 }

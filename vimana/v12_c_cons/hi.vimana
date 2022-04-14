@@ -1,0 +1,2 @@
+('bar' print 'foo' print) funify (bar) setglobal
+1 2 + print print

@@ -10,7 +10,7 @@ void PrimFun_sayHi(VInterp* interp)
 
 void PrimFun_print(VInterp* interp)
 {
-  VItem* item = InterpPop(interp);
+  VItem* item = InterpStackPop(interp);
   MemPrintItem(interp->mem, item);
   PrintNewLine();
 }//
@@ -22,33 +22,33 @@ void PrimFun_printStack(VInterp* interp)
 
 void PrimFun_eval(VInterp* interp)
 {
-  VItem* codeBlock = InterpPop(interp);
-  InterpPushContext(interp, codeBlock);
+  VItem* codeBlock = InterpStackPop(interp);
+  InterpStackPushContext(interp, codeBlock);
 }//
 
 void PrimFun_iftrue(VInterp* interp)
 {
-  VItem* trueBlock = InterpPop(interp);
-  VItem* trueOrFalse = InterpPop(interp);
+  VItem* trueBlock = InterpStackPop(interp);
+  VItem* trueOrFalse = InterpStackPop(interp);
   if (trueOrFalse->intNum)
-    InterpPushContext(interp, trueBlock);
+    InterpStackPushContext(interp, trueBlock);
 }//
 
 void PrimFun_ifelse(VInterp* interp)
 {
-  VItem* falseBlock = InterpPop(interp);
-  VItem* trueBlock = InterpPop(interp);
-  VItem* trueOrFalse = InterpPop(interp);
+  VItem* falseBlock = InterpStackPop(interp);
+  VItem* trueBlock = InterpStackPop(interp);
+  VItem* trueOrFalse = InterpStackPop(interp);
   if (trueOrFalse->intNum)
-    InterpPushContext(interp, trueBlock);
+    InterpStackPushContext(interp, trueBlock);
   else
-    InterpPushContext(interp, falseBlock);
+    InterpStackPushContext(interp, falseBlock);
 }//
 
 void PrimFun_setglobal(VInterp* interp)
 {
-  VItem* list = InterpPop(interp);
-  VItem* value = InterpPop(interp);
+  VItem* list = InterpStackPop(interp);
+  VItem* value = InterpStackPop(interp);
   VItem* symbol = MemItemFirst(interp->mem, list);
   InterpSetGlobalVar(interp, symbol->intNum, value);
 }//
@@ -70,65 +70,65 @@ void PrimFun_loadfile(VInterp* interp)
 /*
 primitive_add()
 {
-  VObj* num2 = InterpPop();
-  VObj* num1 = InterpPop();
+  VObj* num2 = InterpStackPop();
+  VObj* num1 = InterpStackPop();
   VObj* result = InterpAlloc();
   int sum = num1->intNum + num2->intNum;
   ObjSetIntNum(result, sum);
-  InterpPush(result);
+  InterpStackPush(result);
 }
 */
 /*
 PrimFun_plus(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
-  VItem* a = InterpPop(interp);
+  VItem* b = InterpStackPop(interp);
+  VItem* a = InterpStackPop(interp);
   VItem result;
   ItemInit(&result);
   result.intNum = a->intNum + b->intNum;
   ItemSetType(&result, TypeIntNum);
-  InterpPush(interp, &result);
+  InterpStackPush(interp, &result);
 }
 */
 
 void PrimFun_plus(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
-  VItem* a = InterpTop(interp);
+  VItem* b = InterpStackPop(interp);
+  VItem* a = InterpStackTop(interp);
   a->intNum += b->intNum;
 }//
 
 void PrimFun_minus(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
-  VItem* a = InterpTop(interp);
+  VItem* b = InterpStackPop(interp);
+  VItem* a = InterpStackTop(interp);
   a->intNum -= b->intNum;
 }//
 
 void PrimFun_times(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
-  VItem* a = InterpTop(interp);
+  VItem* b = InterpStackPop(interp);
+  VItem* a = InterpStackTop(interp);
   a->intNum *= b->intNum;
 }//
 
 void PrimFun_div(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
-  VItem* a = InterpTop(interp);
+  VItem* b = InterpStackPop(interp);
+  VItem* a = InterpStackTop(interp);
   a->intNum /= b->intNum;
 }//
 
 void PrimFun_not(VInterp* interp)
 {
-  VItem* a = InterpTop(interp);
+  VItem* a = InterpStackTop(interp);
   a->intNum = ! a->intNum;
 }//
 
 void PrimFun_eq(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
-  VItem* a = InterpTop(interp);
+  VItem* b = InterpStackPop(interp);
+  VItem* a = InterpStackTop(interp);
   a->intNum = ItemEquals(a, b);
   ItemSetType(a, TypeIntNum);
 }//

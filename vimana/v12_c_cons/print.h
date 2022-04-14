@@ -10,6 +10,7 @@ Print functions.
 #define PrintDecNum(num)  printf("%g", (double)(num))
 #define PrintChar(c)      printf("%c",  (char)(c))
 #define PrintNewLine()    printf("\n")
+#define PrintLine(str)    printf("%s\n", str)
 
 void PrintBinaryUInt(unsigned int n)
 {

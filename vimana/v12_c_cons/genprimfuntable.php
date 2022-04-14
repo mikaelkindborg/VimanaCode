@@ -7,10 +7,10 @@ function SubstituteName($name)
 {
   $subst =
   [
-    "plus" => "+",
+    "plus"  => "+",
     "minus" => "-",
     "times" => "*",
-    "div" => "/",
+    "div"   => "/",
   ];
 
   if (isset($subst[$name])):

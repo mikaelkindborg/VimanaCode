@@ -8,13 +8,15 @@ Interpreter data structures and functions.
 typedef struct __VContext
 {
   struct __VContext* prev;
-  VItem* code;
-  VItem* instruction;
-  // VItem* localVars;
+  VItem*             code;
+  VItem*             instruction;
+//VItem*             localVars;
 }
 VContext;
 
 // Mind control for hackers
+
+// mindfulness = ta kontroll över sitt tänkande, sina tankar
 
 typedef struct __VInterp
 {
@@ -93,7 +95,7 @@ void InterpGC()
   //MemMark(callstack); // Walk from top and mark localvars
 }
 
-void InterpPush(VInterp* interp, VItem *item)
+void InterpStackPush(VInterp* interp, VItem *item)
 {
   ++ interp->dataStackTop;
 
@@ -106,7 +108,7 @@ void InterpPush(VInterp* interp, VItem *item)
   interp->dataStack[interp->dataStackTop] = *item;
 }
 
-VItem* InterpPop(VInterp* interp)
+VItem* InterpStackPop(VInterp* interp)
 {
   if (interp->dataStackTop < 0)
   {
@@ -116,12 +118,17 @@ VItem* InterpPop(VInterp* interp)
   return & (interp->dataStack[interp->dataStackTop --] );
 }
 
-VItem* InterpTop(VInterp* interp)
+VItem* InterpStackAt(VInterp* interp, int indexFromEnd)
 {
-  return & (interp->dataStack[interp->dataStackTop] );
+  return & (interp->dataStack[interp->dataStackTop - indexFromEnd]);
 }
 
-void InterpPushContext(VInterp* interp, VItem* code)
+VItem* InterpStackTop(VInterp* interp)
+{
+  return InterpStackAt(interp, 0);
+}
+
+void InterpStackPushContext(VInterp* interp, VItem* code)
 {
   if (NULL == interp->callStackTop)
   {
@@ -134,11 +141,14 @@ void InterpPushContext(VInterp* interp, VItem* code)
     if (interp->callStackTop->instruction)
     {
       VContext* next = (void*)interp->callStackTop + sizeof(VContext);
+
       void* maxSize = interp->callStack + (interp->callStackSize * sizeof(VContext));
+
       if ((void*)next + sizeof(VContext) >= maxSize)
       {
         GURU(CALL_STACK_OVERFLOW);
       }
+
       next->prev = interp->callStackTop;
       interp->callStackTop = next;
     }
@@ -149,9 +159,9 @@ void InterpPushContext(VInterp* interp, VItem* code)
   interp->callStackTop->instruction = MemItemFirst(interp->mem, code);
 }
 
-void InterpPopContext(VInterp* interp)
+void InterpStackPopContext(VInterp* interp)
 {
-  printf("POP CONTEXT\n");
+  //printf("POP CONTEXT\n");
 
   if (NULL == interp->callStackTop)
   {
@@ -175,7 +185,7 @@ int InterpEvalSlice(register VInterp* interp, register int sliceSize);
 
 void InterpEval(VInterp* interp, VItem* code)
 {
-  InterpPushContext(interp, code);
+  InterpStackPushContext(interp, code);
   InterpEvalSlice(interp, 0);
   // TODO: GC
 }
@@ -195,13 +205,13 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
 
   while (interp->run)
   {
-    // Track slices if a sliceSize is specified.
+    // Count slices if a sliceSize is specified.
     if (sliceSize)
     {
       if (sliceSize > sliceCounter)
         ++ sliceCounter;
       else
-        goto Exit;
+        goto Exit; // Exit loop
     }
 
     // Evaluate current instruction.
@@ -222,7 +232,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
       else
       if (IsTypePushable(instruction))
       {
-        InterpPush(interp, instruction);
+        InterpStackPush(interp, instruction);
       }
       else
       if (IsTypeSymbol(instruction))
@@ -231,11 +241,11 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         //if (!IsTypeNone(value))
         if (IsTypeFun(value))
         {
-          InterpPushContext(interp, value);
+          InterpStackPushContext(interp, value);
         }
         else
         {
-          InterpPush(interp, value);
+          InterpStackPush(interp, value);
         }
       }
       else
@@ -246,28 +256,21 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     }
     else
     {
-      InterpPopContext(interp);
+      InterpStackPopContext(interp);
 
       // Exit if this was the last stackframe.
       if (NULL == interp->callStackTop)
       {
         printf("EXIT INTERP LOOP\n");
         interp->run = FALSE;
-        goto Exit;
+        goto Exit; // Exit loop
       }
     }
-
+/*
     printf("STACK: ");
-    for (int i = 0; i <= interp->dataStackTop; ++ i)
-    {
-      MemPrintItem(interp->mem, &(interp->dataStack[i]));
-      printf(" ");
-    }
+    MemPrintArray(interp->mem, interp->dataStack, interp->dataStackTop + 1);
     printf("\n");
-
-
-Next:;
-
+*/
   }
   // while
 

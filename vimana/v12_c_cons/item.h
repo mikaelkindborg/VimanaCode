@@ -44,20 +44,21 @@ VItem;
 #define TypeDecNum        3
 #define TypeString        4
 #define TypeStringHolder  5
-#define TypeSymbol        6
+#define TypeSymbol        6 // Pushable types must be before TypeSymbol
 #define TypePrimFun       7
 #define TypeFun           8
 
-// Items that can be pushed without being evaluated
-#define IsTypePushable(item) (ItemType(item) < TypeSymbol)
-#define IsTypeNone(item)     (TypeNone == ItemType(item))
-#define IsTypeList(item)     (TypeList == ItemType(item))
-#define IsTypeIntNum(item)   (TypeIntNum == ItemType(item))
-#define IsTypeDecNum(item)   (TypeDecNum == ItemType(item))
-#define IsTypeString(item)   (TypeString == ItemType(item))
-#define IsTypeSymbol(item)   (TypeSymbol == ItemType(item))
-#define IsTypePrimFun(item)  (TypePrimFun == ItemType(item))
-#define IsTypeFun(item)      (TypeFun == ItemType(item))
+// Pushable items are types that can be pushed to the data stack 
+// without being evaluated
+#define IsTypePushable(item)     (ItemType(item) < TypeSymbol)
+#define IsTypeNone(item)         (TypeNone == ItemType(item))
+#define IsTypeList(item)         (TypeList == ItemType(item))
+#define IsTypeIntNum(item)       (TypeIntNum == ItemType(item))
+#define IsTypeDecNum(item)       (TypeDecNum == ItemType(item))
+#define IsTypeString(item)       (TypeString == ItemType(item))
+#define IsTypeSymbol(item)       (TypeSymbol == ItemType(item))
+#define IsTypePrimFun(item)      (TypePrimFun == ItemType(item))
+#define IsTypeFun(item)          (TypeFun == ItemType(item))
 #define IsTypeStringHolder(item) (TypeStringHolder == ItemType(item))
 
 void ItemSetGCMark(VItem* item, VType mark)
