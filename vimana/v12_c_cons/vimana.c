@@ -11,11 +11,11 @@ int main(int numargs, char* args[])
   int interativeMode = FALSE;
   char* fileName = NULL;
 
-  if (numargs < 1)
+  if (numargs < 2)
   {
     PrintLine("-----------------------------------------------------------");
     PrintLine("Welcome to the wonderful world of Vimana");
-    PrintLine("-----------------------------------------------------------");
+    PrintNewLine();
     PrintLine("You can run Vimana in interactive mode with live reload of");
     PrintLine("the source file, or you can evaluate a source file once.");
     PrintNewLine();
