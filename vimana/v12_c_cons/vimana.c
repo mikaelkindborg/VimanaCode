@@ -54,10 +54,12 @@ int main(int numargs, char* args[])
 
   time_t lastUpdate = 0;
 
+  int sourceSize = 0;
+  int prevSourceSize = 0;
+
   do
   {
-    // Eval source file
-
+    // Read source file
     char* source = FileRead(fileName);
     if (NULL == source) 
     {
@@ -65,11 +67,25 @@ int main(int numargs, char* args[])
       break;
     }
     
+    // If in interactive mode evaluate added code if source has grown
+    if (GInteractiveMode)
+    {
+      sourceSize = strlen(source);
+      if (prevSourceSize && (sourceSize > prevSourceSize))
+      {
+        source = source + (prevSourceSize);
+    printf ("eval: %s\n", source);
+      }
+      prevSourceSize = sourceSize;
+    }
+
+    // Evaluate code
     VItem* code = ParseSourceCode(source, interp->mem);
     InterpEval(interp, code);
 
-    // Handle interactive mode
+    // TODO Dealloc source
 
+    // Handle interactive mode
     if (GInteractiveMode)
     {
       printf("Interactive mode (quit with CTRL-C)\n");
@@ -85,11 +101,10 @@ int main(int numargs, char* args[])
 
         if (FILE_STAT_MODIFIED == result)
         {
-          printf("FILE_STAT_MODIFIED\n");
           break;
         }
 
-        sleep(1);
+        usleep(100000);
       }
     }
   }

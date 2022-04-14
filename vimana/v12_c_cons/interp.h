@@ -261,7 +261,6 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
       // Exit if this was the last stackframe.
       if (NULL == interp->callStackTop)
       {
-        printf("EXIT INTERP LOOP\n");
         interp->run = FALSE;
         goto Exit; // Exit loop
       }
