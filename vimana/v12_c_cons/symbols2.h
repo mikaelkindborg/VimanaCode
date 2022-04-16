@@ -53,15 +53,20 @@ char* SymbolTableGetString(VItem* array, int index)
 // Global symbol table
 
 VItem* GSymbolTable = NULL;
+int    GSymbolTableCounter = 0;
 
 void GSymbolTableInit()
 {
   if (NULL == GSymbolTable) GSymbolTable = SymbolTableNew();
+
+  ++ GSymbolTableCounter;
 }
 
-void GSymbolTableFree()
+void GSymbolTableRelease()
 {
-  if (NULL != GSymbolTable)
+  if (GSymbolTableCounter > 0) -- GSymbolTableCounter;
+
+  if (0 == GSymbolTableCounter && NULL != GSymbolTable)
   {
     SymbolTableFree(GSymbolTable);
     GSymbolTable = NULL;
@@ -70,7 +75,6 @@ void GSymbolTableFree()
 
 int GSymbolTableFindAdd(char* string)
 {
-  GSymbolTableInit();
   GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable) + 10);
   return SymbolTableFindAdd(GSymbolTable, string);
 }

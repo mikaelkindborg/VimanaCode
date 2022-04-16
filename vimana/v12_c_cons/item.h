@@ -6,20 +6,25 @@ Items are like conses in Lisp. They hold a value and
 an address to the next item.
 */
 
+#define PRIMFUN_PTR
+
 typedef unsigned int     VType;
 typedef unsigned int     VAddr;
 typedef          long    VIntNum;
 typedef          double  VDecNum;
 
+typedef struct __VInterp VInterp;
+typedef void (*VPrimFunPtr) (VInterp*);
+
 typedef struct __VItem
 {
   union
   {
-    VAddr   addr;
-    VIntNum intNum;
-    VDecNum decNum;
-    // primfun ptr
-    char*   string;
+    VAddr       addr;
+    VIntNum     intNum;
+    VDecNum     decNum;
+    VPrimFunPtr primFunPtr;
+    char*       string;
   };
   VType  type;  // type info and gc mark bit
   VAddr  next;  // "address" of next item
@@ -70,23 +75,26 @@ void ItemSetType(VItem* item, VType type)
 {
   item->type = (type << 1) | (item->type & 1);
 }
-/*
-void ItemSetAddr(VItem* item, VAddr addr)
-{
-  item->addr = addr;
-}
-*/
+
 void ItemSetSymbol(VItem* item, VIntNum symbol)
 {
   item->intNum = symbol;
   ItemSetType(item, TypeSymbol);
 }
 
+#ifdef PRIMFUN_PTR
+void ItemSetPrimFun(VItem* item, VPrimFunPtr primFun)
+{
+  item->primFunPtr = primFun;
+  ItemSetType(item, TypePrimFun);
+}
+#else
 void ItemSetPrimFun(VItem* item, VIntNum primFun)
 {
   item->intNum = primFun;
   ItemSetType(item, TypePrimFun);
 }
+#endif
 
 void ItemSetIntNum(VItem* item, VIntNum number)
 {

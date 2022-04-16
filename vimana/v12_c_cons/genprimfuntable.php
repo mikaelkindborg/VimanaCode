@@ -11,6 +11,12 @@ function SubstituteName($name)
     "minus" => "-",
     "times" => "*",
     "div"   => "/",
+    "1plus" => "1+",
+    "1minus" => "1-",
+    "2plus" => "2+",
+    "2minus" => "2-",
+    "lessthan" => "<",
+    "greaterthan" => ">",
   ];
 
   if (isset($subst[$name])):

@@ -37,7 +37,9 @@ typedef struct __VInterp
 }
 VInterp;
 
+typedef struct __VInterp VInterp;
 typedef void (*VPrimFunPtr) (VInterp*);
+
 VPrimFunPtr LookupPrimFunPtr(int index);
 
 //#define InterpMem(interp) ((interp)->mem)
@@ -67,6 +69,8 @@ VInterp* InterpNewWithSize(
 
   interp->mem = MemNew(memSize);
 
+  GSymbolTableInit();
+
   return interp;
 }
 
@@ -85,6 +89,7 @@ void InterpFree(VInterp* interp)
   MemSweep(interp->mem);
   MemFree(interp->mem);
   SysFree(interp);
+  GSymbolTableRelease();
 }
 
 void InterpGC()
@@ -118,6 +123,12 @@ VItem* InterpStackPop(VInterp* interp)
   return & (interp->dataStack[interp->dataStackTop --] );
 }
 
+#define InterpStackAt(interp, indexFromEnd) \
+  ( & ((interp)->dataStack[(interp)->dataStackTop - indexFromEnd]) )
+
+#define InterpStackTop(interp) InterpStackAt(interp, 0)
+
+/*
 VItem* InterpStackAt(VInterp* interp, int indexFromEnd)
 {
   return & (interp->dataStack[interp->dataStackTop - indexFromEnd]);
@@ -127,6 +138,7 @@ VItem* InterpStackTop(VInterp* interp)
 {
   return InterpStackAt(interp, 0);
 }
+*/
 
 void InterpStackPushContext(VInterp* interp, VItem* code)
 {
@@ -225,9 +237,14 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
 
       if (IsTypePrimFun(instruction))
       {
-        int primfunId = instruction->intNum;
-        VPrimFunPtr fun = LookupPrimFunPtr(primfunId);
+        #ifdef PRIMFUN_PTR
+        VPrimFunPtr fun = instruction->primFunPtr;
         fun(interp);
+        #else
+        int primFunId = instruction->intNum;
+        VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
+        fun(interp);
+        #endif
       }
       else
       if (IsTypePushable(instruction))

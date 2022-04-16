@@ -1,5 +1,5 @@
 
-#define TRACK_MEMORY_USAGE
+//#define TRACK_MEMORY_USAGE
 
 #include "vimana.h"
 
@@ -53,10 +53,10 @@ int main(int numargs, char* args[])
   VInterp* interp = InterpNew();
 
   time_t lastUpdate = 0;
-
+/*
   int sourceSize = 0;
   int prevSourceSize = 0;
-
+*/
   do
   {
     // Read source file
@@ -66,7 +66,7 @@ int main(int numargs, char* args[])
       PrintLine("Cannot read source code file");
       break;
     }
-    
+/*  
     // If in interactive mode evaluate added code if source has grown
     if (GInteractiveMode)
     {
@@ -78,7 +78,7 @@ int main(int numargs, char* args[])
       }
       prevSourceSize = sourceSize;
     }
-
+*/
     // Evaluate code
     VItem* code = ParseSourceCode(source, interp->mem);
     InterpEval(interp, code);
@@ -111,8 +111,6 @@ int main(int numargs, char* args[])
   while (GInteractiveMode);
 
   InterpFree(interp);
-
-  GSymbolTableFree();
 
   PrintMemStat();
 }

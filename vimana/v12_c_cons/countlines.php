@@ -41,6 +41,8 @@ Version v12_c_cons:
 220414:
   BASE VERSION: 1334 lines (very nice interpeter, more primitives)
   BASE VERSION: 1389 lines (with file functions)
+220416:
+  BASE VERSION: 1508 lines (many more primitives)
 
 Version v11_c_minimal:
 

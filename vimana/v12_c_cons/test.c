@@ -186,6 +186,8 @@ void TestParseSourceCode()
 {
   printf("---> TestParseSourceCode\n");
 
+  GSymbolTableInit();
+
   VMem* mem = MemNew(1000);
   VItem* list;
 
@@ -236,12 +238,12 @@ void TestParseSourceCode()
 
   MemFree(mem);
 
-  GSymbolTableFree();
+  GSymbolTableRelease();
 }
 
-void TestSymbols()
+void TestSymbolTable()
 {
-  printf("---> TestSymbols\n");
+  printf("---> TestSymbolTable\n");
 
   char* s1 = "First";
   char* s2 = "Second";
@@ -384,8 +386,6 @@ void TestInterpEval()
   ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
 
   InterpFree(interp);
-
-  GSymbolTableFree();
 }
 
 void TestInterpEvalFun()
@@ -405,8 +405,6 @@ void TestInterpEvalFun()
   ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
 
   InterpFree(interp);
-
-  GSymbolTableFree();
 }
 
 void TestInterpEvalFunInfiniteTail()
@@ -425,26 +423,26 @@ void TestInterpEvalFunInfiniteTail()
   ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
 
   InterpFree(interp);
-
-  GSymbolTableFree();
 }
 
 int main()
 {
   printf("Welcome to the wonderful world of Vimana\n");
-/*
+
   TestPrintBinary();
   TestItemAttributes();
   TestAllocDealloc();
   TestConsDealloc();
+
   //TestParseSymbolicCode();
-  TestSymbols();
+  TestSymbolTable();
   TestParseSourceCode();
+
   TestArray();
   TestArrayWithStrings();
   TestInterp();
-  */
-  //TestInterpEval();
+  
+  TestInterpEval();
   TestInterpEvalFun();
   //TestInterpEvalFunInfiniteTail();
 
