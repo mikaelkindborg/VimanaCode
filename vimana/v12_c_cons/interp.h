@@ -237,7 +237,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
 
       if (IsTypePrimFun(instruction))
       {
-        #ifdef PRIMFUN_PTR
+        #ifdef OPTIMIZE
         VPrimFunPtr fun = instruction->primFunPtr;
         fun(interp);
         #else
@@ -282,11 +282,6 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         goto Exit; // Exit loop
       }
     }
-/*
-    printf("STACK: ");
-    MemPrintArray(interp->mem, interp->dataStack, interp->dataStackTop + 1);
-    printf("\n");
-*/
   }
   // while
 

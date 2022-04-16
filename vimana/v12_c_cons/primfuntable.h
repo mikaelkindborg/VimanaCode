@@ -1,6 +1,6 @@
   { "sayHi", PrimFun_sayHi },
   { "print", PrimFun_print },
-  { "printStack", PrimFun_printStack },
+  { "printstack", PrimFun_printstack },
   { "eval", PrimFun_eval },
   { "iftrue", PrimFun_iftrue },
   { "iffalse", PrimFun_iffalse },

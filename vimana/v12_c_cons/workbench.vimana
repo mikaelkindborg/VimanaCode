@@ -1,4 +1,3 @@
-'Hi World' print
 
 (funify swap setglobal) funify 
   (def) setglobal
@@ -10,21 +9,20 @@
   ifelse) def
 
 (
-(iffalse)
-  (swap not swap iftrue) def
+  'Hi World' print
 
-(Xfib)
-  (dup 2 < not (dup 1 - fib swap 2 - fib +) iftrue) def
+  (iffalse)
+    (swap not swap iftrue) def
+
+  (Xfib)
+    (dup 2 < not (dup 1 - fib swap 2 - fib +) iftrue) def
+
+  (iffalse2)
+    (swap not swap iftrue) def
 ) 
 drop
-
-(iffalse2)
-  (swap not swap iftrue) def
 
 (fib)
   (dup 2 < (dup 1- fib swap 2- fib +) iffalse) def
 
 (32 fib print) 5 times
-
- 
-(1 2 3) dup eq print

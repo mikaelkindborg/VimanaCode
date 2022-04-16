@@ -1,6 +1,8 @@
 
 //#define TRACK_MEMORY_USAGE
 
+#define OPTIMIZE 
+
 #include "vimana.h"
 
 // TODO: Provide hook for exiting interactive mode from Vimana

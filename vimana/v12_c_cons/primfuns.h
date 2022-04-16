@@ -5,7 +5,7 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 
 void PrimFun_sayHi(VInterp* interp)
 {
-  printf("Hi World!\n");
+  PrintLine("Hi World!");
 }//
 
 void PrimFun_print(VInterp* interp)
@@ -15,9 +15,10 @@ void PrimFun_print(VInterp* interp)
   PrintNewLine();
 }//
 
-void PrimFun_printStack(VInterp* interp)
+void PrimFun_printstack(VInterp* interp)
 {
-  printf("print stack!\n");
+  MemPrintArray(interp->mem, interp->dataStack, interp->dataStackTop + 1);
+  PrintNewLine();
 }//
 
 // TODO: Eval in own context? apply?

@@ -6,8 +6,6 @@ Items are like conses in Lisp. They hold a value and
 an address to the next item.
 */
 
-#define PRIMFUN_PTR
-
 typedef unsigned int     VType;
 typedef unsigned int     VAddr;
 typedef          long    VIntNum;
@@ -82,7 +80,7 @@ void ItemSetSymbol(VItem* item, VIntNum symbol)
   ItemSetType(item, TypeSymbol);
 }
 
-#ifdef PRIMFUN_PTR
+#ifdef OPTIMIZE
 void ItemSetPrimFun(VItem* item, VPrimFunPtr primFun)
 {
   item->primFunPtr = primFun;

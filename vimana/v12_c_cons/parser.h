@@ -114,7 +114,7 @@ VItem* ParseToken(char* token, VMem* mem)
     int primFunId = LookupPrimFun(token);
     if (primFunId > -1)
     {
-      #ifdef PRIMFUN_PTR
+      #ifdef OPTIMIZE
       VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
       ItemSetPrimFun(item, fun);
       #else
