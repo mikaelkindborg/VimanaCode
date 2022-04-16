@@ -1,5 +1,4 @@
-# ruby benchmarks/fib.rb  0.28s user 0.08s system 83% cpu 0.432 total
-# ruby benchmarks/fib.rb  0.23s user 0.03s system 96% cpu 0.271 total
+# ruby fib.rb  1.03s user 0.04s system 97% cpu 1.096 total
 
 def fib(n)
   if n < 2 then

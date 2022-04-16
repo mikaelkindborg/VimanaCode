@@ -62,6 +62,8 @@ python3 benchmarks/fib.py  3.87s user 0.03s system 84% cpu 4.632 total
 
 */
 
+// php fib.php  0.94s user 0.03s system 98% cpu 0.990 total
+
 function fib($n)
 {
   if ($n < 2) return $n;
