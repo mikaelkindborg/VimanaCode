@@ -123,22 +123,20 @@ VItem* InterpStackPop(VInterp* interp)
   return & (interp->dataStack[interp->dataStackTop --] );
 }
 
+#ifdef OPTIMIZE
 #define InterpStackAt(interp, indexFromEnd) \
   ( & ((interp)->dataStack[(interp)->dataStackTop - indexFromEnd]) )
-
 #define InterpStackTop(interp) InterpStackAt(interp, 0)
-
-/*
+#else
 VItem* InterpStackAt(VInterp* interp, int indexFromEnd)
 {
   return & (interp->dataStack[interp->dataStackTop - indexFromEnd]);
 }
-
 VItem* InterpStackTop(VInterp* interp)
 {
   return InterpStackAt(interp, 0);
 }
-*/
+#endif
 
 void InterpStackPushContext(VInterp* interp, VItem* code)
 {
