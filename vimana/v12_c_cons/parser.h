@@ -135,6 +135,31 @@ VItem* ParseToken(char* token, VMem* mem)
   return item;
 }
 
+// A comment begins and ends with three hyphens: /-- comment --/
+
+#define IsComment(p)    (('/' == *(p)) && ('-' == *((p)+1)) && ('-' == *((p)+2)))
+#define IsCommentEnd(p) (('-' == *(p)) && ('-' == *((p)+1)) && ('/' == *((p)+2)))
+
+char* SkipComment(char* p)
+{
+  if (IsComment(p))
+  {
+    p = p + 3;
+
+    while (0 != *p)
+    {
+      if (IsCommentEnd(p)) 
+        return p + 3; // end of comment
+      
+      ++p;
+    }
+
+    return NULL; // end of string
+  }
+  else
+    return p; // not comment
+}
+
 VItem* ParseCode(char* code, char** next, VMem* mem)
 {
   VItem* first = NULL;
@@ -177,6 +202,9 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
     }
     else
     {
+      p = SkipComment(p);
+      if (NULL == p) goto Exit;
+
       char* token = GetNextToken(p, &p);
       item = ParseToken(token, mem);
     }

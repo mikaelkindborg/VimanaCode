@@ -345,26 +345,26 @@ void TestInterp()
   // while (1) InterpStackPush(interp, *item);
 
   // Test callstack
-  InterpStackPushContext(interp, item);
+  InterpPushContext(interp, item);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
-  InterpStackPushContext(interp, item);
+  InterpPushContext(interp, item);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
-  InterpStackPopContext(interp);
+  InterpPopContext(interp);
   ShouldHold("CALLSTACK TOP SHOULD NOT BE NULL", NULL != interp->callStackTop);
 
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
-  InterpStackPopContext(interp);
+  InterpPopContext(interp);
   ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
 
   // Tests for underflow/overflow
-  // InterpStackPopContext(interp);
-  // while (1) InterpStackPushContext(interp, item);
+  // InterpPopContext(interp);
+  // while (1) InterpPushContext(interp, item);
 
   // Free interpreter
   InterpFree(interp);

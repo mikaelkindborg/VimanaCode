@@ -24,4 +24,8 @@
   { "not", PrimFun_not },
   { "dup", PrimFun_dup },
   { "swap", PrimFun_swap },
+  { "N!", PrimFun_local_0_set },
+  { "N", PrimFun_local_0_get },
+  { "L!", PrimFun_local_1_set },
+  { "L", PrimFun_local_1_get },
   { "__sentinel__", NULL }

@@ -21,11 +21,11 @@ void PrimFun_printstack(VInterp* interp)
   PrintNewLine();
 }//
 
-// TODO: Eval in own context? apply?
+// TODO: Eval in own context? apply? funcall?
 void PrimFun_eval(VInterp* interp)
 {
   VItem* codeBlock = InterpStackPop(interp);
-  InterpStackPushContext(interp, codeBlock);
+  InterpPushContext(interp, codeBlock);
 }//
 
 void PrimFun_iftrue(VInterp* interp)
@@ -33,7 +33,7 @@ void PrimFun_iftrue(VInterp* interp)
   VItem* trueBlock = InterpStackPop(interp);
   VItem* trueOrFalse = InterpStackPop(interp);
   if (trueOrFalse->intNum)
-    InterpStackPushContext(interp, trueBlock);
+    InterpPushContext(interp, trueBlock);
 }//
 
 void PrimFun_iffalse(VInterp* interp)
@@ -41,7 +41,7 @@ void PrimFun_iffalse(VInterp* interp)
   VItem* falseBlock = InterpStackPop(interp);
   VItem* trueOrFalse = InterpStackPop(interp);
   if (! trueOrFalse->intNum)
-    InterpStackPushContext(interp, falseBlock);
+    InterpPushContext(interp, falseBlock);
 }//
 
 void PrimFun_ifelse(VInterp* interp)
@@ -50,9 +50,9 @@ void PrimFun_ifelse(VInterp* interp)
   VItem* trueBlock = InterpStackPop(interp);
   VItem* trueOrFalse = InterpStackPop(interp);
   if (trueOrFalse->intNum)
-    InterpStackPushContext(interp, trueBlock);
+    InterpPushContext(interp, trueBlock);
   else
-    InterpStackPushContext(interp, falseBlock);
+    InterpPushContext(interp, falseBlock);
 }//
 
 void PrimFun_setglobal(VInterp* interp)
@@ -180,6 +180,30 @@ void PrimFun_swap(VInterp* interp)
   VItem temp = *a;
   *a = *b;
   *b = temp;
+}//
+
+void PrimFun_local_0_set(VInterp* interp)
+{
+  VItem* a = InterpStackPop(interp);
+  ContextSetLocalVar(interp->callStackTop->funContext, 0, a);
+}//
+
+void PrimFun_local_0_get(VInterp* interp)
+{
+  VItem* a = ContextGetLocalVar(interp->callStackTop->funContext, 0);
+  InterpStackPush(interp, a);
+}//
+
+void PrimFun_local_1_set(VInterp* interp)
+{
+  VItem* a = InterpStackPop(interp);
+  ContextSetLocalVar(interp->callStackTop->funContext, 1, a);
+}//
+
+void PrimFun_local_1_get(VInterp* interp)
+{
+  VItem* a = ContextGetLocalVar(interp->callStackTop->funContext, 1);
+  InterpStackPush(interp, a);
 }//
 
 typedef struct __PrimFunEntry
