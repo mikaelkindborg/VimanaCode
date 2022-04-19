@@ -5,10 +5,18 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Interpreter data structures and functions.
 */
 
+enum CALLTYPE
+{
+  CALLTYPE_EVAL,
+  CALLTYPE_FUN,
+  CALLTYPE_SPECIAL
+};
+
 typedef struct __VContext
 {
-  struct __VContext* prev;
-  struct __VContext* funContext;
+  struct __VContext* prev;           // Previous context in call stack
+  struct __VContext* activeContext;  // Context that holds local vars
+  struct __VContext* funCallContext; // Most recent function call
   VItem*             code;
   VItem*             instruction;
   VItem              localVars[4];
@@ -40,7 +48,6 @@ typedef struct __VInterp
 
   int       callStackSize;
   VContext* callStackTop;    // Current context
-  VContext* callStackTopFun; // Closest function call
   void*     callStack;
 }
 VInterp;
@@ -150,7 +157,7 @@ VItem* InterpStackTop(VInterp* interp)
 
 #endif
 
-void InterpPushContextImpl(VInterp* interp, VItem* code, int funcall)
+void InterpPushContextImpl(VInterp* interp, VItem* code, int calltype)
 {
   if (NULL == interp->callStackTop)
   {
@@ -158,35 +165,52 @@ void InterpPushContextImpl(VInterp* interp, VItem* code, int funcall)
     interp->callStackTop = interp->callStack;
     interp->callStackTop->prev = NULL;
 
-    // The root context has local vars
-    interp->callStackTop->funContext = interp->callStackTop;
+    // The root context always has its own local vars
+    interp->callStackTop->activeContext = interp->callStackTop;
+    interp->callStackTop->funCallContext = interp->callStackTop;
   }
   else
   {
     // Push new context if this is not the last instruction
     if (interp->callStackTop->instruction)
     {
-      VContext* next = (void*)interp->callStackTop + sizeof(VContext);
+      VContext* currentContext = (void*)interp->callStackTop + sizeof(VContext);
 
       void* maxSize = interp->callStack + (interp->callStackSize * sizeof(VContext));
 
-      if ((void*)next + sizeof(VContext) >= maxSize)
+      if ((void*)currentContext + sizeof(VContext) >= maxSize)
       {
         GURU(CALL_STACK_OVERFLOW);
       }
 
       // Make new context top
-      next->prev = interp->callStackTop;
-      interp->callStackTop = next;
+      currentContext->prev = interp->callStackTop;
+      interp->callStackTop = currentContext;
 
-      // If function call the context has local vars
-      if (funcall)
+      if (CALLTYPE_EVAL == calltype)
       {
-        next->funContext = next;
+        // Eval uses the local vars of the most recent function call
+        currentContext->activeContext = currentContext->prev->funCallContext;
+        currentContext->funCallContext = currentContext->prev->funCallContext;
+      }
+      else      
+      if (CALLTYPE_FUN == calltype)
+      {
+        // A function call has its own local vars
+        currentContext->activeContext = currentContext;
+        currentContext->funCallContext = currentContext;
+      }
+      else      
+      if (CALLTYPE_SPECIAL == calltype)
+      {
+        // A special form has its own local vars, but passes on the 
+        // current funtion call context
+        currentContext->activeContext = currentContext;
+        currentContext->funCallContext = currentContext->prev->funCallContext;
       }
       else
       {
-        next->funContext = next->prev->funContext;
+        GURU(UNKNOWN_CALLTYPE);
       }
     }
   }
@@ -197,10 +221,13 @@ void InterpPushContextImpl(VInterp* interp, VItem* code, int funcall)
 }
 
 #define InterpPushContext(interp, code) \
-  InterpPushContextImpl(interp, code, 0)
+  InterpPushContextImpl(interp, code, CALLTYPE_EVAL)
 
 #define InterpPushFunContext(interp, code) \
-  InterpPushContextImpl(interp, code, 1)
+  InterpPushContextImpl(interp, code, CALLTYPE_FUN)
+
+#define InterpPushSpecialContext(interp, code) \
+  InterpPushContextImpl(interp, code, CALLTYPE_SPECIAL)
 
 void InterpPopContext(VInterp* interp)
 {

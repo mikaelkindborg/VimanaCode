@@ -14,7 +14,8 @@
     (dup 2 < (dup 1- fib swap 2- fib +) iffalse) def
 
   (32 fib print) 5 times
-) (
+) 
+(
   (times) (N! L!
     N 0 > 
       (L eval  L N 1- times) 

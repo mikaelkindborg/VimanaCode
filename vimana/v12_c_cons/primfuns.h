@@ -185,25 +185,75 @@ void PrimFun_swap(VInterp* interp)
 void PrimFun_local_0_set(VInterp* interp)
 {
   VItem* a = InterpStackPop(interp);
-  ContextSetLocalVar(interp->callStackTop->funContext, 0, a);
+  ContextSetLocalVar(interp->callStackTop->activeContext, 0, a);
 }//
 
 void PrimFun_local_0_get(VInterp* interp)
 {
-  VItem* a = ContextGetLocalVar(interp->callStackTop->funContext, 0);
+  VItem* a = ContextGetLocalVar(interp->callStackTop->activeContext, 0);
   InterpStackPush(interp, a);
 }//
 
 void PrimFun_local_1_set(VInterp* interp)
 {
   VItem* a = InterpStackPop(interp);
-  ContextSetLocalVar(interp->callStackTop->funContext, 1, a);
+  ContextSetLocalVar(interp->callStackTop->activeContext, 1, a);
 }//
 
 void PrimFun_local_1_get(VInterp* interp)
 {
-  VItem* a = ContextGetLocalVar(interp->callStackTop->funContext, 1);
+  VItem* a = ContextGetLocalVar(interp->callStackTop->activeContext, 1);
   InterpStackPush(interp, a);
+}//
+
+void PrimFun_nil(VInterp* interp)
+{
+}//
+
+void PrimFun_isnil(VInterp* interp)
+{
+}//
+
+void PrimFun_head(VInterp* interp)
+{
+  VItem* list = InterpStackTop(interp);
+
+  if (!IsTypeList(list)) GURU(OBJECT_IS_NOT_A_LIST);
+
+  VItem* head = MemItemFirst(interp->mem, list);
+  if (head)
+  {
+    *list = *head;
+  }
+  else
+  {
+    list->addr = 0;
+  }
+}//
+
+void PrimFun_tail(VInterp* interp)
+{
+  VItem* list = InterpStackTop(interp);
+
+  if (!IsTypeList(list)) GURU(OBJECT_IS_NOT_A_LIST);
+
+  VItem* head = MemItemFirst(interp->mem, list);
+  if (head)
+  {
+    VItem* next = MemItemNext(interp->mem, head);
+    if (next)
+    {
+      // TODO: ?? MemTail(interp->mem, list);
+      MemItemSetFirst(interp->mem, list, next);
+      return;
+    }
+  }
+
+  list->addr = 0; // Empty list
+}//
+
+void PrimFun_cons(VInterp* interp)
+{
 }//
 
 typedef struct __PrimFunEntry

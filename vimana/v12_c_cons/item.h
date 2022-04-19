@@ -63,6 +63,8 @@ VItem;
 #define IsTypePrimFun(item)      (TypePrimFun == ItemType(item))
 #define IsTypeFun(item)          (TypeFun == ItemType(item))
 #define IsTypeStringHolder(item) (TypeStringHolder == ItemType(item))
+// Empty list
+#define IsNil(item)              (IsTypeList(item) && ((item)->addr == 0))
 
 void ItemSetGCMark(VItem* item, VType mark)
 {
