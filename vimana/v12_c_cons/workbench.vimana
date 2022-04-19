@@ -2,7 +2,7 @@
 (funify swap setglobal) funify 
   (def) setglobal
 
-1 
+1
 (
   (times) 
     (dup iszero 
@@ -17,7 +17,7 @@
 ) 
 (
   (times) (N! L!
-    N 0 > 
+    N 0 >
       (L eval  L N 1- times) 
     iftrue) def
 
@@ -28,7 +28,7 @@
 ) 
 ifelse
 
-/--
+/-------------------
 
 42 N!
 N print

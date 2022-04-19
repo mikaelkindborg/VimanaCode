@@ -167,6 +167,11 @@ void PrimFun_not(VInterp* interp)
   a->intNum = ! a->intNum;
 }//
 
+void PrimFun_drop(VInterp* interp)
+{
+  InterpStackPop(interp);
+}//
+
 void PrimFun_dup(VInterp* interp)
 {
   VItem* a = InterpStackTop(interp);

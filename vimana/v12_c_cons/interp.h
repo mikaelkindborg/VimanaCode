@@ -204,7 +204,7 @@ void InterpPushContextImpl(VInterp* interp, VItem* code, int calltype)
       if (CALLTYPE_SPECIAL == calltype)
       {
         // A special form has its own local vars, but passes on the 
-        // current funtion call context
+        // current function call context
         currentContext->activeContext = currentContext;
         currentContext->funCallContext = currentContext->prev->funCallContext;
       }

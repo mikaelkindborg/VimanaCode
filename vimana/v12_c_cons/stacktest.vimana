@@ -1,13 +1,13 @@
 (funify swap setglobal) funify 
   (def) setglobal
-
-(fib)
-  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
-
+  
 (times) 
   (dup iszero 
     (drop drop) 
     (swap dup eval swap 1- times) 
   ifelse) def
 
-(32 fib print) 5 times
+(sayHi) 3 times
+
+printstack
+ 
