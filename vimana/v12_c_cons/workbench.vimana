@@ -30,6 +30,35 @@ ifelse
 
 /-------------------
 
+(add) (2 args A B +) def
+
+((A 1 <)   (sayHi)
+ (A 10 <)  (sayHii)
+ (A 100 <) (sayHiii)
+ (T)       (sayElse)) cond
+
+/-- A cond => ? --/
+(cond) (
+  1 args
+  A isempty
+    (A first eval 
+      (A rest first eval)
+      (A rest rest cond)
+    ifelse)
+  iffalse) def
+
+A 1 < (sayHi) 
+(A 10 < (sayHii)
+(A 100 < (sayHiii)
+iftrue)
+ifelse)
+ifelse
+
+A 1 <   (sayHi)   !
+A 10 <  (sayHii)  !
+A 100 < (sayHiii) !
+T (sayElse) !!
+
 42 N!
 N print
 
