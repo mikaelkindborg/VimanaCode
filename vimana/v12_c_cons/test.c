@@ -336,20 +336,20 @@ void TestInterp()
   ItemSetIntNum(item, 42);
   printf("item value 1: %li\n", item->intNum);
 
-  InterpStackPush(interp, item);
-  VItem* item2 = InterpStackPop(interp);
+  InterpPush(interp, item);
+  VItem* item2 = InterpPop(interp);
   printf("item value 2: %li\n", item2->intNum);
 
   // Tests for underflow/overflow
-  // InterpStackPop(interp);
-  // while (1) InterpStackPush(interp, *item);
+  // InterpPop(interp);
+  // while (1) InterpPush(interp, *item);
 
   // Test callstack
-  InterpPushContext(interp, item);
+  InterpPushStackFrame(interp, item);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
-  InterpPushContext(interp, item);
+  InterpPushStackFrame(interp, item);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
@@ -364,7 +364,7 @@ void TestInterp()
 
   // Tests for underflow/overflow
   // InterpPopContext(interp);
-  // while (1) InterpPushContext(interp, item);
+  // while (1) InterpPushStackFrame(interp, item);
 
   // Free interpreter
   InterpFree(interp);

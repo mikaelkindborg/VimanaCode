@@ -5,31 +5,22 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Interpreter data structures and functions.
 */
 
-enum CALLTYPE
+// -------------------------------------------------------------
+// Data types and structs
+// -------------------------------------------------------------
+
+typedef struct __VStackFrame
 {
-  CALLTYPE_FUN,
-  CALLTYPE_EVAL,
-  CALLTYPE_FUNX,
-  CALLTYPE_EVALX
-};
+  VItem* instruction;
+}
+VStackFrame;
 
 typedef struct __VContext
 {
-  struct __VContext* prev;           // Previous context in call stack
-  struct __VContext* localVarCtx;    // Context that holds local vars
-  VSmallInt          numVars;        // Number of local vars in this context
-  VSmallInt          callType;       // Context type
-  VItem*             code;           // Code list
-  VItem*             instruction;    // Instruction pointer
-  VItem              localVars[1];   // Memory area for local vars
+  VItem     localVars[2];
+  VSmallInt counter;
 }
 VContext;
-
-#define ContextSetLocalVar(context, index, itemPointer) \
-  ((context)->localVars[index] = *(itemPointer))
-
-#define ContextGetLocalVar(context, index) \
-  (& ((context)->localVars[index]))
 
 // Mind control for hackers
 
@@ -37,21 +28,24 @@ VContext;
 
 typedef struct __VInterp
 {
-  int       run; 
+  int          run; 
 
-  VMem*     mem;
+  VMem*        mem;
 
-  int       dataStackSize;
-  int       dataStackTop;
-  VItem*    dataStack;
+  int          globalVarsSize;
+  VItem*       globalVars;
 
-  int       globalVarsSize;
-  VItem*    globalVars;
+  int          dataStackSize;
+  int          dataStackTop;
+  VItem*       dataStack;
 
-  int       callStackSize;
-  void*     callStackBounds;
-  VContext* callStackTop;    // Current context
-  void*     callStack;
+  int          contextStackSize;
+  int          contextStackTop;
+  VContext*    contextStack;
+
+  int          callStackSize;
+  int          callStackTop; // Current context
+  VStackFrame* callStack;
 }
 VInterp;
 
@@ -60,29 +54,39 @@ typedef void (*VPrimFunPtr) (VInterp*);
 
 VPrimFunPtr LookupPrimFunPtr(int index);
 
+#define InterpStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
+
+// -------------------------------------------------------------
+// Interp
+// -------------------------------------------------------------
+
 VInterp* InterpNewWithSize(
-  int dataStackSize, int globalVarsSize, 
+  int globalVarsSize, int dataStackSize, int contextStackSize, 
   int callStackSize, int memSize)
 {
-  int dataStackByteSize = dataStackSize * sizeof(VItem);
   int globalVarsByteSize = globalVarsSize * sizeof(VItem);
-  int callStackByteSize = callStackSize * sizeof(VContext);
+  int dataStackByteSize = dataStackSize * sizeof(VItem);
+  int contextStackByteSize = contextStackSize * sizeof(VContext);
+  int callStackByteSize = callStackSize * sizeof(VStackFrame);
 
   VInterp* interp = SysAlloc(
-    sizeof(VInterp) + dataStackByteSize + 
-    globalVarsByteSize + callStackByteSize);
+    sizeof(VInterp) + globalVarsByteSize + dataStackByteSize + 
+    contextStackByteSize + callStackByteSize);
 
-  interp->dataStack = (void*)interp + sizeof(VInterp);
+  interp->globalVars = (void*)interp + sizeof(VInterp);
+  interp->globalVarsSize = globalVarsSize;
+
+  interp->dataStack = (void*)interp->globalVars + globalVarsByteSize;
   interp->dataStackSize = dataStackSize;
   interp->dataStackTop = -1;
 
-  interp->globalVars = (void*)interp->dataStack + dataStackByteSize;
-  interp->globalVarsSize = globalVarsSize;
+  interp->contextStack = (void*)interp->dataStack + dataStackByteSize;
+  interp->contextStackSize = dataStackSize;
+  interp->contextStackTop = -1;
 
-  interp->callStack = (void*)interp->globalVars + globalVarsByteSize;
+  interp->callStack = (void*)interp->contextStack + contextStackByteSize;
   interp->callStackSize = callStackSize;
-  interp->callStackBounds = (void*)interp->callStack + callStackByteSize;
-  interp->callStackTop = NULL;
+  interp->callStackTop = -1;
 
   interp->mem = MemNew(memSize);
 
@@ -94,8 +98,9 @@ VInterp* InterpNewWithSize(
 VInterp* InterpNew()
 {
   return InterpNewWithSize(
-    100, // dataStackSize, 
     100, // globalVarsSize,
+    100, // dataStackSize, 
+    100, // contextStackSize, 
     100, // callStackSize
     1000 // memSize
   );
@@ -117,7 +122,11 @@ void InterpGC()
   //MemMark(callstack); // Walk from top and mark localvars
 }
 
-void InterpStackPush(VInterp* interp, VItem *item)
+// -------------------------------------------------------------
+// Data stack
+// -------------------------------------------------------------
+
+void InterpPush(VInterp* interp, VItem *item)
 {
   ++ interp->dataStackTop;
 
@@ -130,7 +139,7 @@ void InterpStackPush(VInterp* interp, VItem *item)
   interp->dataStack[interp->dataStackTop] = *item;
 }
 
-VItem* InterpStackPop(VInterp* interp)
+VItem* InterpPop(VInterp* interp)
 {
   if (interp->dataStackTop < 0)
   {
@@ -138,20 +147,21 @@ VItem* InterpStackPop(VInterp* interp)
   }
 
   return & (interp->dataStack[interp->dataStackTop --] );
+  //return interp->dataStack + (interp->dataStackTop --);
 }
 
 #ifdef OPTIMIZE
 
-#define InterpStackAt(interp, indexFromEnd) \
-  ( & ((interp)->dataStack[(interp)->dataStackTop - indexFromEnd]) )
+#define InterpStackAt(interp, offsetFromTop) \
+  ( & ((interp)->dataStack[(interp)->dataStackTop - offsetFromTop]) )
 
 #define InterpStackTop(interp) InterpStackAt(interp, 0)
 
 #else
 
-VItem* InterpStackAt(VInterp* interp, int indexFromEnd)
+VItem* InterpStackAt(VInterp* interp, int offsetFromTop)
 {
-  return & (interp->dataStack[interp->dataStackTop - indexFromEnd]);
+  return & (interp->dataStack[interp->dataStackTop - offsetFromTop]);
 }
 
 VItem* InterpStackTop(VInterp* interp)
@@ -161,138 +171,160 @@ VItem* InterpStackTop(VInterp* interp)
 
 #endif
 
-void InterpPushContextImpl(VInterp* interp, VItem* code, int callType)
+// -------------------------------------------------------------
+// Context stack
+// -------------------------------------------------------------
+
+void InterpPushContext(VInterp* interp)
 {
-  VContext* currentContext = interp->callStackTop;
+  ++ interp->contextStackTop;
 
-  if (NULL == currentContext)
+//printf("push context\n");
+  if (interp->contextStackTop >= interp->contextStackSize)
   {
-    // Set root context
-    currentContext = interp->callStack;
-    currentContext->prev = NULL;
+    GURU(CONTEXT_STACK_OVERFLOW);
+  }
 
-    // The root context always has its own local vars
-    currentContext->localVarCtx = currentContext;
+  interp->contextStack[interp->contextStackTop].counter = 1;
+}
 
-    // Initialize number of local vars
-    currentContext->numVars = 0;
+void InterpPopContext(VInterp* interp)
+{
+  if (interp->contextStackTop < 0)
+  {
+    GURU(CONTEXT_STACK_IS_EMPTY);
+  }
+  -- interp->contextStackTop;
+//printf("pop context\n");
+}
 
-    interp->callStackTop = currentContext;
+void InterpIncrContextCounter(VInterp* interp)
+{
+  if (interp->contextStackTop > -1)
+  {
+    ++ (interp->contextStack[interp->contextStackTop].counter);
+    //printf("InterpIncrContextCounter: %i\n", interp->contextStack[interp->contextStackTop].counter);
+  }
+}
+
+void InterpDecrContextCounter(VInterp* interp)
+{
+  if (interp->contextStackTop > -1)
+  {
+    -- (interp->contextStack[interp->contextStackTop].counter);
+
+    //printf("InterpDecrContextCounter: %i\n", interp->contextStack[interp->contextStackTop].counter);
+    if (interp->contextStack[interp->contextStackTop].counter <= 0)
+    {
+      InterpPopContext(interp);
+    }
+  }
+}
+
+VContext* InterpContextAt(VInterp* interp, int offsetFromTop)
+{
+  if (interp->contextStackTop < 0)
+  {
+    GURU(CONTEXT_STACK_IS_EMPTY);
+  }
+
+  //return & (interp->contextStack[interp->contextStackTop - offsetFromTop]);
+  return interp->contextStack + (interp->contextStackTop - offsetFromTop);
+}
+
+void InterpContextSetLocalVar(VInterp* interp, int index, VItem* item)
+{
+  VContext* context = InterpContextAt(interp, 0);
+  context->localVars[index] = *item;
+}
+
+VItem* InterpContextGetLocalVar(VInterp* interp, int index)
+{
+  VContext* context = InterpContextAt(interp, 0);
+  return & (context->localVars[index]);
+}
+
+// -------------------------------------------------------------
+// Call stack
+// -------------------------------------------------------------
+
+void InterpPushStackFrame(VInterp* interp, VItem* code)
+{
+  VStackFrame* current;
+
+  if (interp->callStackTop < 0)
+  {
+    ++ interp->callStackTop;
+    current = InterpStackFrame(interp);
   }
   else
   {
-    // Check tailcall - push new context only if this is not the last instruction
-    void* pushContext = interp->callStackTop->instruction;
+    current = InterpStackFrame(interp);
+
+    // Check tailcall (are there any instructions left?)
+    void* pushContext = current->instruction;
     if (pushContext)
     {
-      // NOT TAILCALL - PUSH NEW CONTEXT
+      // NOT TAILCALL - PUSH NEW STACK FRAME
 
-      // Size of previous context
-      size_t contextSize = sizeof(VContext) + (interp->callStackTop->numVars * sizeof(VItem));
+      ++ interp->callStackTop;
 
-      // Address of the new current context
-      currentContext = (void*)interp->callStackTop + contextSize;
-
-      // Bounds for callstack with room for 10 local vars in the new context
-      void* bounds = (void*)currentContext + sizeof(VContext) + (10 * sizeof(VItem));
-     
-      if (bounds >= interp->callStackBounds)
+      if (interp->callStackTop >= interp->callStackSize)
       {
         GURU(CALL_STACK_OVERFLOW);
       }
 
-      // Make new context top
-      currentContext->prev = interp->callStackTop;
-      interp->callStackTop = currentContext;
+      current = InterpStackFrame(interp);
 
-      // Set call type of new context
-      currentContext->callType = callType;
-
-      if (CALLTYPE_EVAL == callType)
-      {
-        // A new eval context uses the local vars of the previous context
-        currentContext->localVarCtx = currentContext->prev->localVarCtx;
-        currentContext->numVars = 0;
-      }
-    }
-      
-    // TAILCALL OR NEW CONTEXT
-
-    // Always initialize local vars for function calls
-    if (CALLTYPE_FUN == callType || CALLTYPE_FUNX == callType)
-    {
-      // A function call or special form has its own local vars
-      currentContext->numVars = 0;
-      currentContext->localVarCtx = currentContext;
-    }
-
-    // For tailcall CALLTYPE_EVAL we want to keep the current call type and context
-    // if (CALLTYPE_EVAL == callType) DO_NOTHING();
-
-    // For CALLTYPE_EVALX we want to find the closest function call context
-    if (CALLTYPE_EVALX == callType)
-    {
-      VContext* context = currentContext;
-      while (context)
-      {
-        // Have we found the function call context?
-        if (CALLTYPE_FUN == context->callType)
-        {
-          currentContext->localVarCtx = context;
-          break;
-        }
-
-        context = context->prev;
-      }
-
-      GURU(EVALX_NO_FUNCALL_CONTEXT_FOUND);
+      InterpIncrContextCounter(interp);
     }
   }
-
-  // Set first instruction in new frame
-  currentContext->code = code;
-  currentContext->instruction = MemItemFirst(interp->mem, code);
+  
+  // Set first instruction in the new frame
+  current->instruction = MemItemFirst(interp->mem, code);
 }
 
-#define InterpPushContext(interp, code) \
-  InterpPushContextImpl(interp, code, CALLTYPE_EVAL)
-
-#define InterpPushEvalXContext(interp, code) \
-  InterpPushContextImpl(interp, code, CALLTYPE_EVALX)
-
-#define InterpPushFunContext(interp, code) \
-  InterpPushContextImpl(interp, code, CALLTYPE_FUN)
-
-#define InterpPushFunXContext(interp, code) \
-  InterpPushContextImpl(interp, code, CALLTYPE_FUNX)
-
-void InterpPopContext(VInterp* interp)
+void InterpPopStackFrame(VInterp* interp)
 {
-  //printf("POP CONTEXT\n");
+  //printf("POP STACK FRAME\n");
 
-  if (NULL == interp->callStackTop)
+  if (interp->callStackTop < 0)
   {
     GURU(CALL_STACK_IS_EMPTY);
   }
 
-  interp->callStackTop = interp->callStackTop->prev;
+  -- interp->callStackTop;
+
+  InterpDecrContextCounter(interp);
 }
+
+// -------------------------------------------------------------
+// Global vars
+// -------------------------------------------------------------
 
 void InterpSetGlobalVar(VInterp* interp, int index, VItem* item)
 {
   if (index < interp->globalVarsSize)
+  {
     (interp->globalVars)[index] = *item;
+  }
   else
+  {
     GURU(GLOBALVARS_OVERFLOW);
+  }
 }
 
 #define InterpGetGlobalVar(interp, index) (& (((interp)->globalVars)[index]))
+
+// -------------------------------------------------------------
+// Eval
+// -------------------------------------------------------------
 
 int InterpEvalSlice(register VInterp* interp, register int sliceSize);
 
 void InterpEval(VInterp* interp, VItem* code)
 {
-  InterpPushContext(interp, code);
+  InterpPushStackFrame(interp, code);
   InterpEvalSlice(interp, 0);
   // TODO: GC
 }
@@ -303,10 +335,11 @@ void InterpEval(VInterp* interp, VItem* code)
 // Returns done flag (TRUE = done, FALSE = not done).
 int InterpEvalSlice(VInterp* interp, int sliceSize)
 {
-  VItem*  instruction;
-  VItem*  symbolValue;
-  int     primFun;
-  int     sliceCounter = 0;
+  VStackFrame* current;
+  VItem*       instruction;
+  VItem*       symbolValue;
+  int          primFun;
+  int          sliceCounter = 0;
 
   interp->run = TRUE;
 
@@ -321,14 +354,15 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         goto Exit; // Exit loop
     }
 
-    // Evaluate current instruction.
-    instruction = interp->callStackTop->instruction;
+    // Get instruction pointer
+    current = InterpStackFrame(interp);
+    instruction = current->instruction;
 
+    // Evaluate current instruction.
     if (NULL != instruction)
     {
       // Advance instruction for next loop
-      interp->callStackTop->instruction = 
-        MemItemNext(interp->mem, interp->callStackTop->instruction);
+      current->instruction = MemItemNext(interp->mem, current->instruction);
 
       if (IsTypePrimFun(instruction))
       {
@@ -344,7 +378,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
       else
       if (IsTypePushable(instruction))
       {
-        InterpStackPush(interp, instruction);
+        InterpPush(interp, instruction);
       }
       else
       if (IsTypeSymbol(instruction))
@@ -353,11 +387,11 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         //if (!IsTypeNone(value))
         if (IsTypeFun(value))
         {
-          InterpPushFunContext(interp, value);
+          InterpPushStackFrame(interp, value);
         }
         else
         {
-          InterpStackPush(interp, value);
+          InterpPush(interp, value);
         }
       }
       else
@@ -366,12 +400,12 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         GURU(INTERP_UNEXPECTED_TYPE);
       }
     }
-    else
+    else // NULL == instruction
     {
-      InterpPopContext(interp);
+      InterpPopStackFrame(interp);
 
       // Exit if this was the last stackframe.
-      if (NULL == interp->callStackTop)
+      if (interp->callStackTop < 0)
       {
         interp->run = FALSE;
         goto Exit; // Exit loop

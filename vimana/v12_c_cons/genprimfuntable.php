@@ -17,10 +17,12 @@ function SubstituteName($name)
     "2minus" => "2-",
     "lessthan" => "<",
     "greaterthan" => ">",
+    /*
     "local_0_set" => "A!",
     "local_0_get" => "A",
     "local_1_set" => "B!",
     "local_1_get" => "B",
+    */
   ];
 
   if (isset($subst[$name])):

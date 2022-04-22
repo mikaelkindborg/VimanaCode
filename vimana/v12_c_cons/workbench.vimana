@@ -1,12 +1,67 @@
-1 localvars
-42 A!
-A print
-
 
 (funify swap setglobal) funify 
   (def) setglobal
 
-0
+/--
+(foo) (
+  42 local_setA
+  1 (local_getA print) iftrue
+  88 foo2
+  'foo2 done' print
+  local_getA print
+  55 foo2
+  1 (44 foo2) iftrue) def
+
+(foo2) (
+  'foo2' print
+  local_setA
+  local_getA print) def
+
+foo
+local_getA print
+--/
+
+printstack
+42 local_setA
+local_getA print
+printstack
+
+1
+(
+(times) 
+  (local_setAB
+    local_getB iszero
+    (local_getA eval 
+    local_getA local_getB 1- times) 
+  iffalse) def
+  
+(fib)
+  (dup 2 < (dup 1- fib swap 2- fib +) iffalse) def
+
+(32 fib print) 5 times
+  sayHi
+)
+(
+  (times) 
+    (dup iszero 
+      (drop drop) 
+      (swap dup eval swap 1- times) 
+    ifelse) def
+    
+  (fib)
+    (dup 2 < (dup 1- fib swap 2- fib +) iffalse) def
+
+  (32 fib print) 5 times
+  sayHi
+) ifelse
+
+printstack
+
+local_getA print
+local_getB print
+
+/---
+1
 (
   (times) 
     (dup iszero 
@@ -34,6 +89,8 @@ A print
   (32 fib print) 5 times
 ) 
 ifelse
+---/
+
 
 /-------------------
 

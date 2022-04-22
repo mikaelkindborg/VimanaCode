@@ -30,7 +30,7 @@ Version v12_c_cons:
 220403:
   BASE VERSION: 412 lines (symbolic parser)
 220408:
-  BASE VERSION: 654 lines (work-in-progress in interpreter)
+  BASE VERSION: 654 lines (work-in-progress on interpreter)
 220409:
   BASE VERSION: 652 lines (work-in-progress, new parser, symbol lookup)
   BASE VERSION: 1092 lines
@@ -47,6 +47,7 @@ Version v12_c_cons:
   BASE VERSION: 1604 lines (local variables/registers, /-- comments --/)
 220422:
   BASE VERSION: 1741 lines (hmmm)
+  BASE VERSION: 1753 lines (mostly working again, some kind of local vars)
 
 Version v11_c_minimal:
 
