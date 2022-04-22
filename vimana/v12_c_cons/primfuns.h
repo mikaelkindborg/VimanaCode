@@ -28,6 +28,12 @@ void PrimFun_eval(VInterp* interp)
   InterpPushContext(interp, codeBlock);
 }//
 
+void PrimFun_evalx(VInterp* interp)
+{
+  VItem* codeBlock = InterpStackPop(interp);
+  InterpPushEvalXContext(interp, codeBlock);
+}//
+
 void PrimFun_iftrue(VInterp* interp)
 {
   VItem* trueBlock = InterpStackPop(interp);
@@ -67,6 +73,12 @@ void PrimFun_funify(VInterp* interp)
 {
   VItem* list = & (interp->dataStack[interp->dataStackTop]);
   ItemSetType(list, TypeFun);
+}//
+
+void PrimFun_funifyx(VInterp* interp)
+{
+  VItem* list = & (interp->dataStack[interp->dataStackTop]);
+  ItemSetType(list, TypeFunX);
 }//
 
 void PrimFun_readfile(VInterp* interp)
@@ -193,6 +205,17 @@ void PrimFun_localvars(VInterp* interp)
   interp->callStackTop->numVars = num->intNum;
 }//
 
+void PrimFun_localset(VInterp* interp)
+{
+  VItem* num = InterpStackPop(interp);
+  interp->callStackTop->numVars = num->intNum;
+  for (int i = num->intNum - 1; i >= 0; -- i)
+  {
+    VItem* item = InterpStackPop(interp);
+    ContextSetLocalVar(interp->callStackTop->localVarCtx, i, item);
+  }
+}//
+
 void PrimFun_local_0_set(VInterp* interp)
 {
   VItem* item = InterpStackPop(interp);
@@ -201,6 +224,7 @@ void PrimFun_local_0_set(VInterp* interp)
 
 void PrimFun_local_0_get(VInterp* interp)
 {
+  printf("loc get: %li\n", (long) interp->callStackTop->localVarCtx);
   VItem* item = ContextGetLocalVar(interp->callStackTop->localVarCtx, 0);
   InterpStackPush(interp, item);
 }//

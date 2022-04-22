@@ -1,10 +1,10 @@
-1 localvars
-42 A!
-A print
-
 
 (funify swap setglobal) funify 
   (def) setglobal
+
+(funify swap setglobal) funifyx 
+  (defx) setglobal
+
 
 0
 (
@@ -12,7 +12,7 @@ A print
     (dup iszero 
       (drop drop) 
       (swap dup eval swap 1- times) 
-    ifelse) def
+    ifelse) defx
     
   (fib)
     (dup 2 < (dup 1- fib swap 2- fib +) iffalse) def
@@ -21,21 +21,50 @@ A print
 ) 
 (
   (times) (
-    2 localvars
-    B! A!
+    2 localset
+    A print
+    B print
     B 0 >
-      (A eval  A B 1- times) 
-    iftrue) def
+      (A evalx  A B 1- times) 
+    iftrue) defx
 
-  (fib) (A!
-    1 localvars
+  (fib) (
+    1 localset
     A 2 < (A) (A 1- fib A 2- fib +) ifelse) def
 
-  (32 fib print) 5 times
+  ((32 fib print) 1 times) drop
+
+  (foo) (
+    1 localvars
+    42 A!
+    A print
+    ('foo' print A print) 1 times
+  ) def
+
+  foo
 ) 
 ifelse
 
 /-------------------
+
+varstack
+[X] counter 1, 0
+[XY] counter 1, 2, 1, 1, 0 push + pop -
+
+push/pop context counter
+  (times) (
+    [XY] X 0 >
+      (Y eval  
+       X Y 1- times) 
+    iftrue) def
+
+  (foo) (
+    1 [X]
+    X print
+    ('foo' print A 11 < ('bar' print A 1+ A!) iftrue) 5 times
+  ) def
+
+foo
 
 (add) (2 args A B +) def
 

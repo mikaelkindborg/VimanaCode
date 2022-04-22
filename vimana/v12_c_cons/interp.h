@@ -12,7 +12,20 @@ enum CALLTYPE
   CALLTYPE_FUNX,
   CALLTYPE_EVALX
 };
+/*
+typedef struct __VStackFrame
+{
+  VItem* instruction;
+}
+__VStackFrame;
 
+typedef struct __VContextFrame
+{
+  VItem     localVars[2];
+  VSmallInt counter;
+}
+__VContextFrame;
+*/
 typedef struct __VContext
 {
   struct __VContext* prev;           // Previous context in call stack
@@ -183,7 +196,8 @@ void InterpPushContextImpl(VInterp* interp, VItem* code, int callType)
   {
     // Check tailcall - push new context only if this is not the last instruction
     void* pushContext = interp->callStackTop->instruction;
-    if (pushContext)
+    int newCallType = callType != interp->callStackTop->callType && callType == CALLTYPE_FUNX;
+    if (pushContext || newCallType)
     {
       // NOT TAILCALL - PUSH NEW CONTEXT
 
@@ -235,9 +249,13 @@ void InterpPushContextImpl(VInterp* interp, VItem* code, int callType)
       VContext* context = currentContext;
       while (context)
       {
+        printf("Context type: %i\n", (int) context->callType);
+        printf("Context: %li\n", (long) context);
+        printf("A: %i\n", (int) context->localVars[0].intNum);
         // Have we found the function call context?
         if (CALLTYPE_FUN == context->callType)
         {
+          PrintLine("found context");
           currentContext->localVarCtx = context;
           break;
         }
@@ -245,7 +263,7 @@ void InterpPushContextImpl(VInterp* interp, VItem* code, int callType)
         context = context->prev;
       }
 
-      GURU(EVALX_NO_FUNCALL_CONTEXT_FOUND);
+      if (NULL == context) GURU(EVALX_NO_FUNCALL_CONTEXT_FOUND);
     }
   }
 
@@ -354,6 +372,11 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         if (IsTypeFun(value))
         {
           InterpPushFunContext(interp, value);
+        }
+        else
+        if (IsTypeFunX(value))
+        {
+          InterpPushFunXContext(interp, value);
         }
         else
         {

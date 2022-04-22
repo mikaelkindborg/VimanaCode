@@ -45,6 +45,7 @@ VItem;
 #define TypeSymbol        6 // Pushable types must be before TypeSymbol
 #define TypePrimFun       7
 #define TypeFun           8
+#define TypeFunX          9
 
 // Pushable items are types that can be pushed to the data stack 
 // without being evaluated
@@ -57,6 +58,7 @@ VItem;
 #define IsTypeSymbol(item)       (TypeSymbol == ItemType(item))
 #define IsTypePrimFun(item)      (TypePrimFun == ItemType(item))
 #define IsTypeFun(item)          (TypeFun == ItemType(item))
+#define IsTypeFunX(item)         (TypeFunX == ItemType(item))
 #define IsTypeStringHolder(item) (TypeStringHolder == ItemType(item))
 // Empty list
 #define IsNil(item)              (IsTypeList(item) && ((item)->addr == 0))
