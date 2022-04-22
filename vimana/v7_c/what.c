@@ -90,6 +90,9 @@ int main()
   size = sizeof(int);
   printf("Size of int: %i\n", size);
 
+  size = sizeof(short);
+  printf("Size of short: %i\n", size);
+
   size = sizeof(long);
   printf("Size of long: %i\n", size);
 
