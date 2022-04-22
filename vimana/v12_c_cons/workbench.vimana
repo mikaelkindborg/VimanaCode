@@ -1,8 +1,12 @@
+1 localvars
+42 A!
+A print
+
 
 (funify swap setglobal) funify 
   (def) setglobal
 
-1
+0
 (
   (times) 
     (dup iszero 
@@ -16,13 +20,16 @@
   (32 fib print) 5 times
 ) 
 (
-  (times) (N! L!
-    N 0 >
-      (L eval  L N 1- times) 
+  (times) (
+    2 localvars
+    B! A!
+    B 0 >
+      (A eval  A B 1- times) 
     iftrue) def
 
-  (fib) (N!
-    N 2 < (N) (N 1- fib N 2- fib +) ifelse) def
+  (fib) (A!
+    1 localvars
+    A 2 < (A) (A 1- fib A 2- fib +) ifelse) def
 
   (32 fib print) 5 times
 ) 
@@ -37,15 +44,23 @@ ifelse
  (A 100 <) (sayHiii)
  (T)       (sayElse)) cond
 
-/-- A cond => ? --/
 (cond) (
-  1 args
+  1 poplocalvars
   A isempty
     (A first eval 
       (A rest first eval)
       (A rest rest cond)
     ifelse)
-  iffalse) def
+  iffalse) defx
+
+funifyx
+
+(while) (
+  2 poplocalvars
+  A eval 
+    (B eval  A B while)
+  iftrue) defx
+
 
 A 1 < (sayHi) 
 (A 10 < (sayHii)

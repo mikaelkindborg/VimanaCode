@@ -187,28 +187,34 @@ void PrimFun_swap(VInterp* interp)
   *b = temp;
 }//
 
+void PrimFun_localvars(VInterp* interp)
+{
+  VItem* num = InterpStackPop(interp);
+  interp->callStackTop->numVars = num->intNum;
+}//
+
 void PrimFun_local_0_set(VInterp* interp)
 {
-  VItem* a = InterpStackPop(interp);
-  ContextSetLocalVar(interp->callStackTop->activeContext, 0, a);
+  VItem* item = InterpStackPop(interp);
+  ContextSetLocalVar(interp->callStackTop->localVarCtx, 0, item);
 }//
 
 void PrimFun_local_0_get(VInterp* interp)
 {
-  VItem* a = ContextGetLocalVar(interp->callStackTop->activeContext, 0);
-  InterpStackPush(interp, a);
+  VItem* item = ContextGetLocalVar(interp->callStackTop->localVarCtx, 0);
+  InterpStackPush(interp, item);
 }//
 
 void PrimFun_local_1_set(VInterp* interp)
 {
-  VItem* a = InterpStackPop(interp);
-  ContextSetLocalVar(interp->callStackTop->activeContext, 1, a);
+  VItem* item = InterpStackPop(interp);
+  ContextSetLocalVar(interp->callStackTop->localVarCtx, 1, item);
 }//
 
 void PrimFun_local_1_get(VInterp* interp)
 {
-  VItem* a = ContextGetLocalVar(interp->callStackTop->activeContext, 1);
-  InterpStackPush(interp, a);
+  VItem* item = ContextGetLocalVar(interp->callStackTop->localVarCtx, 1);
+  InterpStackPush(interp, item);
 }//
 
 void PrimFun_nil(VInterp* interp)

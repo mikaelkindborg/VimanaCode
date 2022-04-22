@@ -6,11 +6,6 @@ Items are like conses in Lisp. They hold a value and
 an address to the next item.
 */
 
-typedef unsigned int     VType;
-typedef unsigned int     VAddr;
-typedef          long    VIntNum;
-typedef          double  VDecNum;
-
 typedef struct __VInterp VInterp;
 typedef void (*VPrimFunPtr) (VInterp*);
 

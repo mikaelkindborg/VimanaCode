@@ -7,24 +7,26 @@ Interpreter data structures and functions.
 
 enum CALLTYPE
 {
-  CALLTYPE_EVAL,
   CALLTYPE_FUN,
-  CALLTYPE_SPECIAL
+  CALLTYPE_EVAL,
+  CALLTYPE_FUNX,
+  CALLTYPE_EVALX
 };
 
 typedef struct __VContext
 {
   struct __VContext* prev;           // Previous context in call stack
-  struct __VContext* activeContext;  // Context that holds local vars
-  struct __VContext* funCallContext; // Most recent function call
-  VItem*             code;
-  VItem*             instruction;
-  VItem              localVars[4];
+  struct __VContext* localVarCtx;    // Context that holds local vars
+  VSmallInt          numVars;        // Number of local vars in this context
+  VSmallInt          callType;       // Context type
+  VItem*             code;           // Code list
+  VItem*             instruction;    // Instruction pointer
+  VItem              localVars[1];   // Memory area for local vars
 }
 VContext;
 
-#define ContextSetLocalVar(context, index, itempointer) \
-  ((context)->localVars[index] = *(itempointer))
+#define ContextSetLocalVar(context, index, itemPointer) \
+  ((context)->localVars[index] = *(itemPointer))
 
 #define ContextGetLocalVar(context, index) \
   (& ((context)->localVars[index]))
@@ -47,6 +49,7 @@ typedef struct __VInterp
   VItem*    globalVars;
 
   int       callStackSize;
+  void*     callStackBounds;
   VContext* callStackTop;    // Current context
   void*     callStack;
 }
@@ -78,6 +81,7 @@ VInterp* InterpNewWithSize(
 
   interp->callStack = (void*)interp->globalVars + globalVarsByteSize;
   interp->callStackSize = callStackSize;
+  interp->callStackBounds = (void*)interp->callStack + callStackByteSize;
   interp->callStackTop = NULL;
 
   interp->mem = MemNew(memSize);
@@ -157,28 +161,42 @@ VItem* InterpStackTop(VInterp* interp)
 
 #endif
 
-void InterpPushContextImpl(VInterp* interp, VItem* code, int calltype)
+void InterpPushContextImpl(VInterp* interp, VItem* code, int callType)
 {
-  if (NULL == interp->callStackTop)
+  VContext* currentContext = interp->callStackTop;
+
+  if (NULL == currentContext)
   {
     // Set root context
-    interp->callStackTop = interp->callStack;
-    interp->callStackTop->prev = NULL;
+    currentContext = interp->callStack;
+    currentContext->prev = NULL;
 
     // The root context always has its own local vars
-    interp->callStackTop->activeContext = interp->callStackTop;
-    interp->callStackTop->funCallContext = interp->callStackTop;
+    currentContext->localVarCtx = currentContext;
+
+    // Initialize number of local vars
+    currentContext->numVars = 0;
+
+    interp->callStackTop = currentContext;
   }
   else
   {
-    // Push new context if this is not the last instruction
-    if (interp->callStackTop->instruction)
+    // Check tailcall - push new context only if this is not the last instruction
+    void* pushContext = interp->callStackTop->instruction;
+    if (pushContext)
     {
-      VContext* currentContext = (void*)interp->callStackTop + sizeof(VContext);
+      // NOT TAILCALL - PUSH NEW CONTEXT
 
-      void* maxSize = interp->callStack + (interp->callStackSize * sizeof(VContext));
+      // Size of previous context
+      size_t contextSize = sizeof(VContext) + (interp->callStackTop->numVars * sizeof(VItem));
 
-      if ((void*)currentContext + sizeof(VContext) >= maxSize)
+      // Address of the new current context
+      currentContext = (void*)interp->callStackTop + contextSize;
+
+      // Bounds for callstack with room for 10 local vars in the new context
+      void* bounds = (void*)currentContext + sizeof(VContext) + (10 * sizeof(VItem));
+     
+      if (bounds >= interp->callStackBounds)
       {
         GURU(CALL_STACK_OVERFLOW);
       }
@@ -187,47 +205,66 @@ void InterpPushContextImpl(VInterp* interp, VItem* code, int calltype)
       currentContext->prev = interp->callStackTop;
       interp->callStackTop = currentContext;
 
-      if (CALLTYPE_EVAL == calltype)
+      // Set call type of new context
+      currentContext->callType = callType;
+
+      if (CALLTYPE_EVAL == callType)
       {
-        // Eval uses the local vars of the most recent function call
-        currentContext->activeContext = currentContext->prev->funCallContext;
-        currentContext->funCallContext = currentContext->prev->funCallContext;
+        // A new eval context uses the local vars of the previous context
+        currentContext->localVarCtx = currentContext->prev->localVarCtx;
+        currentContext->numVars = 0;
       }
-      else      
-      if (CALLTYPE_FUN == calltype)
+    }
+      
+    // TAILCALL OR NEW CONTEXT
+
+    // Always initialize local vars for function calls
+    if (CALLTYPE_FUN == callType || CALLTYPE_FUNX == callType)
+    {
+      // A function call or special form has its own local vars
+      currentContext->numVars = 0;
+      currentContext->localVarCtx = currentContext;
+    }
+
+    // For tailcall CALLTYPE_EVAL we want to keep the current call type and context
+    // if (CALLTYPE_EVAL == callType) DO_NOTHING();
+
+    // For CALLTYPE_EVALX we want to find the closest function call context
+    if (CALLTYPE_EVALX == callType)
+    {
+      VContext* context = currentContext;
+      while (context)
       {
-        // A function call has its own local vars
-        currentContext->activeContext = currentContext;
-        currentContext->funCallContext = currentContext;
+        // Have we found the function call context?
+        if (CALLTYPE_FUN == context->callType)
+        {
+          currentContext->localVarCtx = context;
+          break;
+        }
+
+        context = context->prev;
       }
-      else      
-      if (CALLTYPE_SPECIAL == calltype)
-      {
-        // A special form has its own local vars, but passes on the 
-        // current function call context
-        currentContext->activeContext = currentContext;
-        currentContext->funCallContext = currentContext->prev->funCallContext;
-      }
-      else
-      {
-        GURU(UNKNOWN_CALLTYPE);
-      }
+
+      GURU(EVALX_NO_FUNCALL_CONTEXT_FOUND);
     }
   }
 
   // Set first instruction in new frame
-  interp->callStackTop->code = code;
-  interp->callStackTop->instruction = MemItemFirst(interp->mem, code);
+  currentContext->code = code;
+  currentContext->instruction = MemItemFirst(interp->mem, code);
 }
 
 #define InterpPushContext(interp, code) \
   InterpPushContextImpl(interp, code, CALLTYPE_EVAL)
 
+#define InterpPushEvalXContext(interp, code) \
+  InterpPushContextImpl(interp, code, CALLTYPE_EVALX)
+
 #define InterpPushFunContext(interp, code) \
   InterpPushContextImpl(interp, code, CALLTYPE_FUN)
 
-#define InterpPushSpecialContext(interp, code) \
-  InterpPushContextImpl(interp, code, CALLTYPE_SPECIAL)
+#define InterpPushFunXContext(interp, code) \
+  InterpPushContextImpl(interp, code, CALLTYPE_FUNX)
 
 void InterpPopContext(VInterp* interp)
 {
