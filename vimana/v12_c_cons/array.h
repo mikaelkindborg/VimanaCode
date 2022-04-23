@@ -1,8 +1,12 @@
 /*
-File: item.h
+File: array.h
 Author: Mikael Kindborg (mikael@kindborg.com)
+
+Functions for growable item arrays.
 */
 
+// First item in the array is a header with 
+// current length and max size
 #define ArrayLength(array)  ((array)->type)
 #define ArrayMaxSize(array) ((array)->next)
 

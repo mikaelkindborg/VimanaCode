@@ -15,7 +15,7 @@ $numlines =
   countlines("mem.h") +
   countlines("array.h") +
   countlines("gurumeditation.h") +
-  countlines("symbols2.h") +
+  countlines("symboltable.h") +
   countlines("interp.h") + 
   countlines("primfuns.h") +
   countlines("primfuntable.h") +

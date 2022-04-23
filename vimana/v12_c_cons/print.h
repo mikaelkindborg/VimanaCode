@@ -5,6 +5,7 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Print functions.
 */
 
+// For portability (TODO: Add support for Arduino)
 #define Print(str)        fputs(str, stdout)
 #define PrintIntNum(num)  printf("%ld", (long)(num))
 #define PrintDecNum(num)  printf("%g", (double)(num))
@@ -12,6 +13,7 @@ Print functions.
 #define PrintNewLine()    printf("\n")
 #define PrintLine(str)    printf("%s\n", str)
 
+// For debugging
 void PrintBinaryUInt(unsigned int n)
 {
   int numBits = sizeof(unsigned int) * 8;

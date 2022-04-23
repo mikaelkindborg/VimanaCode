@@ -4,15 +4,72 @@
 
 2 (add) (1 2 3 4) map
 
-10 (dup > 0)
+10 (dup 0 >)
   (dup print -1)
 while 
 drop
 
-10 (X > 0)
+10 (X 0 >)
   (X print -1)
 while
 drop
+
+10 X (X 0 >)
+  (1- swap over + swap)
+while []
+
+  ([A-1] [A<->B] [A-B->A] + [A<->B]) "ikoner"
+
+  (X -1 X<->Y X-Y->X + Y<->X) "ikoner"
+
+  (⏺ -1 🔄 ⏩ + 🔄)
+
+  (X -1 swap over + swap)
+
+  (dup -1 swap over + swap)
+
+unicode
+😽
+
+🔄 🔁 ⏩ ❎ ✳️ ⏺ #️⃣
+
+(fib)
+  (X 1 > (X 1- fib swap 2- fib +) iftrue) def
+
+(times) 
+  (⏺ iszero 
+    (❎ ❎) 
+    (🔁 ⏺ eval 🔁 1- times) 
+  ifelse) def
+
+10 10     1-
+10 9      swap
+9 10      over
+9 10 9    +
+9 19      swap
+19 9
+
+19 9      dup
+19 9 9    0 >
+19 9 1    iftrue
+19 9      1-
+19 8      swap
+8 19      over
+8 19 8    +
+8 27      swap
+27 8
+
+nn 0
+
+
+
+
+
+
+
+
+(add-seq)
+  (X 1 - + add-seq) def
 
 (while) 
   ([AB] A eval 
@@ -23,12 +80,12 @@ drop
   ([AB] B isempty not 
     (B first  
      A eval
-     A dup B rest map cons)
+     A B rest map cons)
      A B rest map)
   iftrue) def
 
 (add)
-  (+ dup) def
+  (over +) def
 
 
 

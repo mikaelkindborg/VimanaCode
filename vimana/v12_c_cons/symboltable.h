@@ -5,6 +5,8 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Lookup table for symbols. Used for parsing and printing.
 */
 
+// TODO: Rename file to symboltable.h
+
 VItem* SymbolTableNew()
 {
   return ArrayNew(20);

@@ -50,7 +50,6 @@ char* GetNextToken(char* p, char** next)
   }
 
   *pbuf = 0;
-
   *next = p;
 
   return GTokenBuffer;
@@ -60,8 +59,6 @@ VType TokenType(char* token)
 {
   char* p = token;
   int   dec = 0;
-
-  //printf("Token: %s\n", token);
 
   VType type = TypeSymbol;
 
@@ -87,7 +84,6 @@ VType TokenType(char* token)
     type = TypeDecNum;
 
 Exit:
-  //printf("TokenType: %i\n", type);
   return type;
 }
 
@@ -149,15 +145,15 @@ char* SkipComment(char* p)
     while (0 != *p)
     {
       if (IsCommentEnd(p)) 
-        return p + 3; // end of comment
+        return p + 3; // End of comment
       
       ++p;
     }
 
-    return NULL; // end of string
+    return NULL; // End of string
   }
   else
-    return p; // not comment
+    return p; // Not a comment
 }
 
 VItem* ParseCode(char* code, char** next, VMem* mem)

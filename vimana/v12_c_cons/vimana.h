@@ -19,7 +19,7 @@
 #include "mem.h"
 #include "array.h"
 #include "gurumeditation.h"
-#include "symbols2.h"
+#include "symboltable.h"
 #include "interp.h"
 #include "primfuns.h"
 #include "parser.h"

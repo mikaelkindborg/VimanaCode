@@ -15,13 +15,14 @@ enum CALL_TYPE
   CALL_TYPE_FUN
 };
 
-typedef struct __VStackFrame
+typedef struct __VStackFrame VStackFrame;
+
+struct __VStackFrame
 {
-  VItem*                instruction;
-  struct __VStackFrame* context;
-  VItem                 localVars[4];
-}
-VStackFrame;
+  VItem*       instruction;  // Current instruction
+  VStackFrame* context;      // Stack frame that holds local vars
+  VItem        localVars[4]; // Space for 4 local vars
+};
 
 // Mind control for hackers
 
@@ -41,18 +42,16 @@ typedef struct __VInterp
   VItem*       dataStack;
 
   int          callStackSize;
-  int          callStackTop; // Current context
+  int          callStackTop;   // Current stackframe
   VStackFrame* callStack;
 }
 VInterp;
 
-typedef struct __VInterp VInterp;
-typedef void (*VPrimFunPtr) (VInterp*);
-
+// Prim fun lookup function
 VPrimFunPtr LookupPrimFunPtr(int index);
 
-#define InterpStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
-// TODO #define InterpStackFrame(interp) ( & ((interp)->callStack[(interp)->callStackTop] )
+//#define InterpStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
+#define InterpStackFrame(interp) ( & ((interp)->callStack[(interp)->callStackTop]) )
 
 // -------------------------------------------------------------
 // Interp
@@ -330,6 +329,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         InterpPush(interp, instruction);
       }
       else
+      // TODO: Don't push unbound symbols?
       if (IsTypeSymbol(instruction))
       {
         VItem* value = InterpGetGlobalVar(interp, instruction->intNum);
@@ -338,19 +338,12 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
           // Call function
           InterpPushStackFrameFun(interp, value);
         }
-        else
+        else // check not TypeNone
         {
           // Push value
           InterpPush(interp, value);
         }
       }
-      /*
-      else
-      {
-        printf("Instruction type: %i\n", ItemType(instruction)); 
-        GURU(INTERP_UNEXPECTED_TYPE);
-      }
-      */
     }
     else // NULL == instruction
     {
