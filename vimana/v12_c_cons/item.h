@@ -78,17 +78,17 @@ void ItemSetSymbol(VItem* item, VIntNum symbol)
 }
 
 #ifdef OPTIMIZE
-void ItemSetPrimFun(VItem* item, VPrimFunPtr primFun)
-{
-  item->primFunPtr = primFun;
-  ItemSetType(item, TypePrimFun);
-}
+  void ItemSetPrimFun(VItem* item, VPrimFunPtr primFun)
+  {
+    item->primFunPtr = primFun;
+    ItemSetType(item, TypePrimFun);
+  }
 #else
-void ItemSetPrimFun(VItem* item, VIntNum primFun)
-{
-  item->intNum = primFun;
-  ItemSetType(item, TypePrimFun);
-}
+  void ItemSetPrimFun(VItem* item, VIntNum primFun)
+  {
+    item->intNum = primFun;
+    ItemSetType(item, TypePrimFun);
+  }
 #endif
 
 void ItemSetIntNum(VItem* item, VIntNum number)

@@ -22,11 +22,18 @@ void PrimFun_printstack(VInterp* interp)
   PrintNewLine();
 }//
 
-// TODO: Eval in own context? apply? funcall?
+// Eval in current context
 void PrimFun_eval(VInterp* interp)
 {
   VItem* codeBlock = InterpPop(interp);
   InterpPushStackFrame(interp, codeBlock);
+}//
+
+// Eval in new context (function call)
+void PrimFun_call(VInterp* interp)
+{
+  VItem* codeBlock = InterpPop(interp);
+  InterpPushStackFrameFun(interp, codeBlock);
 }//
 
 void PrimFun_iftrue(VInterp* interp)
@@ -190,32 +197,28 @@ void PrimFun_swap(VInterp* interp)
 
 void PrimFun_local_setA(VInterp* interp)
 {
-  InterpPushContext(interp);
-
   VItem* itemA = InterpPop(interp);
-  InterpContextSetLocalVar(interp, 0, itemA);
+  InterpSetLocalVar(interp, 0, itemA);
 }//
 
 void PrimFun_local_setAB(VInterp* interp)
 {
-  InterpPushContext(interp);
-
   VItem* itemB = InterpPop(interp);
-  InterpContextSetLocalVar(interp, 1, itemB);
+  InterpSetLocalVar(interp, 1, itemB);
 
   VItem* itemA = InterpPop(interp);
-  InterpContextSetLocalVar(interp, 0, itemA);
+  InterpSetLocalVar(interp, 0, itemA);
 }//
 
 void PrimFun_local_getA(VInterp* interp)
 {
-  VItem* item = InterpContextGetLocalVar(interp, 0);
+  VItem* item = InterpGetLocalVar(interp, 0);
   InterpPush(interp, item);
 }//
 
 void PrimFun_local_getB(VInterp* interp)
 {
-  VItem* item = InterpContextGetLocalVar(interp, 1);
+  VItem* item = InterpGetLocalVar(interp, 1);
   InterpPush(interp, item);
 }//
 
@@ -227,7 +230,7 @@ void PrimFun_isnil(VInterp* interp)
 {
 }//
 
-void PrimFun_head(VInterp* interp)
+void PrimFun_first(VInterp* interp)
 {
   VItem* list = InterpStackTop(interp);
 
@@ -244,7 +247,8 @@ void PrimFun_head(VInterp* interp)
   }
 }//
 
-void PrimFun_tail(VInterp* interp)
+// TODO: Allocate new list item
+void PrimFun_rest(VInterp* interp)
 {
   VItem* list = InterpStackTop(interp);
 

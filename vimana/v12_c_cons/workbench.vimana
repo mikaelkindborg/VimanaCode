@@ -2,6 +2,35 @@
 (funify swap setglobal) funify 
   (def) setglobal
 
+2 (add) (1 2 3 4) map
+
+10 (dup > 0)
+  (dup print -1)
+while 
+drop
+
+10 (X > 0)
+  (X print -1)
+while
+drop
+
+(while) 
+  ([AB] A eval 
+    (B eval  A B while)
+  iftrue) def
+
+(map) 
+  ([AB] B isempty not 
+    (B first  
+     A eval
+     A dup B rest map cons)
+     A B rest map)
+  iftrue) def
+
+(add)
+  (+ dup) def
+
+
 
 (foo) (
   42 local_setA

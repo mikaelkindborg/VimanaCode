@@ -115,10 +115,10 @@ VItem* ParseToken(char* token, VMem* mem)
     if (primFunId > -1)
     {
       #ifdef OPTIMIZE
-      VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
-      ItemSetPrimFun(item, fun);
+        VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
+        ItemSetPrimFun(item, fun);
       #else
-      ItemSetPrimFun(item, primFunId);
+        ItemSetPrimFun(item, primFunId);
       #endif
     }
     else

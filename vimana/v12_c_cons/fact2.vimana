@@ -1,11 +1,8 @@
 (funify swap setglobal) funify 
   (def) setglobal
-
-(fib) 
-  ([A] A 1 > 
-    (A 1- fib A 2- fib +)
-    (A)
-  ifelse) def 
+  
+(fact) 
+  ([A] A iszero (1) (A 1- fact A *) ifelse) def
 
 (times) 
   (dup iszero 
@@ -13,4 +10,6 @@
     (swap dup eval swap 1- times) 
   ifelse) def
 
-(32 fib print) 5 times
+20 fact print
+
+(20 fact drop) 10000000 times

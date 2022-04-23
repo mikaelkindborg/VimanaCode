@@ -20,7 +20,7 @@ VMem;
 
 static int GAllocCounter = 0;
 
-#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + addr - 1) ) 
+#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + (addr) - 1) ) 
 
 VMem* MemNew(int memSize)
 {
@@ -41,18 +41,8 @@ void MemFree(VMem* mem)
   printf("GAllocCounter: %i\n", GAllocCounter);
 }
 
-#ifdef OPTIMIZE
 #define MemItemAddr(mem, item) \
-  ( (NULL != item) ? ( ((void*)(item)) - (mem)->start ) + 1 : 0 )
-#else
-VAddr MemItemAddr(VMem* mem, VItem* item)
-{
-  if (NULL != item)
-    return ( ((void*)(item)) - (mem)->start ) + 1;
-  else
-    return 0;
-}     
-#endif
+  ( (NULL != (item)) ? ( ((void*)(item)) - (mem)->start ) + 1 : 0 )
 
 // -------------------------------------------------------------
 // Alloc/dealloc
@@ -140,36 +130,16 @@ void MemItemSetFirst(VMem* mem, VItem* item, VItem* first)
   item->addr = MemItemAddr(mem, first);
 }
 
-#ifdef OPTIMIZE
 #define MemItemFirst(mem, item) \
   ( ((item)->addr) ?  MemItemPointer(mem, (item)->addr) : NULL )
-#else
-VItem* MemItemFirst(VMem* mem, VItem* item)
-{
-  if (item->addr)
-    return MemItemPointer(mem, item->addr);
-  else
-    return NULL;
-}
-#endif
 
 void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
 {
   item1->next = MemItemAddr(mem, item2);
 }
 
-#ifdef OPTIMIZE
 #define MemItemNext(mem, item) \
   ( ItemNext(item) ?  MemItemPointer(mem, ItemNext(item)) : NULL )
-#else
-VItem* MemItemNext(VMem* mem, VItem* item)
-{
-  if (ItemNext(item))
-    return MemItemPointer(mem, ItemNext(item));
-  else
-    return NULL;
-}
-#endif
 
 // Allocates a new item to hold the string
 void MemItemSetString(VMem* mem, VItem* item, char* string)
