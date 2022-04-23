@@ -9,6 +9,12 @@ Interpreter data structures and functions.
 // Data types and structs
 // -------------------------------------------------------------
 
+enum CALL_TYPE
+{
+  CALL_TYPE_EVAL,
+  CALL_TYPE_FUN
+};
+
 typedef struct __VStackFrame
 {
   VItem* instruction;
@@ -200,7 +206,7 @@ void InterpPopContext(VInterp* interp)
 
 void InterpIncrContextCounter(VInterp* interp)
 {
-  if (interp->contextStackTop > -1)
+  if (interp->contextStackTop >= 0)
   {
     ++ (interp->contextStack[interp->contextStackTop].counter);
     //printf("InterpIncrContextCounter: %i\n", interp->contextStack[interp->contextStackTop].counter);
@@ -209,7 +215,7 @@ void InterpIncrContextCounter(VInterp* interp)
 
 void InterpDecrContextCounter(VInterp* interp)
 {
-  if (interp->contextStackTop > -1)
+  if (interp->contextStackTop >= 0)
   {
     -- (interp->contextStack[interp->contextStackTop].counter);
 
@@ -248,7 +254,7 @@ VItem* InterpContextGetLocalVar(VInterp* interp, int index)
 // Call stack
 // -------------------------------------------------------------
 
-void InterpPushStackFrame(VInterp* interp, VItem* code)
+void InterpPushStackFrameImpl(VInterp* interp, VItem* code, VSmallInt callType)
 {
   VStackFrame* current;
 
@@ -278,11 +284,27 @@ void InterpPushStackFrame(VInterp* interp, VItem* code)
 
       InterpIncrContextCounter(interp);
     }
+    else
+    {
+      // TAILCALL
+
+      if (CALL_TYPE_FUN == callType) 
+      {
+       InterpDecrContextCounter(interp);
+       // InterpIncrContextCounter(interp);
+      }
+    }
   }
   
-  // Set first instruction in the new frame
+  // Set first instruction in the frame
   current->instruction = MemItemFirst(interp->mem, code);
 }
+
+#define InterpPushStackFrame(interp, code) \
+  InterpPushStackFrameImpl(interp, code, CALL_TYPE_EVAL)
+
+#define InterpPushStackFrameFun(interp, code) \
+  InterpPushStackFrameImpl(interp, code, CALL_TYPE_FUN)
 
 void InterpPopStackFrame(VInterp* interp)
 {
@@ -387,7 +409,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         //if (!IsTypeNone(value))
         if (IsTypeFun(value))
         {
-          InterpPushStackFrame(interp, value);
+          InterpPushStackFrameFun(interp, value);
         }
         else
         {

@@ -2,7 +2,7 @@
 (funify swap setglobal) funify 
   (def) setglobal
 
-/--
+
 (foo) (
   42 local_setA
   1 (local_getA print) iftrue
@@ -19,7 +19,8 @@
 
 foo
 local_getA print
---/
+
+'---------------------' print
 
 printstack
 42 local_setA
@@ -36,7 +37,7 @@ printstack
   iffalse) def
   
 (fib)
-  (dup 2 < (dup 1- fib swap 2- fib +) iffalse) def
+  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
 
 (32 fib print) 5 times
   sayHi
@@ -58,7 +59,6 @@ printstack
 printstack
 
 local_getA print
-local_getB print
 
 /---
 1

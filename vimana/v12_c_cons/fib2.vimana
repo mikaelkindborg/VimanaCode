@@ -1,0 +1,27 @@
+(funify swap setglobal) funify 
+  (def) setglobal
+
+
+(fib)
+  (dup 1 > (dup 1- fib swap 2- fib printstack +) iftrue) def
+
+
+(fib)
+  (
+  local_setA
+  local_getA 1 > 
+    (local_getA 1- fib  local_getA 2- fib printstack +)
+    (local_getA)
+  ifelse) def 
+
+10 fib print
+
+/--
+(times) 
+  (dup iszero 
+    (drop drop) 
+    (swap dup eval swap 1- times) 
+  ifelse) def
+
+(32 fib 'foo' print print) 5 times
+--/

@@ -10,4 +10,4 @@
     (swap dup eval swap 1- times) 
   ifelse) def
 
-(32 fib print) 20 times
+(32 fib print) 5 times
