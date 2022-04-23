@@ -161,21 +161,12 @@ void InterpPushStackFrameImpl(VInterp* interp, VItem* code, VSmallInt callType)
 {
   VStackFrame* current;
 
-  if (interp->callStackTop < 0)
-  {
-    // EMPTY CALLSTACK - CREATE ROOT FRAME
-
-    ++ interp->callStackTop;
-    current = InterpStackFrame(interp);
-    current->context = current;
-  }
-  else
+  if (interp->callStackTop >= 0)
   {
     VStackFrame* parent = InterpStackFrame(interp);
 
     // Check tailcall (are there any instructions left?)
-    void* instructionsLeft = parent->instruction;
-    if (instructionsLeft)
+    if (parent->instruction)
     {
       // NON-TAILCALL - PUSH NEW STACK FRAME
 
@@ -211,6 +202,14 @@ void InterpPushStackFrameImpl(VInterp* interp, VItem* code, VSmallInt callType)
         current->context = current;
       }
     }
+  }
+  else
+  {
+    // EMPTY CALLSTACK - CREATE ROOT FRAME
+
+    ++ interp->callStackTop;
+    current = InterpStackFrame(interp);
+    current->context = current;
   }
   
   // Set first instruction in the frame
@@ -338,7 +337,8 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
           // Call function
           InterpPushStackFrameFun(interp, value);
         }
-        else // check not TypeNone
+        else
+        if (!IsTypeNone(value))
         {
           // Push value
           InterpPush(interp, value);

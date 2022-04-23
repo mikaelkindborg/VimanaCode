@@ -73,7 +73,7 @@ void PrimFun_setglobal(VInterp* interp)
 
 void PrimFun_funify(VInterp* interp)
 {
-  VItem* list = & (interp->dataStack[interp->dataStackTop]);
+  VItem* list = InterpStackTop(interp);
   ItemSetType(list, TypeFun);
 }//
 
@@ -224,53 +224,64 @@ void PrimFun_local_getB(VInterp* interp)
 
 void PrimFun_nil(VInterp* interp)
 {
+  VItem nil;
+  ItemInit(&nil);
+  InterpPush(interp, nil);
 }//
 
 void PrimFun_isnil(VInterp* interp)
 {
+  VItem* a = InterpStackTop(interp);
+  a->intNum = IsTypeNone(a);
+  ItemSetType(a, TypeIntNum);
 }//
 
+// TODO: Set nil if list is nil (just leave nil on the stack)
 void PrimFun_first(VInterp* interp)
 {
   VItem* list = InterpStackTop(interp);
 
   if (!IsTypeList(list)) GURU(OBJECT_IS_NOT_A_LIST);
 
-  VItem* head = MemItemFirst(interp->mem, list);
-  if (head)
+  VItem* first = MemItemFirst(interp->mem, list);
+  if (first)
   {
-    *list = *head;
+    // Copy value to data stack
+    *list = *first;
   }
   else
   {
-    list->addr = 0;
+    // Set result to nil
+    ItemInit(list);
   }
 }//
 
-// TODO: Allocate new list item
+// TODO: set nil if nil item on stack (leave nil on stack)
 void PrimFun_rest(VInterp* interp)
 {
   VItem* list = InterpStackTop(interp);
 
   if (!IsTypeList(list)) GURU(OBJECT_IS_NOT_A_LIST);
 
-  VItem* head = MemItemFirst(interp->mem, list);
-  if (head)
-  {
-    VItem* next = MemItemNext(interp->mem, head);
-    if (next)
-    {
-      // TODO: ?? MemTail(interp->mem, list);
-      MemItemSetFirst(interp->mem, list, next);
-      return;
-    }
-  }
+  VItem* rest = MemRest(interp->mem, list);
 
-  list->addr = 0; // Empty list
+  if (NULL != rest)
+  {
+    *list = *rest;
+  }
+  else
+  {
+    // Set result to nil
+    ItemInit(list);
+  }
 }//
 
 void PrimFun_cons(VInterp* interp)
 {
+  // TODO: Check if list is nil
+  //if (!IsTypeList(list)) GURU(OBJECT_IS_NOT_A_LIST);
+
+  //VItem* newList = MemCons(interp->mem, item, list);
 }//
 
 typedef struct __PrimFunEntry

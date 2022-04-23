@@ -1,0 +1,15 @@
+(funify swap setglobal) funify 
+  (def) setglobal
+
+(fib)
+  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
+
+(fib5times) (
+  32 fib print
+  32 fib print
+  32 fib print
+  32 fib print
+  32 fib print) def
+
+fib5times
+fib5times

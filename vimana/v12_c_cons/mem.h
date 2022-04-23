@@ -45,7 +45,7 @@ void MemFree(VMem* mem)
   ( (NULL != (item)) ? ( ((void*)(item)) - (mem)->start ) + 1 : 0 )
 
 // -------------------------------------------------------------
-// Alloc/dealloc
+// Alloc and dealloc
 // -------------------------------------------------------------
 
 VItem* MemAllocItem(VMem* mem)
@@ -107,31 +107,17 @@ void MemDeallocItem(VMem* mem, VItem* item)
   mem->firstFree = MemItemAddr(mem, item);
 }
 
-// Conses value into list (another item)
-// Allocs and returns a new item
-VItem* MemCons(VMem* mem, VItem* value, VItem* next)
-{
-  VItem* item = MemAllocItem(mem);
-  if (!item) return NULL;
-  *item = *value;
-  if (NULL == next)
-    item->next = 0;
-  else
-    item->next = MemItemAddr(mem, next);
-  return item;
-}
-
 // -------------------------------------------------------------
 // Item access
 // -------------------------------------------------------------
 
-void MemItemSetFirst(VMem* mem, VItem* item, VItem* first)
+void MemItemSetFirst(VMem* mem, VItem* list, VItem* first)
 {
-  item->addr = MemItemAddr(mem, first);
+  list->addr = MemItemAddr(mem, first);
 }
 
-#define MemItemFirst(mem, item) \
-  ( ((item)->addr) ?  MemItemPointer(mem, (item)->addr) : NULL )
+#define MemItemFirst(mem, list) \
+  ( ((list)->addr) ?  MemItemPointer(mem, (list)->addr) : NULL )
 
 void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
 {
@@ -140,6 +126,70 @@ void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
 
 #define MemItemNext(mem, item) \
   ( ItemNext(item) ?  MemItemPointer(mem, ItemNext(item)) : NULL )
+
+// -------------------------------------------------------------
+// Cons and rest
+// -------------------------------------------------------------
+
+// Adds an item to the front of a new list
+// Allocs and returns the new list
+VItem* MemCons(VMem* mem, VItem* item, VItem* list)
+{
+  // Alloc the new list item
+  VItem* newList = MemAllocItem(mem);
+  if (!newList) return NULL;
+  ItemSetType(newList, TypeList);
+
+  // Alloc the first item in the list
+  VItem* newFirst = MemAllocItem(mem);
+  if (!newFirst) return NULL;
+  *newFirst = *item;
+
+  // Set next of first
+  VItem* first = MemItemFirst(mem, list);
+  if (NULL == first)
+    newFirst->next = 0;
+  else
+    newFirst->next = MemItemAddr(mem, first);
+  
+  // Set first of list
+  MemItemSetFirst(mem, newList, newFirst);
+
+  return newList;
+}
+
+// Allocs and returns a new list
+VItem* MemRest(VMem* mem, VItem* list)
+{
+  VItem* next = NULL;
+
+  // Get next of first
+  VItem* first = MemItemFirst(mem, list);
+  if (NULL != first)
+  {
+    next = MemItemNext(mem, first);
+  }
+  
+  if (NULL == next)
+  {
+    // Return "nil"
+    return NULL;
+  }
+
+  // Alloc new list item
+  VItem* newList = MemAllocItem(mem);
+  if (!newList) return NULL;
+  ItemSetType(newList, TypeList);
+
+  // Set first of new list
+  MemItemSetFirst(mem, newList, next);
+
+  return newList;
+}
+
+// -------------------------------------------------------------
+// String items
+// -------------------------------------------------------------
 
 // Allocates a new item to hold the string
 void MemItemSetString(VMem* mem, VItem* item, char* string)
