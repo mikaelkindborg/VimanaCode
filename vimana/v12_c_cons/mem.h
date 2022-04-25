@@ -38,7 +38,7 @@ void MemFree(VMem* mem)
 {
   SysFree(mem);
 
-  printf("GAllocCounter: %i\n", GAllocCounter);
+  printf("MemAllocCounter: %i\n", GAllocCounter);
 }
 
 #define MemItemAddr(mem, item) \

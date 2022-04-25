@@ -1,11 +1,6 @@
-(funify swap setglobal) funify 
-  (def) setglobal
 
 (fib) 
-  ([A] A 1 > 
-    (A 1- fib A 2- fib +)
-    (A)
-  ifelse) def 
+  ([A] A 2 < (A) (A 1- fib A 2- fib +) ifelse) def 
 
 (times) 
   (dup iszero 

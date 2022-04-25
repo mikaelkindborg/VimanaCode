@@ -26,14 +26,39 @@ void PrimFun_printstack(VInterp* interp)
 void PrimFun_eval(VInterp* interp)
 {
   VItem* codeBlock = InterpPop(interp);
-  InterpPushStackFrame(interp, codeBlock);
+  InterpPushEvalStackFrame(interp, codeBlock);
 }//
 
 // Eval in new context (function call)
 void PrimFun_call(VInterp* interp)
 {
   VItem* codeBlock = InterpPop(interp);
-  InterpPushStackFrameFun(interp, codeBlock);
+  InterpPushFunCallStackFrame(interp, codeBlock);
+}//
+
+// Eval in parent context - this can be used by "macro-like" functions that
+// take block arguments (lists) that refer to the context in which the appear
+void PrimFun_evalInParentContext(VInterp* interp)
+{
+  int          index;
+  VStackFrame* stackframe;
+
+  // Find context of current function call
+  for (index = interp->callStackTop; index > -1; --index)
+  {
+    stackframe = InterpStackFrameAt(interp, index);
+    if (stackframe->context == stackframe) break;
+  }
+
+  // We want the context of the parent of the closest function call
+  if (index > 1)
+  {
+    stackframe = InterpStackFrameAt(interp, index - 1);
+  }
+
+  // Eval in this context
+  VItem* codeBlock = InterpPop(interp);
+  InterpPushStackFrameWithContext(interp, codeBlock, stackframe);  
 }//
 
 void PrimFun_iftrue(VInterp* interp)
@@ -41,7 +66,7 @@ void PrimFun_iftrue(VInterp* interp)
   VItem* trueBlock = InterpPop(interp);
   VItem* trueOrFalse = InterpPop(interp);
   if (trueOrFalse->intNum)
-    InterpPushStackFrame(interp, trueBlock);
+    InterpPushEvalStackFrame(interp, trueBlock);
 }//
 
 void PrimFun_iffalse(VInterp* interp)
@@ -49,7 +74,7 @@ void PrimFun_iffalse(VInterp* interp)
   VItem* falseBlock = InterpPop(interp);
   VItem* trueOrFalse = InterpPop(interp);
   if (! trueOrFalse->intNum)
-    InterpPushStackFrame(interp, falseBlock);
+    InterpPushEvalStackFrame(interp, falseBlock);
 }//
 
 void PrimFun_ifelse(VInterp* interp)
@@ -58,9 +83,9 @@ void PrimFun_ifelse(VInterp* interp)
   VItem* trueBlock = InterpPop(interp);
   VItem* trueOrFalse = InterpPop(interp);
   if (trueOrFalse->intNum)
-    InterpPushStackFrame(interp, trueBlock);
+    InterpPushEvalStackFrame(interp, trueBlock);
   else
-    InterpPushStackFrame(interp, falseBlock);
+    InterpPushEvalStackFrame(interp, falseBlock);
 }//
 
 void PrimFun_setglobal(VInterp* interp)
@@ -195,38 +220,62 @@ void PrimFun_swap(VInterp* interp)
   *b = temp;
 }//
 
+void PrimFun_over(VInterp* interp)
+{
+  InterpPush(interp, InterpStackAt(interp, 1));
+}//
+
 void PrimFun_local_setA(VInterp* interp)
 {
-  VItem* itemA = InterpPop(interp);
-  InterpSetLocalVar(interp, 0, itemA);
+  InterpSetLocalVar(interp, 0, InterpPop(interp));
 }//
 
 void PrimFun_local_setAB(VInterp* interp)
 {
-  VItem* itemB = InterpPop(interp);
-  InterpSetLocalVar(interp, 1, itemB);
+  InterpSetLocalVar(interp, 1, InterpPop(interp));
+  InterpSetLocalVar(interp, 0, InterpPop(interp));
+}//
 
-  VItem* itemA = InterpPop(interp);
-  InterpSetLocalVar(interp, 0, itemA);
+void PrimFun_local_setABC(VInterp* interp)
+{
+  InterpSetLocalVar(interp, 2, InterpPop(interp));
+  InterpSetLocalVar(interp, 1, InterpPop(interp));
+  InterpSetLocalVar(interp, 0, InterpPop(interp));
+}//
+
+void PrimFun_local_setABCD(VInterp* interp)
+{
+  InterpSetLocalVar(interp, 3, InterpPop(interp));
+  InterpSetLocalVar(interp, 2, InterpPop(interp));
+  InterpSetLocalVar(interp, 1, InterpPop(interp));
+  InterpSetLocalVar(interp, 0, InterpPop(interp));
 }//
 
 void PrimFun_local_getA(VInterp* interp)
 {
-  VItem* item = InterpGetLocalVar(interp, 0);
-  InterpPush(interp, item);
+  InterpPush(interp, InterpGetLocalVar(interp, 0));
 }//
 
 void PrimFun_local_getB(VInterp* interp)
 {
-  VItem* item = InterpGetLocalVar(interp, 1);
-  InterpPush(interp, item);
+  InterpPush(interp, InterpGetLocalVar(interp, 1));
+}//
+
+void PrimFun_local_getC(VInterp* interp)
+{
+  InterpPush(interp, InterpGetLocalVar(interp, 2));
+}//
+
+void PrimFun_local_getD(VInterp* interp)
+{
+  InterpPush(interp, InterpGetLocalVar(interp, 3));
 }//
 
 void PrimFun_nil(VInterp* interp)
 {
   VItem nil;
   ItemInit(&nil);
-  InterpPush(interp, nil);
+  InterpPush(interp, &nil);
 }//
 
 void PrimFun_isnil(VInterp* interp)
@@ -282,6 +331,13 @@ void PrimFun_cons(VInterp* interp)
   //if (!IsTypeList(list)) GURU(OBJECT_IS_NOT_A_LIST);
 
   //VItem* newList = MemCons(interp->mem, item, list);
+}//
+
+void PrimFun_def(VInterp* interp)
+{
+  PrimFun_funify(interp);
+  PrimFun_swap(interp);
+  PrimFun_setglobal(interp);
 }//
 
 typedef struct __PrimFunEntry

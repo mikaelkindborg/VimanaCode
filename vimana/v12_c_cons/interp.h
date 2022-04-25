@@ -52,6 +52,7 @@ VPrimFunPtr LookupPrimFunPtr(int index);
 
 //#define InterpStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
 #define InterpStackFrame(interp) ( & ((interp)->callStack[(interp)->callStackTop]) )
+#define InterpStackFrameAt(interp, index) ( & ((interp)->callStack[index]) )
 
 // -------------------------------------------------------------
 // Interp
@@ -78,7 +79,7 @@ VInterp* InterpNewWithSize(
 
   interp->callStack = (void*)interp->dataStack + dataStackByteSize;
   interp->callStackSize = callStackSize;
-  interp->callStackTop = -1;
+  interp->callStackTop = 0;
 
   interp->mem = MemNew(memSize);
 
@@ -157,70 +158,106 @@ VItem* InterpPop(VInterp* interp)
 // Call stack
 // -------------------------------------------------------------
 
-void InterpPushStackFrameImpl(VInterp* interp, VItem* code, VSmallInt callType)
+void InterpPushFirstStackFrame(VInterp* interp, VItem* code)
 {
-  VStackFrame* current;
+  // Set first stackframe
+  interp->callStackTop = 0;
+  VStackFrame* current = InterpStackFrame(interp);
+  current->context = current;
 
-  if (interp->callStackTop >= 0)
-  {
-    VStackFrame* parent = InterpStackFrame(interp);
-
-    // Check tailcall (are there any instructions left?)
-    if (parent->instruction)
-    {
-      // NON-TAILCALL - PUSH NEW STACK FRAME
-
-      ++ interp->callStackTop;
-
-      if (interp->callStackTop >= interp->callStackSize)
-      {
-        GURU(CALL_STACK_OVERFLOW);
-      }
-
-      current = InterpStackFrame(interp);
-
-      if (CALL_TYPE_FUN == callType) 
-      {
-        // Functions have their own local environment
-        current->context = current;
-      }
-      else
-      {
-        // Eval uses the parent environment
-        current->context = parent;
-      }
-    }
-    else
-    {
-      // TAILCALL
-
-      current = parent;
-
-      if (CALL_TYPE_FUN == callType) 
-      {
-        // Functions have their own local environment
-        current->context = current;
-      }
-    }
-  }
-  else
-  {
-    // EMPTY CALLSTACK - CREATE ROOT FRAME
-
-    ++ interp->callStackTop;
-    current = InterpStackFrame(interp);
-    current->context = current;
-  }
-  
   // Set first instruction in the frame
   current->instruction = MemItemFirst(interp->mem, code);
 }
 
-#define InterpPushStackFrame(interp, code) \
-  InterpPushStackFrameImpl(interp, code, CALL_TYPE_EVAL)
+void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
+{
+  // The current stackframe is the parent for the new stackframe
+  VStackFrame* parent = InterpStackFrame(interp);
 
-#define InterpPushStackFrameFun(interp, code) \
-  InterpPushStackFrameImpl(interp, code, CALL_TYPE_FUN)
+  // Assume tailcall
+  VStackFrame* current = parent;
+
+  // Check tailcall (are there any instructions left?)
+  if (parent->instruction)
+  {
+    // NON-TAILCALL - PUSH NEW STACK FRAME
+
+    ++ interp->callStackTop;
+
+    if (interp->callStackTop >= interp->callStackSize)
+    {
+      GURU(CALL_STACK_OVERFLOW);
+    }
+
+    current = InterpStackFrame(interp);
+
+    // Eval uses the parent environment
+    current->context = parent;
+  }
+
+  // Set first instruction in the new frame
+  current->instruction = MemItemFirst(interp->mem, code);
+}
+
+void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
+{
+  // The current stackframe is the parent for the new stackframe
+  VStackFrame* parent = InterpStackFrame(interp);
+
+  // Assume tailcall
+  VStackFrame* current = parent;
+
+  // Check tailcall (are there any instructions left?)
+  if (parent->instruction)
+  {
+    // NON-TAILCALL - PUSH NEW STACK FRAME
+
+    ++ interp->callStackTop;
+
+    if (interp->callStackTop >= interp->callStackSize)
+    {
+      GURU(CALL_STACK_OVERFLOW);
+    }
+
+    current = InterpStackFrame(interp);
+  }
+
+  // Functions have their own local environment
+  current->context = current;
+
+  // Set first instruction in the new frame
+  current->instruction = MemItemFirst(interp->mem, code);
+}
+
+void InterpPushStackFrameWithContext(VInterp* interp, VItem* code, VStackFrame* context)
+{
+  // The current stackframe is the parent for the new stackframe
+  VStackFrame* parent = InterpStackFrame(interp);
+
+  // Assume tailcall
+  VStackFrame* current = parent;
+
+  // Check tailcall (are there any instructions left?)
+  if (parent->instruction)
+  {
+    // NON-TAILCALL - PUSH NEW STACK FRAME
+
+    ++ interp->callStackTop;
+
+    if (interp->callStackTop >= interp->callStackSize)
+    {
+      GURU(CALL_STACK_OVERFLOW);
+    }
+
+    current = InterpStackFrame(interp);
+  }
+
+  // Use the environment in the context stackframe
+  current->context = context;
+
+  // Set first instruction in the new frame
+  current->instruction = MemItemFirst(interp->mem, code);
+}
 
 void InterpPopStackFrame(VInterp* interp)
 {
@@ -271,7 +308,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize);
 
 void InterpEval(VInterp* interp, VItem* code)
 {
-  InterpPushStackFrame(interp, code);
+  InterpPushFirstStackFrame(interp, code);
   InterpEvalSlice(interp, 0);
   // TODO: GC
 }
@@ -335,7 +372,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         if (IsTypeFun(value))
         {
           // Call function
-          InterpPushStackFrameFun(interp, value);
+          InterpPushFunCallStackFrame(interp, value);
         }
         else
         if (!IsTypeNone(value))

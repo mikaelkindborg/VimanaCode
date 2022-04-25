@@ -1,3 +1,17 @@
+/--
+sayHi
+
+(foo) ([A] A print) def
+
+(foo) ([A] A 0 > (A print A 1- foo) iftrue) def
+
+10 foo
+
+(fib)
+  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
+
+12 fib print
+--/
 
 (fib)
   (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
@@ -9,4 +23,3 @@
   ifelse) def
 
 (32 fib print) 5 times
-

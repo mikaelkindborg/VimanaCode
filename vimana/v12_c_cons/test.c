@@ -345,11 +345,11 @@ void TestInterp()
   // while (1) InterpPush(interp, *item);
 
   // Test callstack
-  InterpPushStackFrame(interp, item);
+  InterpPushEvalStackFrame(interp, item);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
-  InterpPushStackFrame(interp, item);
+  InterpPushEvalStackFrame(interp, item);
   printf("code : %li\n", interp->callStackTop->code->intNum);
   printf("instr: %li\n", interp->callStackTop->instruction->intNum);
 
@@ -364,7 +364,7 @@ void TestInterp()
 
   // Tests for underflow/overflow
   // InterpPopContext(interp);
-  // while (1) InterpPushStackFrame(interp, item);
+  // while (1) InterpPushEvalStackFrame(interp, item);
 
   // Free interpreter
   InterpFree(interp);

@@ -25,7 +25,7 @@ cc vimana.c -o vimana -Ofast
 
 C interpreter unoptimized 100.000 iterations:
 ./vimana  2.54s user 0.01s system 85% cpu 2.964 total
-10.000.000 iterations = 254s (4.54s x 100)
+10.000.000 iterations = 254s (2.54s x 100)
 
 Summary:
 

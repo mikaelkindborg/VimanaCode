@@ -1,13 +1,11 @@
-(funify swap setglobal) funify 
-  (def) setglobal
-  
+
 (fact) 
   (dup iszero (drop 1) (dup 1- fact *) ifelse) def
 
 (times) 
   (dup iszero 
     (drop drop) 
-    (swap dup eval swap 1- times) 
+     (over eval 1- times) 
   ifelse) def
 
 20 fact print

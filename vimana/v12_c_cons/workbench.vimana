@@ -2,6 +2,25 @@
 (funify swap setglobal) funify 
   (def) setglobal
 
+(foo)
+  (42 [A] (A print) 5 times) def
+
+(foo)
+  (42 [A] (A print) getstackframe 5 times) def
+
+(foo)
+  (42 [A] (A print) @ 5 times) def
+
+(times) 
+  ([ABC] C iszero (
+    A B evalinparentcontext
+    A B C 1- times) iffalse) def
+
+(times) 
+  ([AB] B iszero (
+    A getparentframe evalinparentcontext
+    A B 1- times) iffalse) def
+
 2 (add) (1 2 3 4) map
 
 10 (dup 0 >)
@@ -14,9 +33,20 @@ drop
 while
 drop
 
+
+10 xx [AB] (A 0 >)
+  ([AB] A 1- A B +) "call"
+while
+
+
 10 X (X 0 >)
-  (1- swap over + swap)
+  (x 1- swap over + swap)
 while []
+
+xyX
+xX
+xy->YX
+
 
   ([A-1] [A<->B] [A-B->A] + [A<->B]) "ikoner"
 
@@ -60,12 +90,6 @@ unicode
 27 8
 
 nn 0
-
-
-
-
-
-
 
 
 (add-seq)

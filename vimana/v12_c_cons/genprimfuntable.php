@@ -1,6 +1,6 @@
 <?php
 // Run this script to generate file "primfuntable.h"
-// The generated is included in file "primfuns.h"
+// The generated file is included in file "primfuns.h"
 // The table is a lookup table for primfuns.
 
 function SubstituteName($name)
@@ -19,8 +19,12 @@ function SubstituteName($name)
     "greaterthan" => ">",
     "local_setA" => "[A]",
     "local_setAB" => "[AB]",
+    "local_setABC" => "[ABC]",
+    "local_setABCD" => "[ABCD]",
     "local_getA" => "A",
     "local_getB" => "B",
+    "local_getC" => "C",
+    "local_getD" => "D",
   ];
 
   if (isset($subst[$name])):
