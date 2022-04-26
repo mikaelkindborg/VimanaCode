@@ -117,7 +117,7 @@ void MemItemSetFirst(VMem* mem, VItem* list, VItem* first)
 }
 
 #define MemItemFirst(mem, list) \
-  ( ((list)->addr) ?  MemItemPointer(mem, (list)->addr) : NULL )
+  ( ((list) && (list)->addr) ?  MemItemPointer(mem, (list)->addr) : NULL )
 
 void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
 {
@@ -229,7 +229,8 @@ void MemMark(VMem* mem, VItem* item)
     //printf("mark item\n");
     ItemSetGCMark(item, 1);
 
-    if (IsTypeList(item) || IsTypeFun(item) || IsTypeString(item))
+    // Types that have children
+    if (IsListType(item) || IsTypeString(item))
     {
       VItem* child = MemItemFirst(mem, item);
       MemMark(mem, child);

@@ -271,66 +271,126 @@ void PrimFun_local_getD(VInterp* interp)
   InterpPush(interp, InterpGetLocalVar(interp, 3));
 }//
 
-void PrimFun_nil(VInterp* interp)
-{
-  VItem nil;
-  ItemInit(&nil);
-  InterpPush(interp, &nil);
-}//
+// Cool languages:
+// https://www.tutorialspoint.com/execute_lisp_online.php
+// https://github.com/phreda4/r3d4
+// https://concatenative.org/wiki/view/r3
+// https://worst.mitten.party
 
-void PrimFun_isnil(VInterp* interp)
-{
-  VItem* a = InterpStackTop(interp);
-  a->intNum = IsTypeNone(a);
-  ItemSetType(a, TypeIntNum);
-}//
+// How other languages do it:
+// (cons 1 2) => (1 2)   // NewLisp
+// (cons 1 2) => (1 . 2) // Lisp
+// (cons 1 nil) => (1)   // Lisp
+// (car '()) => nil      // Lisp
 
-// TODO: Set nil if list is nil (just leave nil on the stack)
+//
+// Specification of Vimana list functions:
+//
+// 1 2 cons => error
+// 1 () cons => (1)
+// 1 (2) cons => (1 2)
+// () () cons => (())
+// () (1) cons => (() 1)
+// () first => ()
+// () rest => ()
+// () first () cons => (())
+// () () eq => 1
+// (1) (1) eq => 0
+// () isempty => 1
+// (isempty) (() eq) def
+//
+
 void PrimFun_first(VInterp* interp)
 {
   VItem* list = InterpStackTop(interp);
 
-  if (!IsTypeList(list)) GURU(OBJECT_IS_NOT_A_LIST);
+  // Must be a list type
+  if (!IsListType(list)) GURU(FIRST_OBJECT_IS_NOT_A_LIST);
 
-  VItem* first = MemItemFirst(interp->mem, list);
-  if (first)
-  {
-    // Copy value to data stack
-    *list = *first;
-  }
-  else
-  {
-    // Set result to nil
-    ItemInit(list);
-  }
+  // Get first item
+  VItem* item = MemItemFirst(interp->mem, list);
+
+  // Leave empty list on the stack
+  // () first => ()
+  if (NULL == item) goto Exit;
+
+  // Copy first item to data stack
+  *list = *item;
+  
+Exit:;
 }//
 
-// TODO: set nil if nil item on stack (leave nil on stack)
 void PrimFun_rest(VInterp* interp)
 {
   VItem* list = InterpStackTop(interp);
 
-  if (!IsTypeList(list)) GURU(OBJECT_IS_NOT_A_LIST);
+  // Must be a list type
+  if (!IsListType(list)) GURU(REST_OBJECT_IS_NOT_A_LIST);
 
-  VItem* rest = MemRest(interp->mem, list);
+  // Get first item
+  VItem* item = MemItemFirst(interp->mem, list);
 
-  if (NULL != rest)
+  // Leave empty list on the stack
+  // () rest => ()
+  if (NULL == item) goto Exit;
+
+  // Get second item in the list
+  item = MemItemNext(interp->mem, item);
+
+  // If empty tail, leave empty list on the stack
+  // (1) rest => ()
+  if (NULL == item)
   {
-    *list = *rest;
+    list->addr = 0;
+    goto Exit;
   }
-  else
-  {
-    // Set result to nil
-    ItemInit(list);
-  }
+
+  // Set second item as first element of the list
+  MemItemSetFirst(interp->mem, list, item);
+
+Exit:;
 }//
 
 void PrimFun_cons(VInterp* interp)
 {
-  // TODO: Check if list is nil
-  //if (!IsTypeList(list)) GURU(OBJECT_IS_NOT_A_LIST);
+  // Get list and item to cons
+  VItem* list = InterpPop(interp);
+  VItem* item = InterpStackTop(interp);
 
-  //VItem* newList = MemCons(interp->mem, item, list);
+  // Must be a list type
+  if (!IsListType(list)) GURU(CONS_OBJECT_IS_NOT_A_LIST);
+
+  // This will be the new head of the cons
+  VItem newList;
+  ItemInit(&newList);
+  ItemSetType(&newList, ItemType(list));
+
+  // Allocate new element
+  VItem* newFirst = MemAllocItem(interp->mem);
+  if (NULL == newFirst) GURU(CONS_OUT_OF_MEMORY);
+
+  // Copy item to new element
+  *newFirst = *item;
+
+  // Get first element of the list 
+  VItem* first = MemItemFirst(interp->mem, list);
+
+  if (NULL == first)
+  {
+    // If empty list, the new item is the last and only element
+    MemItemSetNext(interp->mem, newFirst, NULL);
+  }
+  else
+  {
+    // Link new item to the first element of the list
+    MemItemSetNext(interp->mem, newFirst, first);
+  }
+
+  // Set first of list to refer to the new element
+  MemItemSetFirst(interp->mem, &newList, newFirst);
+
+  // Copy new list item to data stack
+  *item = newList;
 }//
 
 void PrimFun_def(VInterp* interp)

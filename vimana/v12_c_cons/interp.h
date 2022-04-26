@@ -110,7 +110,7 @@ void InterpGC()
 {
   //MemMark(interp->mem, GSymbolTable);
   //MemMark(datastack);
-  //MemMark(globavars);
+  //MemMark(globalvars);
   //MemMark(callstack); // Walk from top and mark localvars
 }
 

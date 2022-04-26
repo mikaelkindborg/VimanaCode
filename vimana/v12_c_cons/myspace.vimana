@@ -6,20 +6,44 @@ sayHi
 (foo) ([A] A 0 > (A print A 1- foo) iftrue) def
 
 10 foo
-
-(fib)
-  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
-
-12 fib print
 --/
 
-(fib)
-  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
+(1) (1) eq print
 
-(times) 
-  (dup iszero 
-    (drop drop) 
-    (swap dup eval swap 1- times) 
-  ifelse) def
+'---------' print
 
-(32 fib print) 5 times
+() first print
+() rest print
+
+'---------' print
+
+(1) first print
+(1) rest print
+(1 2) rest print
+
+'---------' print
+
+1 (2 3) cons dup print rest print
+
+(isempty) (() eq) def
+
+'---------' print
+
+() isempty print
+(1 2) rest isempty print
+
+'---------' print
+
+(printlist)
+  ([A] A isempty not (A first print A rest printlist) iftrue) def
+
+(1 2 3) printlist
+
+'---------' print
+
+(makelist) 
+  ([A] A 1 < (()) (A A 1- makelist cons) ifelse) def
+
+10 makelist 10 makelist 10 makelist cons cons 
+dup print 
+first print

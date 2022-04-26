@@ -36,8 +36,6 @@
   { "B", PrimFun_local_getB },
   { "C", PrimFun_local_getC },
   { "D", PrimFun_local_getD },
-  { "nil", PrimFun_nil },
-  { "isnil", PrimFun_isnil },
   { "first", PrimFun_first },
   { "rest", PrimFun_rest },
   { "cons", PrimFun_cons },
