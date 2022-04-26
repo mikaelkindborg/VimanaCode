@@ -8,6 +8,7 @@ sayHi
 10 foo
 --/
 
+/--
 (1) (1) eq print
 
 '---------' print
@@ -40,10 +41,22 @@ sayHi
 (1 2 3) printlist
 
 '---------' print
+--/
+
+(isempty) (() eq) def
 
 (makelist) 
   ([A] A 1 < (()) (A A 1- makelist cons) ifelse) def
 
 10 makelist 10 makelist 10 makelist cons cons 
-dup print 
-first print
+drop
+printstack
+gc
+
+10 makelist 
+printstack
+drop
+gc
+
+/--dup print 
+first print--/

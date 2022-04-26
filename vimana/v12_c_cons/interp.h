@@ -100,18 +100,42 @@ VInterp* InterpNew()
 
 void InterpFree(VInterp* interp)
 {
+  PrintLine("==============================================================");
   MemSweep(interp->mem);
   MemFree(interp->mem);
   SysFree(interp);
   GSymbolTableRelease();
 }
 
-void InterpGC()
+void InterpGC(VInterp* interp)
 {
-  //MemMark(interp->mem, GSymbolTable);
-  //MemMark(datastack);
-  //MemMark(globalvars);
+  // Mark data stack
+  VItem* stack = interp->dataStack;
+  for (int i = 0; i <= interp->dataStackTop; ++ i)
+  {
+    VItem* item = &(stack[i]);
+    if (IsListType(item))
+    {
+      printf("stack mark list type\n");
+      MemMark(interp->mem, item);
+    }
+  }
+
+  // Mark global vars
+  VItem* globalVars = interp->globalVars;
+  for (int i = 0; i <= interp->globalVarsSize; ++ i)
+  {
+    VItem* item = &(globalVars[i]);
+    if (IsListType(item))
+    {
+      printf("globalvars mark list type\n");
+      MemMark(interp->mem, item);
+    }
+  }
+
   //MemMark(callstack); // Walk from top and mark localvars
+
+  MemSweep(interp->mem);
 }
 
 // -------------------------------------------------------------

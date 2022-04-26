@@ -39,5 +39,6 @@
   { "first", PrimFun_first },
   { "rest", PrimFun_rest },
   { "cons", PrimFun_cons },
+  { "gc", PrimFun_gc },
   { "def", PrimFun_def },
   { "__sentinel__", NULL }

@@ -15,10 +15,9 @@ typedef struct __VMem
   VAddr size;
   void* end;
   void* start;
+  int   allocCounter;
 }
 VMem;
-
-static int GAllocCounter = 0;
 
 #define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + (addr) - 1) ) 
 
@@ -27,10 +26,13 @@ VMem* MemNew(int memSize)
   int memByteSize = memSize * sizeof(VItem);
   VAddr size = memByteSize;
   VMem* mem = SysAlloc(size);
+
   mem->firstFree = 0;
   mem->size = size - sizeof(VMem);
   mem->start = mem + sizeof(VMem);
   mem->end = mem->start;
+  mem->allocCounter = 0;
+
   return mem;
 }
 
@@ -38,7 +40,7 @@ void MemFree(VMem* mem)
 {
   SysFree(mem);
 
-  printf("MemAllocCounter: %i\n", GAllocCounter);
+  printf("MemAllocCounter: %i\n", mem->allocCounter);
 }
 
 #define MemItemAddr(mem, item) \
@@ -76,9 +78,9 @@ VItem* MemAllocItem(VMem* mem)
 
   ItemInit(item);
 
-  ++ GAllocCounter;
+  ++ (mem->allocCounter);
 
-  //printf("MemAllocItem: GAllocCounter: %i\n", GAllocCounter);
+  //printf("MemAllocItem: allocCounter: %i\n", mem->allocCounter);
 
   return item;
 }
@@ -91,9 +93,9 @@ void MemDeallocItem(VMem* mem, VItem* item)
     return;
   }
 
-  -- GAllocCounter;
+  -- (mem->allocCounter);
 
-  //printf("MemDeallocItem: GAllocCounter: %i\n", GAllocCounter);
+  printf("MemDeallocItem: allocCounter: %i\n", mem->allocCounter);
 
   if (IsTypeStringHolder(item))
   {
@@ -226,7 +228,7 @@ void MemMark(VMem* mem, VItem* item)
       return;
     }
 
-    //printf("mark item\n");
+    printf("mark item\n");
     ItemSetGCMark(item, 1);
 
     // Types that have children
@@ -248,12 +250,12 @@ void MemSweep(VMem* mem)
   {
     if (ItemGCMark(item))
     {
-      //printf("unmark\n");
+      printf("unmark\n");
       ItemSetGCMark(item, 0);
     }
     else
     {
-      //printf("dealloc\n");
+      printf("dealloc\n");
       MemDeallocItem(mem, item);
     }
 

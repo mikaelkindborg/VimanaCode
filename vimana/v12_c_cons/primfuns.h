@@ -393,6 +393,11 @@ void PrimFun_cons(VInterp* interp)
   *item = newList;
 }//
 
+void PrimFun_gc(VInterp* interp)
+{
+  InterpGC(interp);
+}//
+
 void PrimFun_def(VInterp* interp)
 {
   PrimFun_funify(interp);
