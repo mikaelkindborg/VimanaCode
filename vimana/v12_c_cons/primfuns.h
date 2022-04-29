@@ -109,16 +109,6 @@ void PrimFun_funify(VInterp* interp)
   ItemSetType(list, TypeFun);
 }//
 
-void PrimFun_readfile(VInterp* interp)
-{
-  VItem* item = InterpStackTop(interp);
-  // TODO: Check IsTypeString
-  char* fileName = MemItemString(interp->mem, item);
-  char* string = FileRead(fileName);
-  // TODO: Check NULL
-  MemItemSetString(interp->mem, item, string);
-}//
-
 VItem* ParseSourceCode(char* sourceCode, VMem* mem);
 
 void PrimFun_parse(VInterp* interp)
@@ -128,6 +118,16 @@ void PrimFun_parse(VInterp* interp)
   char* string = MemItemString(interp->mem, item);
   VItem* list = ParseSourceCode(string, interp->mem);
   *item = *list;
+}//
+
+void PrimFun_readfile(VInterp* interp)
+{
+  VItem* item = InterpStackTop(interp);
+  // TODO: Check IsTypeString
+  char* fileName = MemItemString(interp->mem, item);
+  char* string = FileRead(fileName);
+  // TODO: Check NULL
+  MemItemSetString(interp->mem, item, string);
 }//
 
 void PrimFun_plus(VInterp* interp)
@@ -453,6 +453,13 @@ void PrimFun_def(VInterp* interp)
   PrimFun_funify(interp);
   PrimFun_swap(interp);
   PrimFun_setglobal(interp);
+}//
+
+void PrimFun_evalfile(VInterp* interp)
+{
+  PrimFun_readfile(interp);
+  PrimFun_parse(interp);
+  PrimFun_eval(interp);
 }//
 
 typedef struct __PrimFunEntry

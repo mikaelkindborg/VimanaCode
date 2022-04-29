@@ -10,8 +10,8 @@
   { "setglobal", PrimFun_setglobal },
   { "getglobal", PrimFun_getglobal },
   { "funify", PrimFun_funify },
-  { "readfile", PrimFun_readfile },
   { "parse", PrimFun_parse },
+  { "readfile", PrimFun_readfile },
   { "+", PrimFun_plus },
   { "-", PrimFun_minus },
   { "*", PrimFun_times },
@@ -43,4 +43,5 @@
   { "setfirst", PrimFun_setfirst },
   { "gc", PrimFun_gc },
   { "def", PrimFun_def },
+  { "evalfile", PrimFun_evalfile },
   { "__sentinel__", NULL }

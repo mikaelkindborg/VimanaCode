@@ -1,6 +1,6 @@
 sayHi
 
-'myspace.vimana' readfile parse print
+'fib.vimana' evalfile
 
 printstack
 
