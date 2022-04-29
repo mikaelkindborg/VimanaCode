@@ -1,8 +1,57 @@
+
+([ 1 2 3 ]) printstack
+(]) (sayHi) def
+]
+
+(liststart) () def
+
+([) ('foo' print (liststart) first) def
+
+(]) (() consitem) def
+
+(consitem) ([AB] 
+  A (liststart) first eq (B) 
+    (A B cons consitem) 
+  ifelse) def
+
+[ 1 2 3 4 4 + ] print
+
+
+/--
+
 sayHi
 
 'fib.vimana' evalfile
 
 printstack
+
+() (timerlist) setglobal
+
+0 (timercounter) setglobal
+
+(timercounterIncrement)
+  (timercounter 1+ (timercounter) setglobal) def
+
+(timerlistAdd)
+  (timerlist cons (timerlist) setglobal) def
+
+(timerstart) ([AB] /-- list interval --/
+  timercounter 1+ (timercounter) setglobal
+  /-- (lastrun interval list timerid) --/
+  [ timenow B A timercounter ]
+  timerlistAdd) def
+
+(timerstop)
+  (...) def
+
+(timerstopall)
+  (...) def
+
+(timersetlastrun)
+  (timenow setfirst) def
+
+--/
+
 
 /-- foo --/
 
