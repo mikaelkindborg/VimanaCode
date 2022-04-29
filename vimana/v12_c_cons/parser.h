@@ -197,10 +197,13 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
       SysFree(string);
     }
     else
+    if (IsComment(p))
     {
       p = SkipComment(p);
       if (NULL == p) goto Exit;
-
+    }
+    else
+    {
       char* token = GetNextToken(p, &p);
       item = ParseToken(token, mem);
     }

@@ -82,8 +82,8 @@ int main(int numargs, char* args[])
     }
 */
     // Evaluate code
-    VItem* code = ParseSourceCode(source, interp->mem);
-    InterpEval(interp, code);
+    VItem* list = ParseSourceCode(source, interp->mem);
+    InterpEval(interp, list);
 
     // TODO Dealloc source
 

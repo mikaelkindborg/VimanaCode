@@ -336,13 +336,13 @@ void TestInterp()
   ItemSetIntNum(item, 42);
   printf("item value 1: %li\n", item->intNum);
 
-  InterpPush(interp, item);
-  VItem* item2 = InterpPop(interp);
+  InterpStackPush(interp, item);
+  VItem* item2 = InterpStackPop(interp);
   printf("item value 2: %li\n", item2->intNum);
 
   // Tests for underflow/overflow
-  // InterpPop(interp);
-  // while (1) InterpPush(interp, *item);
+  // InterpStackPop(interp);
+  // while (1) InterpStackPush(interp, *item);
 
   // Test callstack
   InterpPushEvalStackFrame(interp, item);

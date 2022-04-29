@@ -8,6 +8,7 @@
   { "iffalse", PrimFun_iffalse },
   { "ifelse", PrimFun_ifelse },
   { "setglobal", PrimFun_setglobal },
+  { "getglobal", PrimFun_getglobal },
   { "funify", PrimFun_funify },
   { "readfile", PrimFun_readfile },
   { "parse", PrimFun_parse },
@@ -39,6 +40,7 @@
   { "first", PrimFun_first },
   { "rest", PrimFun_rest },
   { "cons", PrimFun_cons },
+  { "setfirst", PrimFun_setfirst },
   { "gc", PrimFun_gc },
   { "def", PrimFun_def },
   { "__sentinel__", NULL }

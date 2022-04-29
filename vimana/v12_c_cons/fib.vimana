@@ -5,7 +5,7 @@
 (times) 
   (dup iszero 
     (drop drop) 
-    (swap dup eval swap 1- times) 
+    (over eval 1- times) 
   ifelse) def
 
 (32 fib print) 5 times

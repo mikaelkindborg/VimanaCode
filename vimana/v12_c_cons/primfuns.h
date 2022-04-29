@@ -10,7 +10,7 @@ void PrimFun_sayHi(VInterp* interp)
 
 void PrimFun_print(VInterp* interp)
 {
-  VItem* item = InterpPop(interp);
+  VItem* item = InterpStackPop(interp);
   MemPrintItem(interp->mem, item);
   PrintNewLine();
 }//
@@ -25,14 +25,14 @@ void PrimFun_printstack(VInterp* interp)
 // Eval in current context
 void PrimFun_eval(VInterp* interp)
 {
-  VItem* codeBlock = InterpPop(interp);
+  VItem* codeBlock = InterpStackPop(interp);
   InterpPushEvalStackFrame(interp, codeBlock);
 }//
 
 // Eval in new context (function call)
 void PrimFun_call(VInterp* interp)
 {
-  VItem* codeBlock = InterpPop(interp);
+  VItem* codeBlock = InterpStackPop(interp);
   InterpPushFunCallStackFrame(interp, codeBlock);
 }//
 
@@ -40,7 +40,7 @@ void PrimFun_call(VInterp* interp)
 // take block arguments (lists) that refer to the context in which the appear
 void PrimFun_evalInParentContext(VInterp* interp)
 {
-  int          index;
+  int index;
   VStackFrame* stackframe;
 
   // Find context of current function call
@@ -57,31 +57,31 @@ void PrimFun_evalInParentContext(VInterp* interp)
   }
 
   // Eval in this context
-  VItem* codeBlock = InterpPop(interp);
+  VItem* codeBlock = InterpStackPop(interp);
   InterpPushStackFrameWithContext(interp, codeBlock, stackframe);  
 }//
 
 void PrimFun_iftrue(VInterp* interp)
 {
-  VItem* trueBlock = InterpPop(interp);
-  VItem* trueOrFalse = InterpPop(interp);
+  VItem* trueBlock = InterpStackPop(interp);
+  VItem* trueOrFalse = InterpStackPop(interp);
   if (trueOrFalse->intNum)
     InterpPushEvalStackFrame(interp, trueBlock);
 }//
 
 void PrimFun_iffalse(VInterp* interp)
 {
-  VItem* falseBlock = InterpPop(interp);
-  VItem* trueOrFalse = InterpPop(interp);
+  VItem* falseBlock = InterpStackPop(interp);
+  VItem* trueOrFalse = InterpStackPop(interp);
   if (! trueOrFalse->intNum)
     InterpPushEvalStackFrame(interp, falseBlock);
 }//
 
 void PrimFun_ifelse(VInterp* interp)
 {
-  VItem* falseBlock = InterpPop(interp);
-  VItem* trueBlock = InterpPop(interp);
-  VItem* trueOrFalse = InterpPop(interp);
+  VItem* falseBlock = InterpStackPop(interp);
+  VItem* trueBlock = InterpStackPop(interp);
+  VItem* trueOrFalse = InterpStackPop(interp);
   if (trueOrFalse->intNum)
     InterpPushEvalStackFrame(interp, trueBlock);
   else
@@ -90,10 +90,17 @@ void PrimFun_ifelse(VInterp* interp)
 
 void PrimFun_setglobal(VInterp* interp)
 {
-  VItem* list = InterpPop(interp);
-  VItem* value = InterpPop(interp);
+  VItem* list = InterpStackPop(interp);
+  VItem* value = InterpStackPop(interp);
   VItem* symbol = MemItemFirst(interp->mem, list);
   InterpSetGlobalVar(interp, symbol->intNum, value);
+}//
+
+void PrimFun_getglobal(VInterp* interp)
+{
+  VItem* item = InterpStackTop(interp);
+  VItem* symbol = MemItemFirst(interp->mem, item);
+  *item = *(InterpGetGlobalVar(interp, symbol->intNum));
 }//
 
 void PrimFun_funify(VInterp* interp)
@@ -104,40 +111,49 @@ void PrimFun_funify(VInterp* interp)
 
 void PrimFun_readfile(VInterp* interp)
 {
-  // pop string
-  // data = read file
+  VItem* item = InterpStackTop(interp);
+  // TODO: Check IsTypeString
+  char* fileName = MemItemString(interp->mem, item);
+  char* string = FileRead(fileName);
+  // TODO: Check NULL
+  MemItemSetString(interp->mem, item, string);
 }//
+
+VItem* ParseSourceCode(char* sourceCode, VMem* mem);
 
 void PrimFun_parse(VInterp* interp)
 {
-  // pop string
-  // list = parse string
+  VItem* item = InterpStackTop(interp);
+  // TODO: Check IsTypeString
+  char* string = MemItemString(interp->mem, item);
+  VItem* list = ParseSourceCode(string, interp->mem);
+  *item = *list;
 }//
 
 void PrimFun_plus(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
+  VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum += b->intNum;
 }//
 
 void PrimFun_minus(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
+  VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum -= b->intNum;
 }//
 
 void PrimFun_times(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
+  VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum *= b->intNum;
 }//
 
 void PrimFun_div(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
+  VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum /= b->intNum;
 }//
@@ -168,21 +184,21 @@ void PrimFun_2minus(VInterp* interp)
 
 void PrimFun_lessthan(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
+  VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum = a->intNum < b->intNum;
 }//
 
 void PrimFun_greaterthan(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
+  VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum = a->intNum > b->intNum;
 }//
 
 void PrimFun_eq(VInterp* interp)
 {
-  VItem* b = InterpPop(interp);
+  VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum = ItemEquals(a, b);
   ItemSetType(a, TypeIntNum);
@@ -202,13 +218,13 @@ void PrimFun_not(VInterp* interp)
 
 void PrimFun_drop(VInterp* interp)
 {
-  InterpPop(interp);
+  InterpStackPop(interp);
 }//
 
 void PrimFun_dup(VInterp* interp)
 {
   VItem* a = InterpStackTop(interp);
-  InterpPush(interp, a);
+  InterpStackPush(interp, a);
 }//
 
 void PrimFun_swap(VInterp* interp)
@@ -222,53 +238,53 @@ void PrimFun_swap(VInterp* interp)
 
 void PrimFun_over(VInterp* interp)
 {
-  InterpPush(interp, InterpStackAt(interp, 1));
+  InterpStackPush(interp, InterpStackAt(interp, 1));
 }//
 
 void PrimFun_local_setA(VInterp* interp)
 {
-  InterpSetLocalVar(interp, 0, InterpPop(interp));
+  InterpSetLocalVar(interp, 0, InterpStackPop(interp));
 }//
 
 void PrimFun_local_setAB(VInterp* interp)
 {
-  InterpSetLocalVar(interp, 1, InterpPop(interp));
-  InterpSetLocalVar(interp, 0, InterpPop(interp));
+  InterpSetLocalVar(interp, 1, InterpStackPop(interp));
+  InterpSetLocalVar(interp, 0, InterpStackPop(interp));
 }//
 
 void PrimFun_local_setABC(VInterp* interp)
 {
-  InterpSetLocalVar(interp, 2, InterpPop(interp));
-  InterpSetLocalVar(interp, 1, InterpPop(interp));
-  InterpSetLocalVar(interp, 0, InterpPop(interp));
+  InterpSetLocalVar(interp, 2, InterpStackPop(interp));
+  InterpSetLocalVar(interp, 1, InterpStackPop(interp));
+  InterpSetLocalVar(interp, 0, InterpStackPop(interp));
 }//
 
 void PrimFun_local_setABCD(VInterp* interp)
 {
-  InterpSetLocalVar(interp, 3, InterpPop(interp));
-  InterpSetLocalVar(interp, 2, InterpPop(interp));
-  InterpSetLocalVar(interp, 1, InterpPop(interp));
-  InterpSetLocalVar(interp, 0, InterpPop(interp));
+  InterpSetLocalVar(interp, 3, InterpStackPop(interp));
+  InterpSetLocalVar(interp, 2, InterpStackPop(interp));
+  InterpSetLocalVar(interp, 1, InterpStackPop(interp));
+  InterpSetLocalVar(interp, 0, InterpStackPop(interp));
 }//
 
 void PrimFun_local_getA(VInterp* interp)
 {
-  InterpPush(interp, InterpGetLocalVar(interp, 0));
+  InterpStackPush(interp, InterpGetLocalVar(interp, 0));
 }//
 
 void PrimFun_local_getB(VInterp* interp)
 {
-  InterpPush(interp, InterpGetLocalVar(interp, 1));
+  InterpStackPush(interp, InterpGetLocalVar(interp, 1));
 }//
 
 void PrimFun_local_getC(VInterp* interp)
 {
-  InterpPush(interp, InterpGetLocalVar(interp, 2));
+  InterpStackPush(interp, InterpGetLocalVar(interp, 2));
 }//
 
 void PrimFun_local_getD(VInterp* interp)
 {
-  InterpPush(interp, InterpGetLocalVar(interp, 3));
+  InterpStackPush(interp, InterpGetLocalVar(interp, 3));
 }//
 
 // Cool languages:
@@ -298,7 +314,14 @@ void PrimFun_local_getD(VInterp* interp)
 // (1) (1) eq => 0
 // () isempty => 1
 // (isempty) (() eq) def
-//
+// (1 2 3) 4 setfirst => (4 2 3)
+// () 4 setfirst => (4)
+// (1 2 3) (4) setfirst => ((4) 1 2 3)
+// (1 2 3) () setfirst => (() 1 2 3)
+// (1 2 3) (4) setrest => (1 4)
+// (1) () setrest => (1)
+// () (1) setrest => (1)
+// () () setrest => ()
 
 void PrimFun_first(VInterp* interp)
 {
@@ -354,7 +377,7 @@ Exit:;
 void PrimFun_cons(VInterp* interp)
 {
   // Get list and item to cons
-  VItem* list = InterpPop(interp);
+  VItem* list = InterpStackPop(interp);
   VItem* item = InterpStackTop(interp);
 
   // Must be a list type
@@ -391,6 +414,33 @@ void PrimFun_cons(VInterp* interp)
 
   // Copy new list item to data stack
   *item = newList;
+}//
+
+void PrimFun_setfirst(VInterp* interp)
+{
+  VItem* item = InterpStackPop(interp);
+  VItem* list = InterpStackTop(interp);
+
+  // Must be a list type
+  if (!IsListType(list)) GURU(SETFIRST_OBJECT_IS_NOT_A_LIST);
+
+  // Get first item
+  VItem* first = MemItemFirst(interp->mem, list);
+
+  // Set first of empty list
+  if (NULL == first)
+  {
+    first = MemAllocItem(interp->mem);
+    if (NULL == first) GURU(SETFIRST_OUT_OF_MEMORY);
+    MemItemSetFirst(interp->mem, list, first);
+  }
+
+  // Preserve address of next item
+  VAddr next = first->next;
+  // Copy item
+  *first = *item;
+  // Restore next
+  first->next = next;
 }//
 
 void PrimFun_gc(VInterp* interp)

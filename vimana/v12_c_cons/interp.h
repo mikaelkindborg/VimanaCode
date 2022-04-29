@@ -142,7 +142,7 @@ void InterpGC(VInterp* interp)
 // Data stack
 // -------------------------------------------------------------
 
-void InterpPush(VInterp* interp, VItem *item)
+void InterpStackPush(VInterp* interp, VItem *item)
 {
   ++ interp->dataStackTop;
 
@@ -155,7 +155,7 @@ void InterpPush(VInterp* interp, VItem *item)
   interp->dataStack[interp->dataStackTop] = *item;
 }
 
-VItem* InterpPop(VInterp* interp)
+VItem* InterpStackPop(VInterp* interp)
 {
   if (interp->dataStackTop < 0)
   {
@@ -166,7 +166,7 @@ VItem* InterpPop(VInterp* interp)
 }
 
 /* Not faster
-#define InterpPop(interp) \
+#define InterpStackPop(interp) \
   ( ((interp)->dataStackTop < 0) ? \
     ( GURU(DATA_STACK_IS_EMPTY), NULL ) : \
     ( (VItem*) & ((interp)->dataStack[(interp)->dataStackTop --]) ) )
@@ -386,7 +386,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
       else
       if (IsTypePushable(instruction))
       {
-        InterpPush(interp, instruction);
+        InterpStackPush(interp, instruction);
       }
       else
       // TODO: Don't push unbound symbols?
@@ -402,7 +402,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         if (!IsTypeNone(value))
         {
           // Push value
-          InterpPush(interp, value);
+          InterpStackPush(interp, value);
         }
       }
     }

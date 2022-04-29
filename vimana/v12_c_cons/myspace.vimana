@@ -1,4 +1,135 @@
+sayHi
+
+'myspace.vimana' readfile parse print
+
+printstack
+
+/-- foo --/
+
 /--
+1 2 3 () cons cons cons
+4 
+setfirst 
+printstack
+
+(1 2 3) 22 setfirst
+printstack
+
+(isempty) (() eq) def
+
+(copy)
+  ([A] A isempty (())
+    (A first A rest copy cons)
+  ifelse) def
+
+(1 2 3) copy printstack
+44 setfirst
+printstack
+
+cons
+cons
+printstack
+drop
+
+() 1 setfirst
+printstack
+
+() () setfirst
+printstack
+
+(1 2 3) [A]
+A rest 'middle' setfirst drop
+A print
+
+(1 2 3)
+dup rest 'middleX' setfirst
+drop print
+printstack
+
+rest 'X' setfirst
+printstack
+--/
+
+/--
+
+22 (dup *) eval print
+
+(isempty) (() eq) def
+
+(map)
+  ([AB] A isempty (())
+     (A first B eval
+        A rest B map  
+      cons) 
+    ifelse) def
+
+(1 2 3 4 5) (dup *) map print
+
+(map)
+  ([AB] A isempty (())
+     (A first B call
+        A rest B map  
+      cons) 
+    ifelse) def
+
+(1 2 3 4 5) ([A] A A *) map print
+
+
+(map)
+  ([ABC] C isempty (())
+     (A C first B evalinparentcontext
+        A B C rest map  
+        printstack
+      cons) 
+    ifelse) def
+
+10 (*) (1 2 3 4 5) map print
+
+--/
+
+
+
+/--
+getframe (setframe A 1 + [A]) .
+
+(A 1 + [A]) bind call
+
+(A 1 + [A]) bind => (<stackframeptr> setcontext A 1 + [A])
+
+getcontext
+setcontext
+
+newvar 
+
+A (*) . (1 2 3 4 5) print
+
+3 (*) first () cons cons => (3 *)
+
+3 (*) .  => (3 *)
+
+(a b c) (1 2 3) . => (a b c 1 2 3)
+
+
+((loop) ('Hi from process' print 1 sleep loop) def
+loop) spawn (processid) setglobal
+
+2 sleep ('Hi from another process' print) processid send
+
+5 sleep processid kill
+
+send:
+   list tostring (sender)
+   primitive send takes string and...
+   string parse eval (receiver)
+
+"timers" for local "processes"
+like setTimeout
+linear code/events, running in one thread
+('Hi from process' print)
+--/
+
+/------------
+
 sayHi
 
 (foo) ([A] A print) def
@@ -6,9 +137,7 @@ sayHi
 (foo) ([A] A 0 > (A print A 1- foo) iftrue) def
 
 10 foo
---/
 
-/--
 (1) (1) eq print
 
 '---------' print
@@ -23,6 +152,7 @@ sayHi
 (1 2) rest print
 
 '---------' print
+
 
 1 (2 3) cons dup print rest print
 
@@ -41,7 +171,6 @@ sayHi
 (1 2 3) printlist
 
 '---------' print
---/
 
 (isempty) (() eq) def
 
@@ -58,5 +187,7 @@ printstack
 drop
 gc
 
-/--dup print 
-first print--/
+dup print 
+first print
+
+------------------/

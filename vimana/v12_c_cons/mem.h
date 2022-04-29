@@ -95,7 +95,7 @@ void MemDeallocItem(VMem* mem, VItem* item)
 
   -- (mem->allocCounter);
 
-  printf("MemDeallocItem: allocCounter: %i\n", mem->allocCounter);
+  //printf("MemDeallocItem: allocCounter: %i\n", mem->allocCounter);
 
   if (IsTypeStringHolder(item))
   {
@@ -228,7 +228,7 @@ void MemMark(VMem* mem, VItem* item)
       return;
     }
 
-    printf("mark item\n");
+    //printf("mark item\n");
     ItemSetGCMark(item, 1);
 
     // Types that have children
@@ -250,12 +250,12 @@ void MemSweep(VMem* mem)
   {
     if (ItemGCMark(item))
     {
-      printf("unmark\n");
+      //printf("unmark\n");
       ItemSetGCMark(item, 0);
     }
     else
     {
-      printf("dealloc\n");
+      //printf("dealloc\n");
       MemDeallocItem(mem, item);
     }
 
