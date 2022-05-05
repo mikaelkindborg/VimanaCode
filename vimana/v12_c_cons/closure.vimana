@@ -1,0 +1,64 @@
+/--
+An unconventional closure
+--/
+
+(makecounter)
+  (0 () cons (dup first 1+ setfirst first) cons) def
+  
+makecounter (mycounter) setglobal
+
+mycounter eval print
+mycounter eval print
+mycounter eval print
+
+(makecounter) getglobal print
+
+makecounter funify (counter) setglobal
+
+(counter) makecounter def
+
+(counter) (0 () cons (dup first 1+ setfirst first) cons) eval def
+
+(counter) getglobal print
+
+counter print
+counter print
+counter print
+
+makecounter (counter) funify setglobal
+
+(counter) getglobal print
+
+counter print
+counter print
+counter print
+
+/--
+
+Ideas and notes for objects/processes ToonTalk style:
+
+(obj box 1) 10 put
+
+obj (moveto 10 10) send
+
+(counter) defprocess
+
+(counter init)
+  (0 box1 put) defmessage
+    
+(counter next)
+  (box1 get 1+ box1 put box1 get) defmessage
+
+
+(counter) spawn (init) send
+
+process
+
+  init
+    
+  getcounter
+
+(makecounter)
+  (((0) copy) eval (dup first 1+ setfirst first) cons) def
+  
+--/

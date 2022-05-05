@@ -1,0 +1,35 @@
+
+(::) () def
+
+(foo)
+  ([A] bar :: A print) def
+
+(bar) (
+  'I am bar' [A] 
+  (A print 'More love' [A]) evalInParentContext 
+  A print) def
+
+'Love' foo
+
+/--
+
+(sayHi) 2000 startTimer (mytimer) setglobal
+
+mytimer stopTimer
+
+stopAllTimers
+
+[ myobj (tick) (do) first ] 1000 startTimer
+
+myobj ((tick) do) cons 1000 startTimer
+
+
+
+(@ myobj (tick) do) 1000 intervalDo
+(@ myobj (tick) do) :: 1000 intervalDo
+(@ myobj (tick) do) @@ 1000 intervalDo
+
+
+
+
+--/

@@ -3,9 +3,9 @@
 (]) (sayHi) def
 ]
 
-(liststart) () def
+(liststart) (4444) def
 
-([) ('foo' print (liststart) first) def
+([) ('foobar44' print (liststart) first) def
 
 (]) (() consitem) def
 
@@ -14,10 +14,20 @@
     (A B cons consitem) 
   ifelse) def
 
-[ 1 2 3 4 4 + ] print
+[ 1 2 3 4 4 (+) first ] print
+
+printstack
+
+'-------------------' print
+
+printstack
 
 
 /--
+
+parentcontext evalincontext
+
+((1) (2) ((+))) (eval) map
 
 sayHi
 

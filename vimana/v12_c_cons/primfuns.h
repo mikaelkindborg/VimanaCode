@@ -46,13 +46,15 @@ void PrimFun_evalInParentContext(VInterp* interp)
   // Find context of current function call
   for (index = interp->callStackTop; index > -1; --index)
   {
+    printf("STACKFRAME: %i\n", index);
     stackframe = InterpStackFrameAt(interp, index);
     if (stackframe->context == stackframe) break;
   }
 
   // We want the context of the parent of the closest function call
-  if (index > 1)
+  if (index > 0)
   {
+    printf("STACKFRAME 2: %i\n", index - 1);
     stackframe = InterpStackFrameAt(interp, index - 1);
   }
 
