@@ -192,8 +192,8 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
     if (IsStringSeparator(*p))
     {
       char* string = ParseString(p + 1, &p);
-      item = MemAllocItem(mem);
-      MemItemSetString(mem, item, string);
+      item = MemAllocBufferItem(mem, StrCopy(string));
+      ItemSetType(item, TypeString);
       SysFree(string);
     }
     else

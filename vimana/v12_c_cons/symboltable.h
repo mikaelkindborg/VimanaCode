@@ -17,7 +17,7 @@ void SymbolTableFree(VItem* array)
   for (int i = 0; i < ArrayLength(array); ++ i)
   {
     VItem* item = ArrayGet(array, i);
-    StrFree(item->string);
+    SysFree(item->ptr);
   }
 
   ArrayFree(array);
@@ -31,7 +31,7 @@ int SymbolTableFindAdd(VItem* array, char* string)
   for (index = 0; index < ArrayLength(array); ++ index)
   {
     VItem* item = ArrayGet(array, index);
-    if (StrEquals(item->string, string))
+    if (StrEquals(item->ptr, string))
     {
       return index; // Found existing symbol
     }
@@ -39,7 +39,7 @@ int SymbolTableFindAdd(VItem* array, char* string)
 
   // Symbol not found, add it
   VItem newItem;
-  newItem.string = StrCopy(string);
+  newItem.ptr = StrCopy(string);
   ArraySet(array, index, &newItem);
   
   return index;
@@ -49,7 +49,7 @@ int SymbolTableFindAdd(VItem* array, char* string)
 char* SymbolTableGetString(VItem* array, int index)
 {
   VItem* item = ArrayGet(array, index);
-  return item->string;
+  return item->ptr;
 }
 
 // Global symbol table

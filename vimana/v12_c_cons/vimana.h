@@ -2,13 +2,17 @@
 #define __VIMANA_H___
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include <limits.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #include "base.h"
 #include "print.h"
@@ -21,6 +25,7 @@
 #include "gurumeditation.h"
 #include "symboltable.h"
 #include "interp.h"
+#include "socket.h"
 #include "primfuns.h"
 #include "parser.h"
 

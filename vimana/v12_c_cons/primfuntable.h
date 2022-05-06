@@ -42,6 +42,7 @@
   { "cons", PrimFun_cons },
   { "setfirst", PrimFun_setfirst },
   { "gc", PrimFun_gc },
+  { "sleep", PrimFun_sleep },
   { "def", PrimFun_def },
   { "evalfile", PrimFun_evalfile },
   { "__sentinel__", NULL }

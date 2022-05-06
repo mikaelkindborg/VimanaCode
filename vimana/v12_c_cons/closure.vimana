@@ -61,4 +61,11 @@ process
 (makecounter)
   (((0) copy) eval (dup first 1+ setfirst first) cons) def
   
+(makecounter)
+  ((0) copy (dup first 1+ setfirst first) cons) def
+  
+(makecounter)
+  ([ 0 ] (dup first 1+ setfirst first) cons) def
+  
+  
 --/

@@ -14,8 +14,6 @@ char* StrCopy(char* str)
   return newStr;
 }
 
-#define StrFree(str) SysFree(str)
-
 void StrToUpper(char* s)
 {
   char* p = s;

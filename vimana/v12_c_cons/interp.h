@@ -100,7 +100,6 @@ VInterp* InterpNew()
 
 void InterpFree(VInterp* interp)
 {
-  PrintLine("==============================================================");
   MemSweep(interp->mem);
   MemFree(interp->mem);
   SysFree(interp);

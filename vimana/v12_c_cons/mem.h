@@ -97,9 +97,9 @@ void MemDeallocItem(VMem* mem, VItem* item)
 
   //printf("MemDeallocItem: allocCounter: %i\n", mem->allocCounter);
 
-  if (IsTypeStringHolder(item))
+  if (IsTypeBufferPtr(item))
   {
-    StrFree(item->string);
+    if (item->ptr) SysFree(item->ptr);
   }
 
   ItemSetType(item, TypeNone);
@@ -190,30 +190,68 @@ VItem* MemRest(VMem* mem, VItem* list)
 }
 
 // -------------------------------------------------------------
-// String items
+// String and buffer items
 // -------------------------------------------------------------
 
+// Allocates two new items: one that can be copied and one that 
+// points to the memory buffer. The memory buffer must be allocated
+// with malloc() or a similar function. The caller must set
+// the type of the returned item.
+//
+// There must be only one instance of the item that points to 
+// allocated memory, and this item must NOT be shared; that is,
+// it must NOT be present on the data stack or used for variables.
+// If the raw pointer would be refereced from many items, the
+// garbage collector would not be able to tell if it is deallocated.
+//
+VItem* MemAllocBufferItem(VMem* mem, void* bufferPtr)
+{
+  VItem* item = MemAllocItem(mem);
+  VItem* bufferItem = MemAllocItem(mem);
+  
+  bufferItem->ptr = bufferPtr;
+  ItemSetType(bufferItem, TypeBufferPtr);
+  MemItemSetFirst(mem, item, bufferItem);
+
+  return item;
+}
+
+// Returns the pointer of the buffer the item refers to.
+void* MemBufferItemPtr(VMem* mem, VItem* item)
+{
+  VItem* bufferItem = MemItemFirst(mem, item);
+
+  if (NULL == bufferItem) return NULL;
+  if (!IsTypeBufferPtr(bufferItem)) return NULL;
+
+  return bufferItem->ptr;
+}
+
+/*
 // Allocates a new item to hold the string
 void MemItemSetString(VMem* mem, VItem* item, char* string)
 {
   char* s = StrCopy(string);
-  VItem* holder = MemAllocItem(mem);
-  holder->string = s;
-  ItemSetType(holder, TypeStringHolder);
+  VItem* bufferItem = MemAllocItem(mem);
+  bufferItem->ptr = s;
+  ItemSetType(bufferItem, TypeBufferPtr);
 
   ItemSetType(item, TypeString);
-  MemItemSetFirst(mem, item, holder);
+  MemItemSetFirst(mem, item, bufferItem);
 }
 
 char* MemItemString(VMem* mem, VItem* item)
 {
-  VItem* holder = MemItemFirst(mem, item);
+  if (!IsTypeString(item)) return NULL;
 
-  if (NULL == holder) return NULL;
-  if (!IsTypeStringHolder(holder)) return NULL;
+  VItem* bufferItem = MemItemFirst(mem, item);
 
-  return holder->string;
+  if (NULL == bufferItem) return NULL;
+  if (!IsTypeBufferPtr(bufferItem)) return NULL;
+
+  return bufferItem->ptr;
 }
+*/
 
 // -------------------------------------------------------------
 // GC
@@ -283,7 +321,7 @@ void MemPrintItem(VMem* mem, VItem* item)
   else if (IsTypeSymbol(item))
     printf("S%li", item->intNum);
   else if (IsTypeString(item))
-    printf("'%s'", (char*)MemItemString(mem, item));
+    printf("'%s'", (char*)MemBufferItemPtr(mem, item));
   else if (IsTypeFun(item))
   {
     printf("[FUN] ");

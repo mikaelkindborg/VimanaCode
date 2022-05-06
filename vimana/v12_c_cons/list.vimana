@@ -1,0 +1,37 @@
+/--
+1500 sleep
+sayHi
+1000 sleep
+sayHi
+500 sleep
+sayHi
+--/
+
+([ 1 2 3 ]) 
+printstack
+drop
+
+(@) (first) def
+
+([) ((__liststart)@) def
+
+(]) (() consitem) def
+
+(consitem) ([AB] 
+  A (__liststart)@ eq (B) 
+    (A B cons consitem) 
+  ifelse) def
+
+/-- item list --/
+(consitem) (
+  swap dup (__liststart)@ eq 
+    (drop) 
+    (swap cons consitem) 
+  ifelse) def
+
+[ 1 [ 2 3 ] (@)@ 4 4 (+)@ ]
+printstack
+eval
+printstack
++ + 
+printstack

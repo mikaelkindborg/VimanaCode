@@ -17,7 +17,7 @@ typedef struct __VItem
     VIntNum     intNum;
     VDecNum     decNum;
     VPrimFunPtr primFunPtr;
-    char*       string;
+    void*       ptr;
   };
   VType  type;  // type info and gc mark bit
   VAddr  next;  // "address" of next item
@@ -36,15 +36,20 @@ VItem;
   ( (ItemType(item1) == ItemType(item2)) && \
     ((item1)->intNum == (item2)->intNum) )
 
-#define TypeNone          0
-#define TypeList          1
-#define TypeIntNum        2
-#define TypeDecNum        3
-#define TypeString        4
-#define TypeStringHolder  5
-#define TypeSymbol        6 // Pushable types must be before TypeSymbol
-#define TypePrimFun       7
-#define TypeFun           8
+enum ItemType
+{
+  TypeNone = 0,
+  TypeList,
+  TypeIntNum,
+  TypeDecNum,
+  TypeString,
+  TypeSocket,
+  TypeBufferPtr,
+  TypeSymbol,      // Pushable types must go before TypeSymbol
+  TypePrimFun,
+  TypeFun,
+  __TypeSentinel__
+};
 
 // Pushable items are types that can be pushed to the data stack 
 // without being evaluated
@@ -54,10 +59,11 @@ VItem;
 #define IsTypeIntNum(item)       (TypeIntNum == ItemType(item))
 #define IsTypeDecNum(item)       (TypeDecNum == ItemType(item))
 #define IsTypeString(item)       (TypeString == ItemType(item))
+#define IsTypeSocket(item)       (TypeSocket == ItemType(item))
 #define IsTypeSymbol(item)       (TypeSymbol == ItemType(item))
 #define IsTypePrimFun(item)      (TypePrimFun == ItemType(item))
 #define IsTypeFun(item)          (TypeFun == ItemType(item))
-#define IsTypeStringHolder(item) (TypeStringHolder == ItemType(item))
+#define IsTypeBufferPtr(item)    (TypeBufferPtr == ItemType(item))
 // Empty list
 #define IsNil(item)              (IsTypeList(item) && ((item)->addr == 0))
 // List types
