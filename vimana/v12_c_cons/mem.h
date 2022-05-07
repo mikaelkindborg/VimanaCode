@@ -215,7 +215,7 @@ VItem* MemRest(VMem* mem, VItem* list)
 //
 VItem* MemAllocBufferItem(VMem* mem, void* bufferPtr)
 {
-  PrintLine("MemAllocBufferItem");
+  //PrintLine("MemAllocBufferItem");
   VItem* item = MemAllocItem(mem);
   VItem* bufferItem = MemAllocItem(mem);
   
@@ -253,7 +253,7 @@ void MemMark(VMem* mem, VItem* item)
       return;
     }
 
-    Print("MARK ITEM: "); MemPrintItem(mem, item); PrintNewLine();
+    //Print("MARK ITEM: "); MemPrintItem(mem, item); PrintNewLine();
     ItemSetGCMark(item, 1);
 
     // Mark children

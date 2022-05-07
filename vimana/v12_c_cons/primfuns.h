@@ -423,6 +423,8 @@ void PrimFun_cons(VInterp* interp)
   *item = newList;
 }//
 
+// Leaves list on the stack
+// list item setfirst --> list
 void PrimFun_setfirst(VInterp* interp)
 {
   VItem* item = InterpStackPop(interp);

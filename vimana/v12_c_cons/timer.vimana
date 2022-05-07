@@ -1,10 +1,4 @@
-/-- List functions --/
-
-(map) 
-  ([AB] A isempty not (
-    A first B call
-    A rest map)
-  iftrue) def
+'lib.vimana' evalfile
 
 /-- Timer global variables --/
 
@@ -17,14 +11,31 @@
 (timerCounterIncr)
   (TimerCounter 1+ (TimerCounter) setglobal) def
 
-(timerListAdd)
+(timerAdd)
   (TimerList cons (TimerList) setglobal) def
 
-(timerListCheck) 
-  ((timerRun) map) def
+ /-- list interval --/
+(timerAdd) (
+  [AB] timerCounterIncr
+  /-- (lastRun interval code timerId) --/
+  [ millis B A TimerCounter ]
+    TimerList cons (TimerList) setglobal) def
+
+(timerCheckAll) 
+  (TimerList (timerRun) map) def
 
 (timerStopAll)
   (0 (TimerRunFlag) setglobal) def
+
+(timerClearAll)
+  (() (TimerList) setglobal) def
+
+(timerLoop) 
+  (TimerRunFlag (
+    timerCheckAll 
+    10 sleep
+    timerLoop) 
+  iftrue) def
 
 /-- Timer functions --/
 
@@ -33,137 +44,30 @@
 (timerCode)       (rest rest first) def
 (timerId)         (rest rest rest first) def
 
-(timerLastRunSet) (millis setfirst) def
+(timerLastRunSet) (millis setfirst drop) def
 
 (timerRun)
-  ([A] A timerLastRun A timerInterval + 
+  ([A] A timerLastRun A timerInterval +
     millis < (
-      A timerCode call
-      A timerLastRunSet) 
+      A timerLastRunSet
+      A timerCode call) 
     iftrue) def
 
+/-- Example --/
 
+(sayHi) 1000 timerAdd
 
+[ 0 ] (dup first 1+ setfirst first print) cons
+  100 timerAdd
 
- /-- list interval --/
-(timerstart) ([AB]
-  timercounter 1+ (timercounter) setglobal
-  /-- (lastrun interval list timerid) --/
-  [ timenow B A timercounter ]
-  timerlistAdd) def
+(timerStopAll) 5000 timerAdd
 
-(timerstop)
-  (...) def
+timerLoop
 
-(timerstopall)
-  (...) def
+printstack
 
-(timersetlastrun)
-  (timenow setfirst) def
+/--
 
-(sayHi) 1000 timerstart
+0 () cons (44 print dup first 1+ setfirst first print) cons eval
 
-
-(timerId)       (0 nth) def
-(timerInterval) (1 nth) def
-(timerLastRun)  (2 nth) def
-(timerCode)     (3 nth) def
-
-(timerRun)
-  (dup timerLastRun over timerInterval + 
-    millis < (
-      dup timerCode call
-      millis timerLastRun-set) 
-    iftrue) def
-
-(timerRun)
-  ([A] A timerLastRun A timerInterval + 
-    millis < (
-      A timerCode call
-      A millis timerLastRunSet) 
-    iftrue) def
-
-(timerRun)
-  ([timer] timer timerLastRun timer timerInterval + 
-    millis < (
-      timer timerCode call
-      timer millis timerLastRun-set) 
-    iftrue) def
-
-function (timerRun timer)
-{
-  if (timerLastRun(timer) + timerInterval(timer) < millis())
-  {
-    call(timerCode(timer))
-    timerLastRun-set(timer, millis()) 
-  }
-}
-
-function (timerRun A)
-{
-  if (timerLastRun(A) + timerInterval(A) < millis())
-  {
-    call(timerCode(A))
-    timerLastRun-set(A, millis()) 
-  }
-}
-
-    
-1 (timers-run-flag) setglobal
-
-(timers-run-flag) 1 setglobal
-
-(timers-list) [ ] set
-(timers-list) [ ] setg
-(timers-list) [ ] defv
-(timers-list) [ ] defval
-
-(timers-stop-all)
-  (0 (timers-run-flag) setglobal) def
-
-(timers-run) 
-  (timers-run-flag (
-    timerlist timers-check 
-    100 sleep 
-    timers-run) iftrue
-  [ ] (timers-list) setglobal) def
-
-(timers-check) 
-  ([A] A isempty not (
-    A first [B]
-    B timerRun
-    A rest timers-check)
-  iftrue) def
-
-
-(timers-check) 
-  ([A] A isempty not (
-    A first timerRun
-    A rest timers-check)
-  iftrue) def
-
-(map) 
-  ([AB] A isempty not (
-    A first B call
-    A rest map)
-  iftrue) def
-  
-(timers-check) 
-  ((timerRun) map) def
-  
-(timers-check) 
-  ([A] A isempty not (
-    A first [B]
-    B timerLastRun 
-    B timerInterval + 
-      millis < (
-        B timerCode call
-        B millis timerLastRun-set) 
-      iftrue
-    A rest timers-check)
-  iftrue) def
-
-(sayHi) 1000 timer-start
-
-(timers-stop-all) 5000 timer-start
-
+--/

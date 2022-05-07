@@ -1,8 +1,51 @@
-(funify swap setglobal) funify 
-  (def) setglobal
+/-- List functions --/
 
-(evalfile) 
-  (readfile parse eval) def
+(@) (first) def
+
+(isempty) (() eq) def
+
+(map) 
+  ([AB] A isempty not (
+    A first B call
+    A rest B map)
+  iftrue) def
+
+(copy)
+  ([A] A isempty (())
+    (A first 
+      A rest copy 
+      cons)
+  ifelse) def
+
+/-- Create lists with evaluated elements --/
+
+([) ((__liststart)@) def
+
+(]) (() consitems) def
+
+(consitems) ([AB] 
+  A (__liststart)@ eq (B) 
+    (A B cons consitems) 
+  ifelse) def
+
+/----
+Examples:
+[ ] --> () create empty list
+[ millis ] --> (<timestamp>) create list with one element
+[ 1 2 1 2 + ] --> (1 2 3) 
+
+There must be spaces before and after the square brackets 
+since they are functions
+----/
+
+/-- Alternative documentation comments --/
 
 (doc)
   (drop) def
+
+/----
+'Now you can write comments like this' doc
+'The comment strings are part of the live code' doc
+'You could for example redefine doc to print all 
+comments as the code executes' doc
+----/
