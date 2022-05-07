@@ -455,8 +455,8 @@ void PrimFun_gc(VInterp* interp)
   InterpGC(interp);
 }//
 
-// clock --> millisecond time stamp
-void PrimFun_clock(VInterp* interp)
+// millis --> millisecond time stamp
+void PrimFun_millis(VInterp* interp)
 {
   struct timeval timestamp;
   VItem item;

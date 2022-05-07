@@ -78,7 +78,7 @@ echo "NumLinesBlank:    " . ($NumLinesBlank) . "\n";
 Version v12_c_cons:
 
 220403:
-  BASE VERSION: 412 lines (symbolic parser)
+  BASE VERSION: 412 lines (symbol parser)
 220408:
   BASE VERSION: 654 lines (work-in-progress on interpreter)
 220409:

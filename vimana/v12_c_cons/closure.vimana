@@ -68,4 +68,144 @@ process
   ([ 0 ] (dup first 1+ setfirst first) cons) def
   
   
+  
+  
+
+(nth) ([AB] 
+  B iszero 
+    (A first) 
+    (A rest B 1- nth)
+  ifelse) 
+def
+
+(timer-id)       (0 nth) def
+(timer-interval) (1 nth) def
+(timer-lastrun)  (2 nth) def
+(timer-code)     (3 nth) def
+
+(timer-lastrun)  (first) def
+(timer-interval) (rest first) def
+(timer-code)     (rest rest first) def
+(timer-id)       (rest rest rest first) def
+
+(timer-lastrun-set) (setfirst) def
+
+(timer-run)
+  (dup timer-lastrun over timer-interval + 
+    millis < (
+      dup timer-code call
+      millis timer-lastrun-set) 
+    iftrue) def
+
+(timerRun)
+  ([A] A timerLastRun A timerInterval + 
+    millis < (
+      A timerCode call
+      A millis timerLastRunSet) 
+    iftrue) def
+
+(timerRun)
+  ([A] A timerLastRun A timerInterval + 
+    millis < (
+      A timerCode call
+      A millis timerLastRunSet) 
+    iftrue) def
+
+(timer-run)
+  ([timer] timer timer-lastrun timer timer-interval + 
+    millis < (
+      timer timer-code call
+      timer millis timer-lastrun-set) 
+    iftrue) def
+
+function (timer-run timer)
+{
+  if (timer-lastrun(timer) + timer-interval(timer) < millis())
+  {
+    call(timer-code(timer))
+    timer-lastrun-set(timer, millis()) 
+  }
+}
+
+function (timer-run A)
+{
+  if (timer-lastrun(A) + timer-interval(A) < millis())
+  {
+    call(timer-code(A))
+    timer-lastrun-set(A, millis()) 
+  }
+}
+
+    
+1 (timers-run-flag) setglobal
+
+(timers-run-flag) 1 setglobal
+
+(timers-list) [ ] set
+(timers-list) [ ] setg
+(timers-list) [ ] defv
+(timers-list) [ ] defval
+
+(timers-stop-all)
+  (0 (timers-run-flag) setglobal) def
+
+(timers-run) 
+  (timers-run-flag (
+    timerlist timers-check 
+    100 sleep 
+    timers-run) iftrue
+  [ ] (timers-list) setglobal) def
+
+(timers-check) 
+  ([A] A isempty not (
+    A first [B]
+    B timer-run
+    A rest timers-check)
+  iftrue) def
+
+
+(timers-check) 
+  ([A] A isempty not (
+    A first timer-run
+    A rest timers-check)
+  iftrue) def
+
+(map) 
+  ([AB] A isempty not (
+    A first B call
+    A rest map)
+  iftrue) def
+  
+(timers-check) 
+  ((timer-run) map) def
+  
+(timers-check) 
+  ([A] A isempty not (
+    A first [B]
+    B timer-lastrun 
+    B timer-interval + 
+      millis < (
+        B timer-code call
+        B millis timer-lastrun-set) 
+      iftrue
+    A rest timers-check)
+  iftrue) def
+
+(sayHi) 1000 timer-start
+
+(timers-stop-all) 5000 timer-start
+
+
+(getprop) (nth) def
+
+0 (name) setglobal
+
+obj name getprop
+
+obj 0 getprop
+
+obj getname
+
+
+
 --/
