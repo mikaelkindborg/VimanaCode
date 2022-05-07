@@ -38,6 +38,11 @@ There must be spaces before and after the square brackets
 since they are functions
 ----/
 
+/-- Alternative syntax for setglobal (reverse argument order) --/
+
+(defval)
+  (swap setglobal) def
+
 /-- Alternative documentation comments --/
 
 (doc)

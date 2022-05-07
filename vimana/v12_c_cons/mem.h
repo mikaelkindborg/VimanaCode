@@ -17,7 +17,9 @@ typedef struct __VMem
   VAddr size;
   void* end;
   void* start;
+#ifdef TRACK_MEMORY_USAGE
   int   allocCounter;
+#endif
 }
 VMem;
 
@@ -33,16 +35,26 @@ VMem* MemNew(int memSize)
   mem->size = size - sizeof(VMem);
   mem->start = mem + sizeof(VMem);
   mem->end = mem->start;
+#ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
+#endif
 
   return mem;
 }
 
+#ifdef TRACK_MEMORY_USAGE
+  void MemPrintAllocCounter(VMem* mem)
+  {
+    Print("MemAllocCounter: "); PrintIntNum(mem->allocCounter); PrintNewLine();
+  }
+#endif
+
 void MemFree(VMem* mem)
 {
   SysFree(mem);
-
-  printf("MemAllocCounter: %i\n", mem->allocCounter);
+#ifdef TRACK_MEMORY_USAGE
+  MemPrintAllocCounter(mem);
+#endif
 }
 
 #define MemItemAddr(mem, item) \
@@ -81,11 +93,9 @@ VItem* MemAllocItem(VMem* mem)
 
   ItemInit(item);
 
+#ifdef TRACK_MEMORY_USAGE
   ++ (mem->allocCounter);
-
-  /*Print("MemAllocItem allocCounter: ");
-  PrintIntNum(mem->allocCounter);
-  PrintNewLine();*/
+#endif
 
   return item;
 }
@@ -98,11 +108,9 @@ void MemDeallocItem(VMem* mem, VItem* item)
     return;
   }
 
+#ifdef TRACK_MEMORY_USAGE
   -- (mem->allocCounter);
-
-  /*Print("MemDeallocItem allocCounter: ");
-  PrintIntNum(mem->allocCounter);
-  PrintNewLine();*/
+#endif
 
   if (IsTypeBufferPtr(item))
   {

@@ -108,8 +108,6 @@ void InterpFree(VInterp* interp)
 
 void InterpGC(VInterp* interp)
 {
-  PrintLine("InterpGC");
-
   // Mark data stack
   VItem* stack = interp->dataStack;
   for (int i = 0; i <= interp->dataStackTop; ++ i)
@@ -143,10 +141,10 @@ void InterpGC(VInterp* interp)
   //MemMark(callstack); // Walk from top and mark localvars
 
   MemSweep(interp->mem);
-
-  Print("MemAllocCounter: ");
-  PrintIntNum(interp->mem->allocCounter);
-  PrintNewLine();
+  
+#ifdef TRACK_MEMORY_USAGE
+  MemPrintAllocCounter(interp->mem);
+#endif
 }
 
 // -------------------------------------------------------------

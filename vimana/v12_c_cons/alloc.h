@@ -7,12 +7,11 @@ Memory allocation tracking.
 
 #ifdef TRACK_MEMORY_USAGE
 
-  int GMemAllocCounter = 0;
-  int GMemFreeCounter = 0;
+  int GSysAllocCounter = 0;
 
   void SysAllocCounterIncr()
   {
-    ++ GMemAllocCounter;
+    ++ GSysAllocCounter;
   }
 
   // TODO: Zero-initialize allocated buffer
@@ -24,14 +23,13 @@ Memory allocation tracking.
 
   void SysFree(void* obj)
   {
-    ++ GMemFreeCounter; 
+    -- GSysAllocCounter; 
     free(obj);
   }
 
   void PrintMemStat()
   {
-    Print("SysAlloc: "); PrintIntNum(GMemAllocCounter); PrintNewLine();
-    Print("SysFree:  "); PrintIntNum(GMemFreeCounter);  PrintNewLine();
+    Print("SysAllocCounter: "); PrintIntNum(GSysAllocCounter); PrintNewLine();
   }
 
 #else

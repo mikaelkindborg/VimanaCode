@@ -1,5 +1,5 @@
 
-#define TRACK_MEMORY_USAGE
+//#define TRACK_MEMORY_USAGE
 #define OPTIMIZE 
 
 #include "vimana.h"

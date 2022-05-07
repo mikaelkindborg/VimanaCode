@@ -118,33 +118,25 @@ def
       timer millis timer-lastrun-set) 
     iftrue) def
 
-function (timer-run timer)
+function timerrun(timer)
 {
-  if (timer-lastrun(timer) + timer-interval(timer) < millis())
+  if (timerlastrun(timer) + timerinterval(timer) < millis())
   {
-    call(timer-code(timer))
-    timer-lastrun-set(timer, millis()) 
+    call(timercode(timer))
+    timerlastrunset(timer, millis()) 
   }
 }
 
-function (timer-run A)
+function timerrun(A)
 {
-  if (timer-lastrun(A) + timer-interval(A) < millis())
+  if (timerlastrun(A) + timerinterval(A) < millis())
   {
-    call(timer-code(A))
-    timer-lastrun-set(A, millis()) 
+    call(timercode(A))
+    timerlastrunset(A, millis()) 
   }
 }
 
-    
 1 (timers-run-flag) setglobal
-
-(timers-run-flag) 1 setglobal
-
-(timers-list) [ ] set
-(timers-list) [ ] setg
-(timers-list) [ ] defv
-(timers-list) [ ] defval
 
 (timers-stop-all)
   (0 (timers-run-flag) setglobal) def

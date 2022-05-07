@@ -3,23 +3,20 @@
 /-- Timer global variables --/
 
 () (TimerList) setglobal
-0 (TimerCounter) setglobal
-1 (TimerRunFlag) setglobal
+0  (TimerCounter) setglobal
+1  (TimerRunFlag) setglobal
 
 /-- Timer handling functions --/
 
 (timerCounterIncr)
   (TimerCounter 1+ (TimerCounter) setglobal) def
 
-(timerAdd)
-  (TimerList cons (TimerList) setglobal) def
-
- /-- list interval --/
+/-- list interval --/
 (timerAdd) (
   [AB] timerCounterIncr
   /-- (lastRun interval code timerId) --/
-  [ millis B A TimerCounter ]
-    TimerList cons (TimerList) setglobal) def
+  [ millis B A TimerCounter ] TimerList cons
+    (TimerList) setglobal) def
 
 (timerCheckAll) 
   (TimerList (timerRun) map) def
@@ -65,9 +62,3 @@
 timerLoop
 
 printstack
-
-/--
-
-0 () cons (44 print dup first 1+ setfirst first print) cons eval
-
---/
