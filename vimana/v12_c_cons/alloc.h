@@ -10,10 +10,15 @@ Memory allocation tracking.
   int GMemAllocCounter = 0;
   int GMemFreeCounter = 0;
 
+  void SysAllocCounterIncr()
+  {
+    ++ GMemAllocCounter;
+  }
+
   // TODO: Zero-initialize allocated buffer
   void* SysAlloc(int size)
   {
-    ++ GMemAllocCounter;
+    SysAllocCounterIncr();
     return malloc(size);
   }
 
@@ -31,6 +36,7 @@ Memory allocation tracking.
 
 #else
 
+  #define SysAllocCounterIncr()
   #define SysAlloc(size) malloc(size)
   #define SysFree(obj) free(obj)
   #define PrintMemStat()

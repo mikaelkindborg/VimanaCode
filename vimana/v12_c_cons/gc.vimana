@@ -1,0 +1,18 @@
+1 2 +
+print
+
+(foo) ('hi foo' print) def
+
+foo
+
+('foobar') print
+
+4444 (bar) setglobal 
+
+1 2 3
+
+clock print
+
+1000 sleep
+
+clock print

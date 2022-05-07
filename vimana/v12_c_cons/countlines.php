@@ -1,27 +1,77 @@
 <?php
 
-function countlines($file)
+$NumLines = 0;
+$NumLinesCode = 0;
+$NumLinesComments = 0;
+$NumLinesBlank = 0;
+
+function StringContains($string, $substring)
 {
-  return count(file($file));
+  return false !== strpos($string, $substring);
 }
 
-$numlines = 
-  countlines("base.h") +
-  countlines("print.h") +
-  countlines("alloc.h") +
-  countlines("file.h") +
-  countlines("string.h") +
-  countlines("item.h") +
-  countlines("mem.h") +
-  countlines("array.h") +
-  countlines("gurumeditation.h") +
-  countlines("symboltable.h") +
-  countlines("interp.h") + 
-  countlines("primfuns.h") +
-  countlines("primfuntable.h") +
-  countlines("parser.h");
+function XCountLines($file)
+{
+  global $NumLines;
 
-echo "BASE VERSION: ". ($numlines) . " lines\n";
+  $NumLines += count(file($file));
+}
+
+function CountLines($file)
+{
+  global $NumLines;
+  global $NumLinesCode;
+  global $NumLinesComments;
+  global $NumLinesBlank;
+
+  $insideMultiLineComment = false;
+
+  foreach (file($file) as $line):
+    ++ $NumLines;
+    // inside multi-line comment
+    if ($insideMultiLineComment):
+      ++ $NumLinesComments;
+      if (StringContains($line, "*/")):
+        $insideMultiLineComment = false;
+      endif;
+    elseif (StringContains($line, "/*")):
+      ++ $NumLinesComments;
+      $insideMultiLineComment = true;
+    elseif (preg_match('/^\s*\/\/./', $line)):
+      ++ $NumLinesComments;
+    elseif (0 == strlen(trim($line))):
+      ++ $NumLinesBlank;
+    else:
+      ++ $NumLinesCode;
+    endif;
+  endforeach;
+}
+
+$files = [
+  "base.h",
+  "print.h",
+  "alloc.h",
+  "file.h",
+  "string.h",
+  "item.h",
+  "mem.h",
+  "array.h",
+  "gurumeditation.h",
+  "symboltable.h",
+  "interp.h",
+  "primfuns.h",
+  "primfuntable.h",
+  "parser.h",
+];
+
+foreach ($files as $file):
+  CountLines($file);
+endforeach;
+
+echo "NumLines:         " . ($NumLines) . "\n";
+echo "NumLinesCode:     " . ($NumLinesCode) . "\n";
+echo "NumLinesComments: " . ($NumLinesComments) . "\n";
+echo "NumLinesBlank:    " . ($NumLinesBlank) . "\n";
 
 /***
 
@@ -50,6 +100,14 @@ Version v12_c_cons:
   BASE VERSION: 1753 lines (mostly working again, local vars experiment)
 220423:
   BASE VERSION: 1669 lines (very nice, simplified localvars)
+220507:
+  // Many more functions, optimizations, and documentation comments
+  NumLines:         2275
+  // Details:
+  NumLines:         2275
+  NumLinesCode:     1384
+  NumLinesComments: 549
+  NumLinesBlank:    342
 
 Version v11_c_minimal:
 

@@ -108,33 +108,45 @@ void InterpFree(VInterp* interp)
 
 void InterpGC(VInterp* interp)
 {
+  PrintLine("InterpGC");
+
   // Mark data stack
   VItem* stack = interp->dataStack;
   for (int i = 0; i <= interp->dataStackTop; ++ i)
   {
     VItem* item = &(stack[i]);
-    if (IsListType(item))
+    if (!IsTypeAtomic(item))
     {
-      printf("stack mark list type\n");
-      MemMark(interp->mem, item);
+      //PrintLine("STACK MARK:");
+      //MemPrintItem(interp->mem, item); PrintNewLine();
+      
+      // We are screwed if item is a TypeBufferPtr
+      MemMark(interp->mem, MemItemFirst(interp->mem, item));
     }
   }
 
   // Mark global vars
   VItem* globalVars = interp->globalVars;
-  for (int i = 0; i <= interp->globalVarsSize; ++ i)
+  for (int i = 0; i < interp->globalVarsSize; ++ i)
   {
     VItem* item = &(globalVars[i]);
-    if (IsListType(item))
+    if (!IsTypeAtomic(item))
     {
-      printf("globalvars mark list type\n");
-      MemMark(interp->mem, item);
+      //PrintLine("GLOBALVAR MARK:");
+      //MemPrintItem(interp->mem, item); PrintNewLine();
+
+      // We are screwed if item is a TypeBufferPtr
+      MemMark(interp->mem, MemItemFirst(interp->mem, item));
     }
   }
 
   //MemMark(callstack); // Walk from top and mark localvars
 
   MemSweep(interp->mem);
+
+  Print("MemAllocCounter: ");
+  PrintIntNum(interp->mem->allocCounter);
+  PrintNewLine();
 }
 
 // -------------------------------------------------------------
@@ -333,7 +345,7 @@ void InterpEval(VInterp* interp, VItem* code)
 {
   InterpPushFirstStackFrame(interp, code);
   InterpEvalSlice(interp, 0);
-  // TODO: GC
+  InterpGC(interp);
 }
 
 // Evaluate a slice of code. 

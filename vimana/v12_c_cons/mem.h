@@ -2,7 +2,9 @@
 File: mem.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Memory manager for linked items.
+Memory manager for List-style linked items.
+
+See item.h for an explanation of memory layout.
 */
 
 // -------------------------------------------------------------
@@ -67,9 +69,10 @@ VItem* MemAllocItem(VMem* mem)
     //printf("mem->size: %i\n", mem->size);
     if (!(memUsed < (mem->size + sizeof(VItem))))
     {
+      // For debugging
       printf("[GURU_MEDITATION: -1] MEM OUT OF MEMORY\n");
-      // GURU(MEM_OUT_OF_MEMORY);
       return NULL;
+      // GURU(MEM_OUT_OF_MEMORY);
     }
     //printf("Free space available\n");
     item = mem->end;
@@ -80,7 +83,9 @@ VItem* MemAllocItem(VMem* mem)
 
   ++ (mem->allocCounter);
 
-  //printf("MemAllocItem: allocCounter: %i\n", mem->allocCounter);
+  /*Print("MemAllocItem allocCounter: ");
+  PrintIntNum(mem->allocCounter);
+  PrintNewLine();*/
 
   return item;
 }
@@ -89,16 +94,19 @@ void MemDeallocItem(VMem* mem, VItem* item)
 {
   if (IsTypeNone(item))
   {
-    printf("MemDeallocItem: IsTypeNone\n");
+    //printf("MemDeallocItem: IsTypeNone\n");
     return;
   }
 
   -- (mem->allocCounter);
 
-  //printf("MemDeallocItem: allocCounter: %i\n", mem->allocCounter);
+  /*Print("MemDeallocItem allocCounter: ");
+  PrintIntNum(mem->allocCounter);
+  PrintNewLine();*/
 
   if (IsTypeBufferPtr(item))
   {
+    //PrintLine("FREE BUFFERPTR");
     if (item->ptr) SysFree(item->ptr);
   }
 
@@ -132,7 +140,7 @@ void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
 // -------------------------------------------------------------
 // Cons and rest
 // -------------------------------------------------------------
-
+/*
 // Adds an item to the front of a new list
 // Allocs and returns the new list
 VItem* MemCons(VMem* mem, VItem* item, VItem* list)
@@ -188,9 +196,10 @@ VItem* MemRest(VMem* mem, VItem* list)
 
   return newList;
 }
+*/
 
 // -------------------------------------------------------------
-// String and buffer items
+// Buffer items
 // -------------------------------------------------------------
 
 // Allocates two new items: one that can be copied and one that 
@@ -206,6 +215,7 @@ VItem* MemRest(VMem* mem, VItem* list)
 //
 VItem* MemAllocBufferItem(VMem* mem, void* bufferPtr)
 {
+  PrintLine("MemAllocBufferItem");
   VItem* item = MemAllocItem(mem);
   VItem* bufferItem = MemAllocItem(mem);
   
@@ -227,35 +237,11 @@ void* MemBufferItemPtr(VMem* mem, VItem* item)
   return bufferItem->ptr;
 }
 
-/*
-// Allocates a new item to hold the string
-void MemItemSetString(VMem* mem, VItem* item, char* string)
-{
-  char* s = StrCopy(string);
-  VItem* bufferItem = MemAllocItem(mem);
-  bufferItem->ptr = s;
-  ItemSetType(bufferItem, TypeBufferPtr);
-
-  ItemSetType(item, TypeString);
-  MemItemSetFirst(mem, item, bufferItem);
-}
-
-char* MemItemString(VMem* mem, VItem* item)
-{
-  if (!IsTypeString(item)) return NULL;
-
-  VItem* bufferItem = MemItemFirst(mem, item);
-
-  if (NULL == bufferItem) return NULL;
-  if (!IsTypeBufferPtr(bufferItem)) return NULL;
-
-  return bufferItem->ptr;
-}
-*/
-
 // -------------------------------------------------------------
 // GC
 // -------------------------------------------------------------
+
+void MemPrintItem(VMem* mem, VItem* item);
 
 void MemMark(VMem* mem, VItem* item)
 {
@@ -263,14 +249,15 @@ void MemMark(VMem* mem, VItem* item)
   {
     if (ItemGCMark(item))
     {
+      PrintLine("ALREADY MARKED");
       return;
     }
 
-    //printf("mark item\n");
+    Print("MARK ITEM: "); MemPrintItem(mem, item); PrintNewLine();
     ItemSetGCMark(item, 1);
 
-    // Types that have children
-    if (IsListType(item) || IsTypeString(item))
+    // Mark children
+    if (!IsTypeAtomic(item))
     {
       VItem* child = MemItemFirst(mem, item);
       MemMark(mem, child);
@@ -288,12 +275,12 @@ void MemSweep(VMem* mem)
   {
     if (ItemGCMark(item))
     {
-      //printf("unmark\n");
+      //PrintLine("MemSweep unmark");
       ItemSetGCMark(item, 0);
     }
     else
     {
-      //printf("dealloc\n");
+      //PrintLine("MemSweep dealloc");
       MemDeallocItem(mem, item);
     }
 
@@ -310,7 +297,9 @@ void MemPrintList(VMem* mem, VItem* first);
 void MemPrintItem(VMem* mem, VItem* item)
 {
   //printf("[T%i]", ItemType(item));
-  if (IsTypeList(item))
+  if (IsTypeNone(item))
+    Print("None");
+  else if (IsTypeList(item))
     MemPrintList(mem, item);
   else if (IsTypeIntNum(item))
     printf("%li", item->intNum);

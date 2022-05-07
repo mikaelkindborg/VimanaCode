@@ -1,6 +1,5 @@
 
-//#define TRACK_MEMORY_USAGE
-
+#define TRACK_MEMORY_USAGE
 #define OPTIMIZE 
 
 #include "vimana.h"
@@ -68,24 +67,13 @@ int main(int numargs, char* args[])
       PrintLine("Cannot read source code file");
       break;
     }
-/*  
-    // If in interactive mode evaluate added code if source has grown
-    if (GInteractiveMode)
-    {
-      sourceSize = strlen(source);
-      if (prevSourceSize && (sourceSize > prevSourceSize))
-      {
-        source = source + (prevSourceSize);
-    printf ("eval: %s\n", source);
-      }
-      prevSourceSize = sourceSize;
-    }
-*/
-    // Evaluate code
-    VItem* list = ParseSourceCode(source, interp->mem);
-    InterpEval(interp, list);
 
-    // TODO Dealloc source
+    // Parse code
+    VItem* list = ParseSourceCode(source, interp->mem);
+    SysFree(source);
+
+    // Evaluate code
+    InterpEval(interp, list);
 
     // Handle interactive mode
     if (GInteractiveMode)

@@ -1,0 +1,28 @@
+
+() (timerlist) setglobal
+
+0 (timercounter) setglobal
+
+(timercounterIncrement)
+  (timercounter 1+ (timercounter) setglobal) def
+
+(timerlistAdd)
+  (timerlist cons (timerlist) setglobal) def
+
+ /-- list interval --/
+(timerstart) ([AB]
+  timercounter 1+ (timercounter) setglobal
+  /-- (lastrun interval list timerid) --/
+  [ timenow B A timercounter ]
+  timerlistAdd) def
+
+(timerstop)
+  (...) def
+
+(timerstopall)
+  (...) def
+
+(timersetlastrun)
+  (timenow setfirst) def
+
+(sayHi) 1000 timerstart

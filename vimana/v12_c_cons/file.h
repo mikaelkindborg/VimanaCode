@@ -25,11 +25,12 @@ char* FileRead(char* fileName)
       fputc(c, stream);
     }
 
-    fputc(c, 0);
+    fputc(0, stream);
     fclose(file);
     fclose(stream);
 
-    // TODO: Update MemAllocCounter
+    // Increment SysAllocCounter
+    SysAllocCounterIncr();
 
     return buffer;
   }

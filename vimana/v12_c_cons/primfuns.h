@@ -335,7 +335,7 @@ void PrimFun_first(VInterp* interp)
   VItem* list = InterpStackTop(interp);
 
   // Must be a list type
-  if (!IsListType(list)) GURU(FIRST_OBJECT_IS_NOT_A_LIST);
+  if (!IsList(list)) GURU(FIRST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
   VItem* item = MemItemFirst(interp->mem, list);
@@ -355,7 +355,7 @@ void PrimFun_rest(VInterp* interp)
   VItem* list = InterpStackTop(interp);
 
   // Must be a list type
-  if (!IsListType(list)) GURU(REST_OBJECT_IS_NOT_A_LIST);
+  if (!IsList(list)) GURU(REST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
   VItem* item = MemItemFirst(interp->mem, list);
@@ -388,7 +388,7 @@ void PrimFun_cons(VInterp* interp)
   VItem* item = InterpStackTop(interp);
 
   // Must be a list type
-  if (!IsListType(list)) GURU(CONS_OBJECT_IS_NOT_A_LIST);
+  if (!IsList(list)) GURU(CONS_OBJECT_IS_NOT_A_LIST);
 
   // This will be the new head of the cons
   VItem newList;
@@ -429,7 +429,7 @@ void PrimFun_setfirst(VInterp* interp)
   VItem* list = InterpStackTop(interp);
 
   // Must be a list type
-  if (!IsListType(list)) GURU(SETFIRST_OBJECT_IS_NOT_A_LIST);
+  if (!IsList(list)) GURU(SETFIRST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
   VItem* first = MemItemFirst(interp->mem, list);
@@ -453,6 +453,23 @@ void PrimFun_setfirst(VInterp* interp)
 void PrimFun_gc(VInterp* interp)
 {
   InterpGC(interp);
+}//
+
+// clock --> millisecond time stamp
+void PrimFun_clock(VInterp* interp)
+{
+  struct timeval timestamp;
+  VItem item;
+
+  gettimeofday(&timestamp, NULL);
+  long days = (1000 * 60 * 24 * 1000);
+  long millis = 
+    ((timestamp.tv_sec % days) * 1000) + 
+    (timestamp.tv_usec / 1000);
+  //printf("sec: %li millis: %li\n", (long)timestamp.tv_sec % days, (long)timestamp.tv_usec / 1000);
+  ItemSetIntNum(&item, millis);
+
+  InterpStackPush(interp, &item);
 }//
 
 // millis sleep -->
