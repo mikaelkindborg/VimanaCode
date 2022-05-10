@@ -52,14 +52,6 @@ void MemInit(VMem* mem, int numItems)
   }
 #endif
 
-void MemFree(VMem* mem)
-{
-  SysFree(mem);
-#ifdef TRACK_MEMORY_USAGE
-  MemPrintAllocCounter(mem);
-#endif
-}
-
 #define MemItemAddr(mem, item) \
   ( (NULL != (item)) ? ( ((void*)(item)) - (mem)->start ) + 1 : 0 )
 

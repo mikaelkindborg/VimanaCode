@@ -99,7 +99,9 @@ VInterp* InterpNew()
 void InterpFree(VInterp* interp)
 {
   MemSweep(interp->mem);
-  MemFree(interp->mem);
+#ifdef TRACK_MEMORY_USAGE
+  MemPrintAllocCounter(interp->mem);
+#endif
   SysFree(interp);
   GSymbolTableRelease();
 }
@@ -381,7 +383,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
       InterpPopStackFrame(interp);
 
       // Exit if this was the last stackframe.
-      if (interp->callStackTop < 0)
+      if (interp->callStackTop < interp->callStack)
       {
         interp->run = FALSE;
         goto Exit; // Exit loop
