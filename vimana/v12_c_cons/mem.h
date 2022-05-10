@@ -25,12 +25,17 @@ VMem;
 
 #define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + (addr) - 1) ) 
 
-VMem* MemNew(int memSize)
+// Return the number of bytes needed to hold numItems
+int MemByteSize(int numItems)
 {
-  int memByteSize = memSize * sizeof(VItem);
-  VAddr size = memByteSize;
-  VMem* mem = SysAlloc(size);
+  int memByteSize = numItems * sizeof(VItem);
+  return memByteSize;
+}
 
+void MemInit(VMem* mem, int numItems)
+{
+  VAddr size = MemByteSize(int numItems);
+  
   mem->firstFree = 0;
   mem->size = size - sizeof(VMem);
   mem->start = mem + sizeof(VMem);
@@ -38,8 +43,6 @@ VMem* MemNew(int memSize)
 #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
 #endif
-
-  return mem;
 }
 
 #ifdef TRACK_MEMORY_USAGE
