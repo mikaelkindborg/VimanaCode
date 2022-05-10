@@ -36,33 +36,6 @@ void PrimFun_call(VInterp* interp)
   InterpPushFunCallStackFrame(interp, codeBlock);
 }//
 
-// Eval in parent context - this can be used by "macro-like" functions that
-// take block arguments (lists) that refer to the context in which the appear
-void PrimFun_evalInParentContext(VInterp* interp)
-{
-  int index;
-  VStackFrame* stackframe;
-
-  // Find context of current function call
-  for (index = interp->callStackTop; index > -1; --index)
-  {
-    printf("STACKFRAME: %i\n", index);
-    stackframe = InterpStackFrameAt(interp, index);
-    if (stackframe->context == stackframe) break;
-  }
-
-  // We want the context of the parent of the closest function call
-  if (index > 0)
-  {
-    printf("STACKFRAME 2: %i\n", index - 1);
-    stackframe = InterpStackFrameAt(interp, index - 1);
-  }
-
-  // Eval in this context
-  VItem* codeBlock = InterpStackPop(interp);
-  InterpPushStackFrameWithContext(interp, codeBlock, stackframe);  
-}//
-
 void PrimFun_iftrue(VInterp* interp)
 {
   VItem* trueBlock = InterpStackPop(interp);

@@ -9,12 +9,6 @@ Interpreter data structures and functions.
 // Data types and structs
 // -------------------------------------------------------------
 
-enum CALL_TYPE
-{
-  CALL_TYPE_EVAL,
-  CALL_TYPE_FUN
-};
-
 typedef struct __VStackFrame VStackFrame;
 
 struct __VStackFrame
@@ -257,36 +251,6 @@ void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
 
   // Functions have their own local environment
   current->context = current;
-
-  // Set first instruction in the new frame
-  current->instruction = MemItemFirst(interp->mem, code);
-}
-
-void InterpPushStackFrameWithContext(VInterp* interp, VItem* code, VStackFrame* context)
-{
-  // The current stackframe is the parent for the new stackframe
-  VStackFrame* parent = InterpStackFrame(interp);
-
-  // Assume tailcall
-  VStackFrame* current = parent;
-
-  // Check tailcall (are there any instructions left?)
-  if (parent->instruction)
-  {
-    // NON-TAILCALL - PUSH NEW STACK FRAME
-
-    ++ interp->callStackTop;
-
-    if (interp->callStackTop >= interp->callStackSize)
-    {
-      GURU(CALL_STACK_OVERFLOW);
-    }
-
-    current = InterpStackFrame(interp);
-  }
-
-  // Use the environment in the context stackframe
-  current->context = context;
 
   // Set first instruction in the new frame
   current->instruction = MemItemFirst(interp->mem, code);
