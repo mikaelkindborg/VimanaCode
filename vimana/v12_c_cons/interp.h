@@ -358,10 +358,16 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
   int          primFun;
   int          sliceCounter = 0;
 
+  int  callstackMax = 0;
+  long callstackLoops = 0;
+
   interp->run = TRUE;
 
   while (interp->run)
   {
+    //if (interp->callStackTop > callstackMax) callstackMax = interp->callStackTop;
+    //++ callstackLoops;
+
     // Count slices if a sliceSize is specified.
     if (sliceSize)
     {
@@ -430,5 +436,8 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
   // while
 
 Exit:
+  PrintLine("EXIT INTERP LOOP");
+  Print("CALLSTACK MAX: "); PrintIntNum(callstackMax); PrintNewLine();
+  Print("INTERP LOOPS: "); PrintIntNum(callstackLoops); PrintNewLine();
   return ! interp->run;
 }
