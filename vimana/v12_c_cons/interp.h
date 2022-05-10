@@ -14,16 +14,15 @@ typedef struct __VStackFrame VCallStackFrame;
 struct __VCallStackFrame
 {
   VItem* instruction;  // Current instruction
-  VInt   flags;
+  void*  localVars;    // Local var context (VRegStackFrame)
 }
 
-
-typedef struct __VStackFrame VRegStackFrame;
+typedef struct __VRegStackFrame VRegStackFrame;
 
 // Stack entry that holds local vars
 struct __VRegStackFrame
 {
-  VItem  localVars[4]; // Space for 4 local vars
+  VItem localVars[4]; // Space for local vars
 };
 
 // Mind control for hackers
@@ -59,9 +58,6 @@ VInterp;
 
 // Prim fun lookup function
 VPrimFunPtr LookupPrimFunPtr(int index);
-
-#define InterpStackFrame(interp) ( & ((interp)->callStack[(interp)->callStackTop]) )
-#define InterpStackFrameAt(interp, index) ( & ((interp)->callStack[index]) )
 
 // -------------------------------------------------------------
 // Interp
@@ -208,17 +204,16 @@ VItem* InterpStackPop(VInterp* interp)
 void InterpPushFirstStackFrame(VInterp* interp, VItem* code)
 {
   // Set first stackframe
-  interp->callStackTop = 0;
-  VStackFrame* current = InterpStackFrame(interp);
+  ++ interp->callStackTop;
 
   // Set first instruction in the frame
-  current->instruction = MemItemFirst(interp->mem, code);
+  interp->callStackTop->instruction = MemItemFirst(interp->mem, code);
 }
 
 void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
 {
   // The current stackframe is the parent for the new stackframe
-  VStackFrame* parent = InterpStackFrame(interp);
+  VStackFrame* parent = interp->callStackTop;
 
   // Assume tailcall
   VStackFrame* current = parent;
@@ -277,7 +272,7 @@ void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
 
 void InterpPopStackFrame(VInterp* interp)
 {
-  if (interp->callStackTop < 0)
+  if (interp->callStackTop < interp->callStack)
   {
     GURU(CALL_STACK_IS_EMPTY);
   }
