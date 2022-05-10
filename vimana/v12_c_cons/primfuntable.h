@@ -3,7 +3,6 @@
   { "printstack", PrimFun_printstack },
   { "eval", PrimFun_eval },
   { "call", PrimFun_call },
-  { "evalInParentContext", PrimFun_evalInParentContext },
   { "iftrue", PrimFun_iftrue },
   { "iffalse", PrimFun_iffalse },
   { "ifelse", PrimFun_ifelse },

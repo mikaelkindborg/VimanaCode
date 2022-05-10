@@ -18,7 +18,8 @@ void PrimFun_print(VInterp* interp)
 void PrimFun_printstack(VInterp* interp)
 {
   Print("STACK: ");
-  MemPrintArray(interp->mem, interp->dataStack, interp->dataStackTop + 1);
+  int numItems = (interp->dataStackTop - interp->dataStack) + 1;
+  MemPrintArray(interp->mem, interp->dataStack, numItems);
   PrintNewLine();
 }//
 

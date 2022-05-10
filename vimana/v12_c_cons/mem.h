@@ -34,7 +34,7 @@ int MemByteSize(int numItems)
 
 void MemInit(VMem* mem, int numItems)
 {
-  VAddr size = MemByteSize(int numItems);
+  VAddr size = MemByteSize(numItems);
   
   mem->firstFree = 0;
   mem->size = size - sizeof(VMem);

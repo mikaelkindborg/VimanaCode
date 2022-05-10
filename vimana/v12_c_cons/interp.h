@@ -9,20 +9,13 @@ Interpreter data structures and functions.
 // Data types and structs
 // -------------------------------------------------------------
 
-typedef struct __VStackFrame VCallStackFrame;
+typedef struct __VStackFrame VStackFrame;
 
-struct __VCallStackFrame
+struct __VStackFrame
 {
-  VItem* instruction;  // Current instruction
-  void*  localVars;    // Local var context (VRegStackFrame)
-}
-
-typedef struct __VRegStackFrame VRegStackFrame;
-
-// Stack entry that holds local vars
-struct __VRegStackFrame
-{
-  VItem localVars[4]; // Space for local vars
+  VItem*       instruction;  // Current instruction
+  VStackFrame* context;      // Current context for local vars
+  VItem        localVars[4]; // Space for local vars
 };
 
 // Mind control for hackers
@@ -31,28 +24,23 @@ struct __VRegStackFrame
 
 typedef struct __VInterp
 {
-  int              run; 
+  int          run; 
 
-  int              globalVarsSize;
-  VItem*           globalVars;
-  VItem*           globalVarsEnd;
+  int          globalVarsSize;
+  VItem*       globalVars;
+  VItem*       globalVarsEnd;
 
-  int              dataStackSize;
-  VItem*           dataStack;
-  VItem*           dataStackEnd
-  VItem*           dataStackTop;   // Top of data stack
+  int          dataStackSize;
+  VItem*       dataStack;
+  VItem*       dataStackEnd;
+  VItem*       dataStackTop;   // Top of data stack
 
-  int              callStackSize;
-  VCallStackFrame* callStack;
-  VCallStackFrame* callStackEnd;
-  VCallStackFrame* callStackTop;   // Current stackframe
+  int          callStackSize;
+  VStackFrame* callStack;
+  VStackFrame* callStackEnd;
+  VStackFrame* callStackTop;   // Current stackframe
 
-  int              regStackSize;
-  VRegStackFrame*  regStack;
-  VRegStackFrame*  regStackEnd;
-  VRegStackFrame*  refStackTop;    // Top of local var stack
-
-  VMem*            mem;            // Item memory
+  VMem*        mem;            // Item memory
 }
 VInterp;
 
@@ -65,17 +53,16 @@ VPrimFunPtr LookupPrimFunPtr(int index);
 
 VInterp* InterpNewWithSize(
   int globalVarsSize, int dataStackSize,
-  int callStackSize, int regStackSize, int memSize)
+  int callStackSize, int memSize)
 {
   int globalVarsByteSize = globalVarsSize * sizeof(VItem);
   int dataStackByteSize = dataStackSize * sizeof(VItem);
-  int callStackByteSize = callStackSize * sizeof(VCallStackFrame);
-  int regStackByteSize = regStackSize * sizeof(VRegStackFrame);
+  int callStackByteSize = callStackSize * sizeof(VStackFrame);
 
   VInterp* interp = SysAlloc(
     sizeof(VInterp) + globalVarsByteSize + 
     dataStackByteSize + callStackByteSize + 
-    regStackByteSize + MemByteSize(memSize));
+    MemByteSize(memSize));
 
   interp->globalVars = ((void*)interp) + sizeof(VInterp);
   interp->globalVarsSize = globalVarsSize;
@@ -91,12 +78,7 @@ VInterp* InterpNewWithSize(
   interp->callStackEnd = interp->callStack + interp->callStackSize - 1;
   interp->callStackTop = interp->callStack - 1;
 
-  interp->regStack = ((void*)interp->callStackEnd) + 1;
-  interp->regStackSize = regStackSize;
-  interp->regStackEnd = interp->regStack + interp->regStackSize - 1;
-  interp->regStackTop = interp->regStack - 1;
-
-  interp->mem = ((void*)interp->regStack) + 1;
+  interp->mem = ((void*)interp->callStackEnd) + 1;
   MemInit(interp->mem, memSize);
 
   GSymbolTableInit();
@@ -109,8 +91,7 @@ VInterp* InterpNew()
   return InterpNewWithSize(
     100, // globalVarsSize,
     100, // dataStackSize, 
-    100, // callStackSize, 
-    100, // regStackSize
+    100, // callStackSize,
     1000 // memSize
   );
 }
@@ -130,7 +111,6 @@ void InterpGC(VInterp* interp)
   // Mark data stack
   for (p = interp->dataStack; p <= interp->dataStackTop; ++ p)
   {
-    VItem* item = &(stack[i]);
     if (!IsTypeAtomic(p))
     {
       //PrintLine("STACK MARK:");
@@ -142,9 +122,7 @@ void InterpGC(VInterp* interp)
   }
 
   // Mark global vars
-  VItem* lastEntry = interp->globalVars + globalVarsSize - 1;
-
-  for (p = interp->globalVars; p <= lastEntry interp->dataStackTop; ++ p)
+  for (p = interp->globalVars; p <= interp->globalVarsEnd; ++ p)
   {
     if (!IsTypeAtomic(p))
     {
@@ -156,7 +134,7 @@ void InterpGC(VInterp* interp)
     }
   }
 
-  // TODO: MemMark(interp->regStack); // Mark localvars
+  // TODO: MemMark(interp->callStack); // Mark localvars
 
   MemSweep(interp->mem);
   
@@ -178,7 +156,7 @@ void InterpStackPush(VInterp* interp, VItem *item)
   }
   
   // Copy item
-  interp->dataStack[interp->dataStackTop] = *item;
+  *(interp->dataStackTop) = *item;
 }
 
 VItem* InterpStackPop(VInterp* interp)
@@ -203,11 +181,14 @@ VItem* InterpStackPop(VInterp* interp)
 
 void InterpPushFirstStackFrame(VInterp* interp, VItem* code)
 {
-  // Set first stackframe
+  // Point to first stackframe
   ++ interp->callStackTop;
 
   // Set first instruction in the frame
   interp->callStackTop->instruction = MemItemFirst(interp->mem, code);
+
+  // Set context
+  interp->callStackTop->context = interp->callStackTop;
 }
 
 void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
@@ -225,12 +206,12 @@ void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
 
     ++ interp->callStackTop;
 
-    if (interp->callStackTop >= interp->callStackSize)
+    if (interp->callStackTop > interp->callStackEnd)
     {
       GURU(CALL_STACK_OVERFLOW);
     }
 
-    current = InterpStackFrame(interp);
+    current = interp->callStackTop;
 
     // Eval uses the parent environment
     current->context = parent;
@@ -243,7 +224,7 @@ void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
 void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
 {
   // The current stackframe is the parent for the new stackframe
-  VStackFrame* parent = InterpStackFrame(interp);
+  VStackFrame* parent = interp->callStackTop;
 
   // Assume tailcall
   VStackFrame* current = parent;
@@ -255,12 +236,12 @@ void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
 
     ++ interp->callStackTop;
 
-    if (interp->callStackTop >= interp->callStackSize)
+    if (interp->callStackTop > interp->callStackEnd)
     {
       GURU(CALL_STACK_OVERFLOW);
     }
 
-    current = InterpStackFrame(interp);
+    current = interp->callStackTop;
   }
 
   // Functions have their own local environment
@@ -286,12 +267,12 @@ void InterpPopStackFrame(VInterp* interp)
 
 void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
 {
-  VStackFrame* frame = InterpStackFrame(interp);
+  VStackFrame* frame = interp->callStackTop;
   frame->context->localVars[index] = *item;
 }
 
 #define InterpGetLocalVar(interp, index) \
-  ( & (InterpStackFrame(interp)->context->localVars[index]) )
+  ( & ((interp)->callStackTop->context->localVars[index]) )
 
 // -------------------------------------------------------------
 // Global vars
@@ -349,8 +330,10 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         goto Exit; // Exit loop
     }
 
+    // Get current stackframe
+    current = interp->callStackTop;
+
     // Get instruction pointer
-    current = InterpStackFrame(interp);
     instruction = current->instruction;
 
     // Evaluate current instruction.
