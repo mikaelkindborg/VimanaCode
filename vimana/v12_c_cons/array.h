@@ -2,8 +2,30 @@
 File: array.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Functions for growable item arrays.
+Growable arrays.
 */
+
+// TODO
+typedef struct __VArray
+{
+  int   itemSize;
+  int   arraySize;
+  int   arrayMaxSize;
+  void* arrayBuffer;
+}
+VArray;
+
+// TODO: Generalize with header:
+//  itemsize
+//  size // array size
+//  maxsize // max array size
+// ArrayNew(int itemSize, int initialArraySize)
+// ArrayFree = SysFree
+// ArrayGrow(VArray* array, int newSize)
+// void* ArrayAt(VArray* array, int index)
+// Get: item = ArrayAt(items, 10);
+// Set: *((VItem*)ArrayAt(items, 10)) = *item;
+// void ArraySetItem(array, index) ...
 
 // First item in the array is a header with 
 // current length and max size

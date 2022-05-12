@@ -51,6 +51,9 @@ int main(int numargs, char* args[])
     }
   }
 
+  // Create table for primfuns
+  CreatePrimFunTable();
+
   VInterp* interp = InterpNew();
 
   time_t lastUpdate = 0;

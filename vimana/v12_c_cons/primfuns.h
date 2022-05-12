@@ -604,22 +604,46 @@ typedef struct __PrimFunEntry
 }
 PrimFunEntry;
 
-PrimFunEntry GPrimFunTable[] = 
+PrimFunEntry GGenPrimFunTable[] = 
 {
   #include "primfuntable.h"
   { "__sentinel__", NULL }
 };
 
-int LookupPrimFun(char* name)
+PrimFunEntry* GPrimFunTable;
+
+int NumPrimFuns()
 {
   for (int i = 0; ; ++ i)
   {
-    PrimFunEntry* entry = & (GPrimFunTable[i]);
-    if (StrEquals(entry->name, name))
+    PrimFunEntry* entry = & (GGenPrimFunTable[i]);
+    if (NULL == entry->fun)
       return i;
-    else
+  }
+}
+
+// Must be called by the application
+void CreatePrimFunTable()
+{
+  int numPrimFuns = NumPrimFuns();
+  GPrimFunTable = malloc(sizeof(PrimFunEntry) * numPrimFuns);
+  for (int i = 0; i <= numPrimFuns; ++ i)
+  {
+    GPrimFunTable[i] = GGenPrimFunTable[i];
+  }
+}
+
+int LookupPrimFun(char* name)
+{
+  //printf("LookupPrimFun: %s\n", name);
+  for (int i = 0; ; ++ i)
+  {
+    PrimFunEntry* entry = & (GPrimFunTable[i]);
     if (NULL == entry->fun)
       return -1;
+    else
+    if (StrEquals(entry->name, name))
+      return i;
   } 
 }
 

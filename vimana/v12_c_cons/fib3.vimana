@@ -1,7 +1,12 @@
 /------
-Vimana 2022-05-07
+Vimana 2022-05-07, 2022-05-12
 
 ./a.out fib3.vimana  2.42s user 0.01s system 99% cpu 2.442 total
+./a.out fib3.vimana  2.39s user 0.00s system 99% cpu 2.402 total
+
+Vimana 2022-05-12 (malloc primfuntable)
+./a.out fib3.vimana  2.36s user 0.00s system 96% cpu 2.443 total
+./a.out fib3.vimana  2.37s user 0.00s system 96% cpu 2.452 total
 ------/
 
 (fib)

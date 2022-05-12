@@ -2,6 +2,7 @@
 \ gforth 0.7.3
 \
 \ gforth fib3.fs  2.60s user 0.01s system 99% cpu 2.611 total
+\ gforth fib3.fs  2.58s user 0.01s system 98% cpu 2.634 total
 \
 
 : fib ( n1 -- n2 )
