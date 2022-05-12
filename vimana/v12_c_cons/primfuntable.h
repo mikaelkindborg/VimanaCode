@@ -45,4 +45,3 @@
   { "sleep", PrimFun_sleep },
   { "def", PrimFun_def },
   { "evalfile", PrimFun_evalfile },
-  { "__sentinel__", NULL }

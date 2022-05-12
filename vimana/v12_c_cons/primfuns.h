@@ -6,35 +6,35 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 void PrimFun_sayHi(VInterp* interp)
 {
   PrintLine("Hi World!");
-}//
+}
 
 void PrimFun_print(VInterp* interp)
 {
   VItem* item = InterpStackPop(interp);
   MemPrintItem(interp->mem, item);
   PrintNewLine();
-}//
+}
 
 void PrimFun_printstack(VInterp* interp)
 {
   Print("STACK: ");
   MemPrintArray(interp->mem, interp->dataStack, interp->dataStackTop + 1);
   PrintNewLine();
-}//
+}
 
 // Eval in current context
 void PrimFun_eval(VInterp* interp)
 {
   VItem* codeBlock = InterpStackPop(interp);
   InterpPushEvalStackFrame(interp, codeBlock);
-}//
+}
 
 // Eval in new context (function call)
 void PrimFun_call(VInterp* interp)
 {
   VItem* codeBlock = InterpStackPop(interp);
   InterpPushFunCallStackFrame(interp, codeBlock);
-}//
+}
 
 void PrimFun_iftrue(VInterp* interp)
 {
@@ -42,7 +42,7 @@ void PrimFun_iftrue(VInterp* interp)
   VItem* trueOrFalse = InterpStackPop(interp);
   if (trueOrFalse->intNum)
     InterpPushEvalStackFrame(interp, trueBlock);
-}//
+}
 
 void PrimFun_iffalse(VInterp* interp)
 {
@@ -50,7 +50,7 @@ void PrimFun_iffalse(VInterp* interp)
   VItem* trueOrFalse = InterpStackPop(interp);
   if (! trueOrFalse->intNum)
     InterpPushEvalStackFrame(interp, falseBlock);
-}//
+}
 
 void PrimFun_ifelse(VInterp* interp)
 {
@@ -61,7 +61,7 @@ void PrimFun_ifelse(VInterp* interp)
     InterpPushEvalStackFrame(interp, trueBlock);
   else
     InterpPushEvalStackFrame(interp, falseBlock);
-}//
+}
 
 void PrimFun_setglobal(VInterp* interp)
 {
@@ -69,20 +69,20 @@ void PrimFun_setglobal(VInterp* interp)
   VItem* value = InterpStackPop(interp);
   VItem* symbol = MemItemFirst(interp->mem, list);
   InterpSetGlobalVar(interp, symbol->intNum, value);
-}//
+}
 
 void PrimFun_getglobal(VInterp* interp)
 {
   VItem* item = InterpStackTop(interp);
   VItem* symbol = MemItemFirst(interp->mem, item);
   *item = *(InterpGetGlobalVar(interp, symbol->intNum));
-}//
+}
 
 void PrimFun_funify(VInterp* interp)
 {
   VItem* list = InterpStackTop(interp);
   ItemSetType(list, TypeFun);
-}//
+}
 
 VItem* ParseSourceCode(char* sourceCode, VMem* mem);
 
@@ -93,7 +93,7 @@ void PrimFun_parse(VInterp* interp)
   char* string = MemBufferItemPtr(interp->mem, item);
   VItem* list = ParseSourceCode(string, interp->mem);
   *item = *list;
-}//
+}
 
 void PrimFun_readfile(VInterp* interp)
 {
@@ -108,73 +108,73 @@ void PrimFun_readfile(VInterp* interp)
   ItemSetType(stringItem, TypeString);
 
   InterpStackPush(interp, stringItem);
-}//
+}
 
-void PrimFun_plus(VInterp* interp)
+void PrimFun_plus(VInterp* interp) // +
 {
   VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum += b->intNum;
-}//
+}
 
-void PrimFun_minus(VInterp* interp)
+void PrimFun_minus(VInterp* interp) // -
 {
   VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum -= b->intNum;
-}//
+}
 
-void PrimFun_times(VInterp* interp)
+void PrimFun_times(VInterp* interp) // *
 {
   VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum *= b->intNum;
-}//
+}
 
-void PrimFun_div(VInterp* interp)
+void PrimFun_div(VInterp* interp) // /
 {
   VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum /= b->intNum;
-}//
+}
 
-void PrimFun_1plus(VInterp* interp)
+void PrimFun_1plus(VInterp* interp) // 1+
 {
   VItem* a = InterpStackTop(interp);
   a->intNum += 1;
-}//
+}
 
-void PrimFun_1minus(VInterp* interp)
+void PrimFun_1minus(VInterp* interp) // 1-
 {
   VItem* a = InterpStackTop(interp);
   a->intNum -= 1;
-}//
+}
 
-void PrimFun_2plus(VInterp* interp)
+void PrimFun_2plus(VInterp* interp) // 2+
 {
   VItem* a = InterpStackTop(interp);
   a->intNum += 2;
-}//
+}
 
-void PrimFun_2minus(VInterp* interp)
+void PrimFun_2minus(VInterp* interp) // 2-
 {
   VItem* a = InterpStackTop(interp);
   a->intNum -= 2;
-}//
+}
 
-void PrimFun_lessthan(VInterp* interp)
+void PrimFun_lessthan(VInterp* interp) // <
 {
   VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum = a->intNum < b->intNum;
-}//
+}
 
-void PrimFun_greaterthan(VInterp* interp)
+void PrimFun_greaterthan(VInterp* interp) // >
 {
   VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
   a->intNum = a->intNum > b->intNum;
-}//
+}
 
 void PrimFun_eq(VInterp* interp)
 {
@@ -182,30 +182,30 @@ void PrimFun_eq(VInterp* interp)
   VItem* a = InterpStackTop(interp);
   a->intNum = ItemEquals(a, b);
   ItemSetType(a, TypeIntNum);
-}//
+}
 
 void PrimFun_iszero(VInterp* interp)
 {
   VItem* a = InterpStackTop(interp);
   a->intNum = 0 == a->intNum;
-}//
+}
 
 void PrimFun_not(VInterp* interp)
 {
   VItem* a = InterpStackTop(interp);
   a->intNum = ! a->intNum;
-}//
+}
 
 void PrimFun_drop(VInterp* interp)
 {
   InterpStackPop(interp);
-}//
+}
 
 void PrimFun_dup(VInterp* interp)
 {
   VItem* a = InterpStackTop(interp);
   InterpStackPush(interp, a);
-}//
+}
 
 void PrimFun_swap(VInterp* interp)
 {
@@ -214,58 +214,58 @@ void PrimFun_swap(VInterp* interp)
   VItem temp = *a;
   *a = *b;
   *b = temp;
-}//
+}
 
 void PrimFun_over(VInterp* interp)
 {
   InterpStackPush(interp, InterpStackAt(interp, 1));
-}//
+}
 
-void PrimFun_local_setA(VInterp* interp)
+void PrimFun_local_setA(VInterp* interp) // [A]
 {
   InterpSetLocalVar(interp, 0, InterpStackPop(interp));
-}//
+}
 
-void PrimFun_local_setAB(VInterp* interp)
+void PrimFun_local_setAB(VInterp* interp) // [AB]
 {
   InterpSetLocalVar(interp, 1, InterpStackPop(interp));
   InterpSetLocalVar(interp, 0, InterpStackPop(interp));
-}//
+}
 
-void PrimFun_local_setABC(VInterp* interp)
+void PrimFun_local_setABC(VInterp* interp) // [ABC]
 {
   InterpSetLocalVar(interp, 2, InterpStackPop(interp));
   InterpSetLocalVar(interp, 1, InterpStackPop(interp));
   InterpSetLocalVar(interp, 0, InterpStackPop(interp));
-}//
+}
 
-void PrimFun_local_setABCD(VInterp* interp)
+void PrimFun_local_setABCD(VInterp* interp) // [ABCD]
 {
   InterpSetLocalVar(interp, 3, InterpStackPop(interp));
   InterpSetLocalVar(interp, 2, InterpStackPop(interp));
   InterpSetLocalVar(interp, 1, InterpStackPop(interp));
   InterpSetLocalVar(interp, 0, InterpStackPop(interp));
-}//
+}
 
-void PrimFun_local_getA(VInterp* interp)
+void PrimFun_local_getA(VInterp* interp) // A
 {
   InterpStackPush(interp, InterpGetLocalVar(interp, 0));
-}//
+}
 
-void PrimFun_local_getB(VInterp* interp)
+void PrimFun_local_getB(VInterp* interp) // B
 {
   InterpStackPush(interp, InterpGetLocalVar(interp, 1));
-}//
+}
 
-void PrimFun_local_getC(VInterp* interp)
+void PrimFun_local_getC(VInterp* interp) // C
 {
   InterpStackPush(interp, InterpGetLocalVar(interp, 2));
-}//
+}
 
-void PrimFun_local_getD(VInterp* interp)
+void PrimFun_local_getD(VInterp* interp) // D
 {
   InterpStackPush(interp, InterpGetLocalVar(interp, 3));
-}//
+}
 
 // Cool languages:
 // https://www.tutorialspoint.com/execute_lisp_online.php
@@ -321,7 +321,7 @@ void PrimFun_first(VInterp* interp)
   *list = *item;
   
 Exit:;
-}//
+}
 
 void PrimFun_rest(VInterp* interp)
 {
@@ -352,7 +352,7 @@ void PrimFun_rest(VInterp* interp)
   MemItemSetFirst(interp->mem, list, item);
 
 Exit:;
-}//
+}
 
 void PrimFun_cons(VInterp* interp)
 {
@@ -394,7 +394,7 @@ void PrimFun_cons(VInterp* interp)
 
   // Copy new list item to data stack
   *item = newList;
-}//
+}
 
 // Leaves list on the stack
 // list item setfirst --> list
@@ -423,12 +423,12 @@ void PrimFun_setfirst(VInterp* interp)
   *first = *item;
   // Restore next
   first->next = next;
-}//
+}
 
 void PrimFun_gc(VInterp* interp)
 {
   InterpGC(interp);
-}//
+}
 
 // millis --> millisecond time stamp
 void PrimFun_millis(VInterp* interp)
@@ -445,7 +445,7 @@ void PrimFun_millis(VInterp* interp)
   ItemSetIntNum(&item, millis);
 
   InterpStackPush(interp, &item);
-}//
+}
 
 // millis sleep -->
 void PrimFun_sleep(VInterp* interp)
@@ -462,7 +462,7 @@ void PrimFun_sleep(VInterp* interp)
 
   sleep(seconds);
   usleep(micros);
-}//
+}
 
 /*
 // port socketcreate --> socket
@@ -502,7 +502,7 @@ void PrimFunx_socketcreate(VInterp* interp)
   socketItem.ptr = socket;
 
   InterpStackPush(interp, &socketItem);
-}//
+}
 
 // socket socketlisten --> socket
 void PrimFunx_socketlisten(VInterp* interp)
@@ -514,7 +514,7 @@ void PrimFunx_socketlisten(VInterp* interp)
   {
     GURU(SOCKET_LISTEN_ERROR);
   }
-}//
+}
 
 // socket socketaccept --> socket result (1 if data available, 0 if not)
 void PrimFunx_socketaccept(VInterp* interp)
@@ -543,7 +543,7 @@ void PrimFunx_socketaccept(VInterp* interp)
   }
 
   InterpStackPush(&result);
-}//
+}
 
 // socket socketaccept --> socket result (1 if data available, 0 if not)
 void PrimFunx_socketaccept(VInterp* interp)
@@ -572,7 +572,7 @@ void PrimFunx_socketaccept(VInterp* interp)
   }
 
   InterpStackPush(&result);
-}//
+}
 
 
 // socket socketclose --> 
@@ -580,7 +580,7 @@ void PrimFunx_sockeclose(VInterp* interp)
 {
   VItem* socket = InterpStackPop(interp);
 close(client_socket);
-}//
+}
 */
 
 void PrimFun_def(VInterp* interp)
@@ -588,14 +588,14 @@ void PrimFun_def(VInterp* interp)
   PrimFun_funify(interp);
   PrimFun_swap(interp);
   PrimFun_setglobal(interp);
-}//
+}
 
 void PrimFun_evalfile(VInterp* interp)
 {
   PrimFun_readfile(interp);
   PrimFun_parse(interp);
   PrimFun_eval(interp);
-}//
+}
 
 typedef struct __PrimFunEntry
 {
@@ -607,6 +607,7 @@ PrimFunEntry;
 PrimFunEntry GPrimFunTable[] = 
 {
   #include "primfuntable.h"
+  { "__sentinel__", NULL }
 };
 
 int LookupPrimFun(char* name)
