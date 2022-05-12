@@ -25,21 +25,25 @@ VMem;
 
 #define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + (addr) - 1) ) 
 
-VMem* MemNew(int memSize)
+// Return the number of bytes needed to hold VMem header plus numItems
+int MemByteSize(int numItems)
 {
-  int memByteSize = memSize * sizeof(VItem);
-  VAddr size = memByteSize;
-  VMem* mem = SysAlloc(size);
+  // Size of VMem header plus item memory in bytes
+  int memByteSize = sizeof(VMem) + (numItems * sizeof(VItem));
+  return memByteSize;
+}
+
+void MemInit(VMem* mem, int numItems)
+{
+  VAddr memByteSize = MemByteSize(numItems);
 
   mem->firstFree = 0;
-  mem->size = size - sizeof(VMem);
+  mem->size = memByteSize - sizeof(VMem);
   mem->start = mem + sizeof(VMem);
   mem->end = mem->start;
 #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
 #endif
-
-  return mem;
 }
 
 #ifdef TRACK_MEMORY_USAGE
@@ -48,14 +52,6 @@ VMem* MemNew(int memSize)
     Print("MemAllocCounter: "); PrintIntNum(mem->allocCounter); PrintNewLine();
   }
 #endif
-
-void MemFree(VMem* mem)
-{
-  SysFree(mem);
-#ifdef TRACK_MEMORY_USAGE
-  MemPrintAllocCounter(mem);
-#endif
-}
 
 #define MemItemAddr(mem, item) \
   ( (NULL != (item)) ? ( ((void*)(item)) - (mem)->start ) + 1 : 0 )

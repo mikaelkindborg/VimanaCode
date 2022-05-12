@@ -52,14 +52,14 @@ typedef struct __VInterp
 
   VMem*        mem;
 
-  int          globalVarsSize;
+  int          numGlobalVars;
   VItem*       globalVars;
 
-  int          dataStackSize;
+  int          numDataStackItems;
   int          dataStackTop;
   VItem*       dataStack;
 
-  int          callStackSize;
+  int          numCallStackFrames;
   int          callStackTop;   // Current stackframe
   VStackFrame* callStack;
 }
@@ -77,29 +77,32 @@ VPrimFunPtr LookupPrimFunPtr(int index);
 // -------------------------------------------------------------
 
 VInterp* InterpNewWithSize(
-  int globalVarsSize, int dataStackSize,
-  int callStackSize, int memSize)
+  int numGlobalVars, int numDataStackItems,
+  int numCallStackFrames, int numMemItems)
 {
-  int globalVarsByteSize = globalVarsSize * sizeof(VItem);
-  int dataStackByteSize = dataStackSize * sizeof(VItem);
-  int callStackByteSize = callStackSize * sizeof(VStackFrame);
+  int globalVarsByteSize = numGlobalVars * sizeof(VItem);
+  int dataStackByteSize  = numDataStackItems * sizeof(VItem);
+  int callStackByteSize  = numCallStackFrames * sizeof(VStackFrame);
+  int memByteSize        = MemByteSize(numMemItems);
 
   VInterp* interp = SysAlloc(
     sizeof(VInterp) + globalVarsByteSize + 
-    dataStackByteSize + callStackByteSize);
+    dataStackByteSize + callStackByteSize + 
+    memByteSize);
 
   interp->globalVars = (void*)interp + sizeof(VInterp);
-  interp->globalVarsSize = globalVarsSize;
+  interp->numGlobalVars = numGlobalVars;
 
   interp->dataStack = (void*)interp->globalVars + globalVarsByteSize;
-  interp->dataStackSize = dataStackSize;
+  interp->numDataStackItems = numDataStackItems;
   interp->dataStackTop = -1;
 
   interp->callStack = (void*)interp->dataStack + dataStackByteSize;
-  interp->callStackSize = callStackSize;
+  interp->numCallStackFrames = numCallStackFrames;
   interp->callStackTop = 0;
 
-  interp->mem = MemNew(memSize);
+  interp->mem = (void*)interp->callStack + callStackByteSize;
+  MemInit(interp->mem, numMemItems);
 
   GSymbolTableInit();
 
@@ -109,17 +112,19 @@ VInterp* InterpNewWithSize(
 VInterp* InterpNew()
 {
   return InterpNewWithSize(
-    100, // globalVarsSize,
-    100, // dataStackSize, 
-    100, // callStackSize
-    1000 // memSize
+    100, // numGlobalVars,
+    100, // numDataStackItems, 
+    100, // numCallStackFrames
+    1000 // numMemItems
   );
 }
 
 void InterpFree(VInterp* interp)
 {
   MemSweep(interp->mem);
-  MemFree(interp->mem);
+#ifdef TRACK_MEMORY_USAGE
+  MemPrintAllocCounter(interp->mem);
+#endif
   SysFree(interp);
   GSymbolTableRelease();
 }
@@ -143,7 +148,7 @@ void InterpGC(VInterp* interp)
 
   // Mark global vars
   VItem* globalVars = interp->globalVars;
-  for (int i = 0; i < interp->globalVarsSize; ++ i)
+  for (int i = 0; i < interp->numGlobalVars; ++ i)
   {
     VItem* item = &(globalVars[i]);
     if (!IsTypeAtomic(item))
@@ -173,7 +178,7 @@ void InterpStackPush(VInterp* interp, VItem *item)
 {
   ++ interp->dataStackTop;
 
-  if (interp->dataStackTop >= interp->dataStackSize)
+  if (interp->dataStackTop >= interp->numDataStackItems)
   {
     GURU(DATA_STACK_OVERFLOW);
   }
@@ -235,7 +240,7 @@ void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
 
     ++ interp->callStackTop;
 
-    if (interp->callStackTop >= interp->callStackSize)
+    if (interp->callStackTop >= interp->numCallStackFrames)
     {
       GURU(CALL_STACK_OVERFLOW);
     }
@@ -265,7 +270,7 @@ void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
 
     ++ interp->callStackTop;
 
-    if (interp->callStackTop >= interp->callStackSize)
+    if (interp->callStackTop >= interp->numCallStackFrames)
     {
       GURU(CALL_STACK_OVERFLOW);
     }
@@ -309,7 +314,7 @@ void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
 
 void InterpSetGlobalVar(VInterp* interp, int index, VItem* item)
 {
-  if (index < interp->globalVarsSize)
+  if (index < interp->numGlobalVars)
   {
     (interp->globalVars)[index] = *item;
   }
