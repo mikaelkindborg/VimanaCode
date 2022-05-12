@@ -9,6 +9,30 @@ Interpreter data structures and functions.
 // Data types and structs
 // -------------------------------------------------------------
 
+/*
+Arduino memory, fit in 2K
+
+item         4 bytes (2+2)
+stackframe  12 bytes (2+2+4+4)
+
+callstack   10 x 12 =  120 bytes
+datastack   10 x 4  =   40 bytes
+globalvars  20 x 4  =   80 bytes
+itemmemory 200 x 4  =  800 bytes
++ sizeof(VInterp)       20 bytes
++ sizeof(VMem)           8 bytes
+                      ----------
+Core memory           1068 bytes
+
+primstrings 50 x 5  =  250 bytes - put in PROGMEM
+globalstr   20 x 6  =  120 bytes
+                      ----------
+String memory          370 bytes
+
+                      ----------
+Total                 1438 bytes
+*/
+
 typedef struct __VStackFrame VStackFrame;
 
 struct __VStackFrame
@@ -322,8 +346,8 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
   int          primFun;
   int          sliceCounter = 0;
 
-  int  callstackMax = 0;
-  long callstackLoops = 0;
+  //int  callstackMax = 0;
+  //long callstackLoops = 0;
 
   interp->run = TRUE;
 
@@ -400,8 +424,8 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
   // while
 
 Exit:
-  PrintLine("EXIT INTERP LOOP");
-  Print("CALLSTACK MAX: "); PrintIntNum(callstackMax); PrintNewLine();
-  Print("INTERP LOOPS: "); PrintIntNum(callstackLoops); PrintNewLine();
+  //PrintLine("EXIT INTERP LOOP");
+  //Print("CALLSTACK MAX: "); PrintIntNum(callstackMax); PrintNewLine();
+  //Print("INTERP LOOPS: "); PrintIntNum(callstackLoops); PrintNewLine();
   return ! interp->run;
 }

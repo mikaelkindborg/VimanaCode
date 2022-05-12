@@ -1,12 +1,10 @@
+(fib) 
+  (dup 2 < (dup 1- fib swap 2 - fib +) iffalse) def
 
-(fib)
-  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
-
-(times) 
+(times)
   (dup iszero 
     (drop drop) 
-    (over eval 1- times) 
+    (swap dup eval swap 1- times) 
   ifelse) def
 
-(32 fib print) 5 times
-
+(32 fib print) 10 times

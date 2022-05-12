@@ -173,7 +173,7 @@ void InterpCallFun(VInterp* interp, VIndex funIndex)
     exit(0);
   }
 
-  VList* codeList = ItemList(index);
+  VList* codeList = ItemList(item);
   InterpInit(interp, codeList);
   InterpEvalSlice(interp, 0);
 }

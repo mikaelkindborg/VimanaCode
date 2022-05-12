@@ -1,0 +1,10 @@
+(fib)
+  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
+
+(times) 
+  (dup iszero 
+    (drop drop) 
+    (over eval 1- times) 
+  ifelse) def
+
+(32 fib print) 10 times
