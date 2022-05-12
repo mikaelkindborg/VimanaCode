@@ -1,0 +1,143 @@
+v10_c
+
+miki@mikis-Air v10_c_call % time ./vimana fib1.vimana
+24157817
+./vimana fib1.vimana  3.15s user 0.00s system 93% cpu 3.371 total
+
+miki@mikis-Air v10_c_call % time ./vimana fib.vimana 
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+./vimana fib.vimana  2.80s user 0.01s system 99% cpu 2.814 total
+
+-----
+
+v11_c
+
+miki@mikis-Air v11_c_minimal % time ./vimana fib1.vimana
+24157817
+./vimana fib1.vimana  3.18s user 0.00s system 99% cpu 3.193 total
+
+miki@mikis-Air v11_c_minimal % time ./vimana fib.vimana 
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+./vimana fib.vimana  2.86s user 0.00s system 99% cpu 2.872 total
+
+-----
+
+v12_c master
+
+miki@mikis-Air v12_c_cons % time ./a.out fib1.vimana 
+24157817
+./a.out fib1.vimana  2.56s user 0.00s system 84% cpu 3.019 total
+
+miki@mikis-Air v12_c_cons % time ./a.out fib.vimana 
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+./a.out fib.vimana  2.31s user 0.00s system 99% cpu 2.320 total
+
+miki@mikis-Air v12_c_cons % time ./a.out fib3.vimana
+24157817
+./a.out fib3.vimana  2.39s user 0.00s system 66% cpu 3.603 total
+miki@mikis-Air v12_c_cons % time ./a.out fib3.vimana
+24157817
+./a.out fib3.vimana  2.39s user 0.00s system 99% cpu 2.400 total
+miki@mikis-Air v12_c_cons % time ./a.out fib3.vimana
+24157817
+./a.out fib3.vimana  2.39s user 0.00s system 99% cpu 2.401 total
+
+v12_c v12_pointer
+
+miki@mikis-Air v12_c_cons % time ./a.out fib1.vimana
+24157817
+zsh: segmentation fault  ./a.out fib1.vimana
+./a.out fib1.vimana  2.68s user 0.00s system 99% cpu 2.688 total
+
+miki@mikis-Air v12_c_cons % time ./a.out fib.vimana          
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+./a.out fib.vimana  2.42s user 0.00s system 82% cpu 2.927 total
+
+v12_c v12_index
+
+miki@mikis-Air v12_c_cons % time ./a.out fib1.vimana
+24157817
+./a.out fib1.vimana  2.56s user 0.00s system 88% cpu 2.900 total
+
+miki@mikis-Air v12_c_cons % time ./a.out fib.vimana 
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+./a.out fib.vimana  2.32s user 0.01s system 99% cpu 2.337 total
+
+v12_c v12_mem
+
+miki@mikis-Air v12_c_cons % time ./a.out fib1.vimana
+24157817
+./a.out fib1.vimana  2.56s user 0.00s system 99% cpu 2.572 total
+
+miki@mikis-Air v12_c_cons % time ./a.out fib.vimana
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+2178309
+./a.out fib.vimana  2.31s user 0.00s system 91% cpu 2.538 total
+
+miki@mikis-Air v12_c_cons % time ./a.out fib3.vimana
+24157817
+./a.out fib3.vimana  2.40s user 0.00s system 99% cpu 2.406 total
+
+miki@mikis-Air v12_c_cons % time ./a.out fib3.vimana
+24157817
+./a.out fib3.vimana  2.39s user 0.00s system 86% cpu 2.756 total
+miki@mikis-Air v12_c_cons % time ./a.out fib3.vimana
+24157817
+./a.out fib3.vimana  2.39s user 0.00s system 99% cpu 2.402 total
+miki@mikis-Air v12_c_cons % time ./a.out fib3.vimana
+24157817
+./a.out fib3.vimana  2.39s user 0.00s system 99% cpu 2.403 total
+miki@mikis-Air v12_c_cons % 
