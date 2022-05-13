@@ -5,83 +5,55 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Lookup table for symbols. Used for parsing and printing.
 */
 
-// TODO: Rename file to symboltable.h
+// Global symbol table
+VArray* GSymbolTable = NULL;
 
-VItem* SymbolTableNew()
+void SymbolTableCreate()
 {
-  return ArrayNew(20);
+  if (NULL == GSymbolTable) 
+  {
+    GSymbolTable = ArrayNew(sizeof(char*), 20);
+  }
 }
 
-void SymbolTableFree(VItem* array)
+void SymbolTableFree()
 {
-  for (int i = 0; i < ArrayLength(array); ++ i)
+  for (int i = 0; i < ArrayLength(GSymbolTable); ++ i)
   {
-    VItem* item = ArrayGet(array, i);
-    SysFree(item->ptr);
+    char* str = ArrayStringAt(GSymbolTable, i);
+    SysFree(str);
   }
 
-  ArrayFree(array);
+  ArrayFree(GSymbolTable);
 }
 
-// Finds or adds a symbol and returns symbol list and symbol index
-int SymbolTableFindAdd(VItem* array, char* string)
+// Finds or adds a string to the symbol table and 
+// returns the symbol index
+// string is copied
+int SymbolTableFindAddString(char* string)
 {
+  // Grows array if needed
+  GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable) + 10);
+  
   int index;
 
-  for (index = 0; index < ArrayLength(array); ++ index)
+  for (index = 0; index < ArrayLength(GSymbolTable); ++ index)
   {
-    VItem* item = ArrayGet(array, index);
-    if (StrEquals(item->ptr, string))
+    char* str = ArrayStringAt(GSymbolTable, index);
+    if (StrEquals(str, string))
     {
       return index; // Found existing symbol
     }
   }
 
   // Symbol not found, add it
-  VItem newItem;
-  newItem.ptr = StrCopy(string);
-  ArraySet(array, index, &newItem);
+  ArrayStringAt(GSymbolTable, index) = StrCopy(string);
   
   return index;
 }
 
-// Returns symbol string 
-char* SymbolTableGetString(VItem* array, int index)
+// Returns string for symbol at index
+char* SymbolTableGetString(int index)
 {
-  VItem* item = ArrayGet(array, index);
-  return item->ptr;
-}
-
-// Global symbol table
-
-VItem* GSymbolTable = NULL;
-int    GSymbolTableCounter = 0;
-
-void GSymbolTableInit()
-{
-  if (NULL == GSymbolTable) GSymbolTable = SymbolTableNew();
-
-  ++ GSymbolTableCounter;
-}
-
-void GSymbolTableRelease()
-{
-  if (GSymbolTableCounter > 0) -- GSymbolTableCounter;
-
-  if (0 == GSymbolTableCounter && NULL != GSymbolTable)
-  {
-    SymbolTableFree(GSymbolTable);
-    GSymbolTable = NULL;
-  }
-}
-
-int GSymbolTableFindAdd(char* string)
-{
-  GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable) + 10);
-  return SymbolTableFindAdd(GSymbolTable, string);
-}
-
-char* GSymbolTableGetString(int index)
-{
-  return SymbolTableGetString(GSymbolTable, index);
+  return ArrayStringAt(GSymbolTable, index);
 }

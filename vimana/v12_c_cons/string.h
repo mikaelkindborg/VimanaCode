@@ -7,6 +7,7 @@ Basic string functions.
 
 #define StrEquals(s1, s2) (0 == strcmp(s1, s2))
 
+// Creates new string
 char* StrCopy(char* str)
 {
   char* newStr = SysAlloc(strlen(str) + 1);

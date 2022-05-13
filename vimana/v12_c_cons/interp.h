@@ -50,8 +50,6 @@ typedef struct __VInterp
 {
   int          run; 
 
-  VMem*        mem;
-
   int          numGlobalVars;
   VItem*       globalVars;
 
@@ -60,8 +58,11 @@ typedef struct __VInterp
   VItem*       dataStack;
 
   int          numCallStackFrames;
-  int          callStackTop;   // Current stackframe
+  int          callStackTop;        // Current stackframe
   VStackFrame* callStack;
+
+  VMem*        mem;                 // Item memory
+
 }
 VInterp;
 
@@ -104,8 +105,6 @@ VInterp* InterpNewWithSize(
   interp->mem = (void*)interp->callStack + callStackByteSize;
   MemInit(interp->mem, numMemItems);
 
-  GSymbolTableInit();
-
   return interp;
 }
 
@@ -126,7 +125,6 @@ void InterpFree(VInterp* interp)
   MemPrintAllocCounter(interp->mem);
 #endif
   SysFree(interp);
-  GSymbolTableRelease();
 }
 
 void InterpGC(VInterp* interp)

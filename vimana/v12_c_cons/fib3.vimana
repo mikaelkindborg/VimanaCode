@@ -1,6 +1,5 @@
 /------
-Vimana 2022-05-07, 2022-05-12
-
+Vimana 2022-05-07
 ./a.out fib3.vimana  2.42s user 0.01s system 99% cpu 2.442 total
 ./a.out fib3.vimana  2.39s user 0.00s system 99% cpu 2.402 total
 

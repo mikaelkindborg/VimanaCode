@@ -612,6 +612,10 @@ PrimFunEntry GGenPrimFunTable[] =
 
 PrimFunEntry* GPrimFunTable;
 
+void PrimFunAdd(char* name, VPrimFunPtr fun)
+{
+}
+
 int NumPrimFuns()
 {
   for (int i = 0; ; ++ i)
@@ -626,7 +630,7 @@ int NumPrimFuns()
 void CreatePrimFunTable()
 {
   int numPrimFuns = NumPrimFuns();
-  GPrimFunTable = malloc(sizeof(PrimFunEntry) * numPrimFuns);
+  GPrimFunTable = SysAlloc(sizeof(PrimFunEntry) * numPrimFuns);
   for (int i = 0; i <= numPrimFuns; ++ i)
   {
     GPrimFunTable[i] = GGenPrimFunTable[i];
@@ -635,10 +639,9 @@ void CreatePrimFunTable()
 
 int LookupPrimFun(char* name)
 {
-  //printf("LookupPrimFun: %s\n", name);
   for (int i = 0; ; ++ i)
   {
-    PrimFunEntry* entry = & (GPrimFunTable[i]);
+    PrimFunEntry* entry = & (GGenPrimFunTable[i]);
     if (NULL == entry->fun)
       return -1;
     else
@@ -649,5 +652,5 @@ int LookupPrimFun(char* name)
 
 VPrimFunPtr LookupPrimFunPtr(int index)
 {
-  return GPrimFunTable[index].fun;
+  return GGenPrimFunTable[index].fun;
 }

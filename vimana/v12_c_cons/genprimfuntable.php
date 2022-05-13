@@ -46,6 +46,7 @@ function GenerateTable($code)
     }
 
     $table .= "  { \"{$vimanaName}\", {$funName} },\n";
+    echo "PrimFunAdd(\"{$vimanaName}\", {$funName});\n";
 
     $pos1 = $pos2;
   }

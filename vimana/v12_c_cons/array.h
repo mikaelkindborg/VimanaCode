@@ -5,68 +5,67 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Growable arrays.
 */
 
-// TODO
 typedef struct __VArray
 {
-  int   itemSize;
-  int   arraySize;
-  int   arrayMaxSize;
-  void* arrayBuffer;
+  int    itemSize;
+  int    length;
+  int    size;
+  void** buffer;
 }
 VArray;
 
-// TODO: Generalize with header:
-//  itemsize
-//  size // array size
-//  maxsize // max array size
-// ArrayNew(int itemSize, int initialArraySize)
-// ArrayFree = SysFree
-// ArrayGrow(VArray* array, int newSize)
-// void* ArrayAt(VArray* array, int index)
-// Get: item = ArrayAt(items, 10);
-// Set: *((VItem*)ArrayAt(items, 10)) = *item;
-// void ArraySetItem(array, index) ...
-
-// First item in the array is a header with 
-// current length and max size
-#define ArrayLength(array)  ((array)->type)
-#define ArrayMaxSize(array) ((array)->next)
-
-VItem* ArrayNew(int size)
+VArray* ArrayNew(int itemSize, int size)
 {
-  VItem* array = SysAlloc((size + 1) * sizeof(VItem));
-  ArrayMaxSize(array) = size;
-  ArrayLength(array) = 0;
+  VArray* array = SysAlloc(sizeof(VArray) + (size * itemSize));
+
+  array->itemSize = itemSize;
+  array->size = size;
+  array->length = 0;
+  array->buffer = (void*)array + sizeof(VArray);
+
   return array;
 }
 
-void ArrayFree(VItem* array)
+void ArrayFree(VArray* array)
 {
   SysFree(array);
 }
 
-VItem* ArrayGet(VItem* array, int index)
+int ArrayLength(VArray* array)
 {
-  return array + (index + 1);
+  return array->length;
 }
 
-VItem* ArrayGrow(VItem* array, int newSize)
+void* ArrayAt(VArray* array, int index)
 {
-  if (newSize >= ArrayMaxSize(array))
+  if (index >= array->size)
   {
-    array = realloc(array, (newSize + 1) * sizeof(VItem));
-    ArrayMaxSize(array) = newSize;
+    GURU(ARRAY_OUT_OF_BOUNDS);
+  }
+
+  if (index >= array->length)
+  {
+    array->length = index + 1;
+  }
+
+  return (void*)array->buffer + (array->itemSize * index);
+}
+
+VArray* ArrayGrow(VArray* array, int newSize)
+{
+  if (newSize >= array->size)
+  {
+    printf("ArrayGrow: %i\n", newSize);
+
+    int totalSize = sizeof(VArray) + (newSize * array->itemSize);
+    array = realloc(array, totalSize);
+    array->size = newSize;
+    array->buffer = (void*)array + sizeof(VArray);
   }
 
   return array;
 }
 
-void ArraySet(VItem* array, int index, VItem* value)
-{
-  if (index + 1 > ArrayLength(array))
-  {
-    ArrayLength(array) = index + 1;
-  }
-  
-  array[index + 1] = *value;
-}
+// Access a char* in the array
+#define ArrayStringAt(array, index) \
+  (*((char**)ArrayAt(array, index)))

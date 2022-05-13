@@ -16,6 +16,7 @@
 #include <netinet/in.h>
 
 #include "base.h"
+#include "gurumeditation.h"
 #include "print.h"
 #include "alloc.h"
 #include "file.h"
@@ -23,7 +24,6 @@
 #include "item.h"
 #include "mem.h"
 #include "array.h"
-#include "gurumeditation.h"
 #include "symboltable.h"
 #include "interp.h"
 #include "socket.h"

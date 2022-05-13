@@ -1,6 +1,6 @@
 
 //#define TRACK_MEMORY_USAGE
-#define OPTIMIZE 
+//#define OPTIMIZE 
 
 #include "vimana.h"
 
@@ -51,9 +51,11 @@ int main(int numargs, char* args[])
     }
   }
 
-  // Create table for primfuns
-  CreatePrimFunTable();
+  // Create tables for primfuns and symbols
+  //PrimFunTableCreate();
+  SymbolTableCreate();
 
+  // Create interpeter
   VInterp* interp = InterpNew();
 
   time_t lastUpdate = 0;
@@ -71,7 +73,7 @@ int main(int numargs, char* args[])
       break;
     }
 
-    // Parse code
+    // Parse source code
     VItem* list = ParseSourceCode(source, interp->mem);
     SysFree(source);
 
@@ -104,6 +106,10 @@ int main(int numargs, char* args[])
   while (GInteractiveMode);
 
   InterpFree(interp);
+  SymbolTableFree();
+  //PrimFunTableFree();
 
   PrintMemStat();
+
+  return 0;
 }

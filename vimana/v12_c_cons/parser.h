@@ -90,7 +90,6 @@ Exit:
 VItem* ParseToken(char* token, VMem* mem)
 {
   VItem* item = MemAllocItem(mem);
-
   VType type = TokenType(token);
 
   if (TypeIntNum == type)
@@ -107,9 +106,12 @@ VItem* ParseToken(char* token, VMem* mem)
   else
   if (TypeSymbol == type)
   {
+    printf("ParseCode typesymbol\n");
     int primFunId = LookupPrimFun(token);
+    printf("ParseCode typesymbol 2\n");
     if (primFunId > -1)
     {
+      printf("parse primfun\n");
       #ifdef OPTIMIZE
         VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
         ItemSetPrimFun(item, fun);
@@ -119,7 +121,8 @@ VItem* ParseToken(char* token, VMem* mem)
     }
     else
     {
-      int symbol = GSymbolTableFindAdd(token);
+      printf("parse symbol\n");
+      int symbol = SymbolTableFindAddString(token);
       ItemSetSymbol(item, symbol);
     }
   }
