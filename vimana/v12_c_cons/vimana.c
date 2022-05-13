@@ -1,6 +1,5 @@
-
-//#define TRACK_MEMORY_USAGE
-//#define OPTIMIZE 
+#define TRACK_MEMORY_USAGE
+#define OPTIMIZE 
 
 #include "vimana.h"
 
@@ -52,7 +51,8 @@ int main(int numargs, char* args[])
   }
 
   // Create tables for primfuns and symbols
-  //PrimFunTableCreate();
+  PrimFunTableCreate();
+  AddCorePrimFuns();
   SymbolTableCreate();
 
   // Create interpeter
@@ -107,7 +107,7 @@ int main(int numargs, char* args[])
 
   InterpFree(interp);
   SymbolTableFree();
-  //PrimFunTableFree();
+  PrimFunTableFree();
 
   PrintMemStat();
 

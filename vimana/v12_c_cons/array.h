@@ -51,12 +51,11 @@ void* ArrayAt(VArray* array, int index)
   return (void*)array->buffer + (array->itemSize * index);
 }
 
-VArray* ArrayGrow(VArray* array, int newSize)
+VArray* ArrayGrow(VArray* array, int newLength)
 {
-  if (newSize >= array->size)
+  if (newLength >= array->size)
   {
-    printf("ArrayGrow: %i\n", newSize);
-
+    int newSize = newLength + 10;
     int totalSize = sizeof(VArray) + (newSize * array->itemSize);
     array = realloc(array, totalSize);
     array->size = newSize;

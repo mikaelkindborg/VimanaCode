@@ -1,18 +1,18 @@
 <?php
-// Run this script to generate file "primfuntable.h"
-// The generated file is included in file "primfuns.h"
-// The table is a lookup table for primfuns.
+// Run this script to print code that adds primfuns
+// in file "primfuns.h"
 
 function ReadCode()
 {
   return file_get_contents(__DIR__ . "/primfuns.h");
 }
 
+/*
 function SaveTable($table)
 {
-  file_put_contents(__DIR__ . "/primfuntable.h", $table);
+  file_put_contents(__DIR__ . "/filexxx.h", $table);
 }
-
+*/
 
 function GenerateTable($code)
 {
@@ -45,8 +45,8 @@ function GenerateTable($code)
       $vimanaName = trim(substr($rest, $start + 2));
     }
 
-    $table .= "  { \"{$vimanaName}\", {$funName} },\n";
-    echo "PrimFunAdd(\"{$vimanaName}\", {$funName});\n";
+    //$table .= "  { \"{$vimanaName}\", {$funName} },\n";
+    $table .= "PrimFunAdd(\"{$vimanaName}\", {$funName});\n";
 
     $pos1 = $pos2;
   }
@@ -54,4 +54,6 @@ function GenerateTable($code)
   return $table;
 }
 
-SaveTable(GenerateTable(ReadCode()));
+//SaveTable(GenerateTable(ReadCode()));
+echo GenerateTable(ReadCode());
+echo PHP_EOL;

@@ -33,7 +33,7 @@ void SymbolTableFree()
 int SymbolTableFindAddString(char* string)
 {
   // Grows array if needed
-  GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable) + 10);
+  GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable));
   
   int index;
 

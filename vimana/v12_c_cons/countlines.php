@@ -49,19 +49,19 @@ function CountLines($file)
 
 $files = [
   "base.h",
+  "gurumeditation.h",
   "print.h",
   "alloc.h",
-  "file.h",
   "string.h",
+  "array.h",
+  "file.h",
   "item.h",
   "mem.h",
-  "array.h",
-  "gurumeditation.h",
   "symboltable.h",
-  "interp.h",
-  "primfuns.h",
   "primfuntable.h",
+  "interp.h",
   "parser.h",
+  "primfuns.h",
 ];
 
 foreach ($files as $file):
@@ -113,6 +113,12 @@ Version v12_c_cons:
   NumLinesCode:     1373
   NumLinesComments: 540
   NumLinesBlank:    331
+220513:
+  // New symbol table and primfun table, generic growable array
+  NumLines:         2302
+  NumLinesCode:     1385
+  NumLinesComments: 581
+  NumLinesBlank:    336
 
 Version v11_c_minimal:
 

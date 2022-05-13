@@ -106,12 +106,9 @@ VItem* ParseToken(char* token, VMem* mem)
   else
   if (TypeSymbol == type)
   {
-    printf("ParseCode typesymbol\n");
     int primFunId = LookupPrimFun(token);
-    printf("ParseCode typesymbol 2\n");
     if (primFunId > -1)
     {
-      printf("parse primfun\n");
       #ifdef OPTIMIZE
         VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
         ItemSetPrimFun(item, fun);
@@ -121,7 +118,6 @@ VItem* ParseToken(char* token, VMem* mem)
     }
     else
     {
-      printf("parse symbol\n");
       int symbol = SymbolTableFindAddString(token);
       ItemSetSymbol(item, symbol);
     }
