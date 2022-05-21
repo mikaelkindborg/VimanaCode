@@ -96,10 +96,12 @@ function VimanaUIClearOutput()
 
 function VimanaUIListPrimFuns()
 {
-  VimanaUIPrint("Listing Built-in Functions (some of these are very experimental):")
+  VimanaUIPrint("BUILT-IN FUNCTIONS:")
   let primFuns = window.VimanaCode.primFuns
   for (let key in primFuns)
+  {
     VimanaUIPrint(key)
+  }
 }
 
 function VimanaUIOpenGitHub()
@@ -135,7 +137,12 @@ function VimanaUIEvalWorkspace()
   try
   {
     let code = document.getElementsByTagName("textarea")[0].value
-    VimanaEval(code)
+    VimanaEvalAsync(
+      code, 
+      function() 
+      {
+        VimanaUIPrint("DONE")
+      })
   }
   catch (exception)
   {
@@ -152,8 +159,12 @@ function VimanaUIEvalSelection()
   {
     let textArea = document.getElementsByTagName("textarea")[0]
     let code = textArea.value.substring(textArea.selectionStart, textArea.selectionEnd)
-    VimanaEval(code)
-    VimanaUIPrintStack()
+    VimanaEvalAsync(
+      code, 
+      function() 
+      {
+        VimanaUIPrintStack()
+      })
   }
   catch (exception)
   {
@@ -168,21 +179,26 @@ function VimanaUIPrint(obj)
 {
   let output = document.getElementsByTagName("textarea")[1]
   if (output.value.length > 0)
-    output.value = output.value + "\n" + VimanaPrettyPrint(obj) //obj.toString()
+  {
+    output.value = output.value + "\n" + window.VimanaCode.prettyPrint(obj) //obj.toString()
+  }
   else
-    output.value = VimanaPrettyPrint(obj) //obj.toString()
+  {
+    output.value = window.VimanaCode.prettyPrint(obj) //obj.toString()
+  }
   //output.insertAdjacentHTML("beforeend", obj.toString() + "\n")
   output.scrollTop = output.scrollHeight;
 }
 
 function VimanaUIPrintStack()
 {
-  VimanaUIPrint("STACK: " + VimanaPrettyPrintStack(window.VimanaCode.dataStack)) //JSON.stringify(window.VimanaCode.stack))
+  VimanaUIPrint("STACK: " + window.VimanaCode.prettyPrintStack()) //JSON.stringify(window.VimanaCode.stack))
 }
 
 function VimanaUIPrintException(exception)
 {
   VimanaUIPrint(exception)
+  /*
   let interp = window.VimanaCode
   let context = interp.callstack[interp.callstackIndex]
   if (context && context.codePointer)
@@ -193,6 +209,7 @@ function VimanaUIPrintException(exception)
     VimanaUIPrint("CODE: " + JSON.stringify(array))
     VimanaUIPrint("CONTEXT: " + JSON.stringify(context))
   }
+  */
 }
 
 function VimanaUIEvalBenchmark()
@@ -203,7 +220,7 @@ function VimanaUIEvalBenchmark()
     {
       let code = document.getElementsByTagName("textarea")[0].value
       let t0 = performance.now()
-      VimanaEvalFast(code)
+      VimanaEval(code)
       let t1 = performance.now()
       VimanaUIPrint("TIME: " + ((t1 - t0) / 1000) + "s")
     }

@@ -11,18 +11,20 @@ function VimanaInterp()
 {
   this.primFuns = {}
   this.globalEnv = {}
-  this.dataStack = []
+  this.stack = []
   this.stackFrame = null // current stackframe
   this.speed = 10 //50 // ms delay in eval loop
   this.symbolCase = "lowercase"
 }
 
-VimanaInterp.prototype.pushDataStack = function(obj)
+/*
+VimanaInterp.prototype.pushStack = function(obj)
 {
   this.stack.push(obj)
 }
+*/
 
-VimanaInterp.prototype.popDataStack = function()
+VimanaInterp.prototype.popStack = function()
 {
   if (0 === this.stack.length)
     this.error("DATASTACK IS EMPTY")
@@ -38,10 +40,10 @@ VimanaInterp.prototype.pushFirstStackFrame = function(list)
 VimanaInterp.prototype.pushStackFrame = function(list)
 {
   // Check tail call
-  if (stackFrame.car === null)
+  if (this.stackFrame.car === null)
   {
     // Reuse current stackframe
-    stackFrame.car = list
+    this.stackFrame.car = list
     this.print("TAILCALL")
   }
   else
@@ -99,7 +101,7 @@ VimanaInterp.prototype.evalSlice = function()
     }
     else
     {
-      this.dataStack.push(instruction.car)
+      this.stack.push(instruction.car)
     }
   }
   else
@@ -109,11 +111,12 @@ VimanaInterp.prototype.evalSlice = function()
 }
 
 // Eval driven by a timer, which is slower but more resource friendly
-VimanaInterp.prototype.timerEval = function(list)
+VimanaInterp.prototype.evalAsync = function(list, doneFun = null)
 {
   // Push root stackframe
   this.pushFirstStackFrame(list)
 
+  // For runTimer
   let interp = this
 
   // Enter eval loop
@@ -126,6 +129,10 @@ VimanaInterp.prototype.timerEval = function(list)
       interp.evalSlice()
       setTimeout(runTimer, interp.speed)
     }
+    else
+    {
+      if (doneFun) doneFun()
+    }
   }
 }
 
@@ -137,9 +144,9 @@ VimanaInterp.prototype.defPrimFun = function(name, fun)
 // PARSER -------------------------------------------------
 
 // Parse (tokenize) a string and return a list
-function VimanaParse(code)
+VimanaInterp.prototype.parse = function(code)
 {
-  code = VimanaRemoveComments(code)
+  code = this.stripComments(code)
 
   code = code.replaceAll("(", " ( ")
   code = code.replaceAll(")", " ) ")
@@ -150,13 +157,13 @@ function VimanaParse(code)
   let tokens = code.split(" ")
   //$tokens = array_filter($tokens,
   //  function($token) { return strlen($token) > 0 })
-  let list = VimanaParseTokens(tokens)
+  let list = this.parseTokens(tokens)
 
   return list
 }
 
 // Remove /-- Vimana comments --/ from the code
-function VimanaRemoveComments(code)
+VimanaInterp.prototype.stripComments = function(code)
 {
   let index = 0
   let start = 0
@@ -210,7 +217,7 @@ function VimanaRemoveComments(code)
 }
 
 // Recursively create the list tree structure
-function VimanaParseTokens(tokens)
+VimanaInterp.prototype.parseTokens = function(tokens)
 {
   let first = { car: null, cdr: null } // Head item
   let item = first
@@ -235,11 +242,15 @@ function VimanaParseTokens(tokens)
 
     if (token === "(")
     {
-      value = VimanaParseTokens(tokens)
+      value = this.parseTokens(tokens)
     }
     else if (isFinite(token))
     {
       value = token * 1 // Convert string to number
+    }
+    else if (token in this.primFuns)
+    {
+      value = this.primFuns[token]
     }
     else
     {
@@ -253,17 +264,18 @@ function VimanaParseTokens(tokens)
 
 // PRINTING -----------------------------------------------
 
-// The idea is that you redefine this function if
+// The idea is that you can redefine this function if
 // you want to output the result in your UI
 VimanaInterp.prototype.print = function(s)
 {
   console.log(s)
 }
 
-function VimanaPrettyPrint(obj)
+// Returns string
+VimanaInterp.prototype.prettyPrint = function(obj)
 {
   if (typeof(obj) == "object")
-    return VimanaPrettyPrintList(obj)
+    return this.prettyPrintList(obj)
   else
   if (typeof(obj) == "function")
     return "[PrimFun]"
@@ -274,7 +286,8 @@ function VimanaPrettyPrint(obj)
     return obj.toString()
 }
 
-function VimanaPrettyPrintList(list)
+// Returns string
+VimanaInterp.prototype.prettyPrintList = function(list)
 {
   let string = "("
   let item = list
@@ -294,12 +307,13 @@ function VimanaPrettyPrintList(list)
   return string + ")"
 }
 
-function VimanaPrettyPrintStack(stack)
+// Returns string
+VimanaInterp.prototype.prettyPrintStack = function()
 {
   let string = ""
-  for (let i = 0; i < stack.length; ++ i)
+  for (let i = 0; i < this.stack.length; ++ i)
   {
-    string += VimanaPrettyPrint(stack[i]) + " "
+    string += this.prettyPrint(this.stack[i]) + " "
   }
   return string
 }
@@ -324,20 +338,20 @@ VimanaInterp.prototype.mustBeList = function(list, errorMessage)
 function VimanaInit()
 {
   window.VimanaCode = new VimanaInterp()
-  VimanaDefPrimFuns(window.VimanaCode)
+  VimanaDefinePrimFuns(window.VimanaCode)
+}
+
+function VimanaEvalAsync(string, doneFun = null)
+{
+  let list = window.VimanaCode.parse(string)
+  window.VimanaCode.evalAsync(list, doneFun)
 }
 
 function VimanaEval(string)
 {
-  let list = VimanaParse(string)
-  window.VimanaCode.timerEval(list)
-}
-
-function VimanaEvalFast(string)
-{
-  let list = VimanaParse(string)
-  // eval is much faster than timerEval, but is less resource 
+  // eval is much faster than evalAsync, but is less resource 
   // friendly and can slow down the browser
+  let list = window.VimanaCode.parse(string)
   window.VimanaCode.eval(list)
 }
 

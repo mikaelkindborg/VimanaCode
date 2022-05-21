@@ -5,36 +5,36 @@
 // mikael@kindborg.com
 //
 
-function VimanaDefPrimFuns(interp)
+function VimanaDefinePrimFuns(interp)
 {
   interp.defPrimFun("eval", function(interp)
   {
-    let list = interp.popDataStack()
+    let list = interp.popStack()
     interp.mustBeList(list, "eval: got non-list")
     interp.pushStackFrame(list)
   })
 
   interp.defPrimFun("drop", function(interp)
   {
-    interp.popDataStack()
+    interp.popStack()
   })
 
   interp.defPrimFun("doc", function(interp)
   {
-    interp.popDataStack()
+    interp.popStack()
   })
 
   // Get value of a symbol
   interp.defPrimFun("value", function(interp)
   {  
-    let element = interp.popDataStack()
+    let element = interp.popStack()
     interp.stack.push(interp.evalSymbol(element))
   })
 
 /*
   interp.defPrimFun("call", function(interp)
   {
-    let list = interp.popDataStack()
+    let list = interp.popStack()
     interp.mustBeList(list, "call: got non-list")
     interp.pushContext(list, {})
   })
@@ -44,9 +44,9 @@ function VimanaDefPrimFuns(interp)
   interp.defPrimFun("setGlobal", function(interp)
   {
     //interp.print("STACK: " + JSON.stringify(interp.stack));
-    let name = interp.popDataStack()
+    let name = interp.popStack()
     interp.mustBeList(name, "setGlobal: name must be in a list")
-    let value = interp.popDataStack()
+    let value = interp.popStack()
     //interp.print("SETGLOBAL: " + name);
     interp.globalEnv[name.car] = value
     //interp.print("GLOBALENV: " + JSON.stringify(interp.globalEnv));
@@ -55,7 +55,7 @@ function VimanaDefPrimFuns(interp)
   interp.defPrimFun("funify", function(interp)
   {
     // Get function definition
-    let list = interp.popDataStack()
+    let list = interp.popStack()
     interp.mustBeList(list, "funify: got non-list")
     // Create and push function object
     let fun = new VimanaFun(list)
@@ -68,12 +68,12 @@ function VimanaDefPrimFuns(interp)
   interp.defPrimFun("def", function(interp)
   {
     // Get function body
-    let body = interp.popDataStack()
+    let body = interp.popStack()
     if (!VimanaObjectIsList(body) && body.items.length < 1)
       interp.error("def: non-list or empty body")
     
     // Get function header
-    let header = interp.popDataStack()
+    let header = interp.popStack()
     if (!VimanaObjectIsList(header) && header.items.length < 1)
       interp.error("def: non-list or empty header")
 
@@ -100,9 +100,9 @@ function VimanaDefPrimFuns(interp)
 /*
   interp.defPrimFun("ifelse", function(interp)
   {
-    let branch2 = interp.popDataStack()
-    let branch1 = interp.popDataStack()
-    let truth = interp.popDataStack()
+    let branch2 = interp.popStack()
+    let branch1 = interp.popStack()
+    let truth = interp.popStack()
     interp.mustBeList(branch1, "ifElse: branch1 is non-list")
     interp.mustBeList(branch2, "ifElse: branch2 is non-list")
     if (truth)
@@ -113,8 +113,8 @@ function VimanaDefPrimFuns(interp)
 
   interp.defPrimFun("iftrue", function(interp)
   {
-    let branch = interp.popDataStack()
-    let truth = interp.popDataStack()
+    let branch = interp.popStack()
+    let truth = interp.popStack()
     interp.mustBeList(branch, "ifTrue: branch is non-list")
     if (truth)
       interp.pushContext(branch)
@@ -122,28 +122,28 @@ function VimanaDefPrimFuns(interp)
 
   interp.defPrimFun("eq", function(interp)
   {
-    let b = interp.popDataStack()
-    let a = interp.popDataStack()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a === b)
   })
 
   interp.defPrimFun("not", function(interp)
   {
-    let a = interp.popDataStack()
+    let a = interp.popStack()
     interp.stack.push(!a)
   })
 
   interp.defPrimFun("isSmaller", function(interp)
   {
-    let b = interp.popDataStack()
-    let a = interp.popDataStack()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a > b)
   })
 
   interp.defPrimFun("isBigger", function(interp)
   {
-    let b = interp.popDataStack()
-    let a = interp.popDataStack()
+    let b = interp.popStack()
+    let a = interp.popStack()
     //interp.print("ISBIGGER " + a + " " + b)
     interp.stack.push(a < b)
   })
@@ -151,36 +151,36 @@ function VimanaDefPrimFuns(interp)
 
   interp.defPrimFun("+", function(interp)
   {
-    let b = interp.popDataStack()
-    let a = interp.popDataStack()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a + b)
   })
 
   interp.defPrimFun("-", function(interp)
   {
-    let b = interp.popDataStack()
-    let a = interp.popDataStack()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a - b)
   })
 
   interp.defPrimFun("*", function(interp)
   {
-    let b = interp.popDataStack()
-    let a = interp.popDataStack()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a * b)
   })
 
   interp.defPrimFun("/", function(interp)
   {
-    let b = interp.popDataStack()
-    let a = interp.popDataStack()
+    let b = interp.popStack()
+    let a = interp.popStack()
     interp.stack.push(a / b)
   })
 
   // Get random number integer between 0 and max 1 -
   interp.defPrimFun("random", function(interp)
   {
-    let max = interp.popDataStack()
+    let max = interp.popStack()
     interp.stack.push(Math.floor(Math.random() * max))
     //interp.printStack()
   })
@@ -188,7 +188,7 @@ function VimanaDefPrimFuns(interp)
   // Get first element of a list
   interp.defPrimFun("first", function(interp)
   {
-    let list = interp.popDataStack()
+    let list = interp.popStack()
     interp.mustBeList(list, "first: got non-list")
     interp.stack.push(list.car)
     //interp.printStack()
@@ -196,19 +196,19 @@ function VimanaDefPrimFuns(interp)
 
   interp.defPrimFun("print", function(interp)
   {
-    let obj = interp.popDataStack()
+    let obj = interp.popStack()
     interp.print(obj)
   })
 
   interp.defPrimFun("printstack", function(interp)
   {
-    interp.print(interp.stack)
+    VimanaUIPrintStack()
   })
   
 /*
   interp.defPrimFun("toString", function(interp)
   {
-    let list = interp.popDataStack()
+    let list = interp.popStack()
     interp.mustBeList(list, "toString: object is non-list")
     let string = list.items.join(" ")
     interp.stack.push(string)
