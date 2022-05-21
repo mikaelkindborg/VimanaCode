@@ -290,6 +290,23 @@ function VimanaUIEvalBenchmark()
 
 function VimanaUIRunNativeBenchmark()
 {
+  function fib(n)
+  {
+    if (n < 2)
+      return n
+    else 
+      return fib(n - 1) + fib(n - 2)
+  }
+  let t1 = performance.now()
+  let n = fib(37)
+  let t2 = performance.now()
+  VimanaUIPrint("fib(37)): " + n)
+  VimanaUIPrint("NATIVE TIME fib(37)): " + ((t2 - t1) / 1000) + "s")
+  //TIME: 
+}
+
+function VimanaUIRunNativeBenchmarkFact()
+{
   function fact(n)
   {
     if (n === 0)
