@@ -331,7 +331,7 @@ void MemPrintList(VMem* mem, VItem* list)
 
   while (item)
   {
-    if (printSpace) printf(" ");
+    if (printSpace) PrintChar(' ');
     MemPrintItem(mem, item);
     item = MemItemNext(mem, item);
     printSpace = TRUE;
