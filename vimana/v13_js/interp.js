@@ -9,12 +9,11 @@
 
 function VimanaInterp()
 {
-  this.primFuns = {}
-  this.globalEnv = {}
-  this.stack = []
+  this.primFuns = {}     // primitive functions
+  this.globalEnv = {}    // global vars
+  this.stack = []        // data stack
   this.stackFrame = null // current stackframe
-  this.speed = 10 //50 // ms delay in eval loop
-  this.symbolCase = "lowercase"
+  this.speed = 10 //50   // ms delay in eval loop
 }
 
 /*
@@ -56,7 +55,9 @@ VimanaInterp.prototype.pushStackFrame = function(list)
 VimanaInterp.prototype.popStackFrame = function()
 {
   if (null === this.stackFrame)
+  {
     this.error("CALLSTACK IS EMPTY")
+  }
 
   this.stackFrame = this.stackFrame.cdr
 }
@@ -97,15 +98,37 @@ VimanaInterp.prototype.evalSlice = function()
 
     if (typeof(instruction.car) == "function")
     {
+      // Call primfun
       instruction.car(this)
     }
     else
+    if (typeof(instruction.car) == "string") //"symbol")
     {
+      console.log("symbol eval")
+      let value = this.evalSymbol(instruction.car)
+      if (value.type == "fun")
+      {
+        console.log("fun call")
+        // Call function
+        this.pushStackFrame(instruction.car)
+      }
+      else
+      {
+        console.log("push: " + value)
+        // Push value onto data stack
+        this.stack.push(value)
+      }
+    }
+    else
+    {
+      console.log("push: " + instruction.car)
+      // Push "literal" onto data stack
       this.stack.push(instruction.car)
     }
   }
   else
   {
+    // End of instruction list - pop stackframe
     this.popStackFrame()
   }
 }
@@ -294,7 +317,7 @@ VimanaInterp.prototype.prettyPrintList = function(list)
 
   while (item != null)
   {
-    string = string + VimanaPrettyPrint(item.car)
+    string = string + this.prettyPrint(item.car)
 
     item = item.cdr
 
