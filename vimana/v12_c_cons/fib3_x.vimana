@@ -1,0 +1,6 @@
+(fib)
+  ([XX] 1 > ([XX] 1- fib [YX] 2- fib +) iftrue) def
+
+40 fib print
+
+/-- over: [XYX] --/

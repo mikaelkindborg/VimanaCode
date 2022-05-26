@@ -172,7 +172,8 @@ void InterpGC(VInterp* interp)
 // Data stack
 // -------------------------------------------------------------
 
-void InterpStackPush(VInterp* interp, VItem *item)
+// Copies item
+void InterpStackPush(VInterp* interp, VItem* item)
 {
   ++ interp->dataStackTop;
 
@@ -297,9 +298,12 @@ void InterpPopStackFrame(VInterp* interp)
 // Local vars
 // -------------------------------------------------------------
 
+// Copies item
 void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
 {
   VStackFrame* frame = InterpStackFrame(interp);
+
+  // Copy item
   frame->context->localVars[index] = *item;
 }
 
@@ -310,10 +314,12 @@ void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
 // Global vars
 // -------------------------------------------------------------
 
+// Copies item
 void InterpSetGlobalVar(VInterp* interp, int index, VItem* item)
 {
   if (index < interp->numGlobalVars)
   {
+    // Copy item
     (interp->globalVars)[index] = *item;
   }
   else
@@ -322,7 +328,8 @@ void InterpSetGlobalVar(VInterp* interp, int index, VItem* item)
   }
 }
 
-#define InterpGetGlobalVar(interp, index) (& (((interp)->globalVars)[index]))
+#define InterpGetGlobalVar(interp, index) \
+  (& (((interp)->globalVars)[index]))
 
 // -------------------------------------------------------------
 // Eval
