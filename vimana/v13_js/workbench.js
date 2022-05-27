@@ -26,6 +26,9 @@ function VimanaUIDoMenuCommand(event)
   if ("vimana-eval-benchmark" === command)
     VimanaUIEvalBenchmark()
   else
+  if ("vimana-eval-js-benchmark" === command)
+    VimanaUIRunNativeBenchmark()
+  else
   if ("vimana-reset-workspace" === command)
     VimanaUIResetWorkspace()
   else
@@ -141,7 +144,8 @@ function VimanaUIEvalWorkspace()
       code, 
       function() 
       {
-        VimanaUIPrint("DONE")
+        //VimanaUIPrint("DONE")
+        VimanaUIPrintStack()
       })
   }
   catch (exception)
@@ -173,6 +177,27 @@ function VimanaUIEvalSelection()
     VimanaUIPrintException(exception)
     throw exception
   }
+}
+function VimanaUIEvalBenchmark()
+{
+  VimanaUIPrint("PLEASE WAIT...")
+  setTimeout(function() {
+    try
+    {
+      let code = document.getElementsByTagName("textarea")[0].value
+      let t0 = performance.now()
+      VimanaEval(code)
+      let t1 = performance.now()
+      VimanaUIPrint("TIME: " + ((t1 - t0) / 1000) + "s")
+    }
+    catch (exception)
+    {
+      console.log("FOOBAR")
+      console.log(exception)
+      VimanaUIPrintException(exception)
+      throw exception
+    }
+  }, 100)
 }
 
 function VimanaUIPrint(obj)
@@ -211,25 +236,6 @@ function VimanaUIPrintException(exception)
   }
   */
 }
-
-function VimanaUIEvalBenchmark()
-{
-  VimanaUIPrint("PLEASE WAIT...")
-  setTimeout(function() {
-    try
-    {
-      let code = document.getElementsByTagName("textarea")[0].value
-      let t0 = performance.now()
-      VimanaEval(code)
-      let t1 = performance.now()
-      VimanaUIPrint("TIME: " + ((t1 - t0) / 1000) + "s")
-    }
-    catch (exception)
-    {
-      VimanaUIPrintException(exception)
-      throw exception
-    }
-  }, 100)
 
 /*
   let code =
@@ -308,7 +314,7 @@ function VimanaUIEvalBenchmark()
   // 0.9123999999985098s
   // 210620
   // 0.9001000000005588s
-}
+
 
 function VimanaUIRunNativeBenchmark()
 {
@@ -322,8 +328,8 @@ function VimanaUIRunNativeBenchmark()
   let t1 = performance.now()
   let n = fib(37)
   let t2 = performance.now()
-  VimanaUIPrint("fib(37)): " + n)
-  VimanaUIPrint("NATIVE TIME fib(37)): " + ((t2 - t1) / 1000) + "s")
+  VimanaUIPrint("fib(37) : " + n)
+  VimanaUIPrint("NATIVE TIME fib(37) : " + ((t2 - t1) / 1000) + "s")
   //TIME: 
 }
 

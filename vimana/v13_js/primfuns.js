@@ -92,7 +92,6 @@ function VimanaDefinePrimFuns(interp)
     interp.mustBeList(list, "funify: got non-list")
 
     list.type = "fun"
-    console.log(list)
     interp.stack.push(list)
   }
 
@@ -200,6 +199,30 @@ function VimanaDefinePrimFuns(interp)
     interp.stack.push(a / b)
   })
 
+  interp.defPrimFun("1+", function(interp)
+  {
+    let a = interp.popStack()
+    interp.stack.push(a + 1)
+  })
+
+  interp.defPrimFun("2+", function(interp)
+  {
+    let a = interp.popStack()
+    interp.stack.push(a + 2)
+  })
+
+  interp.defPrimFun("1-", function(interp)
+  {
+    let a = interp.popStack()
+    interp.stack.push(a - 1)
+  })
+
+  interp.defPrimFun("2-", function(interp)
+  {
+    let a = interp.popStack()
+    interp.stack.push(a - 2)
+  })
+
   // Get random number integer between 0 and max 1 -
   interp.defPrimFun("random", function(interp)
   {
@@ -234,5 +257,6 @@ function VimanaDefinePrimFuns(interp)
   interp.defPrimFun("[XX]", dup)
   interp.defPrimFun("[YX]", swap)
   interp.defPrimFun("[XYX]", over)
+  //interp.defPrimFun("[YZX]", rotate)
 
 }

@@ -13,7 +13,7 @@ function VimanaInterp()
   this.globalEnv = {}    // global vars
   this.stack = []        // data stack
   this.stackFrame = null // current stackframe
-  this.speed = 10 //50   // ms delay in eval loop
+  this.speed = 0        // ms delay in eval loop
 }
 
 /*
@@ -33,7 +33,8 @@ VimanaInterp.prototype.popStack = function()
 
 VimanaInterp.prototype.pushFirstStackFrame = function(list)
 {
-  this.stackFrame = { car: list, cdr: this.stackFrame }
+  //this.stackFrame = { car: list, cdr: this.stackFrame }
+  this.stackFrame = { car: list, cdr: null }
 }
 
 VimanaInterp.prototype.pushStackFrame = function(list)
@@ -41,9 +42,8 @@ VimanaInterp.prototype.pushStackFrame = function(list)
   // Check tail call
   if (this.stackFrame.car === null)
   {
-    // Reuse current stackframe
+    // Tailcall: Reuse current stackframe
     this.stackFrame.car = list
-    this.print("TAILCALL")
   }
   else
   {
@@ -78,7 +78,7 @@ VimanaInterp.prototype.eval = function(list)
   this.pushFirstStackFrame(list)
 
   // Eval loop
-  while (this.stackframe != null)
+  while (null !== this.stackFrame)
   {
     this.evalSlice()
   }
@@ -91,7 +91,7 @@ VimanaInterp.prototype.evalSlice = function()
   let instruction = stackFrame.car
 
   // Evaluate current instruction
-  if (null != instruction)
+  if (null !== instruction)
   {
     // Advance instruction for next loop
     stackFrame.car = instruction.cdr
@@ -104,25 +104,21 @@ VimanaInterp.prototype.evalSlice = function()
     else
     if (typeof(instruction.car) == "string") //"symbol")
     {
-      console.log("symbol eval")
       let value = this.evalSymbol(instruction.car)
       if (value.type == "fun")
       {
-        console.log("fun call")
         // Call function
-        this.pushStackFrame(instruction.car)
+        this.pushStackFrame(value)
       }
       else
       {
-        console.log("push: " + value)
         // Push value onto data stack
         this.stack.push(value)
       }
     }
     else
     {
-      console.log("push: " + instruction.car)
-      // Push "literal" onto data stack
+      // Push literal onto data stack
       this.stack.push(instruction.car)
     }
   }
