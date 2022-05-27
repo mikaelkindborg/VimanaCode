@@ -402,7 +402,6 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         InterpStackPush(interp, instruction);
       }
       else
-      // TODO: Don't push unbound symbols?
       if (IsTypeSymbol(instruction))
       {
         VItem* value = InterpGetGlobalVar(interp, instruction->intNum);
@@ -416,6 +415,12 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         {
           // Push value
           InterpStackPush(interp, value);
+        }
+        else
+        {
+          // TODO: Allow unbound symbols?
+          // Push unbound symbol
+          //InterpStackPush(interp, instruction);
         }
       }
     }
