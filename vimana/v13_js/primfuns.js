@@ -251,6 +251,39 @@ function VimanaDefinePrimFuns(interp)
     VimanaUIPrintStack()
   })
 
+  interp.defPrimFun("draw", function(interp)
+  {
+    let canvas = document.getElementById("vimana-canvas")
+    let surface = canvas.getContext("2d")
+    surface.fillStyle = "rgb(255,255,100)"
+    surface.fillRect(0, 0, 200, 200)
+  })
+
+  // x y w h fillrect
+  interp.defPrimFun("fillrect", function(interp)
+  {
+    let h = interp.popStack()
+    let w = interp.popStack()
+    let y = interp.popStack()
+    let x = interp.popStack()
+    let canvas = document.getElementById("vimana-canvas")
+    let surface = canvas.getContext("2d")
+    //surface.fillStyle = "rgb(0,255,255)"
+    surface.fillRect(x, y, w, h)
+    //surface.fillRect(0, 0, 200, 200)
+  })
+
+  // r g b setcolor
+  interp.defPrimFun("setcolor", function(interp)
+  {
+    let b = interp.popStack()
+    let g = interp.popStack()
+    let r = interp.popStack()
+    let canvas = document.getElementById("vimana-canvas")
+    let surface = canvas.getContext("2d")
+    surface.fillStyle = "rgb(" + r + "," + g + "," + b + ")"
+  })
+
   // Synonyms
   interp.defPrimFun("doc", drop)
   interp.defPrimFun("[]", drop)
@@ -258,5 +291,12 @@ function VimanaDefinePrimFuns(interp)
   interp.defPrimFun("[YX]", swap)
   interp.defPrimFun("[XYX]", over)
   //interp.defPrimFun("[YZX]", rotate)
-
 }
+
+
+/*
+(fib)
+  ([XX] 1 > ([XX] 1 - fib [YX] 2 - fib +) iftrue) def
+
+37 fib
+*/
