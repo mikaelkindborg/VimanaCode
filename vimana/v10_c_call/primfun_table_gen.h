@@ -28,5 +28,6 @@ VFunPtr GInterpPrimFunTable[] =
   PrimFun_19,
   PrimFun_20,
   PrimFun_21,
-  PrimFun_22
+  PrimFun_22,
+  PrimFun_23
 };

@@ -80,6 +80,12 @@ $PrimFunTable = [];
   ++ ListLength(InterpStack(interp));
 <?php PrimFunEnd(); ?>
 
+<?php PrimFunDef("sub2"); ?>
+  VItem* item = InterpPop(interp);
+  ItemSetNumber(item,  ItemNumber(item) - 2);
+  ++ ListLength(InterpStack(interp));
+<?php PrimFunEnd(); ?>
+
 <?php PrimFunDef("eq"); ?>
   VItem* item2 = InterpPop(interp);
   VItem* item1 = InterpPop(interp);

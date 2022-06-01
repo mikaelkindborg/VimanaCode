@@ -1,0 +1,4 @@
+(fib) 
+  (dup 1 > (dup sub1 fib swap sub2 fib +) iftrue) def
+  
+37 fib print

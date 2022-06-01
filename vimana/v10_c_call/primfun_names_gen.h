@@ -14,6 +14,7 @@ void SymbolDictAddPrimFuns(VSymbolDict* dict)
   SymbolDictAddPrimFunName(dict, "*");
   SymbolDictAddPrimFunName(dict, "/");
   SymbolDictAddPrimFunName(dict, "sub1");
+  SymbolDictAddPrimFunName(dict, "sub2");
   SymbolDictAddPrimFunName(dict, "eq");
   SymbolDictAddPrimFunName(dict, "<");
   SymbolDictAddPrimFunName(dict, ">");
