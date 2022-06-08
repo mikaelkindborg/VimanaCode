@@ -2,10 +2,41 @@
 (fib) 
   ([A] A 2 < (A) (A 1- fib A 2- fib +) ifelse) def 
 
+(fib) ([A] 
+  A 2 < (A) (A 1- fib A 2- fib +) ifelse) def 
+
+
+(fib) 
+  ([A] 2 < (A) (A 1- fib A 2- fib +) ifelse) def 
+
+(fib) 
+  (A[] A 2 < (A) (A 1- fib A 2- fib +) ifelse) def 
+
+
+(fib) 
+  ([]A 2 < (A) (A 1- fib A 2- fib +) ifelse) def 
+
+(fib) 
+  (ABC[] A 2 < (A) (A 1- fib A 2- fib +) ifelse) def 
+
+
+(n fib) 
+  (n 2 < (n) (n 1- fib 
+              n 2- fib 
+              +) 
+              ifelse) def 
+
+
 (times) 
   (dup iszero 
     (drop drop) 
     (swap dup eval swap 1- times) 
+  ifelse) def
+
+([list n] times) 
+  ([XX] iszero 
+    ([] []) 
+    ([XYX] eval [YX] 1- times) 
   ifelse) def
 
 (32 fib print) 5 times

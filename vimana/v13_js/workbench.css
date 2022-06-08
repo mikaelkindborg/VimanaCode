@@ -16,7 +16,8 @@ body
 {
   padding: 5px;
   /*background-color: rgb(55,102,201);*/
-  background-color: rgb(0,85,173);
+  /*background-color: rgb(0,85,173);*/
+  background-color: rgb(0,81,156);
   color: rgb(255,255,255);
   font-family: monospace;
   font-weight: normal;
@@ -40,6 +41,8 @@ h2
   margin: 10px 0 0 0;
   padding: 6px;
   border: 3px solid rgb(255,138,0);
+  border: 2px solid rgb(238,131,0);
+  border-radius: 2px;
 }
 
 .vimana-frame-code,
@@ -58,6 +61,7 @@ h2
 .vimana-frame-output textarea
 {
   background-color: rgb(0,85,173);
+  background-color: rgb(5, 100, 202);
 }
 .vimana-frame-output textarea
 {
@@ -86,7 +90,9 @@ textarea
   /* margin: 0 10px 10px 0;*/
   flex: 0 0 auto;
   padding: 5px 10px;
-  border: 3px solid white;
+  background-color: rgb(5, 100, 202);
+  border: 2px solid white;
+  border-radius: 2px;
   unicode-bidi: embed;
   font-family: monospace;
   white-space: pre;
@@ -116,6 +122,7 @@ textarea
   justify-content: flex-start;
   gap: 10px;
   margin: 10px 0;
+  font-weight: 500;
 }
 
 .vimana-dropdown-menu
@@ -124,9 +131,17 @@ textarea
   padding: 2px 6px;
   font-family: monospace;
   font-size: 22px;
-  border: 3px solid white;
+  border: 2px solid white;
+  border-radius: 2px;
   background-color: rgb(0,85,173);
+  background-color: rgb(5, 100, 202);
   color: white;
+}
+
+.vimana-canvas
+{
+  width: 600px;
+  height: 600px;
 }
 
 .vimana-workspace

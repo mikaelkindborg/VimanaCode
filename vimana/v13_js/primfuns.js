@@ -80,7 +80,7 @@ function VimanaDefinePrimFuns(interp)
     interp.mustBeList(name, "setglobal: name must be in a list")
 
     let value = interp.popStack()
-    interp.globalEnv[name.car] = value
+    interp.globalVars[name.car] = value
   }
   
   interp.defPrimFun("setglobal", setglobal)

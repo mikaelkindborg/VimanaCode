@@ -1,11 +1,30 @@
 /------
-Vimana 2022-05-07
+Vimana 2022-05-07 ´ (37 fib)
 ./a.out fib3.vimana  2.42s user 0.01s system 99% cpu 2.442 total
 ./a.out fib3.vimana  2.39s user 0.00s system 99% cpu 2.402 total
 
-Vimana 2022-05-12 (malloc primfuntable)
+Vimana 2022-05-12 (37 fib) (malloc primfuntable)
 ./a.out fib3.vimana  2.36s user 0.00s system 96% cpu 2.443 total
 ./a.out fib3.vimana  2.37s user 0.00s system 96% cpu 2.452 total
+
+Vimana 2022-06-08 (37 fib)
+miki@mikis-MacBook-Air v12_c_cons % cc vimana.c -Ofast      
+miki@mikis-MacBook-Air v12_c_cons % time ./a.out fib3.vimana
+24157817
+MemAllocCounter: 12
+MemAllocCounter: 0
+SysAllocCounter: 0
+./a.out fib3.vimana  2.36s user 0.00s system 96% cpu 2.444 total
+
+Vimana 2022-06-08 (40 fib)
+miki@mikis-MacBook-Air v12_c_cons % cc vimana.c -Ofast      
+miki@mikis-MacBook-Air v12_c_cons % time ./a.out fib3.vimana
+102334155
+MemAllocCounter: 12
+MemAllocCounter: 0
+SysAllocCounter: 0
+./a.out fib3.vimana  10.03s user 0.01s system 99% cpu 10.041 total
+
 ------/
 
 (fib)

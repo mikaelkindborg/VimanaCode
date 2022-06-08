@@ -11,11 +11,11 @@
 (timerCounterIncr)
   (TimerCounter 1+ (TimerCounter) setglobal) def
 
-/-- list interval --/
+/-- codelist interval --/
 (timerAdd) (
-  [AB] timerCounterIncr
-  /-- (lastRun interval code timerId) --/
-  [ millis B A TimerCounter ] TimerList cons
+  [ab] timerCounterIncr
+  /-- (lastRun interval codelist timerId) --/
+  [ millis b a TimerCounter ] TimerList cons
     (TimerList) setglobal) def
 
 (timerCheckAll) 

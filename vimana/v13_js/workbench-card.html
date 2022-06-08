@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1.0, shrink-to-fit=no" />
+  <meta name="copyright" content="(c) 2021 Mikael Kindborg. All Rights Reserved" />
+  <title>VimanaCode</title>
+  <style>
+    @import "workbench.css";
+  </style>
+</head>
+
+<body>
+
+  <div class="vimana-ui">
+
+    <div class="vimana-button-bar">
+      <a class="vimana-button" onclick="VimanaUIEval()" href="javascript:void(0)">Eval</a>
+      <a class="vimana-button" onclick="VimanaUISave()" href="javascript:void(0)">Save</a>
+      <a class="vimana-button" onclick="VimanaUIPrintStack()" href="javascript:void(0)">Show Stack</a>
+      <a class="vimana-button" onclick="VimanaUIClearStack()" href="javascript:void(0)">Clear Stack</a>
+      <a class="vimana-button" onclick="VimanaUIClearOutput()" href="javascript:void(0)">Clear Output</a>
+
+      <select class="vimana-dropdown-menu vimana-command-menu" onchange="VimanaUIDoMenuCommand(event)">
+        <option value="vimana-menu">Navigate</option>
+        <option disabled>----------------</option>
+        <option value="vimana-card-1">Card 1</option>
+        <option value="vimana-card-1">Card 2</option>
+        <option value="vimana-card-1">Card 3</option>
+        <option value="vimana-card-1">Card 4</option>
+        <option disabled>----------------</option>
+        <option value="vimana-list-primfuns">List PrimFuns</option>
+        <!--<option value="vimana-eval-js-benchmark">Eval JS fib(37)</option>-->
+        <option value="vimana-reset-workspace">Restore Card</option>
+        <option value="vimana-open-github">GitHub</option>
+        <option value="vimana-about">About</option>
+      </select>
+    </div>
+
+    <div class="vimana-stack">
+
+      <div class="vimana-card">
+        <div class="vimana-frame vimana-frame-code">
+          <textarea spellcheck="false"></textarea>
+        </div>
+
+        <div class="vimana-frame vimana-frame-output">
+          <textarea spellcheck="false"></textarea>
+        </div>
+
+        <canvas id="vimana-canvas" width="100%" height="600px"></canvas>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="interp.js"></script>
+  <script src="primfuns.js"></script>
+  <xscript src="symcodegen.js"></xscript>
+  <script src="workbench.js"></script>
+
+  </body>
+</html>

@@ -1,7 +1,7 @@
 //
 // File: workbench.js
 // Vimana workbench UI
-// Copyright (c) 2021 Mikael Kindborg
+// Copyright (c) 2021-2022 Mikael Kindborg
 // mikael@kindborg.com
 //
 
@@ -17,31 +17,28 @@ function VimanaUIInit()
 function VimanaUIDoMenuCommand(event)
 {
   let command = event.target.value
-  if ("vimana-list-primfuns" === command)
+  if ("vimana-list-primfuns" == command)
     VimanaUIListPrimFuns()
   else
-  if ("vimana-save-workspace" === command)
+  if ("vimana-save-workspace" == command)
     VimanaUISaveWorkspace()
   else
-  if ("vimana-eval-benchmark" === command)
+  if ("vimana-eval-benchmark" == command)
     VimanaUIEvalBenchmark()
   else
-  if ("vimana-eval-js-benchmark" === command)
+  if ("vimana-eval-js-benchmark" == command)
     VimanaUIRunNativeBenchmark()
   else
-  if ("vimana-reset-workspace" === command)
+  if ("vimana-reset-workspace" == command)
     VimanaUIResetWorkspace()
   else
-  if ("vimana-generate-symbolic-code" === command)
-    VimanaGenerateSymbolicCode()
-  else
-  if ("vimana-open-github" === command)
+  if ("vimana-open-github" == command)
     VimanaUIOpenGitHub()
   else
-  if ("vimana-display-mantra" === command)
+  if ("vimana-display-mantra" == command)
     VimanaUIDisplayMantra()
   else
-  if ("vimana-about" === command)
+  if ("vimana-about" == command)
     VimanaUIAbout()
   let menu = document.querySelector(".vimana-command-menu")
   menu.selectedIndex = 0
@@ -74,16 +71,6 @@ function VimanaUIResetWorkspace()
     localStorage.removeItem(VimanaUIWorkspace)
     VimanaUISelectWorkspace({ target: { value: VimanaUIWorkspace } })
   }
-}
-
-function VimanaGenerateSymbolicCode()
-{
-  VimanaUIPrint("CODE RUNNABLE ON ADRUINO")
-  let code = document.getElementsByTagName("textarea")[0].value
-  let symcode = SymbolDictGenerateSymCode(code)
-  VimanaUIPrint(symcode)
-  window.prompt("Copy to clipboard: Ctrl+C, Enter", symcode)
-  //VimanaUIPrint(SymbolDictGenerateSymCode("1 2 3 'Hi World''Hi'(foo bar) print"))
 }
 
 function VimanaUIClearStack()
@@ -132,14 +119,18 @@ function VimanaUIDisplayMantra()
 
 function VimanaUIAbout()
 {
-  VimanaEval("(My name is Mikael Kindborg. I created Vimana as a hobby project. I have programmed computers for more than 35 years in 35 different programming languages. Vimana encapsulates the essense of several things I like: dynamic typing, code and data have the same format, interactive development, simplicity, few basic constructs, and an easy-to-implement intrepreter.) TOSTRING PRINT")
+  VimanaEval("'I am Mikael. Vimana is my programming language hobby project. I have programmed computers for 40 years in 35 different languages. Vimana encapsulates the essense of several things I like: dynamic typing, code and data have the same format, interactive development, simplicity, few basic constructs, and an easy-to-implement intrepreter' print")
 }
 
-function VimanaUIEvalWorkspace()
+function VimanaUIEval()
 {
   try
   {
-    let code = document.getElementsByTagName("textarea")[0].value
+    let textarea = document.getElementsByTagName("textarea")[0]
+    let code = textarea.value
+    if (textarea.selectionStart < textarea.selectionEnd)
+      code = code.substring(textarea.selectionStart, textarea.selectionEnd)
+
     VimanaEvalAsync(
       code, 
       function() 
@@ -157,27 +148,6 @@ function VimanaUIEvalWorkspace()
   }
 }
 
-function VimanaUIEvalSelection()
-{
-  try
-  {
-    let textArea = document.getElementsByTagName("textarea")[0]
-    let code = textArea.value.substring(textArea.selectionStart, textArea.selectionEnd)
-    VimanaEvalAsync(
-      code, 
-      function() 
-      {
-        VimanaUIPrintStack()
-      })
-  }
-  catch (exception)
-  {
-    console.log("VimanaUIEvalSelection")
-    console.log(exception)
-    VimanaUIPrintException(exception)
-    throw exception
-  }
-}
 function VimanaUIEvalBenchmark()
 {
   VimanaUIPrint("PLEASE WAIT...")
@@ -337,7 +307,7 @@ function VimanaUIRunNativeBenchmarkFact()
 {
   function fact(n)
   {
-    if (n === 0)
+    if (n == 0)
       return 1
     else 
       return n * fact(n - 1)

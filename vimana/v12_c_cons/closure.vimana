@@ -4,7 +4,7 @@ An unconventional closure
 
 (makecounter)
   (0 () cons (dup first 1+ setfirst first) cons) def
-  
+
 makecounter (mycounter) setglobal
 
 mycounter eval print
@@ -32,6 +32,120 @@ makecounter (counter) funify setglobal
 counter print
 counter print
 counter print
+
+/--
+(makecounter)
+  (0 () cons (dup first 1+ setfirst first) cons) def
+
+(makecounter)
+  (0 () cons 
+    (dup dup first 1+ setfirst first) cons funify) def
+
+(makecounter)
+  (0 () cons (2dup first 1+ setfirst first) cons funify) def
+
+[xx]
+[xxx]
+[yx]
+[xyx]
+[yzx]
+[]
+
+[a]
+[b]
+[c]
+[d]
+[ab]
+[abc]
+[abcd]
+
+(makecounter)
+  (0 () cons 
+    ([xxx] first 1+ setfirst first) cons funify) def
+
+(makecounter)
+  (0 () cons 
+    ([a] a a a first 1+ setfirst first) cons funify) def
+
+(makecounter)
+  (0 () cons 
+    (a! a a a first 1+ setfirst first) cons funify) def
+
+(makecounter)
+  (0 () cons 
+    ([a] 
+      a first 1+ [b] 
+      a b setfirst 
+      a first) cons funify) def
+
+(makecounter)
+  (0 () cons (dup first 1+ setfirst first) cons funify) def
+
+(makecounter)
+  ([ [ 0 ] (dup first 1+ setfirst first) ]) def
+
+(makecounter)
+  ([ [ 0 ] (dup first 1+ setfirst first) ] funify) def
+
+(a b add) (a b +) defx
+
+(add) ((a b) => a b +) def
+
+(add) ((a b) set 
+  a b +) def
+
+--> source code should be interpreted unmodified
+should be possible to print and get the same as the source
+no rewriting!
+
+(add) (local (a b) 
+  a b +) defx
+
+(add) ((local a b) 
+  a b +) defx
+
+(add) ((a b) set 
+  a b +) defx
+
+(add) ((vars a b) a b +) defx
+
+(add) ([ab] a b +) def
+
+(add) ([AB] A B +) def
+
+(swap) ([ab] b a) def
+
+(add) (1 set 0 set 0 get 1 get +) def
+
+(add) ([b] [a] a b +) def
+
+Pretty-print ideas:
+
+(fact) 
+  ([a] a iszero (1) 
+    (a 1- fact a *) ifelse) def
+
+(timerRun)
+  ((t) set t timerLastRun t timerInterval + millis < 
+    (t timerLastRunSet t timerCode call) iftrue) def
+
+(timerRun)
+  ([a] a timerLastRun a timerInterval + millis < 
+    (a timerLastRunSet a timerCode call) iftrue) def
+
+(timerRun)
+  ([b] b timerLastRun b timerInterval + millis < 
+    (b timerLastRunSet b timerCode call) iftrue) def
+
+JS counter:
+
+function makecounter() {
+  return (function(n) {
+    return function() { n = n + 1; return n; };
+  })(0);
+}
+
+--/
 
 /--
 

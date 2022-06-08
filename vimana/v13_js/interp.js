@@ -5,15 +5,17 @@
 // mikael@kindborg.com
 //
 
+// TODO: lists, timetorun, strings, token symbols, symbol table, canvas object, save cards, jsbenchmark
+
 // INTERPRETER --------------------------------------------
 
 function VimanaInterp()
 {
   this.primFuns = {}     // primitive functions
-  this.globalEnv = {}    // global vars
+  this.globalVars = {}   // global vars
   this.stack = []        // data stack
   this.stackFrame = null // current stackframe
-  this.speed = 0        // ms delay in eval loop
+  this.speed = 0         // ms delay in eval loop
 }
 
 /*
@@ -63,12 +65,12 @@ VimanaInterp.prototype.popStackFrame = function()
 }
 
 // Lookup symbol in global environment
-VimanaInterp.prototype.evalSymbol = function(obj)
+VimanaInterp.prototype.getGlobalVar = function(symbol)
 {
-  if (obj in this.globalEnv)
-    return this.globalEnv[obj]
+  if (symbol in this.globalVars)
+    return this.globalVars[symbol]
   else
-    return obj
+    return null //symbol
 }
 
 // Eval a list
@@ -105,15 +107,18 @@ VimanaInterp.prototype.evalSlice = function()
     if (typeof(instruction.car) == "string") //"symbol")
     {
       let value = this.evalSymbol(instruction.car)
-      if (value.type == "fun")
+      if (value != null)
       {
-        // Call function
-        this.pushStackFrame(value)
-      }
-      else
-      {
-        // Push value onto data stack
-        this.stack.push(value)
+        if (value.type == "fun")
+        {
+          // Call function
+          this.pushStackFrame(value)
+        }
+        else
+        {
+          // Push value onto data stack
+          this.stack.push(value)
+        }
       }
     }
     else
@@ -384,8 +389,8 @@ function VimanaCallFun(funName, params = [])
     window.VimanaCode.stack.push(params[i])
   }
 
-  // Lookup function in globalEnv
-  let fun = window.VimanaCode.globalEnv[funName]
+  // Lookup function in globalVars
+  let fun = window.VimanaCode.globalVars[funName]
 
   // Call function
   window.VimanaCode.pushContext(fun.code, {})
