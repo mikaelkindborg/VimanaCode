@@ -40,8 +40,11 @@ h2
 {
   margin: 0px;
   padding: 10px 10px;
+  border: 2px solid rgb(208,31,32);
+  border: 2px solid rgb(238,131,0);
   border: 2px solid rgb(255,255,255);
   border-radius: 2px;
+  min-height: 600px;
 }
 
 .vimana-frame

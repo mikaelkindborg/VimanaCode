@@ -32,12 +32,25 @@ class VimanaUI
     this.parser = new VimanaParser()
 
     // Read cards from local storage
-    this.cards = this.readCards()
+    //this.cards = this.readCards()
 
-    // Show home card
-    //this.selectWorkspace({ target: { value: "vimana-workspace-introduction" } })
+    let cardCode = "(VimanaCards) ( (home (home card) print) (addcard 1 2 + print) ) defval"
+    let list = this.parser.parse(cardCode, this.interp)
+    this.interp.eval(list)
+
+    this.showCardFront = true
+    this.commandToggleEditor()
+
+    this.setWorkspaceCode("(VimanaCards) getglobal print")
 
   }
+
+/*
+Det som behövs är att hämta kod till korten
+Sätt en global med en lista med kod för korten
+Typ (VimanaCards) ((card1 ...) (card2 ...)) defval
+Denna källkod sparas i localStorage och kan redigeras.
+*/
 
   readCards()
   {
@@ -45,23 +58,39 @@ class VimanaUI
     let data = localStorage.getItem("VimanaCards")
     if (data)
     {
-      return JSON.parse(data)
+      return data
     }
     else
     {
-      return []
+      return "" 
     }
   }
 
-  saveCards(cards)
+  saveCards(data)
   {
-    localStorage.setItem("VimanaCards", cards)
+    localStorage.setItem("VimanaCards", data)
   }
 
   commandToggleEditor()
   {
-    let menu = document.querySelector(".vimana-command-menu")
-    menu.selectedIndex = 0
+    let front = document.querySelector(".vimana-card-front")
+    let editor = document.querySelector(".vimana-card-editor")
+    let button = document.querySelector(".vimana-toggle-editor")
+
+    this.showCardFront = ! this.showCardFront
+
+    if (this.showCardFront)
+    {
+      front.style.display = "block"
+      editor.style.display = "none"
+      button.innerHTML = "Show Editor"
+    }
+    else
+    {
+      front.style.display = "none"
+      editor.style.display = "block"
+      button.innerHTML = "Hide Editor"
+    }
   }
 
   commandPrint(obj)
@@ -164,11 +193,15 @@ class VimanaUI
       this.commandPrintException(exception)
     }
   }
-
-  commandShowCard3()
+  
+  setWorkspaceCode(code)
   {
+    let codeArea = document.getElementsByTagName("textarea")[0]
+    codeArea.value = code
+    codeArea.scrollTop = 0
   }
 
+/*
   selectWorkspace(event)
   {
     window.VimanaUIWorkspace = event.target.value
@@ -201,7 +234,7 @@ class VimanaUI
       VimanaUISelectWorkspace({ target: { value: VimanaUIWorkspace } })
     }
   }
-
+*/
   commandClearStack()
   {
     this.interp.dataStack = []

@@ -197,6 +197,9 @@ class VimanaInterp
     }
   }
 
+/*
+TODO: Use eval instead of this hack!
+
   // CALL FUNCTION FROM JS --------------------------------
     
   // Call function in Vimana
@@ -215,6 +218,7 @@ class VimanaInterp
     // no other code may be evaluated at the same time!
     this.pushFirstStackFrame(fun.code)
   }
+*/
 
   // PRINTING ---------------------------------------------
 
