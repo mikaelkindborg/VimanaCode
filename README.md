@@ -288,4 +288,4 @@ Current code size (2021-05-21):
 
 License: Creative Commons: Attribution-ShareAlike - CC BY-SA
 
-(I view this as an art project and not a software project, and I enjoy being a rebel, thus my choise of license ;)
+I view VimanaCode as an art project.
