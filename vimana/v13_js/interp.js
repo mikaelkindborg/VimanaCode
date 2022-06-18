@@ -5,7 +5,7 @@
 // mikael@kindborg.com
 //
 
-// TODO: lists, timetorun, strings, token symbols, symbol table, canvas object, save cards, jsbenchmark
+// TODO: lists, strings, token symbols, symbol table, canvas object, save cards, jsbenchmark
 
 // INTERPRETER --------------------------------------------
   
@@ -140,7 +140,7 @@ class VimanaInterp
         // Call primfun
         instruction.car(this)
       }
-      else if (typeof (instruction.car) == "string") //"symbol")
+      else if (typeof (instruction.car) == "symbol")
       {
         let value = this.getGlobalVar(instruction.car)
         if (value != null) {
@@ -230,7 +230,7 @@ TODO: Use eval instead of this hack!
     else if (typeof (obj) == "function")
       return "[PrimFun]"
     else if (typeof (obj) == "symbol")
-      return "[Symbol]"
+      return Symbol.keyFor(obj) //"[Symbol]"
     else
       return obj.toString()
   }

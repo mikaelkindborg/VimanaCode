@@ -9,113 +9,71 @@
 
 class VimanaParser
 {
-  constructor()
-  {
-    this.pos = 0
-  }
-
   // Parse a string and return a list
   parse(code, interp) 
   {
     code = this.stripComments(code)
-    this.pos = 0
-    return this.parseList(code, interp)
+
+    code = code.replaceAll("(", " ( ")
+    code = code.replaceAll(")", " ) ")
+    code = code.replaceAll("\n", " ")
+    code = code.replaceAll("\r", " ")
+    code = code.replaceAll("\t", " ")
+
+    let tokens = code.split(" ")
+    //$tokens = array_filter($tokens,
+    //  function($token) { return strlen($token) > 0 })
+    let list = this.parseTokens(tokens, interp)
+
+    return list
   }
 
-  parseList(code, interp) 
+  // Recursively create the list tree structure
+  parseTokens(tokens, interp) 
   {
     let first = { car: null, cdr: null } // temporary head item
     let item = first
     let value = null
 
-    while (this.pos < code.length)
+    while (true) 
     {
-      let char = code[this.pos]
-
-      if (this.isWhiteSpace(char))
+      if (tokens.length === 0)
       {
-        // Skip whitespace
-        this.pos ++
+        return first.cdr
+      }
+
+      let token = tokens.shift().trim()
+
+      if (token === "") 
+      {
         continue
       }
-      else
-      if (char == "(")
-      {
-        // Parse child list
-        this.pos ++
-        value = this.parseList(code, interp)
-      }
-      else if (char == ")")
-      {
-        break // done parsing child list
-      }
-      else if (char == "'")
-      {
-        // Parse string
-        this.pos ++
-        value = this.parseString(code)
-      }
-      else
-      {
-        // Get token
-        value = this.parseToken(code)
 
-        if (isFinite(value)) 
-        {
-          value = value * 1 // Convert string to number
-        }
-        else if (value in interp.primFuns) 
-        {
-          value = interp.primFuns[value]
-        }
-        else
-        {
-          value = Symbol.for(value)
-        }
+      if (token === ")") 
+      {
+        return first.cdr
       }
 
-      // Add value to list
+      if (token === "(") 
+      {
+        value = this.parseTokens(tokens, interp)
+      }
+      else if (isFinite(token)) 
+      {
+        value = token * 1 // Convert string to number
+      }
+      else if (token in interp.primFuns) 
+      {
+        value = interp.primFuns[token]
+      }
+      else 
+      {
+        value = token
+      }
+
       item.cdr = { car: value, cdr: null }
       item = item.cdr
     }
-
-    return first.cdr
-  }
-
-  isWhiteSpace(char) 
-  {
-    return char == " " || char == "\n" || char == "\r" || char == "\t" 
-  }
-
-  parseString(code) 
-  {
-    let result = ""
-
-    let char = code[this.pos]
-    while (char != "'" && this.pos < code.length)
-    {
-      result += char
-      this.pos ++
-      char = code[this.pos]
-    }
-
-    this.pos ++
-    return result
-  }
-
-  parseToken(code) 
-  {
-    let result = ""
-
-    let char = code[this.pos]
-    while (! this.isWhiteSpace(char) && this.pos < code.length)
-    {
-      result += char
-      this.pos ++
-      char = code[this.pos]
-    }
-
-    return result
   }
 
   // Remove /-- Vimana comments --/ from the code
