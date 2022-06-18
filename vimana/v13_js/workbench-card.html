@@ -16,47 +16,62 @@
   <div class="vimana-ui">
 
     <div class="vimana-button-bar">
-      <a class="vimana-button" onclick="VimanaUIEval()" href="javascript:void(0)">Eval</a>
-      <a class="vimana-button" onclick="VimanaUISave()" href="javascript:void(0)">Save</a>
-      <a class="vimana-button" onclick="VimanaUIPrintStack()" href="javascript:void(0)">Show Stack</a>
-      <a class="vimana-button" onclick="VimanaUIClearStack()" href="javascript:void(0)">Clear Stack</a>
-      <a class="vimana-button" onclick="VimanaUIClearOutput()" href="javascript:void(0)">Clear Output</a>
-
-      <select class="vimana-dropdown-menu vimana-command-menu" onchange="VimanaUIDoMenuCommand(event)">
-        <option value="vimana-menu">Navigate</option>
-        <option disabled>----------------</option>
-        <option value="vimana-card-1">Card 1</option>
-        <option value="vimana-card-1">Card 2</option>
-        <option value="vimana-card-1">Card 3</option>
-        <option value="vimana-card-1">Card 4</option>
-        <option disabled>----------------</option>
-        <option value="vimana-list-primfuns">List PrimFuns</option>
-        <!--<option value="vimana-eval-js-benchmark">Eval JS fib(37)</option>-->
-        <option value="vimana-reset-workspace">Restore Card</option>
-        <option value="vimana-open-github">GitHub</option>
-        <option value="vimana-about">About</option>
-      </select>
+      <a class="vimana-button" onclick="TheVimanaUI.commandHome()" href="javascript:void(0)">Home</a>
+      <a class="vimana-button" onclick="TheVimanaUI.commandPrevCard()" href="javascript:void(0)">Prev</a>
+      <a class="vimana-button" onclick="TheVimanaUI.commandNextCard()" href="javascript:void(0)">Next</a>
+      <a class="vimana-button" onclick="TheVimanaUI.commandToggleEditor()" href="javascript:void(0)">Show Editor</a>
     </div>
-
-    <div class="vimana-stack">
+<!--
+      <select class="vimana-dropdown-menu vimana-command-menu" onchange="TheVimanaUI.doMenuCommand(event)">
+        <option value="commandMenu">Navigate</option>
+        <option disabled>----------------</option>
+        <option value="commandShowCard1">Card 1</option>
+        <option value="commandShowCard2">Card 2</option>
+        <option value="commandShowCard3">Card 3</option>
+        <option value="commandShowCard4">Card 4</option>
+        <option disabled>----------------</option>
+        <option value="commandListPrimFuns">List PrimFuns</option>
+        <option value="vimana-eval-js-benchmark">Eval JS fib(37)</option>
+        <option value="commandResetWorkspace">Restore Card</option>
+        <option value="commandOpenGithub">GitHub</option>
+        <option value="commandAbout">About</option>
+      </select>
+-->
 
       <div class="vimana-card">
-        <div class="vimana-frame vimana-frame-code">
-          <textarea spellcheck="false"></textarea>
+
+        <div class="vimana-card-front">
         </div>
 
-        <div class="vimana-frame vimana-frame-output">
-          <textarea spellcheck="false"></textarea>
-        </div>
+        <div class="vimana-card-editor">
+          <div class="vimana-frame vimana-frame-code">
+            <textarea spellcheck="false"></textarea>
+          </div>
 
+          <div class="vimana-button-bar">
+            <a class="vimana-button" onclick="TheVimanaUI.commandEvalAsync()" href="javascript:void(0)">Eval</a>
+            <!--
+            <a class="vimana-button" onclick="TheVimanaUI.commandSave()" href="javascript:void(0)">Save</a>
+            <a class="vimana-button" onclick="TheVimanaUI.commandPrintStack()" href="javascript:void(0)">Show Stack</a>
+            -->
+            <a class="vimana-button" onclick="TheVimanaUI.commandClearStack()" href="javascript:void(0)">Clear Stack</a>
+            <a class="vimana-button" onclick="TheVimanaUI.commandClearOutput()" href="javascript:void(0)">Clear Output</a>
+          </div>
+
+          <div class="vimana-frame vimana-frame-output">
+            <textarea spellcheck="false"></textarea>
+          </div>
+        </div>
+<!--
         <canvas id="vimana-canvas" width="100%" height="600px"></canvas>
+-->
       </div>
 
     </div>
 
-  </div>
 
   <script src="interp.js"></script>
+  <script src="parser.js"></script>
   <script src="primfuns.js"></script>
   <xscript src="symcodegen.js"></xscript>
   <script src="workbench.js"></script>

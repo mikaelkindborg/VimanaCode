@@ -36,12 +36,20 @@ h2
   font-size: 150%;
 }
 
+.vimana-card
+{
+  margin: 0px;
+  padding: 10px 10px;
+  border: 2px solid rgb(255,255,255);
+  border-radius: 2px;
+}
+
 .vimana-frame
 {
-  margin: 10px 0 0 0;
+  margin: 0;
   padding: 6px;
-  border: 3px solid rgb(255,138,0);
-  border: 2px solid rgb(238,131,0);
+  /*border: 3px solid rgb(255,138,0);*/
+  /*border: 2px solid rgb(238,131,0);*/
   border-radius: 2px;
 }
 
@@ -60,7 +68,7 @@ h2
 .vimana-frame-output, 
 .vimana-frame-output textarea
 {
-  background-color: rgb(0,85,173);
+  /*background-color: rgb(0,85,173);*/
   background-color: rgb(5, 100, 202);
 }
 .vimana-frame-output textarea

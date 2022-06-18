@@ -5,207 +5,288 @@
 // mikael@kindborg.com
 //
 
-VimanaUIInit()
 
-function VimanaUIInit()
-{
-  VimanaInit()
-  VimanaInterp.prototype.print = VimanaUIPrint
-  VimanaUISelectWorkspace({ target: { value: "vimana-workspace-introduction" } })
-}
+/*
+(fib) ([xx] 1 > ([xx] 1 - fib [yx] 2 - fib +) iftrue) def
 
-function VimanaUIDoMenuCommand(event)
-{
-  let command = event.target.value
-  if ("vimana-list-primfuns" == command)
-    VimanaUIListPrimFuns()
-  else
-  if ("vimana-save-workspace" == command)
-    VimanaUISaveWorkspace()
-  else
-  if ("vimana-eval-benchmark" == command)
-    VimanaUIEvalBenchmark()
-  else
-  if ("vimana-eval-js-benchmark" == command)
-    VimanaUIRunNativeBenchmark()
-  else
-  if ("vimana-reset-workspace" == command)
-    VimanaUIResetWorkspace()
-  else
-  if ("vimana-open-github" == command)
-    VimanaUIOpenGitHub()
-  else
-  if ("vimana-display-mantra" == command)
-    VimanaUIDisplayMantra()
-  else
-  if ("vimana-about" == command)
-    VimanaUIAbout()
-  let menu = document.querySelector(".vimana-command-menu")
-  menu.selectedIndex = 0
-}
+37 fib
 
-function VimanaUISelectWorkspace(event)
-{
-  window.VimanaUIWorkspace = event.target.value
-  let storedWorkspaceCode = localStorage.getItem(VimanaUIWorkspace)
-  let codeArea = document.getElementsByTagName("textarea")[0]
-  if (storedWorkspaceCode)
-    codeArea.value = storedWorkspaceCode 
-  else
-    codeArea.value = document.querySelector("." + VimanaUIWorkspace).textContent
-  codeArea.scrollTop = 0
-}
+(fib) ([xx] 1 > ([xx] 1- fib [yx] 2- fib +) iftrue) def
+10 fib
 
-function VimanaUISaveWorkspace()
-{
-  let codeArea = document.getElementsByTagName("textarea")[0]
-  localStorage.setItem(VimanaUIWorkspace, codeArea.value)
-  VimanaUIPrint("Workspace Saved")
-}
+(37 fib) timetorun print
 
-function VimanaUIResetWorkspace()
+*/
+
+class VimanaUI
 {
-  let yes = window.confirm("This will cause any edits you have made in this workspace to be lost. Do you wish to proceed?")
-  if (yes) 
+  constructor()
   {
-    localStorage.removeItem(VimanaUIWorkspace)
-    VimanaUISelectWorkspace({ target: { value: VimanaUIWorkspace } })
+    // Create interpeter
+    this.interp = new VimanaInterp()
+
+    // Create primitive functions
+    VimanaDefinePrimFuns(this.interp)
+
+    // Create parser
+    this.parser = new VimanaParser()
+
+    // Read cards from local storage
+    this.cards = this.readCards()
+
+    // Show home card
+    //this.selectWorkspace({ target: { value: "vimana-workspace-introduction" } })
+
   }
-}
 
-function VimanaUIClearStack()
-{
-  window.VimanaCode.stack = []
-  VimanaUIPrintStack()
-}
-
-function VimanaUIClearOutput()
-{
-  document.getElementsByTagName("textarea")[1].value = ""
-}
-
-function VimanaUIListPrimFuns()
-{
-  VimanaUIPrint("BUILT-IN FUNCTIONS:")
-  let primFuns = window.VimanaCode.primFuns
-  for (let key in primFuns)
+  readCards()
   {
-    VimanaUIPrint(key)
+    // Read cards from local storage
+    let data = localStorage.getItem("VimanaCards")
+    if (data)
+    {
+      return JSON.parse(data)
+    }
+    else
+    {
+      return []
+    }
   }
-}
 
-function VimanaUIOpenGitHub()
-{
-  window.location.href = "https://github.com/mikaelkindborg/VimanaCode"
-}
-
-function VimanaUIDisplayMantra()
-{
-  VimanaEval(`
-    ((I am conscious) 
-     (I am present) 
-     (I exist here and now)
-     (I sense the air that surrounds me)
-     (I follow my breath)
-     (I feel my feet in contact with the ground)
-     (I sense the gravity of the Earth)
-     (I am aware of where I am and what time it is))
-    (MANTRA-LIST) SET 
-    MANTRA-LIST LENGTH RANDOM
-      MANTRA-LIST GETAT 
-        TOSTRING PRINT
-  `)
-}
-
-function VimanaUIAbout()
-{
-  VimanaEval("'I am Mikael. Vimana is my programming language hobby project. I have programmed computers for 40 years in 35 different languages. Vimana encapsulates the essense of several things I like: dynamic typing, code and data have the same format, interactive development, simplicity, few basic constructs, and an easy-to-implement intrepreter' print")
-}
-
-function VimanaUIEval()
-{
-  try
+  saveCards(cards)
   {
-    let textarea = document.getElementsByTagName("textarea")[0]
-    let code = textarea.value
-    if (textarea.selectionStart < textarea.selectionEnd)
-      code = code.substring(textarea.selectionStart, textarea.selectionEnd)
-
-    VimanaEvalAsync(
-      code, 
-      function() 
-      {
-        //VimanaUIPrint("DONE")
-        VimanaUIPrintStack()
-      })
+    localStorage.setItem("VimanaCards", cards)
   }
-  catch (exception)
+
+  commandToggleEditor()
   {
-    console.log("VimanaUIEvalWorkspace")
-    console.log(exception)
-    VimanaUIPrintException(exception)
-    throw exception
+    let menu = document.querySelector(".vimana-command-menu")
+    menu.selectedIndex = 0
   }
-}
 
-function VimanaUIEvalBenchmark()
-{
-  VimanaUIPrint("PLEASE WAIT...")
-  setTimeout(function() {
+  commandPrint(obj)
+  {
+    let output = document.getElementsByTagName("textarea")[1]
+    if (output.value.length > 0)
+    {
+      output.value = output.value + "\n" + this.interp.prettyPrint(obj) //obj.toString()
+    }
+    else
+    {
+      output.value = this.interp.prettyPrint(obj) //obj.toString()
+    }
+    //output.insertAdjacentHTML("beforeend", obj.toString() + "\n")
+    output.scrollTop = output.scrollHeight;
+  }
+
+  commandPrintStack()
+  {
+    this.commandPrint("STACK: " + this.interp.prettyPrintStack())
+  }
+
+  commandPrintException(exception)
+  {
+    this.commandPrint(exception)
+
+    /*
+    // TODO: Fix this code!
+    let interp = window.VimanaCode
+    let context = interp.callstack[interp.callstackIndex]
+    if (context && context.codePointer)
+    {
+      let index = context.codePointer
+      let array = Array.from(context.code.items)
+      array.splice(index, 0, "ERROR HERE >>>>")
+      VimanaUIPrint("CODE: " + JSON.stringify(array))
+      VimanaUIPrint("CONTEXT: " + JSON.stringify(context))
+    }
+    */
+  }
+
+  doMenuCommand(event)
+  {
+    let command = event.target.value
+    this[command]()
+
+    let menu = document.querySelector(".vimana-command-menu")
+    menu.selectedIndex = 0
+  }
+
+  commandEvalAsync()
+  {
     try
     {
-      let code = document.getElementsByTagName("textarea")[0].value
-      let t0 = performance.now()
-      VimanaEval(code)
-      let t1 = performance.now()
-      VimanaUIPrint("TIME: " + ((t1 - t0) / 1000) + "s")
+      let textarea = document.getElementsByTagName("textarea")[0]
+
+      let code = textarea.value
+      if (textarea.selectionStart < textarea.selectionEnd)
+      {
+        code = code.substring(textarea.selectionStart, textarea.selectionEnd)
+      }
+
+      let list = this.parser.parse(code, this.interp)
+      let ui = this // for the closure below
+      this.interp.evalAsync(
+        list,
+        function()
+        {
+          ui.commandPrintStack()
+        })
     }
     catch (exception)
     {
-      console.log("FOOBAR")
+      console.log("EXCEPTION:")
       console.log(exception)
-      VimanaUIPrintException(exception)
-      throw exception
+      this.commandPrintException(exception)
     }
-  }, 100)
+  }
+
+  commandEval()
+  {
+    try
+    {
+      let textarea = document.getElementsByTagName("textarea")[0]
+
+      let code = textarea.value
+      if (textarea.selectionStart < textarea.selectionEnd)
+      {
+        code = code.substring(textarea.selectionStart, textarea.selectionEnd)
+      }
+
+      let list = this.parser.parse(code, this.interp)
+      this.interp.eval(list)
+      this.commandPrintStack()
+    }
+    catch (exception)
+    {
+      console.log("EXCEPTION:")
+      console.log(exception)
+      this.commandPrintException(exception)
+    }
+  }
+
+  commandShowCard3()
+  {
+  }
+
+  selectWorkspace(event)
+  {
+    window.VimanaUIWorkspace = event.target.value
+    let storedWorkspaceCode = localStorage.getItem(VimanaUIWorkspace)
+    let codeArea = document.getElementsByTagName("textarea")[0]
+    if (storedWorkspaceCode)
+    {
+      codeArea.value = storedWorkspaceCode 
+    }
+    else
+    {
+      codeArea.value = document.querySelector("." + VimanaUIWorkspace).textContent
+    }
+    codeArea.scrollTop = 0
+  }
+
+  commandSaveWorkspace()
+  {
+    let codeArea = document.getElementsByTagName("textarea")[0]
+    localStorage.setItem(VimanaUIWorkspace, codeArea.value)
+    VimanaUIPrint("Workspace Saved")
+  }
+
+  commandResetWorkspace()
+  {
+    let yes = window.confirm("This will cause any edits you have made in this workspace to be lost. Do you wish to proceed?")
+    if (yes) 
+    {
+      localStorage.removeItem(VimanaUIWorkspace)
+      VimanaUISelectWorkspace({ target: { value: VimanaUIWorkspace } })
+    }
+  }
+
+  commandClearStack()
+  {
+    this.interp.dataStack = []
+    this.commandPrintStack()
+  }
+
+  commandClearOutput()
+  {
+    document.getElementsByTagName("textarea")[1].value = ""
+  }
+
+  commandListPrimFuns()
+  {
+    VimanaUIPrint("BUILT-IN FUNCTIONS:")
+    let primFuns = window.VimanaCode.primFuns
+    for (let key in primFuns)
+    {
+      VimanaUIPrint(key)
+    }
+  }
+
+  commandOpenGitHub()
+  {
+    window.location.href = "https://github.com/mikaelkindborg/VimanaCode"
+  }
+/*
+  commandDisplayMantra()
+  {
+    VimanaEval(`
+      ((I am conscious) 
+      (I am present) 
+      (I exist here and now)
+      (I sense the air that surrounds me)
+      (I follow my breath)
+      (I feel my feet in contact with the ground)
+      (I sense the gravity of the Earth)
+      (I am aware of where I am and what time it is))
+      (MANTRA-LIST) SET 
+      MANTRA-LIST LENGTH RANDOM
+        MANTRA-LIST GETAT 
+          TOSTRING PRINT
+    `)
+  }
+*/
+
+  commandAbout()
+  {
+    VimanaEval("'I am Mikael. Vimana is my programming language hobby project. I have programmed computers for 40 years in 35 different languages. Vimana encapsulates the essense of several things I like: dynamic typing, code and data have the same format, interactive development, simplicity, few basic constructs, and an easy-to-implement intrepreter' print")
+  }
+
+/*
+  commandEvalBenchmark()
+  {
+    VimanaUIPrint("PLEASE WAIT...")
+    setTimeout(function() {
+      try
+      {
+        let code = document.getElementsByTagName("textarea")[0].value
+        let t0 = performance.now()
+        VimanaEval(code)
+        let t1 = performance.now()
+        VimanaUIPrint("TIME: " + ((t1 - t0) / 1000) + "s")
+      }
+      catch (exception)
+      {
+        console.log("FOOBAR")
+        console.log(exception)
+        VimanaUIPrintException(exception)
+        throw exception
+      }
+    }, 100)
+  }
+*/
 }
 
-function VimanaUIPrint(obj)
-{
-  let output = document.getElementsByTagName("textarea")[1]
-  if (output.value.length > 0)
-  {
-    output.value = output.value + "\n" + window.VimanaCode.prettyPrint(obj) //obj.toString()
-  }
-  else
-  {
-    output.value = window.VimanaCode.prettyPrint(obj) //obj.toString()
-  }
-  //output.insertAdjacentHTML("beforeend", obj.toString() + "\n")
-  output.scrollTop = output.scrollHeight;
-}
+// Create global UI instance
+window.TheVimanaUI = new VimanaUI()
 
-function VimanaUIPrintStack()
-{
-  VimanaUIPrint("STACK: " + window.VimanaCode.prettyPrintStack()) //JSON.stringify(window.VimanaCode.stack))
-}
 
-function VimanaUIPrintException(exception)
-{
-  VimanaUIPrint(exception)
-  /*
-  let interp = window.VimanaCode
-  let context = interp.callstack[interp.callstackIndex]
-  if (context && context.codePointer)
-  {
-    let index = context.codePointer
-    let array = Array.from(context.code.items)
-    array.splice(index, 0, "ERROR HERE >>>>")
-    VimanaUIPrint("CODE: " + JSON.stringify(array))
-    VimanaUIPrint("CONTEXT: " + JSON.stringify(context))
-  }
-  */
-}
+
+
+
+
+
+//---------------------------------------------------------
 
 /*
   let code =
@@ -285,7 +366,7 @@ function VimanaUIPrintException(exception)
   // 210620
   // 0.9001000000005588s
 
-
+/*
 function VimanaUIRunNativeBenchmark()
 {
   function fib(n)
@@ -405,6 +486,7 @@ function VimanaUIRunBenchmarkConsFunObj()
 
   VimanaUIPrint("TIME CONS FUNOBJ: " + ((t2 - t1) / 1000) + "s")
 }
+*/
 
 /*
 INCREDIBLY SLOW
@@ -494,6 +576,7 @@ String (js string)
 Symbol (js symbol)
 */
 
+/*
 function VimanaUIRunBenchmarkPlainArray()
 {
   let t1 = performance.now()
@@ -532,3 +615,4 @@ function tossDice()
 {
   return Math.floor(Math.random() * 6) + 1
 }
+*/
