@@ -39,7 +39,8 @@ counter print
 
 (makecounter)
   (0 () cons 
-    (dup dup first 1+ setfirst first) cons funify) def
+    (dup dup first 1+ setfirst first) cons 
+      funify) def
 
 (makecounter)
   (0 () cons (2dup first 1+ setfirst first) cons funify) def
@@ -61,7 +62,8 @@ counter print
 
 (makecounter)
   (0 () cons 
-    ([xxx] first 1+ setfirst first) cons funify) def
+    ([xxx] first 1+ setfirst first) cons 
+      funify) def
 
 (makecounter)
   (0 () cons 
@@ -98,6 +100,8 @@ counter print
 should be possible to print and get the same as the source
 no rewriting!
 
+symbol markAsLocalVar
+
 (add) (local (a b) 
   a b +) defx
 
@@ -111,8 +115,6 @@ no rewriting!
 
 (add) ([ab] a b +) def
 
-(add) ([AB] A B +) def
-
 (swap) ([ab] b a) def
 
 (add) (1 set 0 set 0 get 1 get +) def
@@ -124,6 +126,10 @@ Pretty-print ideas:
 (fact) 
   ([a] a iszero (1) 
     (a 1- fact a *) ifelse) def
+
+(timerRun)
+  (r1! r1 timerLastRun r1 timerInterval + millis < 
+    (r1 timerLastRunSet r1 timerCode call) iftrue) def
 
 (timerRun)
   ((t) set t timerLastRun t timerInterval + millis < 
