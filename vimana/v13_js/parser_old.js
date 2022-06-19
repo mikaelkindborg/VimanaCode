@@ -21,10 +21,11 @@ class VimanaParser
     code = code.replaceAll("\t", " ")
 
     let tokens = code.split(" ")
+    console.log(tokens)
     //$tokens = array_filter($tokens,
     //  function($token) { return strlen($token) > 0 })
     let list = this.parseTokens(tokens, interp)
-
+    console.log(list)
     return list
   }
 
@@ -39,6 +40,7 @@ class VimanaParser
     {
       if (tokens.length === 0)
       {
+        //console.log(first)
         return first.cdr
       }
 
@@ -51,11 +53,13 @@ class VimanaParser
 
       if (token === ")") 
       {
+        //console.log(first)
         return first.cdr
       }
 
       if (token === "(") 
       {
+        //console.log("PARSE CHILD LIST")
         value = this.parseTokens(tokens, interp)
       }
       else if (isFinite(token)) 

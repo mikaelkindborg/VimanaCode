@@ -17,9 +17,11 @@ class VimanaParser
   // Parse a string and return a list
   parse(code, interp) 
   {
-    code = this.stripComments(code)
+    code = this.stripComments(code, interp)
     this.pos = 0
-    return this.parseList(code, interp)
+    let list = this.parseList(code, interp)
+    console.log(list)
+    return list
   }
 
   parseList(code, interp) 
@@ -39,17 +41,18 @@ class VimanaParser
         continue
       }
       else
-      if (char == "(")
+      if ("(" === char)
       {
         // Parse child list
         this.pos ++
         value = this.parseList(code, interp)
       }
-      else if (char == ")")
+      else if (")" === char)
       {
+        this.pos ++
         break // done parsing child list
       }
-      else if (char == "'")
+      else if ("'" === char)
       {
         // Parse string
         this.pos ++
@@ -78,13 +81,18 @@ class VimanaParser
       item.cdr = { car: value, cdr: null }
       item = item.cdr
     }
-
+    
     return first.cdr
   }
 
   isWhiteSpace(char) 
   {
-    return char == " " || char == "\n" || char == "\r" || char == "\t" 
+    return " " === char || "\n" === char || "\r" === char || "\t" === char 
+  }
+
+  isWhiteSpaceOrParen(char) 
+  {
+    return "(" === char || ")" === char || this.isWhiteSpace(char)
   }
 
   parseString(code) 
@@ -108,19 +116,58 @@ class VimanaParser
     let result = ""
 
     let char = code[this.pos]
-    while (! this.isWhiteSpace(char) && this.pos < code.length)
+    while (! this.isWhiteSpaceOrParen(char) && this.pos < code.length)
     {
       result += char
       this.pos ++
       char = code[this.pos]
     }
 
+    this.pos ++
     return result
   }
 
+  stripComments(code, interp) 
+  {
+    let commentLevel = 0
+    let pos = 0
+    let result = ""
+
+    while (pos < code.length) 
+    {
+      if ("/--" === code.substr(pos, pos + 3))
+      {
+        commentLevel ++
+        pos += 3
+      }
+
+      if ("--/" === code.substr(pos, pos + 3))
+      {
+        commentLevel --
+        pos += 3
+      }
+
+      if (commentLevel < 0)
+      {
+        interp.error("Unbalanced end comment")
+      }
+
+      if (0 === commentLevel)
+      {
+        result += code[pos]
+      }
+      
+      pos ++
+    }
+
+    return result
+  }
+
+/*
   // Remove /-- Vimana comments --/ from the code
   // Allow nested comments (not supported in VimanaC)
-  stripComments(code) 
+  // TODO: Rewrite/simplify
+  OLD_stripComments(code) 
   {
     let index = 0
     let start = 0
@@ -172,4 +219,6 @@ class VimanaParser
 
     return result
   }
+*/
+
 }

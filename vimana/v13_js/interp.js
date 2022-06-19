@@ -16,6 +16,7 @@ class VimanaInterp
   constructor() 
   {
     this.primFuns = {} // primitive functions
+    this.primFunNames = {} // primfun name lookup
     this.globalVars = {} // global vars
     this.dataStack = [] // data stack
     this.stackFrame = null // top stackframe of callstack
@@ -28,6 +29,7 @@ class VimanaInterp
   defPrimFun(name, fun) 
   {
     this.primFuns[name] = fun
+    this.primFunNames[fun] = name
   }
 
   // DATA STACK -------------------------------------------
@@ -54,7 +56,7 @@ class VimanaInterp
   pushStackFrame(list) 
   {
     // Check tail call
-    if (this.stackFrame.car === null) 
+    if (null === this.stackFrame.car) 
     {
       // Tailcall: Reuse current stackframe
       this.stackFrame.car = list
@@ -82,9 +84,13 @@ class VimanaInterp
   getGlobalVar(symbol) 
   {
     if (symbol in this.globalVars)
+    {
       return this.globalVars[symbol]
+    }
     else
+    {
       return null
+    }
   }
 
   // Set global variable
@@ -94,20 +100,7 @@ class VimanaInterp
   }
 
   // INTERPRETER LOOP -------------------------------------
-/*
-  // Eval a list
-  eval(list) 
-  {
-    // Push root stackframe
-    this.pushFirstStackFrame(list)
 
-    // Eval loop
-    while (null !== this.stackFrame) 
-    {
-      this.evalSlice()
-    }
-  }
-*/
   // Eval a list
   eval(list) 
   {
@@ -135,16 +128,17 @@ class VimanaInterp
       // Advance instruction pointer for next loop
       stackFrame.car = instruction.cdr
 
-      if (typeof (instruction.car) == "function") 
+      if ("function" === typeof (instruction.car)) 
       {
         // Call primfun
         instruction.car(this)
       }
-      else if (typeof (instruction.car) == "symbol")
+      else if ("symbol" === typeof (instruction.car))
       {
         let value = this.getGlobalVar(instruction.car)
-        if (value != null) {
-          if (value.type == "fun") 
+        if (value != null) 
+        {
+          if ("fun" === value.type) 
           {
             // Call function
             this.pushStackFrame(value)
@@ -197,42 +191,27 @@ class VimanaInterp
     }
   }
 
-/*
-TODO: Use eval instead of this hack!
-
-  // CALL FUNCTION FROM JS --------------------------------
-    
-  // Call function in Vimana
-  callFun(funName, params = [])
-  {
-    // Push params on stack (note the order)
-    for (let i = params.length - 1; i > -1; -- i)
-    {
-      this.pushStack(params[i])
-    }
-
-    // Lookup function in globalVars
-    let fun = this.globalVars[funName]
-
-    // Call function - note the use of pushFirstStackFrame,
-    // no other code may be evaluated at the same time!
-    this.pushFirstStackFrame(fun.code)
-  }
-*/
-
   // PRINTING ---------------------------------------------
 
   // Returns string
   prettyPrint(obj) 
   {
-    if (typeof (obj) == "object")
+    if ("object" === typeof (obj))
+    {
       return this.prettyPrintList(obj)
-    else if (typeof (obj) == "function")
-      return "[PrimFun]"
-    else if (typeof (obj) == "symbol")
-      return Symbol.keyFor(obj) //"[Symbol]"
+    }
+    else if ("function" === typeof (obj))
+    {
+      return this.primFunNames[obj]
+    }
+    else if ("symbol" === typeof (obj))
+    {
+      return Symbol.keyFor(obj)
+    }
     else
+    {
       return obj.toString()
+    }
   }
 
   // Returns string
@@ -279,6 +258,31 @@ TODO: Use eval instead of this hack!
   mustBeList(list, errorMessage) 
   {
     if (typeof (list) != "object")
+    {
       this.error(errorMessage)
+    }
   }
 }
+
+/*
+TODO: Remove - Use eval instead of this hack!
+
+  // CALL FUNCTION FROM JS --------------------------------
+    
+  // Call function in Vimana
+  callFun(funName, params = [])
+  {
+    // Push params on stack (note the order)
+    for (let i = params.length - 1; i > -1; -- i)
+    {
+      this.pushStack(params[i])
+    }
+
+    // Lookup function in globalVars
+    let fun = this.globalVars[funName]
+
+    // Call function - note the use of pushFirstStackFrame,
+    // no other code may be evaluated at the same time!
+    this.pushFirstStackFrame(fun.code)
+  }
+*/

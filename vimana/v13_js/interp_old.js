@@ -42,7 +42,7 @@ VimanaInterp.prototype.pushFirstStackFrame = function(list)
 VimanaInterp.prototype.pushStackFrame = function(list)
 {
   // Check tail call
-  if (this.stackFrame.car === null)
+  if (null === this.stackFrame.car)
   {
     // Tailcall: Reuse current stackframe
     this.stackFrame.car = list
