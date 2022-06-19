@@ -23,7 +23,7 @@ function VimanaDefinePrimFuns(interp)
   {
     interp.pushStackFrame(list)
   })
-  let call = interp.primFuns["call"]
+  let call = interp.getPrimFunWithName("call")
 
   // list timetorun -> seconds
   interp.defPrimFun("timetorun", function(interp)
@@ -46,7 +46,7 @@ function VimanaDefinePrimFuns(interp)
   {
     interp.popStack()
   })
-  let drop = interp.primFuns["drop"]
+  let drop = interp.getPrimFunWithName("drop")
 
   // a dup -> a a
   interp.defPrimFun("dup", function(interp)
@@ -55,7 +55,7 @@ function VimanaDefinePrimFuns(interp)
     interp.pushStack(a)
     interp.pushStack(a)
   })
-  let dup = interp.primFuns["dup"]
+  let dup = interp.getPrimFunWithName("dup")
 
   // a 2dup -> a a a
   interp.defPrimFun("2dup", function(interp)
@@ -63,7 +63,7 @@ function VimanaDefinePrimFuns(interp)
     dup()
     dup()
   })
-  let dupdup = interp.primFuns["2dup"]
+  let dupdup = interp.getPrimFunWithName("2dup")
 
   // a b swap -> b a
   interp.defPrimFun("swap", function(interp)
@@ -73,7 +73,7 @@ function VimanaDefinePrimFuns(interp)
     interp.pushStack(b)
     interp.pushStack(a)
   })
-  let swap = interp.primFuns["swap"]
+  let swap = interp.getPrimFunWithName("swap")
 
   // a b over -> a b a
   interp.defPrimFun("over", function(interp)
@@ -84,7 +84,7 @@ function VimanaDefinePrimFuns(interp)
     interp.pushStack(b)
     interp.pushStack(a)
   })
-  let over = interp.primFuns["over"]
+  let over = interp.getPrimFunWithName("over")
 
   // ALTERNATIVE NAMES FOR STACK OPERATIONS ---------------
 
@@ -108,7 +108,7 @@ function VimanaDefinePrimFuns(interp)
     let value = interp.popStack()
     interp.setGlobalVar(name.car, value)
   })
-  let setglobal = interp.primFuns["setglobal"]
+  let setglobal = interp.getPrimFunWithName("setglobal")
 
   // setglobal with reversed parameter order
   // (name) value defval ->
@@ -139,7 +139,7 @@ function VimanaDefinePrimFuns(interp)
     list.type = "fun"
     interp.pushStack(list)
   })
-  let funify = interp.primFuns["funify"]
+  let funify = interp.getPrimFunWithName("funify")
 
   // (name) (funbody) def ->
   interp.defPrimFun("def", function(interp)
@@ -286,7 +286,7 @@ function VimanaDefinePrimFuns(interp)
   interp.defPrimFun("rest", function(interp)
   {
     let list = interp.popStack()
-    interp.mustBeList(list, "first: got non-list")
+    interp.mustBeList(list, "rest: got non-list")
     interp.pushStack(list.car)
     //interp.printStack()
   })

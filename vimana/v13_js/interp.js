@@ -26,10 +26,30 @@ class VimanaInterp
   // DEFINE PRIMITIVE FUNCTION ----------------------------
   
   // Define a primitive function
+  // Symbols map to functions
   defPrimFun(name, fun) 
   {
-    this.primFuns[name] = fun
-    this.primFunNames[fun] = name
+    let symbol = Symbol.for(name)
+    this.primFuns[symbol] = fun
+    this.primFunNames[fun] = symbol
+  }
+
+  // Return string name for primfun function object
+  getPrimFunName(primFun)
+  {
+    return Symbol.keyFor(this.primFunNames[primFun])
+  }
+
+  // Get primfun by string name
+  getPrimFunWithName(name)
+  {
+    return this.primFuns[Symbol.for(name)]
+  }
+
+  // Check if string name is primfun
+  isPrimFun(name)
+  {
+    return Symbol.for(name) in this.primFuns
   }
 
   // DATA STACK -------------------------------------------
@@ -202,7 +222,7 @@ class VimanaInterp
     }
     else if ("function" === typeof (obj))
     {
-      return this.primFunNames[obj]
+      return this.getPrimFunName(obj)
     }
     else if ("symbol" === typeof (obj))
     {

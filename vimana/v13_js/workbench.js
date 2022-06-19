@@ -34,14 +34,14 @@ class VimanaUI
     // Read cards from local storage
     //this.cards = this.readCards()
 
-    let cardCode = "(VimanaCards) ( (home (home card) print) (addcard 1 2 + print) ) defval"
-    let list = this.parser.parse(cardCode, this.interp)
-    this.interp.eval(list)
+    //let cardCode = "(VimanaCards) ( (home (home card) print) (addcard 1 2 + print) ) defval"
+    //let list = this.parser.parse(cardCode, this.interp)
+    //this.interp.eval(list)
 
     this.showCardFront = true
     this.commandToggleEditor()
 
-    this.setWorkspaceCode("(VimanaCards) getglobal print")
+    //this.setWorkspaceCode("(VimanaCards) getglobal print")
 
   }
 

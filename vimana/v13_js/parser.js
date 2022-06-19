@@ -17,17 +17,17 @@ class VimanaParser
   // Parse a string and return a list
   parse(code, interp) 
   {
-    code = this.stripComments(code, interp)
+    // TODO: debug stripComments
+    //code = this.stripComments(code, interp)
     this.pos = 0
     let list = this.parseList(code, interp)
-    console.log(list)
     return list
   }
 
   parseList(code, interp) 
   {
-    let first = { car: null, cdr: null } // temporary head item
-    let item = first
+    let head = { car: null, cdr: null } // temporary head item
+    let item = head
     let value = null
 
     while (this.pos < code.length)
@@ -48,9 +48,10 @@ class VimanaParser
         value = this.parseList(code, interp)
       }
       else if (")" === char)
-      {
+      { 
+        // Done parsing child list
         this.pos ++
-        break // done parsing child list
+        break
       }
       else if ("'" === char)
       {
@@ -60,20 +61,23 @@ class VimanaParser
       }
       else
       {
-        // Get token
-        value = this.parseToken(code)
+        // Get token as string
+        let token = this.parseToken(code)
 
-        if (isFinite(value)) 
+        if (isFinite(token)) 
         {
-          value = value * 1 // Convert string to number
+          // Set value to number (convert string to number)
+          value = token * 1 
         }
-        else if (value in interp.primFuns) 
+        else if (interp.isPrimFun(token)) 
         {
-          value = interp.primFuns[value]
+          // Set value to primfun
+          value = interp.getPrimFunWithName(token)
         }
         else
         {
-          value = Symbol.for(value)
+          // Set value to symbol
+          value = Symbol.for(token)
         }
       }
 
@@ -82,7 +86,8 @@ class VimanaParser
       item = item.cdr
     }
     
-    return first.cdr
+    // Discard head item
+    return head.cdr
   }
 
   isWhiteSpace(char) 
@@ -123,7 +128,6 @@ class VimanaParser
       char = code[this.pos]
     }
 
-    this.pos ++
     return result
   }
 
