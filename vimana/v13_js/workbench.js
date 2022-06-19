@@ -31,6 +31,13 @@ class VimanaUI
     // Create parser
     this.parser = new VimanaParser()
 
+    this.showCardFront = true
+    this.commandToggleEditor()
+
+    let masterProgram = document.querySelector(".vimana-master-program")
+    masterProgram.textContent
+    this.setCardCode(masterProgram.textContent)
+
     // Read cards from local storage
     //this.cards = this.readCards()
 
@@ -38,10 +45,7 @@ class VimanaUI
     //let list = this.parser.parse(cardCode, this.interp)
     //this.interp.eval(list)
 
-    this.showCardFront = true
-    this.commandToggleEditor()
-
-    //this.setWorkspaceCode("(VimanaCards) getglobal print")
+    //this.setCardCode("(VimanaCards) getglobal print")
 
   }
 
@@ -194,7 +198,7 @@ Denna källkod sparas i localStorage och kan redigeras.
     }
   }
   
-  setWorkspaceCode(code)
+  setCardCode(code)
   {
     let codeArea = document.getElementsByTagName("textarea")[0]
     codeArea.value = code
