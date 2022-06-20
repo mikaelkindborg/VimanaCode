@@ -17,8 +17,7 @@ class VimanaParser
   // Parse a string and return a list
   parse(code, interp) 
   {
-    // TODO: debug stripComments
-    //code = this.stripComments(code, interp)
+    code = this.stripComments(code, interp)
     this.pos = 0
     let list = this.parseList(code, interp)
     return list
@@ -139,90 +138,35 @@ class VimanaParser
 
     while (pos < code.length) 
     {
-      if ("/--" === code.substr(pos, pos + 3))
+      if ("/--" === code.substring(pos, pos + 3))
       {
         commentLevel ++
         pos += 3
+        result += " "
       }
-
-      if ("--/" === code.substr(pos, pos + 3))
+      else
+      if ("--/" === code.substring(pos, pos + 3))
       {
         commentLevel --
+        if (commentLevel < 0)
+        {
+          interp.error("Unbalanced end comment")
+        }
         pos += 3
+        result += " "
+      }
+      else
+      {
+        if (0 === commentLevel)
+        {
+          result += code[pos]
+        }
+        pos ++
       }
 
-      if (commentLevel < 0)
-      {
-        interp.error("Unbalanced end comment")
-      }
-
-      if (0 === commentLevel)
-      {
-        result += code[pos]
-      }
-      
-      pos ++
+      console.log(result)
     }
 
     return result
   }
-
-/*
-  // Remove /-- Vimana comments --/ from the code
-  // Allow nested comments (not supported in VimanaC)
-  // TODO: Rewrite/simplify
-  OLD_stripComments(code) 
-  {
-    let index = 0
-    let start = 0
-    let stop = 0
-    let result = ""
-
-    while (true) 
-    {
-      // Find start comment
-      start = code.indexOf("/--", index)
-
-      if (start === -1) 
-      {
-        // No start comment - find last end comment
-        stop = code.lastIndexOf("--/")
-        if (stop > -1) 
-        {
-          // Remove everything until last end comment
-          result = result + code.slice(stop + 3)
-        }
-        else 
-        {
-          // No end comment - keep rest of string
-          result = result + code.slice(index)
-        }
-        // Exit loop
-        break
-      }
-
-      if (start > -1) 
-      {
-        // Find end comment
-        stop = code.indexOf("--/", start)
-        if (stop > -1) 
-        {
-          // Remove comment
-          result = result + code.slice(index, start)
-          index = stop + 3
-        }
-        else 
-        {
-          // No end comment - remove rest of string and exit loop
-          result = result + code.slice(index, start)
-          // Exit loop
-          break
-        }
-      }
-    }
-
-    return result
-  }
-*/
-
-}
+} // class

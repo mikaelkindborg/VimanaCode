@@ -12,7 +12,6 @@
 37 fib
 
 (fib) ([xx] 1 > ([xx] 1- fib [yx] 2- fib +) iftrue) def
-10 fib
 
 (37 fib) timetorun print
 
@@ -34,9 +33,13 @@ class VimanaUI
     this.showCardFront = true
     this.commandToggleEditor()
 
-    let masterProgram = document.querySelector(".vimana-master-program")
-    masterProgram.textContent
-    this.setCardCode(masterProgram.textContent)
+    // Set master program
+    let masterProgram = localStorage.getItem("vimana-master-program")
+    if (!masterProgram)
+    {
+      masterProgram = document.querySelector(".vimana-master-program").textContent
+    }
+    this.setCardCode(masterProgram)
 
     // Read cards from local storage
     //this.cards = this.readCards()
@@ -136,15 +139,6 @@ Denna källkod sparas i localStorage och kan redigeras.
     */
   }
 
-  doMenuCommand(event)
-  {
-    let command = event.target.value
-    this[command]()
-
-    let menu = document.querySelector(".vimana-command-menu")
-    menu.selectedIndex = 0
-  }
-
   commandEvalAsync()
   {
     try
@@ -198,6 +192,13 @@ Denna källkod sparas i localStorage och kan redigeras.
     }
   }
   
+  commandSaveCardCode()
+  {  
+    let codeArea = document.getElementsByTagName("textarea")[0]
+    localStorage.setItem("vimana-master-program", codeArea.value)
+    this.commandPrint("Master Program Saved")
+  }
+
   setCardCode(code)
   {
     let codeArea = document.getElementsByTagName("textarea")[0]
@@ -205,7 +206,57 @@ Denna källkod sparas i localStorage och kan redigeras.
     codeArea.scrollTop = 0
   }
 
+  commandClearStack()
+  {
+    this.interp.dataStack = []
+    this.commandPrintStack()
+  }
+
+  commandClearOutput()
+  {
+    document.getElementsByTagName("textarea")[1].value = ""
+  }
+
+  commandListPrimFuns()
+  {
+    this.commandPrint("BUILT-IN FUNCTIONS:")
+    let primFuns = this.interp.primFuns
+    let symbols = Object.getOwnPropertySymbols(primFuns)
+    for (let key in symbols) 
+    {
+      this.commandPrint(Symbol.keyFor(symbols[key]))
+    }   
+  }
+
+  commandOpenGitHub()
+  {
+    window.location.href = "https://github.com/mikaelkindborg/VimanaCode"
+  }
+
+  commandAbout()
+  {
+    VimanaEval("'I am Mikael. Vimana is my programming language hobby project. I have programmed computers for 40 years in 35 different languages. Vimana encapsulates the essense of several things I like: dynamic typing, code and data have the same format, interactive development, simplicity, few basic constructs, and an easy-to-implement intrepreter' print")
+  }
+
+} // class
+
+// Create global UI instance
+window.TheVimanaUI = new VimanaUI()
+
+
+
+
+
 /*
+  doMenuCommand(event)
+  {
+    let command = event.target.value
+    this[command]()
+
+    let menu = document.querySelector(".vimana-command-menu")
+    menu.selectedIndex = 0
+  }
+
   selectWorkspace(event)
   {
     window.VimanaUIWorkspace = event.target.value
@@ -222,49 +273,23 @@ Denna källkod sparas i localStorage och kan redigeras.
     codeArea.scrollTop = 0
   }
 
-  commandSaveWorkspace()
-  {
-    let codeArea = document.getElementsByTagName("textarea")[0]
-    localStorage.setItem(VimanaUIWorkspace, codeArea.value)
-    VimanaUIPrint("Workspace Saved")
-  }
+commandSaveWorkspace()
+{
+  let codeArea = document.getElementsByTagName("textarea")[0]
+  localStorage.setItem(VimanaUIWorkspace, codeArea.value)
+  VimanaUIPrint("Workspace Saved")
+}
 
-  commandResetWorkspace()
+commandResetWorkspace()
+{
+  let yes = window.confirm("This will cause any edits you have made in this workspace to be lost. Do you wish to proceed?")
+  if (yes) 
   {
-    let yes = window.confirm("This will cause any edits you have made in this workspace to be lost. Do you wish to proceed?")
-    if (yes) 
-    {
-      localStorage.removeItem(VimanaUIWorkspace)
-      VimanaUISelectWorkspace({ target: { value: VimanaUIWorkspace } })
-    }
+    localStorage.removeItem(VimanaUIWorkspace)
+    VimanaUISelectWorkspace({ target: { value: VimanaUIWorkspace } })
   }
-*/
-  commandClearStack()
-  {
-    this.interp.dataStack = []
-    this.commandPrintStack()
-  }
+}
 
-  commandClearOutput()
-  {
-    document.getElementsByTagName("textarea")[1].value = ""
-  }
-
-  commandListPrimFuns()
-  {
-    VimanaUIPrint("BUILT-IN FUNCTIONS:")
-    let primFuns = window.VimanaCode.primFuns
-    for (let key in primFuns)
-    {
-      VimanaUIPrint(key)
-    }
-  }
-
-  commandOpenGitHub()
-  {
-    window.location.href = "https://github.com/mikaelkindborg/VimanaCode"
-  }
-/*
   commandDisplayMantra()
   {
     VimanaEval(`
@@ -282,14 +307,7 @@ Denna källkod sparas i localStorage och kan redigeras.
           TOSTRING PRINT
     `)
   }
-*/
 
-  commandAbout()
-  {
-    VimanaEval("'I am Mikael. Vimana is my programming language hobby project. I have programmed computers for 40 years in 35 different languages. Vimana encapsulates the essense of several things I like: dynamic typing, code and data have the same format, interactive development, simplicity, few basic constructs, and an easy-to-implement intrepreter' print")
-  }
-
-/*
   commandEvalBenchmark()
   {
     VimanaUIPrint("PLEASE WAIT...")
@@ -312,15 +330,6 @@ Denna källkod sparas i localStorage och kan redigeras.
     }, 100)
   }
 */
-}
-
-// Create global UI instance
-window.TheVimanaUI = new VimanaUI()
-
-
-
-
-
 
 
 //---------------------------------------------------------

@@ -10,6 +10,13 @@ function VimanaDefinePrimFuns(interp)
   // EVAL -------------------------------------------------
 
   // list eval ->
+  interp.defPrimFun("evalJS", function(interp)
+  {
+    let js = interp.popStack()
+    new Function("x", "y", "return x*y;")
+  })
+
+  // list eval ->
   interp.defPrimFun("eval", function(interp)
   {
     let list = interp.popStack()
@@ -111,8 +118,8 @@ function VimanaDefinePrimFuns(interp)
   let setglobal = interp.getPrimFunWithName("setglobal")
 
   // setglobal with reversed parameter order
-  // (name) value defval ->
-  interp.defPrimFun("defval", function(interp)
+  // (name) value defvar ->
+  interp.defPrimFun("defvar", function(interp)
   {
     swap(interp)
     setglobal(interp)

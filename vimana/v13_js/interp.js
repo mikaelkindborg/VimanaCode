@@ -153,7 +153,15 @@ class VimanaInterp
         // Call primfun
         instruction.car(this)
       }
-      else if ("symbol" === typeof (instruction.car))
+      else
+      /*let primFun = this.primFuns[instruction.car]
+      if (primFun) 
+      {
+        // Call primfun
+        primFun(this)
+      }
+      else*/
+      if ("symbol" === typeof (instruction.car))
       {
         let value = this.getGlobalVar(instruction.car)
         if (value != null) 
