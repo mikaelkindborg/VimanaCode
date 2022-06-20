@@ -28,6 +28,7 @@ class VimanaParser
     let head = { car: null, cdr: null } // temporary head item
     let item = head
     let value = null
+    let type = "undef"
 
     while (this.pos < code.length)
     {
@@ -45,6 +46,7 @@ class VimanaParser
         // Parse child list
         this.pos ++
         value = this.parseList(code, interp)
+        type = "list"
       }
       else if (")" === char)
       { 
@@ -57,6 +59,7 @@ class VimanaParser
         // Parse string
         this.pos ++
         value = this.parseString(code)
+        type = "string"
       }
       else
       {
@@ -67,21 +70,24 @@ class VimanaParser
         {
           // Set value to number (convert string to number)
           value = token * 1 
+          type = "number"
         }
         else if (interp.isPrimFun(token)) 
         {
           // Set value to primfun
           value = interp.getPrimFunWithName(token)
+          type = "primfun"
         }
         else
         {
           // Set value to symbol
           value = Symbol.for(token)
+          type = "symbol"
         }
       }
 
       // Add value to list
-      item.cdr = { car: value, cdr: null }
+      item.cdr = { car: value, cdr: null, type: type }
       item = item.cdr
     }
     
@@ -163,8 +169,6 @@ class VimanaParser
         }
         pos ++
       }
-
-      console.log(result)
     }
 
     return result

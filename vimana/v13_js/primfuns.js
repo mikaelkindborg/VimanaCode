@@ -9,6 +9,19 @@ function VimanaDefinePrimFuns(interp)
 {
   // EVAL -------------------------------------------------
 
+  // x inspect ->
+  interp.defPrimFun("inspect", function(interp)
+  {
+    let x = interp.popStack()
+    console.log(x)
+  })
+
+  // inspectglobals ->
+  interp.defPrimFun("inspectglobals", function(interp)
+  {
+    console.log(interp.globalVars)
+  })
+
   // list eval ->
   interp.defPrimFun("evalJS", function(interp)
   {
