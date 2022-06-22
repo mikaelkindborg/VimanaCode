@@ -102,6 +102,20 @@ class VimanaParser
     return "(" === char || ")" === char || this.isWhiteSpace(char)
   }
 
+  isDoubleStringChar(code) 
+  {
+    if (this.pos + 1 < code.length)
+    {
+      let chars = code.substring(this.pos, this.pos + 2)
+      if (("{{" === chars) || ("}}" === chars))
+      {
+        return true
+      }
+    }
+
+    return false
+  }
+
   parseString(code) 
   {
     let result = ""
@@ -114,17 +128,24 @@ class VimanaParser
 
     while (this.pos < code.length)
     {
-      let char = code[this.pos]
+      if (this.isDoubleStringChar(code))
+      {
+        result += code[this.pos]
+        this.pos ++
+        result += code[this.pos]
+        this.pos ++
+     }
+     else
+     {
+        if ("{" === code[this.pos]) level ++
+        if ("}" === code[this.pos]) level --
+        if (level <= 0) break
 
-      if ("{" === char) level ++
-      if ("}" === char) level --
-      if (level <= 0) break
-
-      result += char
-
-      this.pos ++
+        result += code[this.pos]
+        this.pos ++
+      }
     }
-
+    
     // Move beyond closing curly
     this.pos ++
 
