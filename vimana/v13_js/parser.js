@@ -7,6 +7,8 @@
 
 // PARSER -------------------------------------------------
 
+// ((name {code}) (name {code}) (name {code}))
+
 class VimanaParser
 {
   constructor()
@@ -54,15 +56,16 @@ class VimanaParser
         this.pos ++
         break
       }
-      else if ("'" === char)
+      else if ("{" === char)
       {
         // Parse string
-        this.pos ++
         value = this.parseString(code)
         type = "string"
       }
       else
       {
+        // We got a non-separator char - we have a token character
+
         // Get token as string
         let token = this.parseToken(code)
 
@@ -105,19 +108,55 @@ class VimanaParser
     return "(" === char || ")" === char || this.isWhiteSpace(char)
   }
 
+  isDoubleStringChar(code) 
+  {
+    if (this.pos + 1 < code.length)
+    {
+      let chars = code.substring(this.pos, this.pos + 2)
+      if (("{{" === chars) || ("}}" === chars))
+      {
+        return true
+      }
+    }
+
+    return false
+  }
+
   parseString(code) 
   {
     let result = ""
+    let level = 1
 
-    let char = code[this.pos]
-    while (char != "'" && this.pos < code.length)
+    // Position is at opening curly
+
+    // Move beyond opening curly
+    this.pos ++
+
+    while (this.pos < code.length)
     {
-      result += char
-      this.pos ++
-      char = code[this.pos]
+      /*if (this.isDoubleStringChar(code))
+      {
+        result += code[this.pos]
+        this.pos ++
+        result += code[this.pos]
+        this.pos ++
+      }
+      else
+      {*/
+        if ("{" === code[this.pos]) level ++
+        if ("}" === code[this.pos]) level --
+        if (level <= 0) break
+
+        result += code[this.pos]
+        this.pos ++
+      //}
     }
 
+    // Move beyond closing curly
     this.pos ++
+
+    // Position is at character after closing curly
+
     return result
   }
 
@@ -125,13 +164,17 @@ class VimanaParser
   {
     let result = ""
 
-    let char = code[this.pos]
-    while (! this.isWhiteSpaceOrParen(char) && this.pos < code.length)
+    // Position is at first token character
+
+    while (this.pos < code.length)
     {
-      result += char
+      if (this.isWhiteSpaceOrParen(code[this.pos])) break
+
+      result += code[this.pos]
       this.pos ++
-      char = code[this.pos]
     }
+
+    // Position is at character after last token character
 
     return result
   }

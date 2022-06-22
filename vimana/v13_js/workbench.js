@@ -15,6 +15,8 @@
 
 (37 fib) timetorun print
 
+(fib) ([aa] 1 > ([aa] 1- fib [ba] 2- fib +) iftrue) def
+
 */
 
 class VimanaUI

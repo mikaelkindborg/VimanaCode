@@ -21,6 +21,10 @@ class VimanaInterp
     this.dataStack = [] // data stack
     this.stackFrame = null // top stackframe of callstack
     this.speed = 0 // ms delay in eval loop
+
+    this.prettyPrintIndent = 0
+    this.prettyNumItemsPrinted = 0
+    this.prettyPrintListEnd = false
   }
 
   // DEFINE PRIMITIVE FUNCTION ----------------------------
@@ -223,8 +227,15 @@ console.log("TYPE: " + instruction.type)
 
   // PRINTING ---------------------------------------------
 
-  // Returns string
   prettyPrint(obj) 
+  {
+    this.prettyPrintIndent = 0
+    this.prettyNumItemsPrinted = 0
+    return this.prettyPrintObj(obj)
+  }
+
+  // Returns string
+  prettyPrintObj(obj) 
   {
     if ("object" === typeof (obj))
     {
@@ -250,19 +261,47 @@ console.log("TYPE: " + instruction.type)
     let string = "("
     let item = list
 
+    if (this.prettyNumItemsPrinted > 2)
+    {
+      this.prettyNumItemsPrinted = 0
+      this.prettyPrintIndent += 2
+      let indent = " ".repeat(this.prettyPrintIndent)
+      string = "\n" + indent + "("
+    }
+  
     while (item != null) 
     {
-      string = string + this.prettyPrint(item.car)
+      this.prettyNumItemsPrinted ++
+      this.prettyPrintListEnd = false
+
+      string += this.prettyPrintObj(item.car)
 
       item = item.cdr
 
       if (item != null) 
       {
-        string = string + " "
+        string += " "
       }
     }
 
-    return string + ")"
+    string += ")"
+
+    if (this.prettyPrintIndent > 0)
+    {
+      this.prettyNumItemsPrinted = 0
+      this.prettyPrintIndent -= 2
+    }
+/*
+    let indent = " ".repeat(this.prettyPrintIndent)
+
+    if (this.prettyPrintListEnd)
+    {
+      string += "\n" + indent
+    }
+
+    this.prettyPrintListEnd = true
+*/
+    return string
   }
 
   // Returns string
@@ -279,20 +318,20 @@ console.log("TYPE: " + instruction.type)
   // ERROR HANDLING ---------------------------------------
 
   // Error handling is simple - an error aborts execution
-  error(s) 
+  error(errorMessage) 
   {
-    let guruMeditation = "Guru Meditation: " + s
+    let guruMeditation = "Guru Meditation: " + errorMessage
     throw guruMeditation
   }
 
   mustBeList(list, errorMessage) 
   {
-    if (typeof (list) != "object")
+    if ("object" != typeof (list))
     {
       this.error(errorMessage)
     }
   }
-}
+} // class
 
 /*
 TODO: Remove - Use eval instead of this hack!

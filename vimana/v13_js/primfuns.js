@@ -110,11 +110,11 @@ function VimanaDefinePrimFuns(interp)
 
   interp.defPrimFun("doc", drop)
   interp.defPrimFun("[]", drop)
-  interp.defPrimFun("[xx]", dup)
-  interp.defPrimFun("[xxx]", dupdup)
-  interp.defPrimFun("[yx]", swap)
-  interp.defPrimFun("[xyx]", over)
-  //interp.defPrimFun("[yzx]", rotate)
+  interp.defPrimFun("[aa]", dup)
+  interp.defPrimFun("[aaa]", dupdup)
+  interp.defPrimFun("[ba]", swap)
+  interp.defPrimFun("[aba]", over)
+  //interp.defPrimFun("[bca]", rotate)
 
   // GLOBAL VARS ------------------------------------------
 
