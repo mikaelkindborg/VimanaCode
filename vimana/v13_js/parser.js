@@ -30,7 +30,6 @@ class VimanaParser
     let head = { car: null, cdr: null } // temporary head item
     let item = head
     let value = null
-    let type = "undef"
 
     while (this.pos < code.length)
     {
@@ -48,7 +47,6 @@ class VimanaParser
         // Parse child list
         this.pos ++
         value = this.parseList(code, interp)
-        type = "list"
       }
       else if (")" === char)
       { 
@@ -60,7 +58,6 @@ class VimanaParser
       {
         // Parse string
         value = this.parseString(code)
-        type = "string"
       }
       else
       {
@@ -72,25 +69,22 @@ class VimanaParser
         if (isFinite(token)) 
         {
           // Set value to number (convert string to number)
-          value = token * 1 
-          type = "number"
+          value = token * 1
         }
         else if (interp.isPrimFun(token)) 
         {
           // Set value to primfun
           value = interp.getPrimFunWithName(token)
-          type = "primfun"
         }
         else
         {
           // Set value to symbol
           value = Symbol.for(token)
-          type = "symbol"
         }
       }
 
       // Add value to list
-      item.cdr = { car: value, cdr: null, type: type }
+      item.cdr = { car: value, cdr: null }
       item = item.cdr
     }
     
@@ -108,20 +102,6 @@ class VimanaParser
     return "(" === char || ")" === char || this.isWhiteSpace(char)
   }
 
-  isDoubleStringChar(code) 
-  {
-    if (this.pos + 1 < code.length)
-    {
-      let chars = code.substring(this.pos, this.pos + 2)
-      if (("{{" === chars) || ("}}" === chars))
-      {
-        return true
-      }
-    }
-
-    return false
-  }
-
   parseString(code) 
   {
     let result = ""
@@ -134,22 +114,15 @@ class VimanaParser
 
     while (this.pos < code.length)
     {
-      /*if (this.isDoubleStringChar(code))
-      {
-        result += code[this.pos]
-        this.pos ++
-        result += code[this.pos]
-        this.pos ++
-      }
-      else
-      {*/
-        if ("{" === code[this.pos]) level ++
-        if ("}" === code[this.pos]) level --
-        if (level <= 0) break
+      let char = code[this.pos]
 
-        result += code[this.pos]
-        this.pos ++
-      //}
+      if ("{" === char) level ++
+      if ("}" === char) level --
+      if (level <= 0) break
+
+      result += char
+
+      this.pos ++
     }
 
     // Move beyond closing curly

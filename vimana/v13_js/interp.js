@@ -151,9 +151,8 @@ class VimanaInterp
     {
       // Advance instruction pointer for next loop
       stackFrame.car = instruction.cdr
-console.log("TYPE: " + instruction.type)
+
       if ("function" === typeof (instruction.car)) 
-      //if ("primfun" === instruction.type) 
       {
         // Call primfun
         instruction.car(this)
@@ -166,8 +165,7 @@ console.log("TYPE: " + instruction.type)
         primFun(this)
       }
       else*/
-      //if ("symbol" === typeof (instruction.car))
-      if ("symbol" === instruction.type)
+      if ("symbol" === typeof (instruction.car))
       {
         let value = this.getGlobalVar(instruction.car)
         if (value != null) 
