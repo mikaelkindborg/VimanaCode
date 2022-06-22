@@ -17,9 +17,14 @@ drop
 
 (]) (() consitem) def
 
-(consitem) ([AB] 
-  A (__liststart)@ eq (B) 
-    (A B cons consitem) 
+(consitem) ([ab] 
+  a (__liststart)@ eq (b) 
+    (a b cons consitem) 
+  ifelse) def
+
+(consitem) ([xy] 
+  x (__liststart)@ eq (y) 
+    (x y cons consitem) 
   ifelse) def
 
 /-- item list --/

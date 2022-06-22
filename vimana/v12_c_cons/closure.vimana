@@ -60,14 +60,41 @@ counter print
 [abc]
 [abcd]
 
+(makecounter) (
+  ((0) 2dup first 1+ setfirst first) copy
+) def
+
+(makecounter) (
+  ((0) |aaa| first 1+ setfirst first) copy
+) def
+
+(makecounter) (
+  ((0) [x] x x first 1+ setfirst x first) copy
+) def
+
+(makecounter)
+  (0 () cons ([aaa] first 1+ setfirst first) cons) def
+
+(makecounter)
+  ((0) copy ([aaa] first 1+ setfirst first) cons) def
+
+(makecounter)
+  ([ 0 ] ([aaa] first 1+ setfirst first) cons) def
+
+(makecounter)
+  ([ [ 0 ] (2dup first 1+ setfirst first) ]) def
+
+(makecounter)
+  ((0) ([aaa] first 1+ setfirst first) cons) def
+
 (makecounter)
   (0 () cons 
-    ([xxx] first 1+ setfirst first) cons 
+    ([aaa] first 1+ setfirst first) cons 
       funify) def
 
 (makecounter)
   (0 () cons 
-    ([a] a a a first 1+ setfirst first) cons funify) def
+    ([x] x x x first 1+ setfirst first) cons funify) def
 
 (makecounter)
   (0 () cons 
@@ -75,10 +102,10 @@ counter print
 
 (makecounter)
   (0 () cons 
-    ([a] 
-      a first 1+ [b] 
-      a b setfirst 
-      a first) cons funify) def
+    ([x] 
+      x first 1+ [y] 
+      x y setfirst 
+      x first) cons funify) def
 
 (makecounter)
   (0 () cons (dup first 1+ setfirst first) cons funify) def
