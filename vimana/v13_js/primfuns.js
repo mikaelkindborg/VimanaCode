@@ -221,7 +221,20 @@ function VimanaDefinePrimFuns(interp)
   {
     let b = interp.popStack()
     let a = interp.popStack()
-    interp.pushStack(a === b)
+    let equals = false
+
+    // Compare lists for equality
+    // a.car === b.car && a.cdr === b.cdr
+    if ("object" === typeof (a) && "object" === typeof (b))
+    {
+      equals = a.car === b.car && a.cdr === b.cdr
+    }
+    else
+    {
+      equals = a === b
+    }
+
+    interp.pushStack(equals)
   })
 
   // MATH FUNCTIONS ---------------------------------------
@@ -302,7 +315,8 @@ function VimanaDefinePrimFuns(interp)
 
   // LIST FUNCTIONS ---------------------------------------
 
-  // Get first element of a list
+  // Get first item of a list
+  // list first -> item
   interp.defPrimFun("first", function(interp)
   {
     let list = interp.popStack()
@@ -310,12 +324,44 @@ function VimanaDefinePrimFuns(interp)
     interp.pushStack(list.car)
   })
 
-  // Get first element of a list
+  // Get rest of a list
+  // list rest -> list
   interp.defPrimFun("rest", function(interp)
   {
     let list = interp.popStack()
     interp.mustBeList(list, "rest: got non-list")
     interp.pushStack(list.cdr)
+  })
+
+  // Cons item onto a list
+  // item list cons -> list
+  interp.defPrimFun("cons", function(interp)
+  {
+    let list = interp.popStack()
+    let item = interp.popStack()
+    interp.mustBeList(list, "cons: got non-list")
+    let first = { car: item, cdr: list }
+    interp.pushStack(first)
+  })
+
+  // Replace first element of a list
+  // list item setfirst -> 
+  interp.defPrimFun("setfirst", function(interp)
+  {
+    let item = interp.popStack()
+    let list = interp.popStack()
+    interp.mustBeList(list, "setfirst: got non-list")
+    list.car = item
+  })
+
+  // Replace rest of a list
+  // list list setrest -> 
+  interp.defPrimFun("setrest", function(interp)
+  {
+    let rest = interp.popStack()
+    let list = interp.popStack()
+    interp.mustBeList(list, "setfirst: got non-list")
+    list.cdr = rest
   })
 
   // PRINT FUNCTIONS --------------------------------------

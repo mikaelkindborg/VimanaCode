@@ -98,30 +98,6 @@ class VimanaParser
     return head.cdr
   }
 
-  isWhiteSpace(char) 
-  {
-    return " " === char || "\n" === char || "\r" === char || "\t" === char 
-  }
-
-  isWhiteSpaceOrParen(char) 
-  {
-    return "(" === char || ")" === char || this.isWhiteSpace(char)
-  }
-
-  isDoubleStringChar(code) 
-  {
-    if (this.pos + 1 < code.length)
-    {
-      let chars = code.substring(this.pos, this.pos + 2)
-      if (("{{" === chars) || ("}}" === chars))
-      {
-        return true
-      }
-    }
-
-    return false
-  }
-
   parseString(code) 
   {
     let result = ""
@@ -215,5 +191,29 @@ class VimanaParser
     }
 
     return result
+  }
+
+  isWhiteSpace(char) 
+  {
+    return " " === char || "\n" === char || "\r" === char || "\t" === char 
+  }
+
+  isWhiteSpaceOrParen(char) 
+  {
+    return "(" === char || ")" === char || this.isWhiteSpace(char)
+  }
+
+  isDoubleStringChar(code) 
+  {
+    if (this.pos + 1 < code.length)
+    {
+      let chars = code.substring(this.pos, this.pos + 2)
+      if (("{{" === chars) || ("}}" === chars))
+      {
+        return true
+      }
+    }
+
+    return false
   }
 } // class

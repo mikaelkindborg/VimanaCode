@@ -54,9 +54,10 @@
 
 <div class="vimana-master-program" style="display:none">
 { This program runs on startup } []
+
 (
-  (master-program {(sayHi) ('Hi World' print) def})
-  (card-1 {'I am card 1' print})
+  (master-card {(sayHi) ({Hi World} print) def})
+  (card-1 {{I am card 1} print})
 )
 (Cards) setglobal
 </div>
