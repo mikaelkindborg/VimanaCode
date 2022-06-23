@@ -30,7 +30,10 @@ class VimanaUI
     VimanaDefinePrimFuns(this.interp)
 
     // Create parser
-    this.parser = new VimanaParser()
+    let parser = new VimanaParser()
+
+    // Set interp parser
+    this.interp.setParser(parser)
 
     this.showCardFront = true
     this.commandToggleEditor()
@@ -107,14 +110,19 @@ Denna källkod sparas i localStorage och kan redigeras.
     let output = document.getElementsByTagName("textarea")[1]
     if (output.value.length > 0)
     {
-      output.value = output.value + "\n" + this.interp.prettyPrint(obj) //obj.toString()
+      output.value = output.value + "\n" + obj.toString()
     }
     else
     {
-      output.value = this.interp.prettyPrint(obj) //obj.toString()
+      output.value = obj.toString()
     }
     //output.insertAdjacentHTML("beforeend", obj.toString() + "\n")
     output.scrollTop = output.scrollHeight;
+  }
+
+  commandPrettyPrint(obj)
+  {
+    this.commandPrint(this.interp.prettyPrint(obj));
   }
 
   commandPrintStack()
@@ -153,7 +161,7 @@ Denna källkod sparas i localStorage och kan redigeras.
         code = code.substring(textarea.selectionStart, textarea.selectionEnd)
       }
 
-      let list = this.parser.parse(code, this.interp)
+      let list = this.interp.parse(code)
       let ui = this // for the closure below
       this.interp.evalAsync(
         list,
@@ -182,7 +190,7 @@ Denna källkod sparas i localStorage och kan redigeras.
         code = code.substring(textarea.selectionStart, textarea.selectionEnd)
       }
 
-      let list = this.parser.parse(code, this.interp)
+      let list = this.interp.parse(code)
       this.interp.eval(list)
       this.commandPrintStack()
     }
@@ -194,11 +202,19 @@ Denna källkod sparas i localStorage och kan redigeras.
     }
   }
   
-  commandSaveCardCode()
+  commandSaveCard()
   {  
     let codeArea = document.getElementsByTagName("textarea")[0]
     localStorage.setItem("vimana-master-program", codeArea.value)
     this.commandPrint("Master Program Saved")
+  }
+
+  commandResetCard()
+  {  
+    let codeArea = document.getElementsByTagName("textarea")[0]
+    let code = document.querySelector(".vimana-master-program").textContent
+    codeArea.value = code
+    this.commandPrint("Master Program Reset")
   }
 
   setCardCode(code)

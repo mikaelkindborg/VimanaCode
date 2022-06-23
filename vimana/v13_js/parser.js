@@ -59,6 +59,12 @@ class VimanaParser
         // Parse string
         value = this.parseString(code)
       }
+      else if ("}" === char)
+      {
+        // Unexpected!
+        this.pos ++
+        continue
+      }
       else
       {
         // We got a non-separator char - we have a token character
@@ -145,7 +151,7 @@ class VimanaParser
         this.pos ++
       }
     }
-    
+
     // Move beyond closing curly
     this.pos ++
 

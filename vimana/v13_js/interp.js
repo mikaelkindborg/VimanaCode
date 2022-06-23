@@ -22,6 +22,8 @@ class VimanaInterp
     this.stackFrame = null // top stackframe of callstack
     this.speed = 0 // ms delay in eval loop
 
+    this.parser = null
+
     this.prettyPrintIndent = 0
     this.prettyNumItemsPrinted = 0
     this.prettyPrintListEnd = false
@@ -54,6 +56,18 @@ class VimanaInterp
   isPrimFun(name)
   {
     return Symbol.for(name) in this.primFuns
+  }
+
+  // PARSER -----------------------------------------------
+
+  setParser(parser)
+  {
+    this.parser = parser
+  }
+
+  parse(string)
+  {
+    return this.parser.parse(string, this)
   }
 
   // DATA STACK -------------------------------------------
@@ -247,6 +261,10 @@ class VimanaInterp
     {
       return Symbol.keyFor(obj)
     }
+    else if ("string" === typeof (obj))
+    {
+      return "{" + obj + "}"
+    }
     else
     {
       return obj.toString()
@@ -306,10 +324,19 @@ class VimanaInterp
   prettyPrintStack() 
   {
     let string = ""
-    for (let i = 0; i < this.dataStack.length; ++ i) 
+
+    if (this.dataStack.length <= 0)
     {
-      string += this.prettyPrint(this.dataStack[i]) + " "
+      string = "[EMPTY]"
     }
+    else
+    {
+      for (let i = 0; i < this.dataStack.length; ++ i) 
+      {
+        string += this.prettyPrint(this.dataStack[i]) + " "
+      }
+    }
+
     return string
   }
 

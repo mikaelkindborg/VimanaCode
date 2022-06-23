@@ -34,10 +34,11 @@
 
         <div class="vimana-button-bar">
           <a class="vimana-button" onclick="TheVimanaUI.commandEvalAsync()" href="javascript:void(0)">Eval</a>
-          <a class="vimana-button" onclick="TheVimanaUI.commandSaveCardCode()" href="javascript:void(0)">Save</a>
           <a class="vimana-button" onclick="TheVimanaUI.commandClearStack()" href="javascript:void(0)">Clear Stack</a>
           <a class="vimana-button" onclick="TheVimanaUI.commandClearOutput()" href="javascript:void(0)">Clear Output</a>
           <a class="vimana-button" onclick="TheVimanaUI.commandListPrimFuns()" href="javascript:void(0)">PrimFuns</a>
+          <a class="vimana-button" onclick="TheVimanaUI.commandSaveCard()" href="javascript:void(0)">Save</a>
+          <a class="vimana-button" onclick="TheVimanaUI.commandResetCard()" href="javascript:void(0)">Reset</a>
         </div>
 
         <div class="vimana-frame vimana-frame-output">
@@ -51,8 +52,13 @@
 
   </div> <!-- vimana-ui -->
 
-<div class="vimana-master-program" style="display:none">'Program run on startup' []
-(sayHi) ('Hi World' print) def
+<div class="vimana-master-program" style="display:none">
+{ This program runs on startup } []
+(
+  (master-program {(sayHi) ('Hi World' print) def})
+  (card-1 {'I am card 1' print})
+)
+(Cards) setglobal
 </div>
 
   <script src="interp.js"></script>

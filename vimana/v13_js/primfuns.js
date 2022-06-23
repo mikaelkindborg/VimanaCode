@@ -22,14 +22,23 @@ function VimanaDefinePrimFuns(interp)
     console.log(interp.globalVars)
   })
 
-  // list eval ->
+  // list eval -> ?
   interp.defPrimFun("evalJS", function(interp)
   {
     let js = interp.popStack()
     new Function("x", "y", "return x*y;")
   })
 
-  // list eval ->
+  // string parse -> list
+  interp.defPrimFun("parse", function(interp)
+  {
+    let string = interp.popStack()
+    //TODO interp.mustBeString(string, "parse: got non-string")
+    let list = interp.parse(string)
+    interp.pushStack(list)
+  })
+
+  // list eval -> ?
   interp.defPrimFun("eval", function(interp)
   {
     let list = interp.popStack()
@@ -38,7 +47,7 @@ function VimanaDefinePrimFuns(interp)
   })
 
   // TODO: Push a stackframe with own enviroment
-  // list call ->
+  // list call -> ?
   interp.defPrimFun("call", function(interp)
   {
     interp.pushStackFrame(list)
@@ -299,7 +308,6 @@ function VimanaDefinePrimFuns(interp)
     let list = interp.popStack()
     interp.mustBeList(list, "first: got non-list")
     interp.pushStack(list.car)
-    //interp.printStack()
   })
 
   // Get first element of a list
@@ -307,8 +315,7 @@ function VimanaDefinePrimFuns(interp)
   {
     let list = interp.popStack()
     interp.mustBeList(list, "rest: got non-list")
-    interp.pushStack(list.car)
-    //interp.printStack()
+    interp.pushStack(list.cdr)
   })
 
   // PRINT FUNCTIONS --------------------------------------
@@ -316,7 +323,7 @@ function VimanaDefinePrimFuns(interp)
   interp.defPrimFun("print", function(interp)
   {
     let obj = interp.popStack()
-    TheVimanaUI.commandPrint(obj)
+    TheVimanaUI.commandPrettyPrint(obj)
   })
 
   interp.defPrimFun("printstack", function(interp)
