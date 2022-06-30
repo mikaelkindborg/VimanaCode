@@ -5,6 +5,69 @@
 // mikael@kindborg.com
 //
 
+/*
+An Epic Story by MaxKoMusic | https://maxkomusic.com/
+Music promoted by https://www.chosic.com/free-music/all/
+Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+https://creativecommons.org/licenses/by-sa/3.0/
+ 
+The Inspiration by Keys of Moon | https://soundcloud.com/keysofmoon
+Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+Music promoted by https://www.chosic.com/free-music/all/ 
+
+Epic Trailer by LesFM | https://lesfm.net/
+Music promoted by https://www.chosic.com/free-music/all/
+Creative Commons CC BY 3.0
+https://creativecommons.org/licenses/by/3.0/
+ 
+Epic Cinematic Adventure Music | ICELAND by Alex-Productions | https://www.youtube.com/channel/UCx0_M61F81Nfb-BRXE-SeVA
+Music promoted by https://www.chosic.com/free-music/all/
+Creative Commons CC BY 3.0
+https://creativecommons.org/licenses/by/3.0/
+ 
+The Epic Story by MaxKoMusic | https://maxkomusic.com/
+Music promoted by https://www.chosic.com/free-music/all/
+Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+https://creativecommons.org/licenses/by-sa/3.0/
+ 
+Steam punk engine
+
+programmable model steam engine
+
+
+
+
+(1 2 3 4 5) (2 *) map
+
+(map)
+  ([xy] x isempty
+    (())
+    (x rest x first y call map cons)
+  ifelse) def
+
+(map)
+  ([ab] a isempty
+    (())
+    (a rest a first b call map cons)
+  ifelse) def
+
+(map)
+  ([aba] isempty
+    ([] [] ())
+    ([aba] rest [aba] first [aa] call map cons)
+  ifelse) def
+
+(map)
+  (over isempty
+    (2drop ())
+    (over rest 
+      over first dup call 
+        map cons)
+  ifelse) def
+
+*/
+
 
 /*
 (fib) ([xx] 1 > ([xx] 1 - fib [yx] 2 - fib +) iftrue) def
@@ -16,6 +79,8 @@
 (37 fib) timetorun print
 
 (fib) ([aa] 1 > ([aa] 1- fib [ba] 2- fib +) iftrue) def
+
+(fib) ([x] x 1 > (x 1- fib x 2- fib +) iftrue) def
 
 */
 

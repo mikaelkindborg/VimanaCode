@@ -224,7 +224,6 @@ function VimanaDefinePrimFuns(interp)
     let equals = false
 
     // Compare lists for equality
-    // a.car === b.car && a.cdr === b.cdr
     if ("object" === typeof (a) && "object" === typeof (b))
     {
       equals = a.car === b.car && a.cdr === b.cdr
