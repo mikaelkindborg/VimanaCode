@@ -74,7 +74,7 @@ int main(int numargs, char* args[])
     }
 
     // Parse source code
-    VItem* list = ParseSourceCode(source, interp->mem);
+    VItem* list = ParseSourceCode(source, interp->itemMemory);
     SysFree(source);
 
     // Evaluate code

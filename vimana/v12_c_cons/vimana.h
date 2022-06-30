@@ -24,7 +24,7 @@
 #include "file.h"
 #include "socket.h"
 #include "item.h"
-#include "mem.h"
+#include "itemMemory.h"
 #include "symboltable.h"
 #include "primfuntable.h"
 #include "interp.h"

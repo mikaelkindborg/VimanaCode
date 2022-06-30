@@ -6,12 +6,12 @@ Items are like conses in Lisp. They hold a value and
 an address to the next item.
 
 Items are equal size and allocated from a larger block by the
-memory manager in mem.h. 
+memory manager in itemMemory.h. 
 
 Items are copied when pushed onto the data stack and 
 assigned to variables. The data stack and global variables
-have separate memory areas, which are not handled by the
-memory manager.
+have separate memory areas (arrays), which are not handled 
+by the memory manager.
 
 Items allocated by the memory manager are garbage collected. 
 Items in the data stack and in variables are used as the roots
@@ -23,7 +23,7 @@ since they are not allocated by the memory manager. However, they
 may point to items in the garbage collected space; for example 
 lists.
 
-An item can point to a memory buffer allocated with malloc.
+An item can point to a memory buffer (allocated with malloc).
 This is the case with strings, for example. The item pointing
 to the string buffer must exist in garbage-collected memory
 to be collected, and theye may be only one item that refers to
@@ -54,49 +54,48 @@ Example of a list that contains a list:
 
 Data Stack     Managed Mem
 ----------     ------------------------
-ListHead   --> FirstItem --> SecondItem
+ListHead   --> ListHead (FirstItem) --> SecondItem
                  !
-               ListHead  --> FirstItem  --> SecondItem
+               FirstItem  --> SecondItem
 
-See mem.h for details on how managed memory is allocated and how
-addresses are used to reference items.
+See itemMemory.h for details on how managed memory is allocated 
+and how addresses are used to reference items.
 
-Addresses are pointer offsets, and are used to save space by 
-not having to store full pointers in items. Pointers to
-allocated memory are stored as full pointers (since they
-exist in a separate memory block). Pointers to primitive
-functions are also stored as full pointers in optimized mode.
+Addresses are item indexes, and are used to save space by 
+not having to store full pointers to items on small machines 
+(Arduino). 
+
+Pointers to allocated memory are stored as full pointers. 
+
+Pointers to primitive functions are stored as full pointers 
+in optimized mode.
 */
 
+// Forward declarations
 typedef struct __VInterp VInterp;
 typedef void (*VPrimFunPtr) (VInterp*);
 
 typedef struct __VItem
 {
+  // Value of the item
   union
   {
-    VAddr       addr;       // Address of first item in a list
+    VAddr       addr;       // Address of first item in a child list
     VIntNum     intNum;     // Integer value (symbol, integers)
     VDecNum     decNum;     // Floating point number
     VPrimFunPtr primFunPtr; // Pointer to a primitive function
-    void*       ptr;        // Pointer to malloc allocated block
+    void*       ptr;        // Pointer to memory block
   };
-  VType         type;       // Type info and GC mark bit
-  VAddr         next;       // Address of next item in a list
+    
+  // Layout of field "next":
+  // Bit 1-4: Type info  
+  // Bit 5:   GC mark bit
+  // Bit 6-n: Address of next item
+
+  // Address of next item in a list - also holds GC mark bit and type info
+  VAddr         next;       
 }
 VItem;
-
-// Layout of field "type" on 64 bit machines:
-// Bit 1:    mark bit
-// Bit 1-31: type info
-
-#define ItemType(item)   ( ((item)->type) >> 1 )
-#define ItemGCMark(item) ( ((item)->type) &  1 )
-#define ItemNext(item)   ( (item)->next )
-
-#define ItemEquals(item1, item2) \
-  ( (ItemType(item1) == ItemType(item2)) && \
-    ((item1)->intNum == (item2)->intNum) )
 
 enum ItemType
 {
@@ -104,12 +103,14 @@ enum ItemType
   TypeIntNum,
   TypeDecNum,
   TypeList,
-  TypeBufferPtr,   // Should not be pushed on the data stack
-  TypeString,
-  TypeSocket,
+  TypeBufferPtr,   // Is never pushed to the data stack
+  TypeBuffer,      // Used for strings (and other memory objects)
+  //TypeString,
+  //TypeSocket,
   TypeSymbol,      // Pushable types must go before TypeSymbol
-  TypePrimFun,
-  TypeFun,
+  TypePrimFun,     // Primitive function
+  TypeFun,         // Vimana function
+  //TypeFunX,        // Vimana "macro" function
   __TypeSentinel__
 };
 
@@ -118,38 +119,54 @@ enum ItemType
 #define IsTypeIntNum(item)       (TypeIntNum == ItemType(item))
 #define IsTypeDecNum(item)       (TypeDecNum == ItemType(item))
 #define IsTypeBufferPtr(item)    (TypeBufferPtr == ItemType(item))
-#define IsTypeString(item)       (TypeString == ItemType(item))
-#define IsTypeSocket(item)       (TypeSocket == ItemType(item))
+#define IsTypeBuffer(item)       (TypeBuffer == ItemType(item))
+//#define IsTypeString(item)       (TypeString == ItemType(item))
+//#define IsTypeSocket(item)       (TypeSocket == ItemType(item))
 #define IsTypeSymbol(item)       (TypeSymbol == ItemType(item))
 #define IsTypePrimFun(item)      (TypePrimFun == ItemType(item))
 #define IsTypeFun(item)          (TypeFun == ItemType(item))
 
-// Pushable items are types that can be pushed to the data stack 
-// without being evaluated
+// Pushable items are types that are pushed
+// to the data stack without being evaluated
 #define IsTypePushable(item) \
   (ItemType(item) < TypeSymbol)
 
-// Types that does not refernce other items
+// Types that do not reference other items
 #define IsTypeAtomic(item) \
-  (IsTypeNone(item) || IsTypeIntNum(item) || IsTypeDecNum(item) || \
+  (IsTypeNone(item)  || IsTypeIntNum(item)  || IsTypeDecNum(item) || \
   IsTypeSymbol(item) || IsTypePrimFun(item) || IsTypeBufferPtr(item))
 
 // Empty list
 #define IsNil(item) \
-  (IsTypeList(item) && ((item)->addr == 0))
+  (IsTypeList(item) && (0 == (item)->addr))
 
 // List types
 #define IsList(item) \
   (IsTypeList(item) || IsTypeFun(item))
 
-void ItemSetGCMark(VItem* item, VType mark)
+#define TypeMask         15 // Type bits
+#define MarkMask         16 // Mark bit
+#define NonAddrMask      31 // TypeMask + MarkMask (non-addr bits)
+#define MarkShift        4
+#define AddrShift        5
+
+#define ItemType(item)     (((item)->next) & TypeMask)
+#define ItemGCMark(item)   ((((item)->next) & MarkMask) >> MarkShift)
+#define ItemNextAddr(item) (((item)->next) >> AddrShift)
+
+void ItemSetGCMark(VItem* item, unsigned int mark)
 {
-  item->type = (item->type & ~1) | (mark & 1);
+  item->next = (item->next & ~MarkMask) | (mark << MarkShift);
 }
 
-void ItemSetType(VItem* item, VType type)
+void ItemSetType(VItem* item, unsigned int type)
 {
-  item->type = (type << 1) | (item->type & 1);
+  item->next = (item->next & ~TypeMask) | type;
+}
+
+void ItemSetNextAddr(VItem* item, VAddr addr)
+{
+  item->next = (item->next & NonAddrMask) | (addr << AddrShift);
 }
 
 void ItemSetSymbol(VItem* item, VIntNum symbol)
@@ -187,6 +204,10 @@ void ItemSetDecNum(VItem* item, VDecNum number)
 void ItemInit(VItem* item)
 {
   item->intNum = 0;
-  item->type = 0;
   item->next = 0;
 }
+
+// TODO: Need to fix this for doubles?
+#define ItemEquals(item1, item2) \
+  ( (ItemType(item1) == ItemType(item2)) && \
+    ((item1)->intNum == (item2)->intNum) )

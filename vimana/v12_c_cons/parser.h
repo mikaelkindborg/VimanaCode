@@ -87,9 +87,9 @@ Exit:
   return type;
 }
 
-VItem* ParseToken(char* token, VMem* mem)
+VItem* ParseToken(char* token, VItemMemory* itemMemory)
 {
-  VItem* item = MemAllocItem(mem);
+  VItem* item = MemAllocItem(itemMemory);
   VType type = TokenType(token);
 
   if (TypeIntNum == type)
@@ -155,13 +155,13 @@ char* SkipComment(char* p)
     return p; // Not a comment
 }
 
-VItem* ParseCode(char* code, char** next, VMem* mem)
+VItem* ParseCode(char* code, char** next, VItemMemory* itemMemory)
 {
   VItem* first = NULL;
   VItem* item  = NULL;
   VItem* prev;
 
-  VItem* list = MemAllocItem(mem);
+  VItem* list = MemAllocItem(itemMemory);
   ItemSetType(list, TypeList);
   
   char* p = code;
@@ -177,7 +177,7 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
     if (IsLeftParen(*p))
     {
       // Parse child list
-      item = ParseCode(p + 1, &p, mem);
+      item = ParseCode(p + 1, &p, itemMemory);
     }
     else
     if (IsRightParen(*p))
@@ -191,7 +191,7 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
     if (IsStringSeparator(*p))
     {
       char* string = ParseString(p + 1, &p);
-      item = MemAllocBufferItem(mem, StrCopy(string));
+      item = MemAllocBufferItem(itemMemory, StrCopy(string));
       ItemSetType(item, TypeString);
       SysFree(string);
     }
@@ -204,7 +204,7 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
     else
     {
       char* token = GetNextToken(p, &p);
-      item = ParseToken(token, mem);
+      item = ParseToken(token, itemMemory);
     }
 
     // Add item to list
@@ -213,7 +213,7 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
       if (NULL == first)
         first = item;
       else
-        MemItemSetNext(mem, prev, item);
+        MemItemSetNext(itemMemory, prev, item);
 
       prev = item;
       item = NULL;
@@ -221,12 +221,12 @@ VItem* ParseCode(char* code, char** next, VMem* mem)
   }
 
 Exit:
-  MemItemSetFirst(mem, list, first);
+  MemItemSetFirst(itemMemory, list, first);
   return list;
 }
 
-VItem* ParseSourceCode(char* sourceCode, VMem* mem)
+VItem* ParseSourceCode(char* sourceCode, VItemMemory* itemMemory)
 {
   char* p;
-  return ParseCode(sourceCode, &p, mem);
+  return ParseCode(sourceCode, &p, itemMemory);
 }

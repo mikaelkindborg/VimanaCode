@@ -20,7 +20,7 @@ datastack   10 x 4  =   40 bytes
 globalvars  20 x 4  =   80 bytes
 itemmemory 200 x 4  =  800 bytes
 + sizeof(VInterp)       20 bytes
-+ sizeof(VMem)           8 bytes
++ sizeof(VItemMemory)           8 bytes
                       ----------
 Core memory           1068 bytes
 
@@ -61,7 +61,7 @@ typedef struct __VInterp
   int          callStackTop;        // Current stackframe
   VStackFrame* callStack;
 
-  VMem*        mem;                 // Item memory
+  VItemMemory*        itemMemory;                 // Item memory
 
 }
 VInterp;
@@ -102,8 +102,8 @@ VInterp* InterpNewWithSize(
   interp->numCallStackFrames = numCallStackFrames;
   interp->callStackTop = 0;
 
-  interp->mem = (void*)interp->callStack + callStackByteSize;
-  MemInit(interp->mem, numMemItems);
+  interp->itemMemory = (void*)interp->callStack + callStackByteSize;
+  MemInit(interp->itemMemory, numMemItems);
 
   return interp;
 }
@@ -120,12 +120,29 @@ VInterp* InterpNew()
 
 void InterpFree(VInterp* interp)
 {
-  MemSweep(interp->mem);
+  MemSweep(interp->itemMemory);
 #ifdef TRACK_MEMORY_USAGE
-  MemPrintAllocCounter(interp->mem);
+  MemPrintAllocCounter(interp->itemMemory);
 #endif
   SysFree(interp);
 }
+
+// -------------------------------------------------------------
+// Item memory access
+// -------------------------------------------------------------
+
+// TODO
+InterpItemAlloc    -> MemAllocItem
+InterpItemSetFirst -> MemSetItemFirst
+InterpItemGetFirst -> MemGetItemFirst
+InterpItemSetNext  -> MemSetItemNext
+InterpItemGetNext  -> MemGetItemNext
+InterpItemPrint    -> MemPrintItem
+
+
+// -------------------------------------------------------------
+// GC
+// -------------------------------------------------------------
 
 void InterpGC(VInterp* interp)
 {
@@ -137,10 +154,10 @@ void InterpGC(VInterp* interp)
     if (!IsTypeAtomic(item))
     {
       //PrintLine("STACK MARK:");
-      //MemPrintItem(interp->mem, item); PrintNewLine();
+      //MemPrintItem(interp->itemMemory, item); PrintNewLine();
       
       // We are screwed if item is a TypeBufferPtr
-      MemMark(interp->mem, MemItemFirst(interp->mem, item));
+      MemMark(interp->itemMemory, MemItemFirst(interp->itemMemory, item));
     }
   }
 
@@ -152,19 +169,19 @@ void InterpGC(VInterp* interp)
     if (!IsTypeAtomic(item))
     {
       //PrintLine("GLOBALVAR MARK:");
-      //MemPrintItem(interp->mem, item); PrintNewLine();
+      //MemPrintItem(interp->itemMemory, item); PrintNewLine();
 
       // We are screwed if item is a TypeBufferPtr
-      MemMark(interp->mem, MemItemFirst(interp->mem, item));
+      MemMark(interp->itemMemory, MemItemFirst(interp->itemMemory, item));
     }
   }
 
   //MemMark(callstack); // Walk from top and mark localvars
 
-  MemSweep(interp->mem);
+  MemSweep(interp->itemMemory);
   
 #ifdef TRACK_MEMORY_USAGE
-  MemPrintAllocCounter(interp->mem);
+  MemPrintAllocCounter(interp->itemMemory);
 #endif
 }
 
@@ -221,7 +238,7 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* code)
   current->context = current;
 
   // Set first instruction in the frame
-  current->instruction = MemItemFirst(interp->mem, code);
+  current->instruction = MemItemFirst(interp->itemMemory, code);
 }
 
 void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
@@ -251,7 +268,7 @@ void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
   }
 
   // Set first instruction in the new frame
-  current->instruction = MemItemFirst(interp->mem, code);
+  current->instruction = MemItemFirst(interp->itemMemory, code);
 }
 
 void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
@@ -281,7 +298,7 @@ void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
   current->context = current;
 
   // Set first instruction in the new frame
-  current->instruction = MemItemFirst(interp->mem, code);
+  current->instruction = MemItemFirst(interp->itemMemory, code);
 }
 
 void InterpPopStackFrame(VInterp* interp)
@@ -383,7 +400,10 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     if (NULL != instruction)
     {
       // Advance instruction for next loop
-      current->instruction = MemItemNext(interp->mem, current->instruction);
+      current->instruction = MemItemNext(interp->itemMemory, current->instruction);
+
+      //current->instruction = InterpCdr(interp, current->instruction);
+      //current->instruction = InterpMemNext(interp, current->instruction);
 
       if (IsTypePrimFun(instruction))
       {

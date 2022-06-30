@@ -1,17 +1,17 @@
 /*
-File: mem.h
+File: itemMemory.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Memory manager for List-style linked items.
+Memory manager for Lisp-style linked lists.
 
 See item.h for an explanation of memory layout.
 */
 
 // -------------------------------------------------------------
-// VMem struct
+// VItemMemory struct
 // -------------------------------------------------------------
 
-typedef struct __VMem
+typedef struct __VItemMemory
 {
   VAddr firstFree;
   VAddr size;
@@ -21,82 +21,90 @@ typedef struct __VMem
   int   allocCounter;
 #endif
 }
-VMem;
+VItemMemory;
 
-#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + (addr) - 1) ) 
+// TODO fix addressing
+#define ItemAddrShift 3 // 64 bit machines
+#define ItemMemoryAddrToPtr(itemMemory, addr) \
+  ((VItem*) ((itemMemory)->start + ((addr) << ItemAddrShift))) 
+// TODO Fix addressing (+ 1)
+MIKI
+#define ItemMemoryPtrToAddr(itemMemory, itemPtr) \
+  ( (NULL != (itemPtr)) ? ( ((void*)(itemPtr)) - (itemMemory)->start ) + 1 : 0 )
 
-// Return the number of bytes needed to hold VMem header plus numItems
-int MemByteSize(int numItems)
+// Return the number of bytes needed to hold VItemMemory header plus numItems
+int ItemMemoryByteSize(int numItems)
 {
-  // Size of VMem header plus item memory in bytes
-  int memByteSize = sizeof(VMem) + (numItems * sizeof(VItem));
-  return memByteSize;
+  // Size of VItemMemory header plus item memory space in bytes
+  int byteSize = sizeof(VItemMemory) + (numItems * sizeof(VItem));
+  return byteSize;
 }
 
-void MemInit(VMem* mem, int numItems)
+void ItemMemoryInit(VItemMemory* itemMemory, int numItems)
 {
-  VAddr memByteSize = MemByteSize(numItems);
+  VAddr byteSize = ItemMemoryByteSize(numItems);
 
-  mem->firstFree = 0;
-  mem->size = memByteSize - sizeof(VMem);
-  mem->start = mem + sizeof(VMem);
-  mem->end = mem->start;
+  itemMemory->firstFree = 0;
+  itemMemory->size = byteSize - sizeof(VItemMemory);
+  itemMemory->start = itemMemory + sizeof(VItemMemory); // TODO offset start?
+  itemMemory->end = itemMemory->start;
 #ifdef TRACK_MEMORY_USAGE
-  mem->allocCounter = 0;
+  itemMemory->allocCounter = 0;
 #endif
 }
 
 #ifdef TRACK_MEMORY_USAGE
-  void MemPrintAllocCounter(VMem* mem)
+  void MPrintAllocCounter(VItemMemory* itemMemory)
   {
-    Print("MemAllocCounter: "); PrintIntNum(mem->allocCounter); PrintNewLine();
+    Print("MemAllocCounter: "); PrintIntNum(itemMemory->allocCounter); PrintNewLine();
   }
 #endif
-
-#define MemItemAddr(mem, item) \
-  ( (NULL != (item)) ? ( ((void*)(item)) - (mem)->start ) + 1 : 0 )
 
 // -------------------------------------------------------------
 // Alloc and dealloc
 // -------------------------------------------------------------
 
-VItem* MemAllocItem(VMem* mem)
+// TODO: Massive renaming
+MIKI
+VItem* ItemMemoryAlloc(VItemMemory* itemMemory)
 {
   VItem* item;
 
-  if (mem->firstFree)
+  if (itemMemory->firstFree)
   {
     //printf("Free item available\n");
-    item = MemItemPointer(mem, mem->firstFree);
-    mem->firstFree = item->next;
+    item = MemItemPointer(itemMemory, itemMemory->firstFree);
+    itemMemory->firstFree = ItemNextAddr(item);
   }
   else
   {
-    VAddr memUsed = mem->end - mem->start;
-    //printf("memUsed: %i\n", memUsed);
-    //printf("mem->size: %i\n", mem->size);
-    if (!(memUsed < (mem->size + sizeof(VItem))))
+    VAddr memoryUsed = itemMemory->end - itemMemory->start;
+    //printf("memoryUsed: %i\n", memoryUsed);
+    //printf("itemMemory->size: %i\n", itemMemory->size);
+    if (!(memoryUsed < (itemMemory->size + sizeof(VItem))))
     {
       // For debugging
+      // TODO add debug flag
       printf("[GURU_MEDITATION: -1] MEM OUT OF MEMORY\n");
       return NULL;
+      // TODO if not debug raise error
       // GURU(MEM_OUT_OF_MEMORY);
     }
     //printf("Free space available\n");
-    item = mem->end;
-    mem->end += sizeof(VItem);
+    item = itemMemory->end;
+    itemMemory->end += sizeof(VItem);
   }
 
   ItemInit(item);
 
 #ifdef TRACK_MEMORY_USAGE
-  ++ (mem->allocCounter);
+  ++ (itemMemory->allocCounter);
 #endif
 
   return item;
 }
 
-void MemDeallocItem(VMem* mem, VItem* item)
+void MemDeallocItem(VItemMemory* itemMemory, VItem* item)
 {
   if (IsTypeNone(item))
   {
@@ -105,7 +113,7 @@ void MemDeallocItem(VMem* mem, VItem* item)
   }
 
 #ifdef TRACK_MEMORY_USAGE
-  -- (mem->allocCounter);
+  -- (itemMemory->allocCounter);
 #endif
 
   if (IsTypeBufferPtr(item))
@@ -115,31 +123,33 @@ void MemDeallocItem(VMem* mem, VItem* item)
   }
 
   ItemSetType(item, TypeNone);
+  
+//TODO ->next
+  MIKI
+  item->next = itemMemory->firstFree;
 
-  item->next = mem->firstFree;
-
-  mem->firstFree = MemItemAddr(mem, item);
+  itemMemory->firstFree = MemItemAddr(itemMemory, item);
 }
 
 // -------------------------------------------------------------
 // Item access
 // -------------------------------------------------------------
 
-void MemItemSetFirst(VMem* mem, VItem* list, VItem* first)
+void MemItemSetFirst(VItemMemory* itemMemory, VItem* list, VItem* first)
 {
-  list->addr = MemItemAddr(mem, first);
+  list->addr = MemItemAddr(itemMemory, first);
 }
 
-#define MemItemFirst(mem, list) \
-  ( ((list) && (list)->addr) ?  MemItemPointer(mem, (list)->addr) : NULL )
+#define MemItemFirst(itemMemory, list) \
+  ( ((list) && (list)->addr) ?  MemItemPointer(itemMemory, (list)->addr) : NULL )
 
-void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
+void MemItemSetNext(VItemMemory* itemMemory, VItem* item1, VItem* item2)
 {
-  item1->next = MemItemAddr(mem, item2);
+  ItemSetNextAddr(item1, MemItemAddr(itemMemory, item2));
 }
 
-#define MemItemNext(mem, item) \
-  ( ItemNext(item) ?  MemItemPointer(mem, ItemNext(item)) : NULL )
+#define MemItemNext(itemMemory, item) \
+  ( ItemNextAddr(item) ?  MemItemPointer(itemMemory, ItemNextAddr(item)) : NULL )
 
 // -------------------------------------------------------------
 // Cons and rest
@@ -147,41 +157,41 @@ void MemItemSetNext(VMem* mem, VItem* item1, VItem* item2)
 /*
 // Adds an item to the front of a new list
 // Allocs and returns the new list
-VItem* MemCons(VMem* mem, VItem* item, VItem* list)
+VItem* MemCons(VItemMemory* itemMemory, VItem* item, VItem* list)
 {
   // Alloc the new list item
-  VItem* newList = MemAllocItem(mem);
+  VItem* newList = MemAllocItem(itemMemory);
   if (!newList) return NULL;
   ItemSetType(newList, TypeList);
 
   // Alloc the first item in the list
-  VItem* newFirst = MemAllocItem(mem);
+  VItem* newFirst = MemAllocItem(itemMemory);
   if (!newFirst) return NULL;
   *newFirst = *item;
 
   // Set next of first
-  VItem* first = MemItemFirst(mem, list);
+  VItem* first = MemItemFirst(itemMemory, list);
   if (NULL == first)
     newFirst->next = 0;
   else
-    newFirst->next = MemItemAddr(mem, first);
+    newFirst->next = MemItemAddr(itemMemory, first);
   
   // Set first of list
-  MemItemSetFirst(mem, newList, newFirst);
+  MemItemSetFirst(itemMemory, newList, newFirst);
 
   return newList;
 }
 
 // Allocs and returns a new list
-VItem* MemRest(VMem* mem, VItem* list)
+VItem* MemRest(VItemMemory* itemMemory, VItem* list)
 {
   VItem* next = NULL;
 
   // Get next of first
-  VItem* first = MemItemFirst(mem, list);
+  VItem* first = MemItemFirst(itemMemory, list);
   if (NULL != first)
   {
-    next = MemItemNext(mem, first);
+    next = MemItemNext(itemMemory, first);
   }
   
   if (NULL == next)
@@ -191,12 +201,12 @@ VItem* MemRest(VMem* mem, VItem* list)
   }
 
   // Alloc new list item
-  VItem* newList = MemAllocItem(mem);
+  VItem* newList = MemAllocItem(itemMemory);
   if (!newList) return NULL;
   ItemSetType(newList, TypeList);
 
   // Set first of new list
-  MemItemSetFirst(mem, newList, next);
+  MemItemSetFirst(itemMemory, newList, next);
 
   return newList;
 }
@@ -206,7 +216,7 @@ VItem* MemRest(VMem* mem, VItem* list)
 // Buffer items
 // -------------------------------------------------------------
 
-// Allocates two new items: one that can be copied and one that 
+// Allocate two new items: one that can be copied and one that 
 // points to the memory buffer. The memory buffer must be allocated
 // with malloc() or a similar function. The caller must set
 // the type of the returned item.
@@ -217,23 +227,23 @@ VItem* MemRest(VMem* mem, VItem* list)
 // If the raw pointer would be refereced from many items, the
 // garbage collector would not be able to tell if it is deallocated.
 //
-VItem* MemAllocBufferItem(VMem* mem, void* bufferPtr)
+VItem* MemAllocBufferItem(VItemMemory* itemMemory, void* bufferPtr)
 {
   //PrintLine("MemAllocBufferItem");
-  VItem* item = MemAllocItem(mem);
-  VItem* bufferItem = MemAllocItem(mem);
+  VItem* item = MemAllocItem(itemMemory);
+  VItem* bufferItem = MemAllocItem(itemMemory);
   
   bufferItem->ptr = bufferPtr;
   ItemSetType(bufferItem, TypeBufferPtr);
-  MemItemSetFirst(mem, item, bufferItem);
+  MemItemSetFirst(itemMemory, item, bufferItem);
 
   return item;
 }
 
 // Returns the pointer of the buffer the item refers to.
-void* MemBufferItemPtr(VMem* mem, VItem* item)
+void* MemBufferItemPtr(VItemMemory* itemMemory, VItem* item)
 {
-  VItem* bufferItem = MemItemFirst(mem, item);
+  VItem* bufferItem = MemItemFirst(itemMemory, item);
 
   if (NULL == bufferItem) return NULL;
   if (!IsTypeBufferPtr(bufferItem)) return NULL;
@@ -245,9 +255,9 @@ void* MemBufferItemPtr(VMem* mem, VItem* item)
 // GC
 // -------------------------------------------------------------
 
-void MemPrintItem(VMem* mem, VItem* item);
+void MemPrintItem(VItemMemory* itemMemory, VItem* item);
 
-void MemMark(VMem* mem, VItem* item)
+void MemMark(VItemMemory* itemMemory, VItem* item)
 {
   while (item)
   {
@@ -257,25 +267,25 @@ void MemMark(VMem* mem, VItem* item)
       return;
     }
 
-    //Print("MARK ITEM: "); MemPrintItem(mem, item); PrintNewLine();
+    //Print("MARK ITEM: "); MemPrintItem(itemMemory, item); PrintNewLine();
     ItemSetGCMark(item, 1);
 
     // Mark children
     if (!IsTypeAtomic(item))
     {
-      VItem* child = MemItemFirst(mem, item);
-      MemMark(mem, child);
+      VItem* child = MemItemFirst(itemMemory, item);
+      MemMark(itemMemory, child);
     }
 
-    item = MemItemNext(mem, item);
+    item = MemItemNext(itemMemory, item);
   }
 }
 
-void MemSweep(VMem* mem)
+void MemSweep(VItemMemory* itemMemory)
 {
-  VItem* item = mem->start;
+  VItem* item = itemMemory->start;
 
-  while ((void*)item < mem->end)
+  while ((void*)item < itemMemory->end)
   {
     if (ItemGCMark(item))
     {
@@ -285,7 +295,7 @@ void MemSweep(VMem* mem)
     else
     {
       //PrintLine("MemSweep dealloc");
-      MemDeallocItem(mem, item);
+      MemDeallocItem(itemMemory, item);
     }
 
     ++ item;
@@ -296,15 +306,15 @@ void MemSweep(VMem* mem)
 // Print items
 // -------------------------------------------------------------
 
-void MemPrintList(VMem* mem, VItem* first);
+void MemPrintList(VItemMemory* itemMemory, VItem* first);
 
-void MemPrintItem(VMem* mem, VItem* item)
+void MemPrintItem(VItemMemory* itemMemory, VItem* item)
 {
   //printf("[T%i]", ItemType(item));
   if (IsTypeNone(item))
     Print("None");
   else if (IsTypeList(item))
-    MemPrintList(mem, item);
+    MemPrintList(itemMemory, item);
   else if (IsTypeIntNum(item))
     printf("%li", item->intNum);
   else if (IsTypeDecNum(item))
@@ -314,37 +324,37 @@ void MemPrintItem(VMem* mem, VItem* item)
   else if (IsTypeSymbol(item))
     printf("S%li", item->intNum);
   else if (IsTypeString(item))
-    printf("'%s'", (char*)MemBufferItemPtr(mem, item));
+    printf("'%s'", (char*)MemBufferItemPtr(itemMemory, item));
   else if (IsTypeFun(item))
   {
     printf("[FUN] ");
-    MemPrintList(mem, item);
+    MemPrintList(itemMemory, item);
   }
 }
 
-void MemPrintList(VMem* mem, VItem* list)
+void MemPrintList(VItemMemory* itemMemory, VItem* list)
 {
   PrintChar('(');
 
   int printSpace = FALSE;
-  VItem* item = MemItemFirst(mem, list);
+  VItem* item = MemItemFirst(itemMemory, list);
 
   while (item)
   {
     if (printSpace) PrintChar(' ');
-    MemPrintItem(mem, item);
-    item = MemItemNext(mem, item);
+    MemPrintItem(itemMemory, item);
+    item = MemItemNext(itemMemory, item);
     printSpace = TRUE;
   }
 
   PrintChar(')');
 }
 
-void MemPrintArray(VMem* mem, VItem* array, int numItems)
+void MemPrintArray(VItemMemory* itemMemory, VItem* array, int numItems)
 {
   for (int i = 0; i < numItems; ++ i)
   {
-    MemPrintItem(mem, &(array[i]));
+    MemPrintItem(itemMemory, &(array[i]));
     PrintChar(' ');
   }
 }

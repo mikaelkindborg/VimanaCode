@@ -55,7 +55,7 @@ char* ParseString(char* p, VString** pString)
 // p is the current position in the string.
 // Returns the new current position. 
 // Parsed list is returned in first.
-char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
+char* __ParseSymbolicCode(char* p, VItem** first, VItemMemory* itemMemory)
 {
   VItem*   item;
   VItem*   child;
@@ -83,18 +83,18 @@ char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
     }
     else
     {
-      item = MemAllocItem(mem);
+      item = MemAllocItem(itemMemory);
 
       if (NULL == *first) 
         *first = item;
       else
-        MemItemSetNext(mem, prev, item);
+        MemItemSetNext(itemMemory, prev, item);
 
       if (IsLeftParen(*p))
       {
         // Parse child list
-        p = __ParseSymbolicCode(p + 1, &child, mem);
-        ItemSetList(item, MemItemAddr(mem, child));
+        p = __ParseSymbolicCode(p + 1, &child, itemMemory);
+        ItemSetList(item, MemItemAddr(itemMemory, child));
       }
       else
       /*if (IsStringSeparator(*p))
@@ -143,9 +143,9 @@ char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
 }
 
 // Returns list. 
-VItem* ParseSymbolicCode(char* p, VMem* mem)
+VItem* ParseSymbolicCode(char* p, VItemMemory* itemMemory)
 {
   VItem* list;
-  __ParseSymbolicCode(p, &list, mem);
+  __ParseSymbolicCode(p, &list, itemMemory);
   return list;
 }

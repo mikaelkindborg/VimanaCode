@@ -11,14 +11,14 @@ void PrimFun_sayHi(VInterp* interp)
 void PrimFun_print(VInterp* interp)
 {
   VItem* item = InterpStackPop(interp);
-  MemPrintItem(interp->mem, item);
+  MemPrintItem(interp->itemMemory, item);
   PrintNewLine();
 }
 
 void PrimFun_printstack(VInterp* interp)
 {
   Print("STACK: ");
-  MemPrintArray(interp->mem, interp->dataStack, interp->dataStackTop + 1);
+  MemPrintArray(interp->itemMemory, interp->dataStack, interp->dataStackTop + 1);
   PrintNewLine();
 }
 
@@ -67,14 +67,14 @@ void PrimFun_setglobal(VInterp* interp)
 {
   VItem* list = InterpStackPop(interp);
   VItem* value = InterpStackPop(interp);
-  VItem* symbol = MemItemFirst(interp->mem, list);
+  VItem* symbol = MemItemFirst(interp->itemMemory, list);
   InterpSetGlobalVar(interp, symbol->intNum, value);
 }
 
 void PrimFun_getglobal(VInterp* interp)
 {
   VItem* item = InterpStackTop(interp);
-  VItem* symbol = MemItemFirst(interp->mem, item);
+  VItem* symbol = MemItemFirst(interp->itemMemory, item);
   *item = *(InterpGetGlobalVar(interp, symbol->intNum));
 }
 
@@ -84,14 +84,14 @@ void PrimFun_funify(VInterp* interp)
   ItemSetType(list, TypeFun);
 }
 
-VItem* ParseSourceCode(char* sourceCode, VMem* mem);
+VItem* ParseSourceCode(char* sourceCode, VItemMemory* itemMemory);
 
 void PrimFun_parse(VInterp* interp)
 {
   VItem* item = InterpStackTop(interp);
   // TODO: Check IsTypeString
-  char* string = MemBufferItemPtr(interp->mem, item);
-  VItem* list = ParseSourceCode(string, interp->mem);
+  char* string = MemBufferItemPtr(interp->itemMemory, item);
+  VItem* list = ParseSourceCode(string, interp->itemMemory);
   *item = *list;
 }
 
@@ -100,11 +100,11 @@ void PrimFun_readfile(VInterp* interp)
   VItem* stringItem = InterpStackPop(interp);
   // TODO: Check IsTypeString
 
-  char* fileName = MemBufferItemPtr(interp->mem, stringItem);
+  char* fileName = MemBufferItemPtr(interp->itemMemory, stringItem);
   char* string = FileRead(fileName);
   // TODO: Check NULL
 
-  stringItem = MemAllocBufferItem(interp->mem, string);
+  stringItem = MemAllocBufferItem(interp->itemMemory, string);
   ItemSetType(stringItem, TypeString);
 
   InterpStackPush(interp, stringItem);
@@ -311,7 +311,7 @@ void PrimFun_first(VInterp* interp)
   if (!IsList(list)) GURU(FIRST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
-  VItem* item = MemItemFirst(interp->mem, list);
+  VItem* item = MemItemFirst(interp->itemMemory, list);
 
   // Leave empty list on the stack
   // () first => ()
@@ -331,14 +331,14 @@ void PrimFun_rest(VInterp* interp)
   if (!IsList(list)) GURU(REST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
-  VItem* item = MemItemFirst(interp->mem, list);
+  VItem* item = MemItemFirst(interp->itemMemory, list);
 
   // Leave empty list on the stack
   // () rest => ()
   if (NULL == item) goto Exit;
 
   // Get second item in the list
-  item = MemItemNext(interp->mem, item);
+  item = MemItemNext(interp->itemMemory, item);
 
   // If empty tail, leave empty list on the stack
   // (1) rest => ()
@@ -349,7 +349,7 @@ void PrimFun_rest(VInterp* interp)
   }
 
   // Set second item as first element of the list
-  MemItemSetFirst(interp->mem, list, item);
+  MemItemSetFirst(interp->itemMemory, list, item);
 
 Exit:;
 }
@@ -369,28 +369,28 @@ void PrimFun_cons(VInterp* interp)
   ItemSetType(&newList, ItemType(list));
 
   // Allocate new element
-  VItem* newFirst = MemAllocItem(interp->mem);
+  VItem* newFirst = MemAllocItem(interp->itemMemory);
   if (NULL == newFirst) GURU(CONS_OUT_OF_MEMORY);
 
   // Copy item to new element
   *newFirst = *item;
 
   // Get first element of the list 
-  VItem* first = MemItemFirst(interp->mem, list);
+  VItem* first = MemItemFirst(interp->itemMemory, list);
 
   if (NULL == first)
   {
     // If empty list, the new item is the last and only element
-    MemItemSetNext(interp->mem, newFirst, NULL);
+    MemItemSetNext(interp->itemMemory, newFirst, NULL);
   }
   else
   {
     // Link new item to the first element of the list
-    MemItemSetNext(interp->mem, newFirst, first);
+    MemItemSetNext(interp->itemMemory, newFirst, first);
   }
 
   // Set first of list to refer to the new element
-  MemItemSetFirst(interp->mem, &newList, newFirst);
+  MemItemSetFirst(interp->itemMemory, &newList, newFirst);
 
   // Copy new list item to data stack
   *item = newList;
@@ -407,21 +407,25 @@ void PrimFun_setfirst(VInterp* interp)
   if (!IsList(list)) GURU(SETFIRST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
-  VItem* first = MemItemFirst(interp->mem, list);
+  VItem* first = MemItemFirst(interp->itemMemory, list);
 
   // Set first of empty list
   if (NULL == first)
   {
-    first = MemAllocItem(interp->mem);
+    first = MemAllocItem(interp->itemMemory);
     if (NULL == first) GURU(SETFIRST_OUT_OF_MEMORY);
-    MemItemSetFirst(interp->mem, list, first);
+    MemItemSetFirst(interp->itemMemory, list, first);
   }
 
   // Preserve address of next item
+  //TODO ->next
+  MIKI
   VAddr next = first->next;
   // Copy item
   *first = *item;
   // Restore next
+  //TODO ->next
+  MIKI
   first->next = next;
 }
 
