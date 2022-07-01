@@ -24,12 +24,12 @@
 #include "file.h"
 #include "socket.h"
 #include "item.h"
-#include "printitem.h"
-#include "cellmemory.h"
+#include "mem.h"
 #include "symboltable.h"
 #include "primfuntable.h"
 #include "interp.h"
 #include "parser.h"
+#include "printitem.h"
 #include "primfuns.h"
 
 #endif

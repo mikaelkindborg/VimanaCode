@@ -10,7 +10,7 @@ Interpreter data structures and functions.
 // -------------------------------------------------------------
 
 /*
-Arduino memory, fit in 2K
+Arduino Uno example memory layout, fit in 2K
 
 item         4 bytes (2+2)
 stackframe  12 bytes (2+2+4+4)
@@ -18,9 +18,9 @@ stackframe  12 bytes (2+2+4+4)
 callstack   10 x 12 =  120 bytes
 datastack   10 x 4  =   40 bytes
 globalvars  20 x 4  =   80 bytes
-cellmemory 200 x 4  =  800 bytes
+items      200 x 4  =  800 bytes
 + sizeof(VInterp)       20 bytes
-+ sizeof(VCellMemory)           8 bytes
++ sizeof(VMem)           8 bytes
                       ----------
 Core memory           1068 bytes
 
@@ -61,13 +61,15 @@ typedef struct __VInterp
   int          callStackTop;        // Current stackframe
   VStackFrame* callStack;
 
-  VCellMemory*        cellMemory;                 // Item memory
+  VMem*        mem;                 // Item memory
 
 }
 VInterp;
 
 // Prim fun lookup function
 VPrimFunPtr LookupPrimFunPtr(int index);
+
+#define InterpMem(interp) ((interp)->mem)
 
 // Seems to be slower?
 //#define InterpGetStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
@@ -86,26 +88,26 @@ VInterp* InterpNewWithSize(
   int globalVarsByteSize = numGlobalVars * sizeof(VItem);
   int dataStackByteSize  = numDataStackItems * sizeof(VItem);
   int callStackByteSize  = numCallStackFrames * sizeof(VStackFrame);
-  int cellMemoryByteSize = CellMemoryGetByteSize(numItems);
+  int memByteSize        = MemGetByteSize(numItems);
 
   VInterp* interp = SysAlloc(
     sizeof(VInterp) + globalVarsByteSize + 
     dataStackByteSize + callStackByteSize + 
-    cellMemoryByteSize);
+    memByteSize);
 
-  interp->globalVars = BytePtrOffset(interp, sizeof(VInterp));
+  interp->globalVars = (VItem*) BytePtrOffset(interp, sizeof(VInterp));
   interp->numGlobalVars = numGlobalVars;
 
-  interp->dataStack = BytePtrOffset(interp->globalVars, globalVarsByteSize);
+  interp->dataStack = (VItem*) BytePtrOffset(interp->globalVars, globalVarsByteSize);
   interp->numDataStackItems = numDataStackItems;
   interp->dataStackTop = -1;
 
-  interp->callStack = BytePtrOffset(interp->dataStack, dataStackByteSize);
+  interp->callStack = (VStackFrame*) BytePtrOffset(interp->dataStack, dataStackByteSize);
   interp->numCallStackFrames = numCallStackFrames;
   interp->callStackTop = 0;
 
-  interp->cellMemory = BytePtrOffset(interp->callStack, callStackByteSize);
-  CellMemoryInit(interp->cellMemory, numMemItems);
+  interp->mem = (VMem*) BytePtrOffset(interp->callStack, callStackByteSize);
+  MemInit(InterpMem(interp), numItems);
 
   return interp;
 }
@@ -122,46 +124,27 @@ VInterp* InterpNew()
 
 void InterpFree(VInterp* interp)
 {
-  CellMemorySweep(interp->cellMemory);
+  MemSweep(InterpMem(interp));
+
 #ifdef TRACK_MEMORY_USAGE
-  CellMemoryPrintAllocCounter(interp->cellMemory);
+  MemPrintAllocCounter(InterpMem(interp));
 #endif
+
   SysFree(interp);
 }
-
-// -------------------------------------------------------------
-// Item memory access
-// -------------------------------------------------------------
-
-// TODO
 
 // -------------------------------------------------------------
 // Item access
 // -------------------------------------------------------------
 
-// Set first item of child list
-void InterpSetFirst(VInterp* interp, VItem* list, VItem* first)
-{
-  list->addr = ItemPtrToAddr(first, interp->cellMemory->start);
-}
-// Set next item
-void InterpSetNext(VInterp* interp, VItem* item, VItem* next)
-{
-  ItemSetNext(item, ItemPtrToAddr(next, interp->cellMemory->start));
-}
+#define InterpGetFirst(interp, list) MemGetFirst(InterpMem(interp), list)
+#define InterpGetNext(interp, item) MemGetNext(InterpMem(interp), item)
+#define InterpSetFirst(interp, list, first) MemSetFirst(InterpMem(interp), list, first)
+#define InterpSetNext(interp, item, next) MemSetNext(InterpMem(interp), item, next)
 
-// Get first item of child list
-#define InterpGetFirst(interp, list) \
-  ItemAddrToPtr(ItemGetFirst(first), (interp)->cellMemory->start)
-
-// Get next item
-#define InterpGetNext(interp, item) \
-  ItemAddrToPtr(ItemGetNext(item), (interp)->cellMemory->start)
-
-InterpAllocBufferItem
-InterpAllocItem    -> CellMemoryAllocItem
-
-InterpGetBufferPtr(interp, item);
+#define InterpAllocItem(interp) MemAllocItem(InterpMem(interp))
+#define InterpAllocBuffer(interp, data) MemAllocBuffer(InterpMem(interp), data)
+#define InterpGetBufferPtr(interp, item) MemGetBufferPtr(InterpMem(interp), item)
 
 // -------------------------------------------------------------
 // GC
@@ -177,10 +160,10 @@ void InterpGC(VInterp* interp)
     if (!IsTypeAtomic(item))
     {
       //PrintLine("STACK MARK:");
-      //MemPrintItem(interp->cellMemory, item); PrintNewLine();
+      //MemPrintItem(interp->mem, item); PrintNewLine();
       
       // We are screwed if item is a TypeBufferPtr
-      InterpMark(interp, InterpGetFirst(interp, item));
+      MemMark(InterpMem(interp), InterpGetFirst(interp, item));
     }
   }
 
@@ -192,19 +175,19 @@ void InterpGC(VInterp* interp)
     if (!IsTypeAtomic(item))
     {
       //PrintLine("GLOBALVAR MARK:");
-      //MemPrintItem(interp->cellMemory, item); PrintNewLine();
+      //MemPrintItem(interp->mem, item); PrintNewLine();
 
       // We are screwed if item is a TypeBufferPtr
-      InterpMark(interp, InterpGetFirst(interp, item));
+      MemMark(InterpMem(interp), InterpGetFirst(interp, item));
     }
   }
 
   //InterpMark(callstack); // Walk from top and mark localvars
 
-  CellMemorySweep(interp->cellMemory);
+  MemSweep(InterpMem(interp));
 
 #ifdef TRACK_MEMORY_USAGE
-  CellMemoryPrintAllocCounter(interp->cellMemory);
+  MemPrintAllocCounter(InterpMem(interp));
 #endif
 }
 

@@ -26,7 +26,7 @@ void InterpPrintItem(VInterp* interp, VItem* item)
     printf("P%li", item->intNum);
   else if (IsTypeSymbol(item))
     printf("S%li", item->intNum);
-  else if (IsTypeString(item))
+  else if (IsTypeBuffer(item))
     printf("'%s'", (char*)InterpGetBufferPtr(interp, item));
   else if (IsTypeFun(item))
   {

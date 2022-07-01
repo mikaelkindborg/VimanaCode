@@ -10,9 +10,12 @@ Basic data types and functions.
 // -------------------------------------------------------------
 
 typedef unsigned char    VByte;
+typedef unsigned int     VUInt;
 typedef unsigned long    VAddr;
 typedef          long    VIntNum;
 typedef          double  VDecNum;
+
+#define UInt(n) ((VUInt)(n))
 
 // -------------------------------------------------------------
 // Boolean values

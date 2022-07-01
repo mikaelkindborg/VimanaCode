@@ -55,12 +55,12 @@ char* GetNextToken(char* p, char** next)
   return GTokenBuffer;
 }
 
-VType TokenType(char* token)
+VUInt TokenType(char* token)
 {
   char* p = token;
   int   dec = 0;
 
-  VType type = TypeSymbol;
+  VUInt type = TypeSymbol;
 
   // Single minus sign is not a number
   if ( ('-' == *p) && (1 == strlen(token)) ) goto Exit;
@@ -90,7 +90,7 @@ Exit:
 VItem* ParseToken(char* token, VInterp* interp)
 {
   VItem* item = InterpAllocItem(interp);
-  VType type = TokenType(token);
+  VUInt type = TokenType(token);
 
   if (TypeIntNum == type)
   {
@@ -191,8 +191,9 @@ VItem* ParseCode(char* code, char** next, VInterp* interp)
     if (IsStringSeparator(*p))
     {
       char* string = ParseString(p + 1, &p);
-      item = InterpAllocBufferItem(interp, StrCopy(string));
-      ItemSetType(item, TypeString);
+      item = InterpAllocBuffer(interp, StrCopy(string));
+      //ItemSetType(item, TypeString); // TODO!
+      ItemSetType(item, TypeBuffer);
       SysFree(string);
     }
     else

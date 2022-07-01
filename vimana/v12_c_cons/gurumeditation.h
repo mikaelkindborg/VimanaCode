@@ -65,6 +65,6 @@ void ShouldHold(char* description, int condition)
 {
   if (!condition) 
   {
-    printf("[SHOULD_HOLD_FAILED] %s\n", description);
+    printf("[ShouldHold] %s\n", description);
   }
 }

@@ -84,7 +84,7 @@ void PrimFun_funify(VInterp* interp)
   ItemSetType(list, TypeFun);
 }
 
-VItem* ParseSourceCode(char* sourceCode, VCellMemory* cellMemory);
+VItem* ParseSourceCode(char* sourceCode, VInterp* interp);
 
 void PrimFun_parse(VInterp* interp)
 {
@@ -104,8 +104,9 @@ void PrimFun_readfile(VInterp* interp)
   char* string = FileRead(fileName);
   // TODO: Check NULL
 
-  stringItem = InterpAllocBufferItem(interp, string);
-  ItemSetType(stringItem, TypeString);
+  stringItem = InterpAllocBuffer(interp, string);
+  //ItemSetType(stringItem, TypeString); // TODO!!
+  ItemSetType(stringItem, TypeBuffer); // TODO!!
 
   InterpStackPush(interp, stringItem);
 }
@@ -344,7 +345,7 @@ void PrimFun_rest(VInterp* interp)
   // (1) rest => ()
   if (NULL == item)
   {
-    list->addr = 0;
+    list->first = 0;
     goto Exit;
   }
 
@@ -366,7 +367,7 @@ void PrimFun_cons(VInterp* interp)
   // This will be the new head of the cons
   VItem newList;
   ItemInit(&newList);
-  ItemSetType(&newList, ItemType(list));
+  ItemSetType(&newList, ItemGetType(list));
 
   // Allocate new element
   VItem* newFirst = InterpAllocItem(interp);
@@ -418,15 +419,13 @@ void PrimFun_setfirst(VInterp* interp)
   }
 
   // Preserve address of next item
-  //TODO ->next
-  MIKI
-  VAddr next = first->next;
+  VAddr next = ItemGetNext(first);
+
   // Copy item
   *first = *item;
+
   // Restore next
-  //TODO ->next
-  MIKI
-  first->next = next;
+  ItemSetNext(first, next);
 }
 
 void PrimFun_gc(VInterp* interp)

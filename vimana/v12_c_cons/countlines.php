@@ -56,7 +56,7 @@ $files = [
   "array.h",
   "file.h",
   "item.h",
-  "cellmemory.h",
+  "mem.h",
   "symboltable.h",
   "primfuntable.h",
   "interp.h",

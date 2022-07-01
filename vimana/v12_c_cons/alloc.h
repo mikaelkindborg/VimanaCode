@@ -14,7 +14,6 @@ Memory allocation tracking.
     ++ GSysAllocCounter;
   }
 
-  // TODO: Zero-initialize allocated buffer?
   void* SysAlloc(int size)
   {
     SysAllocCounterIncr();

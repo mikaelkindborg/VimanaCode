@@ -2,11 +2,11 @@
 File: item.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Items are like cons cells in Lisp. They hold a value and 
+Items are like conses in Lisp. They hold a value and 
 an address to the next item.
 
 Items are equal size and allocated from a larger block by the
-memory manager in cellmemory.h. 
+memory manager in mem.h. 
 
 Items are copied when pushed onto the data stack and 
 assigned to variables. The data stack and global variables
@@ -58,7 +58,7 @@ ListHead   --> ListHead   --> SecondItem
                  !
                FirstItem  --> SecondItem
 
-See cellmemory.h for details on how managed memory is allocated 
+See mem.h for details on how managed memory is allocated 
 and how addresses are used to reference items.
 
 Addresses are item indexes, and are used to save space by 
@@ -98,60 +98,15 @@ typedef struct __VItem
 VItem;
 
 // -------------------------------------------------------------
-// Item types
-// -------------------------------------------------------------
-
-enum ItemType
-{
-  TypeNone = 0,
-  TypeIntNum,
-  TypeDecNum,
-  TypeList,
-  TypeBufferPtr,   // Is never pushed to the data stack
-  TypeBuffer,      // Used for strings (and other memory objects)
-  //TypeString,
-  //TypeSocket,
-  TypeSymbol,      // Pushable types must go before TypeSymbol
-  TypePrimFun,     // Primitive function
-  TypeFun,         // Vimana function
-  //TypeFunX,        // Vimana "macro" function
-  __TypeSentinel__
-};
-
-#define IsTypeNone(item)         (TypeNone == ItemType(item))
-#define IsTypeList(item)         (TypeList == ItemType(item))
-#define IsTypeIntNum(item)       (TypeIntNum == ItemType(item))
-#define IsTypeDecNum(item)       (TypeDecNum == ItemType(item))
-#define IsTypeBufferPtr(item)    (TypeBufferPtr == ItemType(item))
-#define IsTypeBuffer(item)       (TypeBuffer == ItemType(item))
-//#define IsTypeString(item)       (TypeString == ItemType(item))
-//#define IsTypeSocket(item)       (TypeSocket == ItemType(item))
-#define IsTypeSymbol(item)       (TypeSymbol == ItemType(item))
-#define IsTypePrimFun(item)      (TypePrimFun == ItemType(item))
-#define IsTypeFun(item)          (TypeFun == ItemType(item))
-
-// Pushable items are types that are pushed
-// to the data stack without being evaluated
-#define IsTypePushable(item) \
-  (ItemType(item) < TypeSymbol)
-
-// Types that do not reference other items
-#define IsTypeAtomic(item) \
-  (IsTypeNone(item)  || IsTypeIntNum(item)  || IsTypeDecNum(item) || \
-  IsTypeSymbol(item) || IsTypePrimFun(item) || IsTypeBufferPtr(item))
-
-// Empty list
-#define IsEmpty(item) \
-  (IsTypeList(item) && (0 == (item)->first))
-
-// List types
-#define IsList(item) \
-  (IsTypeList(item) || IsTypeFun(item))
-
-// -------------------------------------------------------------
 // Convert addr to/from pointer
 // -------------------------------------------------------------
 
+#define ItemAddrToPtr(addr, memStart) ((memStart) + ((addr) - 1))
+#define ItemPtrToAddr(itemPtr, memStart) ((itemPtr - memStart) + 1)
+
+#define VItemPtr(p) ((VItem*)(p))
+
+/*
 // Use bit shift to multiply to get item offset 
 // 4 byte item size (on 8 bit processors with 16 bit pointers)
 //   #define ItemAddrPtrShift 2 
@@ -169,14 +124,15 @@ enum ItemType
 #define ItemAddrPtrShift 4 
 
 // Convert address to pointer
-// start is the beginning of cell memory
-#define ItemAddrToPtr(addr, start) \
-  ( (VItem*) (BytePtrOffset(start, ((addr) - 1) << ItemAddrPtrShift)) ) 
+// memStart is the beginning of item memory
+#define ItemAddrToPtr(addr, memStart) \
+  ( (VItem*) (BytePtrOffset(memStart, ((addr) - 1) << ItemAddrPtrShift)) ) 
 
 // Convert pointer to address
-// start is the beginning of cell memory
-#define ItemPtrToAddr(itemPtr, start) \
-  ( ((BytePtr(itemPtr) - (start)) >> ItemAddrPtrShift) + 1 )
+// memStart is the beginning of memory
+#define ItemPtrToAddr(itemPtr, memStart) \
+  ( ((BytePtr(itemPtr) - (memStart)) >> ItemAddrPtrShift) + 1 )
+*/
 
 // TODO: Check that addressing works (+/- 1)
 // TODO: Move this to interp and set start to start - sizeof(VItem) in struct
@@ -192,16 +148,17 @@ enum ItemType
 #define MarkShift        4
 #define AddrShift        5
 
-#define ItemGetType(item)   (((item)->next) & TypeMask)
-#define ItemGetGCMark(item) ((((item)->next) & MarkMask) >> MarkShift)
+#define ItemGetType(item)   UInt(((item)->next) & TypeMask)
+#define ItemGetGCMark(item) UInt((((item)->next) & MarkMask) >> MarkShift)
 #define ItemGetNext(item)   (((item)->next) >> AddrShift)
+#define ItemGetNextPtr(item, memStart) ItemAddrToPtr(ItemGetNext(item), memStart)
 
-void ItemSetGCMark(VItem* item, unsigned int mark)
+void ItemSetGCMark(VItem* item, VUInt mark)
 {
   item->next = (item->next & ~MarkMask) | (mark << MarkShift);
 }
 
-void ItemSetType(VItem* item, unsigned int type)
+void ItemSetType(VItem* item, VUInt type)
 {
   item->next = (item->next & ~TypeMask) | type;
 }
@@ -212,10 +169,66 @@ void ItemSetNext(VItem* item, VAddr addr)
 }
 
 // -------------------------------------------------------------
+// Item types
+// -------------------------------------------------------------
+
+enum ItemType
+{
+  TypeNone = 0,
+  TypeIntNum,
+  TypeDecNum,
+  TypeList,
+  TypeBuffer,      // Used for strings (and other memory objects)
+  // TODO: Move to object header
+  //TypeString,
+  //TypeSocket,
+  TypeSymbol,      // Pushable types must go before TypeSymbol
+  TypePrimFun,     // Primitive function
+  TypeFun,         // Vimana function
+  TypeFunX,        // Vimana "macro" function
+  TypeBufferPtr,   // Never used on the data stack
+  __TypeSentinel__
+};
+
+#define IsTypeNone(item)         (TypeNone == ItemGetType(item))
+#define IsTypeList(item)         (TypeList == ItemGetType(item))
+#define IsTypeIntNum(item)       (TypeIntNum == ItemGetType(item))
+#define IsTypeDecNum(item)       (TypeDecNum == ItemGetType(item))
+#define IsTypeBuffer(item)       (TypeBuffer == ItemGetType(item))
+#define IsTypeSymbol(item)       (TypeSymbol == ItemGetType(item))
+#define IsTypePrimFun(item)      (TypePrimFun == ItemGetType(item))
+#define IsTypeFun(item)          (TypeFun == ItemGetType(item))
+#define IsTypeFunX(item)         (TypeFunX == ItemGetType(item))
+#define IsTypeBufferPtr(item)    (TypeBufferPtr == ItemGetType(item))
+
+// TODO: Move to object header
+//#define IsTypeString(item)       (TypeString == ItemGetType(item))
+//#define IsTypeSocket(item)       (TypeSocket == ItemGetType(item))
+
+// Pushable items are types that are pushed
+// to the data stack without being evaluated
+#define IsTypePushable(item) \
+  (ItemGetType(item) < TypeSymbol)
+
+// Types that do not reference other items
+#define IsTypeAtomic(item) \
+  (IsTypeNone(item)  || IsTypeIntNum(item)  || IsTypeDecNum(item) || \
+  IsTypeSymbol(item) || IsTypePrimFun(item) || IsTypeBufferPtr(item))
+
+// Empty list
+#define IsEmpty(item) \
+  (IsTypeList(item) && (0 == (item)->first))
+
+// List types
+#define IsList(item) \
+  (IsTypeList(item) || IsTypeFun(item))
+
+// -------------------------------------------------------------
 // Access to data in item value field
 // -------------------------------------------------------------
 
-#define ItemGetFirst(item)  ((item)->addr)
+#define ItemGetFirst(item)  ((item)->first)
+#define ItemGetFirstPtr(item, memStart) ItemAddrToPtr(ItemGetFirst(item), memStart)
 #define ItemGetSymbol(item) ((item)->symbol)
 #define ItemGetIntNum(item) ((item)->intNum)
 #define ItemGetDecNum(item) ((item)->decNum)
@@ -223,7 +236,7 @@ void ItemSetNext(VItem* item, VAddr addr)
 // Set first of child list
 void ItemSetFirst(VItem* item, VAddr addr)
 {
-  item->addr = addr;
+  item->first = addr;
 }
 
 void ItemSetSymbol(VItem* item, VIntNum symbol)
@@ -281,5 +294,5 @@ void ItemInit(VItem* item)
 
 // TODO: Need to fix this for doubles?
 #define ItemEquals(item1, item2) \
-  ( (ItemType(item1) == ItemType(item2)) && \
+  ( (ItemGetType(item1) == ItemGetType(item2)) && \
     ((item1)->intNum == (item2)->intNum) )

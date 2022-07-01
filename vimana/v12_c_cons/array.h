@@ -21,7 +21,7 @@ VArray* ArrayNew(int itemSize, int size)
   array->itemSize = itemSize;
   array->size = size;
   array->length = 0;
-  array->buffer = BytePtrOffset(array, sizeof(VArray));
+  array->buffer = (void*) BytePtrOffset(array, sizeof(VArray));
 
   return array;
 }
@@ -59,7 +59,7 @@ VArray* ArrayGrow(VArray* array, int newLength)
     int totalSize = sizeof(VArray) + (newSize * array->itemSize);
     array = realloc(array, totalSize);
     array->size = newSize;
-    array->buffer = BytePtrOffset(array, sizeof(VArray));
+    array->buffer = (void*) BytePtrOffset(array, sizeof(VArray));
   }
 
   return array;
