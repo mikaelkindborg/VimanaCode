@@ -2,11 +2,11 @@
 File: item.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Items are like conses in Lisp. They hold a value and 
+Items are like cons cells in Lisp. They hold a value and 
 an address to the next item.
 
 Items are equal size and allocated from a larger block by the
-memory manager in itemMemory.h. 
+memory manager in cellmemory.h. 
 
 Items are copied when pushed onto the data stack and 
 assigned to variables. The data stack and global variables
@@ -54,11 +54,11 @@ Example of a list that contains a list:
 
 Data Stack     Managed Mem
 ----------     ------------------------
-ListHead   --> ListHead (FirstItem) --> SecondItem
+ListHead   --> ListHead   --> SecondItem
                  !
                FirstItem  --> SecondItem
 
-See itemMemory.h for details on how managed memory is allocated 
+See cellmemory.h for details on how managed memory is allocated 
 and how addresses are used to reference items.
 
 Addresses are item indexes, and are used to save space by 
@@ -71,16 +71,16 @@ Pointers to primitive functions are stored as full pointers
 in optimized mode.
 */
 
-// Forward declarations
-typedef struct __VInterp VInterp;
-typedef void (*VPrimFunPtr) (VInterp*);
+// -------------------------------------------------------------
+// Item struct
+// -------------------------------------------------------------
 
 typedef struct __VItem
 {
   // Value of the item
   union
   {
-    VAddr       addr;       // Address of first item in a child list
+    VAddr       first;      // Address of first item in a child list
     VIntNum     intNum;     // Integer value (symbol, integers)
     VDecNum     decNum;     // Floating point number
     VPrimFunPtr primFunPtr; // Pointer to a primitive function
@@ -96,6 +96,10 @@ typedef struct __VItem
   VAddr         next;       
 }
 VItem;
+
+// -------------------------------------------------------------
+// Item types
+// -------------------------------------------------------------
 
 enum ItemType
 {
@@ -137,12 +141,50 @@ enum ItemType
   IsTypeSymbol(item) || IsTypePrimFun(item) || IsTypeBufferPtr(item))
 
 // Empty list
-#define IsNil(item) \
-  (IsTypeList(item) && (0 == (item)->addr))
+#define IsEmpty(item) \
+  (IsTypeList(item) && (0 == (item)->first))
 
 // List types
 #define IsList(item) \
   (IsTypeList(item) || IsTypeFun(item))
+
+// -------------------------------------------------------------
+// Convert addr to/from pointer
+// -------------------------------------------------------------
+
+// Use bit shift to multiply to get item offset 
+// 4 byte item size (on 8 bit processors with 16 bit pointers)
+//   #define ItemAddrPtrShift 2 
+// 8 byte item size (on 32 bit processors)
+//   #define ItemAddrPtrShift 3 
+// 16 byte item size (on 64 bit processors)
+//   #define ItemAddrPtrShift 4
+//
+// This:
+//   ptr = start + (addr * sizeof(VItem))
+// is equal to:
+//   ptr = start + (addr << ItemAddrPtrShift)
+
+// Use on 64 bit machines
+#define ItemAddrPtrShift 4 
+
+// Convert address to pointer
+// start is the beginning of cell memory
+#define ItemAddrToPtr(addr, start) \
+  ( (VItem*) (BytePtrOffset(start, ((addr) - 1) << ItemAddrPtrShift)) ) 
+
+// Convert pointer to address
+// start is the beginning of cell memory
+#define ItemPtrToAddr(itemPtr, start) \
+  ( ((BytePtr(itemPtr) - (start)) >> ItemAddrPtrShift) + 1 )
+
+// TODO: Check that addressing works (+/- 1)
+// TODO: Move this to interp and set start to start - sizeof(VItem) in struct
+// We cannot have address zero in items since that is empty list or list end.
+
+// -------------------------------------------------------------
+// Access to data in item next field
+// -------------------------------------------------------------
 
 #define TypeMask         15 // Type bits
 #define MarkMask         16 // Mark bit
@@ -150,9 +192,9 @@ enum ItemType
 #define MarkShift        4
 #define AddrShift        5
 
-#define ItemType(item)     (((item)->next) & TypeMask)
-#define ItemGCMark(item)   ((((item)->next) & MarkMask) >> MarkShift)
-#define ItemNextAddr(item) (((item)->next) >> AddrShift)
+#define ItemGetType(item)   (((item)->next) & TypeMask)
+#define ItemGetGCMark(item) ((((item)->next) & MarkMask) >> MarkShift)
+#define ItemGetNext(item)   (((item)->next) >> AddrShift)
 
 void ItemSetGCMark(VItem* item, unsigned int mark)
 {
@@ -164,9 +206,24 @@ void ItemSetType(VItem* item, unsigned int type)
   item->next = (item->next & ~TypeMask) | type;
 }
 
-void ItemSetNextAddr(VItem* item, VAddr addr)
+void ItemSetNext(VItem* item, VAddr addr)
 {
   item->next = (item->next & NonAddrMask) | (addr << AddrShift);
+}
+
+// -------------------------------------------------------------
+// Access to data in item value field
+// -------------------------------------------------------------
+
+#define ItemGetFirst(item)  ((item)->addr)
+#define ItemGetSymbol(item) ((item)->symbol)
+#define ItemGetIntNum(item) ((item)->intNum)
+#define ItemGetDecNum(item) ((item)->decNum)
+
+// Set first of child list
+void ItemSetFirst(VItem* item, VAddr addr)
+{
+  item->addr = addr;
 }
 
 void ItemSetSymbol(VItem* item, VIntNum symbol)
@@ -174,20 +231,6 @@ void ItemSetSymbol(VItem* item, VIntNum symbol)
   item->intNum = symbol;
   ItemSetType(item, TypeSymbol);
 }
-
-#ifdef OPTIMIZE
-  void ItemSetPrimFun(VItem* item, VPrimFunPtr primFun)
-  {
-    item->primFunPtr = primFun;
-    ItemSetType(item, TypePrimFun);
-  }
-#else
-  void ItemSetPrimFun(VItem* item, VIntNum primFun)
-  {
-    item->intNum = primFun;
-    ItemSetType(item, TypePrimFun);
-  }
-#endif
 
 void ItemSetIntNum(VItem* item, VIntNum number)
 {
@@ -201,11 +244,40 @@ void ItemSetDecNum(VItem* item, VDecNum number)
   ItemSetType(item, TypeDecNum);
 }
 
+#ifdef OPTIMIZE
+
+  #define ItemGetPrimFun(item) ((item)->primFunPtr)
+
+  void ItemSetPrimFun(VItem* item, VPrimFunPtr primFun)
+  {
+    item->primFunPtr = primFun;
+    ItemSetType(item, TypePrimFun);
+  }
+#else
+
+  #define ItemGetPrimFun(item) ((item)->intNum)
+
+  void ItemSetPrimFun(VItem* item, VIntNum primFun)
+  {
+    item->intNum = primFun;
+    ItemSetType(item, TypePrimFun);
+  }
+
+#endif
+
+// -------------------------------------------------------------
+// Init item
+// -------------------------------------------------------------
+
 void ItemInit(VItem* item)
 {
-  item->intNum = 0;
+  item->first = 0;
   item->next = 0;
 }
+
+// -------------------------------------------------------------
+// Item functions
+// -------------------------------------------------------------
 
 // TODO: Need to fix this for doubles?
 #define ItemEquals(item1, item2) \

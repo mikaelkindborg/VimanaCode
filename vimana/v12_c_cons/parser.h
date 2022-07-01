@@ -87,9 +87,9 @@ Exit:
   return type;
 }
 
-VItem* ParseToken(char* token, VItemMemory* itemMemory)
+VItem* ParseToken(char* token, VInterp* interp)
 {
-  VItem* item = MemAllocItem(itemMemory);
+  VItem* item = InterpAllocItem(interp);
   VType type = TokenType(token);
 
   if (TypeIntNum == type)
@@ -124,7 +124,7 @@ VItem* ParseToken(char* token, VItemMemory* itemMemory)
   }
   else
   {
-    GURU(PARSER_TOKEN_TYPE_ERROR);
+    GURU_MEDITATION(PARSER_TOKEN_TYPE_ERROR);
   }
 
   return item;
@@ -155,13 +155,13 @@ char* SkipComment(char* p)
     return p; // Not a comment
 }
 
-VItem* ParseCode(char* code, char** next, VItemMemory* itemMemory)
+VItem* ParseCode(char* code, char** next, VInterp* interp)
 {
   VItem* first = NULL;
   VItem* item  = NULL;
   VItem* prev;
 
-  VItem* list = MemAllocItem(itemMemory);
+  VItem* list = InterpAllocItem(interp);
   ItemSetType(list, TypeList);
   
   char* p = code;
@@ -177,7 +177,7 @@ VItem* ParseCode(char* code, char** next, VItemMemory* itemMemory)
     if (IsLeftParen(*p))
     {
       // Parse child list
-      item = ParseCode(p + 1, &p, itemMemory);
+      item = ParseCode(p + 1, &p, interp);
     }
     else
     if (IsRightParen(*p))
@@ -191,7 +191,7 @@ VItem* ParseCode(char* code, char** next, VItemMemory* itemMemory)
     if (IsStringSeparator(*p))
     {
       char* string = ParseString(p + 1, &p);
-      item = MemAllocBufferItem(itemMemory, StrCopy(string));
+      item = InterpAllocBufferItem(interp, StrCopy(string));
       ItemSetType(item, TypeString);
       SysFree(string);
     }
@@ -204,16 +204,20 @@ VItem* ParseCode(char* code, char** next, VItemMemory* itemMemory)
     else
     {
       char* token = GetNextToken(p, &p);
-      item = ParseToken(token, itemMemory);
+      item = ParseToken(token, interp);
     }
 
     // Add item to list
     if (NULL != item)
     {
       if (NULL == first)
+      {
         first = item;
+      }
       else
-        MemItemSetNext(itemMemory, prev, item);
+      {
+        InterpSetNext(interp, prev, item);
+      }
 
       prev = item;
       item = NULL;
@@ -221,12 +225,12 @@ VItem* ParseCode(char* code, char** next, VItemMemory* itemMemory)
   }
 
 Exit:
-  MemItemSetFirst(itemMemory, list, first);
+  InterpSetFirst(interp, list, first);
   return list;
 }
 
-VItem* ParseSourceCode(char* sourceCode, VItemMemory* itemMemory)
+VItem* ParseSourceCode(char* sourceCode, VInterp* interp)
 {
   char* p;
-  return ParseCode(sourceCode, &p, itemMemory);
+  return ParseCode(sourceCode, &p, interp);
 }

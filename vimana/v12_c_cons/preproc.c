@@ -12,7 +12,7 @@ enum GURU_TABLE
   CODE_C
 };
 
-#define GURU(name) GuruMeditation(name, #name)
+#define GURU_MEDITATION(name) GuruMeditation(name, #name)
 
 //STRINGIFY(CODE_A)
 //STRVALUE(CODE_A)
@@ -24,6 +24,6 @@ void GuruMeditation(int id, char* name)
 
 int main()
 {
-  GURU(CODE_A);
-  GURU(CODE_C);
+  GURU_MEDITATION(CODE_A);
+  GURU_MEDITATION(CODE_C);
 }

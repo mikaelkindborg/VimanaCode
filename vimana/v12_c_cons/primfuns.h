@@ -11,14 +11,14 @@ void PrimFun_sayHi(VInterp* interp)
 void PrimFun_print(VInterp* interp)
 {
   VItem* item = InterpStackPop(interp);
-  MemPrintItem(interp->itemMemory, item);
+  InterpPrintItem(interp, item);
   PrintNewLine();
 }
 
 void PrimFun_printstack(VInterp* interp)
 {
   Print("STACK: ");
-  MemPrintArray(interp->itemMemory, interp->dataStack, interp->dataStackTop + 1);
+  InterpPrintItemArray(interp, interp->dataStack, interp->dataStackTop + 1);
   PrintNewLine();
 }
 
@@ -67,14 +67,14 @@ void PrimFun_setglobal(VInterp* interp)
 {
   VItem* list = InterpStackPop(interp);
   VItem* value = InterpStackPop(interp);
-  VItem* symbol = MemItemFirst(interp->itemMemory, list);
+  VItem* symbol = InterpGetFirst(interp, list);
   InterpSetGlobalVar(interp, symbol->intNum, value);
 }
 
 void PrimFun_getglobal(VInterp* interp)
 {
   VItem* item = InterpStackTop(interp);
-  VItem* symbol = MemItemFirst(interp->itemMemory, item);
+  VItem* symbol = InterpGetFirst(interp, item);
   *item = *(InterpGetGlobalVar(interp, symbol->intNum));
 }
 
@@ -84,14 +84,14 @@ void PrimFun_funify(VInterp* interp)
   ItemSetType(list, TypeFun);
 }
 
-VItem* ParseSourceCode(char* sourceCode, VItemMemory* itemMemory);
+VItem* ParseSourceCode(char* sourceCode, VCellMemory* cellMemory);
 
 void PrimFun_parse(VInterp* interp)
 {
   VItem* item = InterpStackTop(interp);
   // TODO: Check IsTypeString
-  char* string = MemBufferItemPtr(interp->itemMemory, item);
-  VItem* list = ParseSourceCode(string, interp->itemMemory);
+  char* string = InterpGetBufferPtr(interp, item);
+  VItem* list = ParseSourceCode(string, interp);
   *item = *list;
 }
 
@@ -100,11 +100,11 @@ void PrimFun_readfile(VInterp* interp)
   VItem* stringItem = InterpStackPop(interp);
   // TODO: Check IsTypeString
 
-  char* fileName = MemBufferItemPtr(interp->itemMemory, stringItem);
+  char* fileName = InterpGetBufferPtr(interp, stringItem);
   char* string = FileRead(fileName);
   // TODO: Check NULL
 
-  stringItem = MemAllocBufferItem(interp->itemMemory, string);
+  stringItem = InterpAllocBufferItem(interp, string);
   ItemSetType(stringItem, TypeString);
 
   InterpStackPush(interp, stringItem);
@@ -308,10 +308,10 @@ void PrimFun_first(VInterp* interp)
   VItem* list = InterpStackTop(interp);
 
   // Must be a list type
-  if (!IsList(list)) GURU(FIRST_OBJECT_IS_NOT_A_LIST);
+  if (!IsList(list)) GURU_MEDITATION(FIRST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
-  VItem* item = MemItemFirst(interp->itemMemory, list);
+  VItem* item = InterpGetFirst(interp, list);
 
   // Leave empty list on the stack
   // () first => ()
@@ -328,17 +328,17 @@ void PrimFun_rest(VInterp* interp)
   VItem* list = InterpStackTop(interp);
 
   // Must be a list type
-  if (!IsList(list)) GURU(REST_OBJECT_IS_NOT_A_LIST);
+  if (!IsList(list)) GURU_MEDITATION(REST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
-  VItem* item = MemItemFirst(interp->itemMemory, list);
+  VItem* item = InterpGetFirst(interp, list);
 
   // Leave empty list on the stack
   // () rest => ()
   if (NULL == item) goto Exit;
 
   // Get second item in the list
-  item = MemItemNext(interp->itemMemory, item);
+  item = InterpGetNext(interp, item);
 
   // If empty tail, leave empty list on the stack
   // (1) rest => ()
@@ -349,7 +349,7 @@ void PrimFun_rest(VInterp* interp)
   }
 
   // Set second item as first element of the list
-  MemItemSetFirst(interp->itemMemory, list, item);
+  InterpSetFirst(interp, list, item);
 
 Exit:;
 }
@@ -361,7 +361,7 @@ void PrimFun_cons(VInterp* interp)
   VItem* item = InterpStackTop(interp);
 
   // Must be a list type
-  if (!IsList(list)) GURU(CONS_OBJECT_IS_NOT_A_LIST);
+  if (!IsList(list)) GURU_MEDITATION(CONS_OBJECT_IS_NOT_A_LIST);
 
   // This will be the new head of the cons
   VItem newList;
@@ -369,28 +369,28 @@ void PrimFun_cons(VInterp* interp)
   ItemSetType(&newList, ItemType(list));
 
   // Allocate new element
-  VItem* newFirst = MemAllocItem(interp->itemMemory);
-  if (NULL == newFirst) GURU(CONS_OUT_OF_MEMORY);
+  VItem* newFirst = InterpAllocItem(interp);
+  if (NULL == newFirst) GURU_MEDITATION(CONS_OUT_OF_MEMORY);
 
   // Copy item to new element
   *newFirst = *item;
 
   // Get first element of the list 
-  VItem* first = MemItemFirst(interp->itemMemory, list);
+  VItem* first = InterpGetFirst(interp, list);
 
   if (NULL == first)
   {
     // If empty list, the new item is the last and only element
-    MemItemSetNext(interp->itemMemory, newFirst, NULL);
+    InterpSetNext(interp, newFirst, NULL);
   }
   else
   {
     // Link new item to the first element of the list
-    MemItemSetNext(interp->itemMemory, newFirst, first);
+    InterpSetNext(interp, newFirst, first);
   }
 
   // Set first of list to refer to the new element
-  MemItemSetFirst(interp->itemMemory, &newList, newFirst);
+  InterpSetFirst(interp, &newList, newFirst);
 
   // Copy new list item to data stack
   *item = newList;
@@ -404,17 +404,17 @@ void PrimFun_setfirst(VInterp* interp)
   VItem* list = InterpStackTop(interp);
 
   // Must be a list type
-  if (!IsList(list)) GURU(SETFIRST_OBJECT_IS_NOT_A_LIST);
+  if (!IsList(list)) GURU_MEDITATION(SETFIRST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
-  VItem* first = MemItemFirst(interp->itemMemory, list);
+  VItem* first = InterpGetFirst(interp, list);
 
   // Set first of empty list
   if (NULL == first)
   {
-    first = MemAllocItem(interp->itemMemory);
-    if (NULL == first) GURU(SETFIRST_OUT_OF_MEMORY);
-    MemItemSetFirst(interp->itemMemory, list, first);
+    first = InterpAllocItem(interp);
+    if (NULL == first) GURU_MEDITATION(SETFIRST_OUT_OF_MEMORY);
+    InterpSetFirst(interp, list, first);
   }
 
   // Preserve address of next item
@@ -457,7 +457,7 @@ void PrimFun_sleep(VInterp* interp)
   VItem* item = InterpStackPop(interp);
   if (!IsTypeIntNum(item))
   {
-    GURU(SLEEP_NOT_INTNUM);
+    GURU_MEDITATION(SLEEP_NOT_INTNUM);
   }
 
   int millis = item->intNum;
@@ -477,13 +477,13 @@ void PrimFunx_socketcreate(VInterp* interp)
   int socketId = socket(AF_INET, SOCK_STREAM, 0);
   if (socketId < 1)
   {
-    GURU(SOCKET_CREATE_ERROR);
+    GURU_MEDITATION(SOCKET_CREATE_ERROR);
   }
 
   int status = fcntl(socketId, F_SETFL, fcntl(socketId, F_GETFL, 0) | O_NONBLOCK);
   if (status == -1)
   {
-    GURU(SOCKET_CREATE_FCNTL_ERROR);
+    GURU_MEDITATION(SOCKET_CREATE_FCNTL_ERROR);
   }
   
   VSocket* socket = SysAlloc(sizeof(VSocket));
@@ -497,7 +497,7 @@ void PrimFunx_socketcreate(VInterp* interp)
   if (status < 0)
   {
     SysFree(socket);
-    GURU(SOCKET_BIND_ERROR);
+    GURU_MEDITATION(SOCKET_BIND_ERROR);
   }
 
   VItem socketItem;
@@ -516,7 +516,7 @@ void PrimFunx_socketlisten(VInterp* interp)
   int status = listen(socket->intNum, 10);
   if (status < 0) 
   {
-    GURU(SOCKET_LISTEN_ERROR);
+    GURU_MEDITATION(SOCKET_LISTEN_ERROR);
   }
 }
 
@@ -538,7 +538,7 @@ void PrimFunx_socketaccept(VInterp* interp)
     } 
     else 
     {
-      GURU(SOCKET_ACCEPT_ERROR);
+      GURU_MEDITATION(SOCKET_ACCEPT_ERROR);
     }
   }
   else
@@ -567,7 +567,7 @@ void PrimFunx_socketaccept(VInterp* interp)
     } 
     else 
     {
-      GURU(SOCKET_ACCEPT_ERROR);
+      GURU_MEDITATION(SOCKET_ACCEPT_ERROR);
     }
   }
   else

@@ -16,9 +16,9 @@ void TestItemAttributes()
 {
   printf("---> TestItemAttributes\n");
 
-  VItemMemory* itemMemory = MemNew(100);
+  VCellMemory* cellMemory = MemNew(100);
 
-  VItem* item = MemAllocItem(itemMemory);
+  VItem* item = MemAllocItem(cellMemory);
   ItemSetGCMark(item, 1);
   ItemSetType(item, 42);
   PrintBinaryUInt(item->type);
@@ -26,31 +26,31 @@ void TestItemAttributes()
   printf("Mark: %i\n", ItemGCMark(item));
   ShouldHold("Item type should be equal", 42 == ItemType(item));
   ShouldHold("Item gc mark should be set", 1 == ItemGCMark(item));
-  MemDeallocItem(itemMemory, item);
+  MemDeallocItem(cellMemory, item);
   
-  MemFree(itemMemory);
+  MemFree(cellMemory);
 }
 
-VItem* AllocMaxItems(VItemMemory* itemMemory)
+VItem* AllocMaxItems(VCellMemory* cellMemory)
 {
   // Alloc and cons items until out of memory
 
   printf("Alloc max items\n");
-  VItem* first = MemAllocItem(itemMemory);
+  VItem* first = MemAllocItem(cellMemory);
   ItemSetIntNum(first, 1);
   VItem* item = first;
   while (1)
   {
-    VItem* next = MemAllocItem(itemMemory);
+    VItem* next = MemAllocItem(cellMemory);
     if (NULL == next) break;
     ItemSetIntNum(next, item->intNum + 1);
-    MemItemSetNext(itemMemory, item, next);
+    MemItemSetNext(cellMemory, item, next);
     item = next;
   }
   return first;
 }
 
-VItem* AllocMaxItemsUsingCons(VItemMemory* itemMemory)
+VItem* AllocMaxItemsUsingCons(VCellMemory* cellMemory)
 {
   // Alloc and cons items until out of memory
   int counter = 1;
@@ -59,7 +59,7 @@ VItem* AllocMaxItemsUsingCons(VItemMemory* itemMemory)
   {
     VItem item;
     ItemSetIntNum(&item, counter ++);
-    VItem* cons = MemCons(itemMemory, &item, first);
+    VItem* cons = MemCons(cellMemory, &item, first);
     if (NULL == cons) break;
     first = cons;
   }
@@ -67,49 +67,49 @@ VItem* AllocMaxItemsUsingCons(VItemMemory* itemMemory)
 }
 
 /*
-void X_DeallocItems(VItem* first, VItemMemory* itemMemory)
+void X_DeallocItems(VItem* first, VCellMemory* cellMemory)
 {
   VItem* item = first;
   while (1)
   {
     printf("DEALLOC: %li\n", item->intNum);
     VAddr nextAddr = item->next;
-    MemDeallocItem(itemMemory, item);
+    MemDeallocItem(cellMemory, item);
     if (0 == nextAddr) break;
-    item = MemItemPointer(itemMemory, nextAddr);
+    item = MemItemPointer(cellMemory, nextAddr);
   }
 }
 
-void xPrintItems(VItem* first, VItemMemory* itemMemory)
+void xPrintItems(VItem* first, VCellMemory* cellMemory)
 {
-  VAddr addr = MemItemAddr(itemMemory, first);
+  VAddr addr = MemItemAddr(cellMemory, first);
   while (addr)
   {
-    VItem* item = MemItemPointer(itemMemory, addr);
+    VItem* item = MemItemPointer(cellMemory, addr);
     printf("%li\n", item->intNum);
     addr = item->next;
   }
 }
 */
 
-void PrintItems(VItem* first, VItemMemory* itemMemory)
+void PrintItems(VItem* first, VCellMemory* cellMemory)
 {
   VItem* item = first;
   while (item)
   {
     printf("%li\n", item->intNum);
-    item = MemItemNext(itemMemory, item);
+    item = MemItemNext(cellMemory, item);
   }
 }
 
-int CountItems(VItem* first, VItemMemory* itemMemory)
+int CountItems(VItem* first, VCellMemory* cellMemory)
 {
   int counter = 0;
-  VAddr addr = MemItemAddr(itemMemory, first);
+  VAddr addr = MemItemAddr(cellMemory, first);
   while (addr)
   {
     ++ counter;
-    VItem* item = MemItemPointer(itemMemory, addr);
+    VItem* item = MemItemPointer(cellMemory, addr);
     addr = item->next;
   }
   return counter;
@@ -119,66 +119,66 @@ void TestAllocDealloc()
 {
   printf("---> TestAllocDealloc\n");
 
-  VItemMemory* itemMemory = MemNew(10);
+  VCellMemory* cellMemory = MemNew(10);
 
   printf("Alloc max\n");
-  VItem* first = AllocMaxItems(itemMemory);
-  PrintItems(first, itemMemory);
-  int numItems = CountItems(first, itemMemory);
+  VItem* first = AllocMaxItems(cellMemory);
+  PrintItems(first, cellMemory);
+  int numItems = CountItems(first, cellMemory);
   printf("Num items: %i\n", numItems);
 
-  MemSweep(itemMemory);
+  MemSweep(cellMemory);
 
   printf("Alloc max again\n");
-  first = AllocMaxItems(itemMemory);
-  PrintItems(first, itemMemory);
-  int numItems2 = CountItems(first, itemMemory);
+  first = AllocMaxItems(cellMemory);
+  PrintItems(first, cellMemory);
+  int numItems2 = CountItems(first, cellMemory);
   printf("Num items: %i\n", numItems2);
 
-  MemSweep(itemMemory);
+  MemSweep(cellMemory);
 
   ShouldHold("Allocated items should be equal", numItems == numItems2);
 
-  MemFree(itemMemory);
+  MemFree(cellMemory);
 }
 
 void TestConsDealloc()
 {
   printf("---> TestConsDealloc\n");
 
-  VItemMemory* itemMemory = MemNew(10);
+  VCellMemory* cellMemory = MemNew(10);
 
-  VItem* first = AllocMaxItemsUsingCons(itemMemory);
+  VItem* first = AllocMaxItemsUsingCons(cellMemory);
   printf("ONE\n");
   printf("ONE NEXT: %i\n", (int)first->next);
   printf("ONE ADDR: %i\n", (int)first->addr);
-  PrintItems(first, itemMemory);
-  int numItems = CountItems(first, itemMemory);
+  PrintItems(first, cellMemory);
+  int numItems = CountItems(first, cellMemory);
   printf("Num items: %i\n", numItems);
 
-  MemSweep(itemMemory);
+  MemSweep(cellMemory);
 
-  first = AllocMaxItems(itemMemory);
-  PrintItems(first, itemMemory);
-  int numItems2 = CountItems(first, itemMemory);
+  first = AllocMaxItems(cellMemory);
+  PrintItems(first, cellMemory);
+  int numItems2 = CountItems(first, cellMemory);
   printf("Num items: %i\n", numItems2);
 
-  MemSweep(itemMemory);
+  MemSweep(cellMemory);
 
   ShouldHold("Allocated items should be equal", numItems == numItems2);
 
-  MemFree(itemMemory);
+  MemFree(cellMemory);
 }
 
 /*
 void TestParseSymbolicCode()
 {
-  VItemMemory* itemMemory = MemNew(1000);
+  VCellMemory* cellMemory = MemNew(1000);
   char* code = "N-42 N44 (P1 N2 (N3 (P4)) N5 N6) N0 (((N88";
-  VItem* first = ParseSymbolicCode(code, itemMemory);
-  MemPrintList(itemMemory, first);
+  VItem* first = ParseSymbolicCode(code, cellMemory);
+  MemPrintList(cellMemory, first);
   printf("\n");
-  MemFree(itemMemory);
+  MemFree(cellMemory);
 }
 */
 
@@ -188,55 +188,55 @@ void TestParseSourceCode()
 
   GSymbolTableInit();
 
-  VItemMemory* itemMemory = MemNew(1000);
+  VCellMemory* cellMemory = MemNew(1000);
   VItem* list;
 
   char* code = "1 2 (((3 4) 5))";
-  list = ParseSourceCode(code, itemMemory);
-  MemPrintItem(itemMemory, list);
+  list = ParseSourceCode(code, cellMemory);
+  MemPrintItem(cellMemory, list);
   printf("\n");
 
   char* empty = "";
-  list = ParseSourceCode(empty, itemMemory);
-  MemPrintItem(itemMemory, list);
+  list = ParseSourceCode(empty, cellMemory);
+  MemPrintItem(cellMemory, list);
   printf("\n");
   //ShouldHold("first should be NULL", NULL == first);
 
   char* empty2 = "()";
-  list = ParseSourceCode(empty2, itemMemory);
-  MemPrintItem(itemMemory, list);
+  list = ParseSourceCode(empty2, cellMemory);
+  MemPrintItem(cellMemory, list);
   printf("\n");
 
   char* empty3 = "   (( ( ) ))   ";
-  list = ParseSourceCode(empty3, itemMemory);
-  MemPrintItem(itemMemory, list);
+  list = ParseSourceCode(empty3, cellMemory);
+  MemPrintItem(cellMemory, list);
   printf("\n");
 
   char* string = "'Hi World'";
-  list = ParseSourceCode(string, itemMemory);
-  MemPrintItem(itemMemory, list);
+  list = ParseSourceCode(string, cellMemory);
+  MemPrintItem(cellMemory, list);
   printf("\n");
 
   char* string2 = "('Hi foo') 'foo bar'";
-  list = ParseSourceCode(string2, itemMemory);
-  MemPrintItem(itemMemory, list);
+  list = ParseSourceCode(string2, cellMemory);
+  MemPrintItem(cellMemory, list);
   printf("\n");
 
   char* code2 = "1 2 3.33 foo bar bar sayHi";
-  list = ParseSourceCode(code2, itemMemory);
-  MemPrintItem(itemMemory, list);
+  list = ParseSourceCode(code2, cellMemory);
+  MemPrintItem(cellMemory, list);
   printf("\n");
 
   /*
-  MemMark(itemMemory, list);
-  MemSweep(itemMemory);
-  MemMark(itemMemory, list);
-  MemSweep(itemMemory);
+  MemMark(cellMemory, list);
+  MemSweep(cellMemory);
+  MemMark(cellMemory, list);
+  MemSweep(cellMemory);
   */
-  MemSweep(itemMemory);
-  MemSweep(itemMemory);
+  MemSweep(cellMemory);
+  MemSweep(cellMemory);
 
-  MemFree(itemMemory);
+  MemFree(cellMemory);
 
   GSymbolTableRelease();
 }
@@ -291,7 +291,7 @@ void TestArrayWithStrings()
 {
   printf("---> TestArrayWithStrings\n");
 
-  VItemMemory* itemMemory = MemNew(1000);
+  VCellMemory* cellMemory = MemNew(1000);
 
   VItem* item;
 
@@ -302,8 +302,8 @@ void TestArrayWithStrings()
     array = ArrayGrow(array, i + 5);
 
     char* str = "Hej";
-    item = MemAllocItem(itemMemory);
-    MemItemSetString(itemMemory, item, str);
+    item = MemAllocItem(cellMemory);
+    MemItemSetString(cellMemory, item, str);
 
     ArraySet(array, i, item);
   }
@@ -311,18 +311,18 @@ void TestArrayWithStrings()
   for (int i = 0; i < ArrayLength(array); ++ i)
   {
     VItem* item = ArrayGet(array, i);
-    printf("value: %s\n", MemItemString(itemMemory, item));
+    printf("value: %s\n", MemItemString(cellMemory, item));
   }
 
-  MemMark(itemMemory, & array[1]);
-  MemMark(itemMemory, & array[2]);
-  MemMark(itemMemory, & array[3]);
-  MemSweep(itemMemory);
-  MemSweep(itemMemory);
+  MemMark(cellMemory, & array[1]);
+  MemMark(cellMemory, & array[2]);
+  MemMark(cellMemory, & array[3]);
+  MemSweep(cellMemory);
+  MemSweep(cellMemory);
 
   ArrayFree(array);
 
-  MemFree(itemMemory);
+  MemFree(cellMemory);
 }
 
 void TestInterp()
@@ -332,7 +332,7 @@ void TestInterp()
   VInterp* interp = InterpNew();
 
   // Test data stack
-  VItem* item = MemAllocItem(interp->itemMemory);
+  VItem* item = MemAllocItem(interp->cellMemory);
   ItemSetIntNum(item, 42);
   printf("item value 1: %li\n", item->intNum);
 
@@ -377,8 +377,8 @@ void TestInterpEval()
   VInterp* interp = InterpNew();
 
   char* source = "1 2 3 sayHi 1 2 3 + + + + + (SUM)setglobal SUM print";
-  VItem* code = ParseSourceCode(source, interp->itemMemory);
-  MemPrintList(interp->itemMemory, code);
+  VItem* code = ParseSourceCode(source, interp->cellMemory);
+  MemPrintList(interp->cellMemory, code);
   printf("\n");
 
   InterpEval(interp, code);
@@ -396,8 +396,8 @@ void TestInterpEvalFun()
 
   //char* source = "(+ print)funify(ADD)setglobal 1 2 ADD sayHi ('My name is Ruma' print)funify(RUMA)setglobal (RUMA RUMA)funify(RUMA2)setglobal RUMA2";
   char* source = "(88 print 1 2 + print) eval";
-  VItem* code = ParseSourceCode(source, interp->itemMemory);
-  MemPrintList(interp->itemMemory, code);
+  VItem* code = ParseSourceCode(source, interp->cellMemory);
+  MemPrintList(interp->cellMemory, code);
   printf("\n");
 
   InterpEval(interp, code);
@@ -414,8 +414,8 @@ void TestInterpEvalFunInfiniteTail()
   VInterp* interp = InterpNew();
 
   char* source = "('Hi Ruma' print RUMA)funify(RUMA)setglobal RUMA";
-  VItem* code = ParseSourceCode(source, interp->itemMemory);
-  MemPrintList(interp->itemMemory, code);
+  VItem* code = ParseSourceCode(source, interp->cellMemory);
+  MemPrintList(interp->cellMemory, code);
   printf("\n");
 
   InterpEval(interp, code);

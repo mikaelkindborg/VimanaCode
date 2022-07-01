@@ -14,7 +14,7 @@ Memory allocation tracking.
     ++ GSysAllocCounter;
   }
 
-  // TODO: Zero-initialize allocated buffer
+  // TODO: Zero-initialize allocated buffer?
   void* SysAlloc(int size)
   {
     SysAllocCounterIncr();
@@ -29,7 +29,9 @@ Memory allocation tracking.
 
   void PrintMemStat()
   {
-    Print("SysAllocCounter: "); PrintIntNum(GSysAllocCounter); PrintNewLine();
+    Print("SysAllocCounter: "); 
+    PrintIntNum(GSysAllocCounter); 
+    PrintNewLine();
   }
 
 #else

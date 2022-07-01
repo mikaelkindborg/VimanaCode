@@ -18,9 +18,9 @@ stackframe  12 bytes (2+2+4+4)
 callstack   10 x 12 =  120 bytes
 datastack   10 x 4  =   40 bytes
 globalvars  20 x 4  =   80 bytes
-itemmemory 200 x 4  =  800 bytes
+cellmemory 200 x 4  =  800 bytes
 + sizeof(VInterp)       20 bytes
-+ sizeof(VItemMemory)           8 bytes
++ sizeof(VCellMemory)           8 bytes
                       ----------
 Core memory           1068 bytes
 
@@ -61,7 +61,7 @@ typedef struct __VInterp
   int          callStackTop;        // Current stackframe
   VStackFrame* callStack;
 
-  VItemMemory*        itemMemory;                 // Item memory
+  VCellMemory*        cellMemory;                 // Item memory
 
 }
 VInterp;
@@ -69,9 +69,11 @@ VInterp;
 // Prim fun lookup function
 VPrimFunPtr LookupPrimFunPtr(int index);
 
-//#define InterpStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
-#define InterpStackFrame(interp) ( & ((interp)->callStack[(interp)->callStackTop]) )
-#define InterpStackFrameAt(interp, index) ( & ((interp)->callStack[index]) )
+// Seems to be slower?
+//#define InterpGetStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
+#define InterpGetStackFrame(interp) ( & ((interp)->callStack[(interp)->callStackTop]) )
+// UNUSED
+//#define InterpGetStackFrameAt(interp, index) ( & ((interp)->callStack[index]) )
 
 // -------------------------------------------------------------
 // Interp
@@ -79,31 +81,31 @@ VPrimFunPtr LookupPrimFunPtr(int index);
 
 VInterp* InterpNewWithSize(
   int numGlobalVars, int numDataStackItems,
-  int numCallStackFrames, int numMemItems)
+  int numCallStackFrames, int numItems)
 {
   int globalVarsByteSize = numGlobalVars * sizeof(VItem);
   int dataStackByteSize  = numDataStackItems * sizeof(VItem);
   int callStackByteSize  = numCallStackFrames * sizeof(VStackFrame);
-  int memByteSize        = MemByteSize(numMemItems);
+  int cellMemoryByteSize = CellMemoryGetByteSize(numItems);
 
   VInterp* interp = SysAlloc(
     sizeof(VInterp) + globalVarsByteSize + 
     dataStackByteSize + callStackByteSize + 
-    memByteSize);
+    cellMemoryByteSize);
 
-  interp->globalVars = (void*)interp + sizeof(VInterp);
+  interp->globalVars = BytePtrOffset(interp, sizeof(VInterp));
   interp->numGlobalVars = numGlobalVars;
 
-  interp->dataStack = (void*)interp->globalVars + globalVarsByteSize;
+  interp->dataStack = BytePtrOffset(interp->globalVars, globalVarsByteSize);
   interp->numDataStackItems = numDataStackItems;
   interp->dataStackTop = -1;
 
-  interp->callStack = (void*)interp->dataStack + dataStackByteSize;
+  interp->callStack = BytePtrOffset(interp->dataStack, dataStackByteSize);
   interp->numCallStackFrames = numCallStackFrames;
   interp->callStackTop = 0;
 
-  interp->itemMemory = (void*)interp->callStack + callStackByteSize;
-  MemInit(interp->itemMemory, numMemItems);
+  interp->cellMemory = BytePtrOffset(interp->callStack, callStackByteSize);
+  CellMemoryInit(interp->cellMemory, numMemItems);
 
   return interp;
 }
@@ -114,15 +116,15 @@ VInterp* InterpNew()
     100, // numGlobalVars,
     100, // numDataStackItems, 
     100, // numCallStackFrames
-    1000 // numMemItems
+    1000 // numItems
   );
 }
 
 void InterpFree(VInterp* interp)
 {
-  MemSweep(interp->itemMemory);
+  CellMemorySweep(interp->cellMemory);
 #ifdef TRACK_MEMORY_USAGE
-  MemPrintAllocCounter(interp->itemMemory);
+  CellMemoryPrintAllocCounter(interp->cellMemory);
 #endif
   SysFree(interp);
 }
@@ -132,13 +134,34 @@ void InterpFree(VInterp* interp)
 // -------------------------------------------------------------
 
 // TODO
-InterpItemAlloc    -> MemAllocItem
-InterpItemSetFirst -> MemSetItemFirst
-InterpItemGetFirst -> MemGetItemFirst
-InterpItemSetNext  -> MemSetItemNext
-InterpItemGetNext  -> MemGetItemNext
-InterpItemPrint    -> MemPrintItem
 
+// -------------------------------------------------------------
+// Item access
+// -------------------------------------------------------------
+
+// Set first item of child list
+void InterpSetFirst(VInterp* interp, VItem* list, VItem* first)
+{
+  list->addr = ItemPtrToAddr(first, interp->cellMemory->start);
+}
+// Set next item
+void InterpSetNext(VInterp* interp, VItem* item, VItem* next)
+{
+  ItemSetNext(item, ItemPtrToAddr(next, interp->cellMemory->start));
+}
+
+// Get first item of child list
+#define InterpGetFirst(interp, list) \
+  ItemAddrToPtr(ItemGetFirst(first), (interp)->cellMemory->start)
+
+// Get next item
+#define InterpGetNext(interp, item) \
+  ItemAddrToPtr(ItemGetNext(item), (interp)->cellMemory->start)
+
+InterpAllocBufferItem
+InterpAllocItem    -> CellMemoryAllocItem
+
+InterpGetBufferPtr(interp, item);
 
 // -------------------------------------------------------------
 // GC
@@ -154,10 +177,10 @@ void InterpGC(VInterp* interp)
     if (!IsTypeAtomic(item))
     {
       //PrintLine("STACK MARK:");
-      //MemPrintItem(interp->itemMemory, item); PrintNewLine();
+      //MemPrintItem(interp->cellMemory, item); PrintNewLine();
       
       // We are screwed if item is a TypeBufferPtr
-      MemMark(interp->itemMemory, MemItemFirst(interp->itemMemory, item));
+      InterpMark(interp, InterpGetFirst(interp, item));
     }
   }
 
@@ -169,19 +192,19 @@ void InterpGC(VInterp* interp)
     if (!IsTypeAtomic(item))
     {
       //PrintLine("GLOBALVAR MARK:");
-      //MemPrintItem(interp->itemMemory, item); PrintNewLine();
+      //MemPrintItem(interp->cellMemory, item); PrintNewLine();
 
       // We are screwed if item is a TypeBufferPtr
-      MemMark(interp->itemMemory, MemItemFirst(interp->itemMemory, item));
+      InterpMark(interp, InterpGetFirst(interp, item));
     }
   }
 
-  //MemMark(callstack); // Walk from top and mark localvars
+  //InterpMark(callstack); // Walk from top and mark localvars
 
-  MemSweep(interp->itemMemory);
-  
+  CellMemorySweep(interp->cellMemory);
+
 #ifdef TRACK_MEMORY_USAGE
-  MemPrintAllocCounter(interp->itemMemory);
+  CellMemoryPrintAllocCounter(interp->cellMemory);
 #endif
 }
 
@@ -196,7 +219,7 @@ void InterpStackPush(VInterp* interp, VItem* item)
 
   if (interp->dataStackTop >= interp->numDataStackItems)
   {
-    GURU(DATA_STACK_OVERFLOW);
+    GURU_MEDITATION(DATA_STACK_OVERFLOW);
   }
   
   // Copy item
@@ -207,7 +230,7 @@ VItem* InterpStackPop(VInterp* interp)
 {
   if (interp->dataStackTop < 0)
   {
-    GURU(DATA_STACK_IS_EMPTY);
+    GURU_MEDITATION(DATA_STACK_IS_EMPTY);
   }
 
   return & (interp->dataStack[interp->dataStackTop --] );
@@ -216,7 +239,7 @@ VItem* InterpStackPop(VInterp* interp)
 /* Not faster
 #define InterpStackPop(interp) \
   ( ((interp)->dataStackTop < 0) ? \
-    ( GURU(DATA_STACK_IS_EMPTY), NULL ) : \
+    ( GURU_MEDITATION(DATA_STACK_IS_EMPTY), NULL ) : \
     ( (VItem*) & ((interp)->dataStack[(interp)->dataStackTop --]) ) )
 */  
 
@@ -234,17 +257,17 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* code)
 {
   // Set first stackframe
   interp->callStackTop = 0;
-  VStackFrame* current = InterpStackFrame(interp);
+  VStackFrame* current = InterpGetStackFrame(interp);
   current->context = current;
 
   // Set first instruction in the frame
-  current->instruction = MemItemFirst(interp->itemMemory, code);
+  current->instruction = InterpGetFirst(interp, code);
 }
 
 void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
 {
   // The current stackframe is the parent for the new stackframe
-  VStackFrame* parent = InterpStackFrame(interp);
+  VStackFrame* parent = InterpGetStackFrame(interp);
 
   // Assume tailcall
   VStackFrame* current = parent;
@@ -258,23 +281,23 @@ void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
 
     if (interp->callStackTop >= interp->numCallStackFrames)
     {
-      GURU(CALL_STACK_OVERFLOW);
+      GURU_MEDITATION(CALL_STACK_OVERFLOW);
     }
 
-    current = InterpStackFrame(interp);
+    current = InterpGetStackFrame(interp);
 
     // Eval uses the parent environment
     current->context = parent;
   }
 
   // Set first instruction in the new frame
-  current->instruction = MemItemFirst(interp->itemMemory, code);
+  current->instruction = InterpGetFirst(interp, code);
 }
 
 void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
 {
   // The current stackframe is the parent for the new stackframe
-  VStackFrame* parent = InterpStackFrame(interp);
+  VStackFrame* parent = InterpGetStackFrame(interp);
 
   // Assume tailcall
   VStackFrame* current = parent;
@@ -288,24 +311,24 @@ void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
 
     if (interp->callStackTop >= interp->numCallStackFrames)
     {
-      GURU(CALL_STACK_OVERFLOW);
+      GURU_MEDITATION(CALL_STACK_OVERFLOW);
     }
 
-    current = InterpStackFrame(interp);
+    current = InterpGetStackFrame(interp);
   }
 
   // Functions have their own local environment
   current->context = current;
 
   // Set first instruction in the new frame
-  current->instruction = MemItemFirst(interp->itemMemory, code);
+  current->instruction = InterpGetFirst(interp, code);
 }
 
 void InterpPopStackFrame(VInterp* interp)
 {
   if (interp->callStackTop < 0)
   {
-    GURU(CALL_STACK_IS_EMPTY);
+    GURU_MEDITATION(CALL_STACK_IS_EMPTY);
   }
 
   -- interp->callStackTop;
@@ -318,14 +341,14 @@ void InterpPopStackFrame(VInterp* interp)
 // Copies item
 void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
 {
-  VStackFrame* frame = InterpStackFrame(interp);
+  VStackFrame* frame = InterpGetStackFrame(interp);
 
   // Copy item
   frame->context->localVars[index] = *item;
 }
 
 #define InterpGetLocalVar(interp, index) \
-  ( & (InterpStackFrame(interp)->context->localVars[index]) )
+  ( & (InterpGetStackFrame(interp)->context->localVars[index]) )
 
 // -------------------------------------------------------------
 // Global vars
@@ -341,7 +364,7 @@ void InterpSetGlobalVar(VInterp* interp, int index, VItem* item)
   }
   else
   {
-    GURU(GLOBALVARS_OVERFLOW);
+    GURU_MEDITATION(GLOBALVARS_OVERFLOW);
   }
 }
 
@@ -393,17 +416,14 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     }
 
     // Get instruction pointer
-    current = InterpStackFrame(interp);
+    current = InterpGetStackFrame(interp);
     instruction = current->instruction;
 
     // Evaluate current instruction.
     if (NULL != instruction)
     {
       // Advance instruction for next loop
-      current->instruction = MemItemNext(interp->itemMemory, current->instruction);
-
-      //current->instruction = InterpCdr(interp, current->instruction);
-      //current->instruction = InterpMemNext(interp, current->instruction);
+      current->instruction = InterpGetNext(interp, current->instruction);
 
       if (IsTypePrimFun(instruction))
       {
