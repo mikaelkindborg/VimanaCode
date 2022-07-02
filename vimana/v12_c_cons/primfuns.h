@@ -84,14 +84,14 @@ void PrimFun_funify(VInterp* interp)
   ItemSetType(list, TypeFun);
 }
 
-VItem* ParseSourceCode(char* sourceCode, VInterp* interp);
+//VItem* Parse(char* sourceCode, VInterp* interp);
 
 void PrimFun_parse(VInterp* interp)
 {
   VItem* item = InterpStackTop(interp);
   // TODO: Check IsTypeString
   char* string = InterpGetBufferPtr(interp, item);
-  VItem* list = ParseSourceCode(string, interp);
+  VItem* list = Parse(string, interp);
   *item = *list;
 }
 
@@ -105,8 +105,7 @@ void PrimFun_readfile(VInterp* interp)
   // TODO: Check NULL
 
   stringItem = InterpAllocBuffer(interp, string);
-  //ItemSetType(stringItem, TypeString); // TODO!!
-  ItemSetType(stringItem, TypeBuffer); // TODO!!
+  ItemSetType(stringItem, TypeString);
 
   InterpStackPush(interp, stringItem);
 }

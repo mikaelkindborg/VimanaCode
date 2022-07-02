@@ -10,7 +10,7 @@ typedef struct __VArray
   int    itemSize;
   int    length;
   int    size;
-  void** buffer;
+  void*  buffer;
 }
 VArray;
 
@@ -66,5 +66,4 @@ VArray* ArrayGrow(VArray* array, int newLength)
 }
 
 // Access a char* in the array
-#define ArrayStringAt(array, index) \
-  (*((char**)ArrayAt(array, index)))
+#define ArrayStringAt(array, index) (*((char**)ArrayAt(array, index)))

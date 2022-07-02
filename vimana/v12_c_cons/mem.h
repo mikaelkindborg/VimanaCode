@@ -155,13 +155,13 @@ void MemDeallocItem(VMem* mem, VItem* item)
 #define MemGetNext(mem, item) \
   (ItemGetNext(item) ? ItemGetNextPtr(item, MemStart(mem)) : NULL)
 
-// Set first item of list
-void MemSetFirst(VMem* mem, VItem* list, VItem* first)
+// Set first
+void MemSetFirst(VMem* mem, VItem* item, VItem* first)
 {
-  ItemSetFirst(list, ItemPtrToAddr(first, MemStart(mem)));
+  ItemSetFirst(item, ItemPtrToAddr(first, MemStart(mem)));
 }
 
-// Set next item
+// Set next
 void MemSetNext(VMem* mem, VItem* item, VItem* next)
 {
   ItemSetNext(item, ItemPtrToAddr(next, MemStart(mem)));
@@ -182,6 +182,9 @@ void MemSetNext(VMem* mem, VItem* item, VItem* next)
 // If the raw pointer would be refereced from many items, the
 // garbage collector would not be able to tell if it is deallocated.
 //
+// Ownership of bufferPtr goes to the memory manager!
+// bufferPtr must be allocated with SysAlloc (malloc)!
+//
 VItem* MemAllocBuffer(VMem* mem, void* bufferPtr)
 {
   //PrintLine("MemAllocBuffer");
@@ -192,6 +195,7 @@ VItem* MemAllocBuffer(VMem* mem, void* bufferPtr)
   ItemSetType(bufferPtrItem, TypeBufferPtr);
 
   bufferPtrItem->ptr = bufferPtr;
+  
   MemSetFirst(mem, bufferItem, bufferPtrItem);
 
   return bufferItem;
@@ -207,6 +211,7 @@ void* MemGetBufferPtr(VMem* mem, VItem* bufferItem)
 
   // TODO: GURU_MEDITATION?
   if (NULL == bufferPtrItem) return NULL;
+  
   // TODO: GURU_MEDITATION?
   if (!IsTypeBufferPtr(bufferPtrItem)) return NULL;
 

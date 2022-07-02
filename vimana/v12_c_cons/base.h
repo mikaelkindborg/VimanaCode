@@ -9,6 +9,8 @@ Basic data types and functions.
 // Types
 // -------------------------------------------------------------
 
+// All Vimana types are prefixed with 'V'
+
 typedef unsigned char    VByte;
 typedef unsigned int     VUInt;
 typedef unsigned long    VAddr;

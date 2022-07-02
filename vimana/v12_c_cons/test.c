@@ -4,9 +4,16 @@
 
 #include "vimana.h"
 
+void LogTest(char* testName)
+{
+  PrintLine("================================================");
+  PrintLine(testName);
+  PrintLine("================================================");
+}
+
 void TestPrintBinary()
 {
-  printf("---> TestPrintBinary\n");
+  LogTest("TestPrintBinary");
 
   PrintBinaryUInt(0x80000000);
   PrintBinaryUInt(0x1 << 1);
@@ -19,7 +26,7 @@ void TestPrintBinary()
 
 void TestItemAttributes()
 {
-  printf("---> TestItemAttributes\n");
+  LogTest("TestItemAttributes");
 
   VItem theItem;
   VItem* item = &theItem;
@@ -72,7 +79,7 @@ void TestFoo()
   PrintBinaryULong((unsigned long)n4);
 */
 
-  printf("16 bit memory layout\n");
+  PrintLine("16 bit memory layout");
   PrintBinaryUShort(4);
   PrintBinaryUShort(8);
   PrintBinaryUShort(12);
@@ -83,22 +90,14 @@ void TestFoo()
   PrintBinaryUShort(1024*8);
   PrintBinaryUShort(0xFFFF);
 
-  printf("32 bit memory layout\n");
+  PrintLine("32 bit memory layout");
   PrintBinaryUInt(1024*32);
   PrintBinaryUInt(1024*256);
 }
 
-/*
-0000000000000000011111111111111011101101101101010110101010110000
-0000000000000000011111111111111011101101101101010110101010111000
-0000000000000000011111111111111011101101101101010110101011000000
-0000000000000000011111111111111011101101101101010110101011001000
-*/
-
-
 void TestMemAlloc()
 {
-  printf("---> TestMemAlloc\n");
+  LogTest("TestMemAlloc");
 
   VMem* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
@@ -118,7 +117,7 @@ VItem* AllocMaxItems(VMem* mem)
 {
   // Alloc items until out of memory
 
-  printf("Alloc max items\n");
+  PrintLine("Alloc max items");
 
   VItem* first = NULL;
   VItem* item;
@@ -168,17 +167,17 @@ void PrintItems(VItem* first, VMem* mem)
     printf("%li ", ItemGetIntNum(item));
     item = MemGetNext(mem, item);
   }
-  printf("\n");
+  PrintNewLine();
 }
 
 void TestAllocDealloc()
 {
-  printf("---> TestAllocDealloc\n");
+  LogTest("TestAllocDealloc");
 
   VMem* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
 
-  printf("Alloc max\n");
+  PrintLine("Alloc max");
   VItem* first = AllocMaxItems(mem);
   PrintItems(first, mem);
   int numItems = CountItems(first, mem);
@@ -186,7 +185,7 @@ void TestAllocDealloc()
 
   MemSweep(mem);
 
-  printf("Alloc max again\n");
+  PrintLine("Alloc max again");
   first = AllocMaxItems(mem);
   PrintItems(first, mem);
   int numItems2 = CountItems(first, mem);
@@ -198,18 +197,221 @@ void TestAllocDealloc()
 
   MemPrintAllocCounter(mem);
   SysFree(mem);
-  PrintMemStat();
+  SysPrintMemStat();
+}
+
+void TestSetFirst()
+{
+  LogTest("TestSetFirst");
+
+  VItem* first;
+  VItem* item;
+  VItem* next;
+  VAddr addr;
+
+  VMem* mem = SysAlloc(MemGetByteSize(10));
+  MemInit(mem, 10);
+
+  first = MemAllocItem(mem);
+  item = first;
+  ItemSetNext(item, 1); // Using next for the item value in this test
+
+  next = MemAllocItem(mem);
+  ItemSetNext(next, 2);
+  addr = ItemPtrToAddr(next, mem->start);
+  printf("addr: %lu\n", addr);
+  ItemSetFirst(item, addr);
+  item = next;
+
+  next = MemAllocItem(mem);
+  ItemSetNext(next, 3);
+  addr = ItemPtrToAddr(next, mem->start);
+  printf("addr: %lu\n", addr);
+  ItemSetFirst(item, addr);
+  item = next;
+
+  // Last item
+  ItemSetFirst(item, 0);
+
+// item = MemItemAt(mem, index)
+
+  item = first;
+  while (1)
+  {
+    printf("item: %lu\n", ItemGetNext(item));
+
+    if (0 == ItemGetFirst(item)) break;
+
+    item = MemGetFirst(mem, item);
+  }
+
+  MemPrintAllocCounter(mem);
+  SysFree(mem);
+}
+
+void TestStringItem()
+{
+  LogTest("TestStringItem");
+
+  VItem* first;
+  VItem* item;
+  VItem* next;
+  VAddr addr;
+  
+TODO!!
+
+  VMem* mem = SysAlloc(MemGetByteSize(10));
+  MemInit(mem, 10);
+
+  first = MemAllocItem(mem);
+  item = first;
+  ItemSetNext(item, 1); // Using next for the item value in this test
+
+  next = MemAllocItem(mem);
+  ItemSetNext(next, 2);
+  addr = ItemPtrToAddr(next, mem->start);
+  printf("addr: %lu\n", addr);
+  ItemSetFirst(item, addr);
+  item = next;
+
+  next = MemAllocItem(mem);
+  ItemSetNext(next, 3);
+  addr = ItemPtrToAddr(next, mem->start);
+  printf("addr: %lu\n", addr);
+  ItemSetFirst(item, addr);
+  item = next;
+
+  // Last item
+  ItemSetFirst(item, 0);
+
+// item = MemItemAt(mem, index)
+
+  item = first;
+  while (1)
+  {
+    printf("item: %lu\n", ItemGetNext(item));
+
+    if (0 == ItemGetFirst(item)) break;
+
+    item = MemGetFirst(mem, item);
+  }
+
+  MemPrintAllocCounter(mem);
+  SysFree(mem);
+}
+
+void TestArray()
+{
+  LogTest("TestArray");
+
+  VItem item;
+
+  VArray* array = ArrayNew(sizeof(VItem), 5);
+
+  for (int i = 0; i < 20; ++ i)
+  {
+    item.intNum = i + 1;
+    array = ArrayGrow(array, i + 5);
+    VItem* p = ArrayAt(array, i);
+    *p = item;
+  }
+
+  for (int i = 0; i < ArrayLength(array); ++ i)
+  {
+    VItem* item = ArrayAt(array, i);
+    printf("value: %li\n", item->intNum);
+  }
+
+  ArrayFree(array);
+}
+
+void TestSymbolTable()
+{
+  LogTest("TestSymbolTable");
+
+  char* s1 = "First";
+  char* s2 = "Second";
+  char* s3 = "Third";
+
+  SymbolTableCreate();
+
+  SymbolTableFindAdd(s1);
+  SymbolTableFindAdd(s2);
+  SymbolTableFindAdd(s3);
+
+  int index = SymbolTableFindAdd(s3);
+  char* s = SymbolTableGet(index);
+
+  printf("Symbol: %i %s\n", index, s);
+
+  SymbolTableFree();
+}
+
+void TestArrayWithStringItems()
+{
+  LogTest("TestArrayWithStringItems");
+
+  // Make room for 5 string items and 5 buffer items
+  VMem* mem = SysAlloc(MemGetByteSize(10));
+  MemInit(mem, 10);
+
+  VItem* item;
+
+  VArray* array = ArrayNew(sizeof(VItem*), 5);
+
+  for (int i = 0; i < 5; ++ i)
+  {
+    array = ArrayGrow(array, i + 1);
+
+    char* str = "Hi there";
+    item = MemAllocBuffer(mem, StrCopy(str));
+    ItemSetType(item, TypeString);
+
+    VItem** p = ArrayAt(array, i);
+    *p = item;
+  }
+
+  for (int i = 0; i < ArrayLength(array); ++ i)
+  {
+    PrintLine("foo");
+    VItem* item = ArrayAt(array, i);
+    printf("Item first: %lu\n", ItemGetFirst(item));
+    PrintLine("foo2");
+    VItem* buffer = MemGetFirst(mem, item);
+    PrintLine("foo3");
+    //char* str = (char*) ItemGetFirst(buffer);
+    //printf("String: %s\n", str);
+  }
+
+  PrintLine("foo4");
+
+  MemMark(mem, ArrayAt(array, 2));
+  MemMark(mem, ArrayAt(array, 3));
+  MemSweep(mem);
+  MemSweep(mem);
+
+  PrintLine("foo5");
+
+  ArrayFree(array);
+
+  SysFree(mem);
 }
 
 int main()
 {
-  printf("Welcome to the wonderful world of Vimana\n");
-
-  //TestPrintBinary();
-  //TestItemAttributes();
-  //TestFoo();
-  //TestMemAlloc();
+  LogTest("Welcome to VimanaCode tests");
+/*
+  TestPrintBinary();
+  TestItemAttributes();
+  TestFoo();
+  TestMemAlloc();
   TestAllocDealloc();
+  TestArray();
+  TestSymbolTable();*/
+  TestSetFirst();
+  //TestArrayWithStringItems();
+
+  SysPrintMemStat();
 
   return 0;
 }
@@ -218,77 +420,6 @@ int main()
 
 #ifdef FOOBAR
 
-
-VItem* AllocMaxItemsUsingCons(VMem* mem)
-{
-  // Alloc and cons items until out of memory
-  int counter = 1;
-  VItem* first = NULL;
-  while (1)
-  {
-    VItem item;
-    ItemSetIntNum(&item, counter ++);
-    VItem* cons = MemCons(mem, &item, first);
-    if (NULL == cons) break;
-    first = cons;
-  }
-  return first;
-}
-
-/*
-void X_DeallocItems(VItem* first, VMem* mem)
-{
-  VItem* item = first;
-  while (1)
-  {
-    printf("DEALLOC: %li\n", item->intNum);
-    VAddr nextAddr = item->next;
-    MemDeallocItem(mem, item);
-    if (0 == nextAddr) break;
-    item = MemItemPointer(mem, nextAddr);
-  }
-}
-
-void xPrintItems(VItem* first, VMem* mem)
-{
-  VAddr addr = MemItemAddr(mem, first);
-  while (addr)
-  {
-    VItem* item = MemItemPointer(mem, addr);
-    printf("%li\n", item->intNum);
-    addr = item->next;
-  }
-}
-*/
-
-void TestConsDealloc()
-{
-  printf("---> TestConsDealloc\n");
-
-  VMem* mem = MemNew(10);
-
-  VItem* first = AllocMaxItemsUsingCons(mem);
-  printf("ONE\n");
-  printf("ONE NEXT: %i\n", (int)first->next);
-  printf("ONE ADDR: %i\n", (int)first->addr);
-  PrintItems(first, mem);
-  int numItems = CountItems(first, mem);
-  printf("Num items: %i\n", numItems);
-
-  MemSweep(mem);
-
-  first = AllocMaxItems(mem);
-  PrintItems(first, mem);
-  int numItems2 = CountItems(first, mem);
-  printf("Num items: %i\n", numItems2);
-
-  MemSweep(mem);
-
-  ShouldHold("Allocated items should be equal", numItems == numItems2);
-
-  MemFree(mem);
-}
-
 /*
 void TestParseSymbolicCode()
 {
@@ -296,14 +427,14 @@ void TestParseSymbolicCode()
   char* code = "N-42 N44 (P1 N2 (N3 (P4)) N5 N6) N0 (((N88";
   VItem* first = ParseSymbolicCode(code, mem);
   MemPrintList(mem, first);
-  printf("\n");
+  PrintNewLine();
   MemFree(mem);
 }
 */
 
-void TestParseSourceCode()
+void TestParse()
 {
-  printf("---> TestParseSourceCode\n");
+  LogTest("TestParse");
 
   GSymbolTableInit();
 
@@ -313,38 +444,38 @@ void TestParseSourceCode()
   char* code = "1 2 (((3 4) 5))";
   list = ParseSourceCode(code, mem);
   MemPrintItem(mem, list);
-  printf("\n");
+  PrintNewLine();
 
   char* empty = "";
   list = ParseSourceCode(empty, mem);
   MemPrintItem(mem, list);
-  printf("\n");
+  PrintNewLine();
   //ShouldHold("first should be NULL", NULL == first);
 
   char* empty2 = "()";
   list = ParseSourceCode(empty2, mem);
   MemPrintItem(mem, list);
-  printf("\n");
+  PrintNewLine();
 
   char* empty3 = "   (( ( ) ))   ";
   list = ParseSourceCode(empty3, mem);
   MemPrintItem(mem, list);
-  printf("\n");
+  PrintNewLine();
 
   char* string = "'Hi World'";
   list = ParseSourceCode(string, mem);
   MemPrintItem(mem, list);
-  printf("\n");
+  PrintNewLine();
 
   char* string2 = "('Hi foo') 'foo bar'";
   list = ParseSourceCode(string2, mem);
   MemPrintItem(mem, list);
-  printf("\n");
+  PrintNewLine();
 
   char* code2 = "1 2 3.33 foo bar bar sayHi";
   list = ParseSourceCode(code2, mem);
   MemPrintItem(mem, list);
-  printf("\n");
+  PrintNewLine();
 
   /*
   MemMark(mem, list);
@@ -360,93 +491,9 @@ void TestParseSourceCode()
   GSymbolTableRelease();
 }
 
-void TestSymbolTable()
-{
-  printf("---> TestSymbolTable\n");
-
-  char* s1 = "First";
-  char* s2 = "Second";
-  char* s3 = "Third";
-
-  VItem* symbols = SymbolTableNew();
-  
-  SymbolTableFindAdd(symbols, s1);
-  SymbolTableFindAdd(symbols, s2);
-  SymbolTableFindAdd(symbols, s3);
-
-  int index = SymbolTableFindAdd(symbols, s3);
-  char* s = SymbolTableGetString(symbols, 1);
-
-  printf("Symbol index: %i %s\n", index, s);
-
-  SymbolTableFree(symbols);
-}
-
-void TestArray()
-{
-  printf("---> TestArray\n");
-
-  VItem item;
-
-  VItem* array = ArrayNew(5);
-
-  for (int i = 0; i < 20; ++ i)
-  {
-    item.intNum = i + 1;
-    array = ArrayGrow(array, i + 5);
-    ArraySet(array, i, &item);
-  }
-
-  for (int i = 0; i < ArrayLength(array); ++ i)
-  {
-    VItem* item = ArrayGet(array, i);
-    printf("value: %li\n", item->intNum);
-  }
-
-  ArrayFree(array);
-}
-
-void TestArrayWithStrings()
-{
-  printf("---> TestArrayWithStrings\n");
-
-  VMem* mem = MemNew(1000);
-
-  VItem* item;
-
-  VItem* array = ArrayNew(5);
-
-  for (int i = 0; i < 20; ++ i)
-  {
-    array = ArrayGrow(array, i + 5);
-
-    char* str = "Hej";
-    item = MemAllocItem(mem);
-    MemItemSetString(mem, item, str);
-
-    ArraySet(array, i, item);
-  }
-
-  for (int i = 0; i < ArrayLength(array); ++ i)
-  {
-    VItem* item = ArrayGet(array, i);
-    printf("value: %s\n", MemItemString(mem, item));
-  }
-
-  MemMark(mem, & array[1]);
-  MemMark(mem, & array[2]);
-  MemMark(mem, & array[3]);
-  MemSweep(mem);
-  MemSweep(mem);
-
-  ArrayFree(array);
-
-  MemFree(mem);
-}
-
 void TestInterp()
 {
-  printf("---> TestInterp\n");
+  LogTest("TestInterp");
 
   VInterp* interp = InterpNew();
 
@@ -491,14 +538,14 @@ void TestInterp()
 
 void TestInterpEval()
 {
-  printf("---> TestInterpEval\n");
+  LogTest("TestInterpEval");
 
   VInterp* interp = InterpNew();
 
   char* source = "1 2 3 sayHi 1 2 3 + + + + + (SUM)setglobal SUM print";
   VItem* code = ParseSourceCode(source, interp->mem);
   MemPrintList(interp->mem, code);
-  printf("\n");
+  PrintNewLine();
 
   InterpEval(interp, code);
 
@@ -509,7 +556,7 @@ void TestInterpEval()
 
 void TestInterpEvalFun()
 {
-  printf("---> TestInterpEvalFun\n");
+  LogTest("TestInterpEvalFun");
 
   VInterp* interp = InterpNew();
 
@@ -517,7 +564,7 @@ void TestInterpEvalFun()
   char* source = "(88 print 1 2 + print) eval";
   VItem* code = ParseSourceCode(source, interp->mem);
   MemPrintList(interp->mem, code);
-  printf("\n");
+  PrintNewLine();
 
   InterpEval(interp, code);
 
@@ -528,14 +575,14 @@ void TestInterpEvalFun()
 
 void TestInterpEvalFunInfiniteTail()
 {
-  printf("---> TestInterpEvalFunInfiniteTail\n");
+  LogTest("TestInterpEvalFunInfiniteTail");
 
   VInterp* interp = InterpNew();
 
   char* source = "('Hi Ruma' print RUMA)funify(RUMA)setglobal RUMA";
   VItem* code = ParseSourceCode(source, interp->mem);
   MemPrintList(interp->mem, code);
-  printf("\n");
+  PrintNewLine();
 
   InterpEval(interp, code);
 
@@ -546,7 +593,7 @@ void TestInterpEvalFunInfiniteTail()
 
 int main()
 {
-  printf("Welcome to the wonderful world of Vimana\n");
+  PrintLine("Welcome to the wonderful world of Vimana");
 
   TestPrintBinary();
   TestItemAttributes();
@@ -565,9 +612,9 @@ int main()
   TestInterpEvalFun();
   //TestInterpEvalFunInfiniteTail();
 
-  printf("DONE\n");
+  LogTest("DONE");
 
-  PrintMemStat();
+  SysPrintMemStat();
 }
 
 #endif
@@ -624,11 +671,11 @@ int main(int numargs, char* args[])
 {
   SymbolTableCreate();
 
-  SymbolTableFindAddString("foo");
-  SymbolTableFindAddString("bar");
-  SymbolTableFindAddString("foo");
+  SymbolTableFindAdd("foo");
+  SymbolTableFindAdd("bar");
+  SymbolTableFindAdd("foo");
 
-  PrintLine(SymbolTableGetString(1));
+  PrintLine(SymbolTableGet(1));
 
   SymbolTableFree();
 

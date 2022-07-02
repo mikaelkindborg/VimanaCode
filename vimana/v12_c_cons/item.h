@@ -36,13 +36,13 @@ This is what it looks like for strings:
 
 Data Stack     Managed Mem     Malloc Mem
 ----------     -----------     ----------
-StringItem --> BufferItem  --> MemoryBuffer
+StringItem --> BufferPtrItem   --> MemoryBuffer
 
 For example:
 
 Data Stack     Managed Mem     Malloc Mem
 ----------     -----------     ----------
-StringItem --> BufferItem  --> 'Hi World'
+StringItem --> BufferPtrItem   --> 'Hi World'
 
 Here is an axample for lists:
 
@@ -58,17 +58,46 @@ ListHead   --> ListHead   --> SecondItem
                  !
                FirstItem  --> SecondItem
 
-See mem.h for details on how managed memory is allocated 
-and how addresses are used to reference items.
+Note that a list item always is of TypeList (or TypeFun/FunX).
+The list item functions as the head of the list. The elements
+of the list have types that correspond to the data they hold.
 
-Addresses are item indexes, and are used to save space by 
-not having to store full pointers to items on small machines 
-(Arduino). 
+For example, the rest function will put a list item on the
+data stack that points to the first item in the rest of the list.
 
-Pointers to allocated memory are stored as full pointers. 
+Example program:
 
-Pointers to primitive functions are stored as full pointers 
-in optimized mode.
+   (1 2 3) REST
+
+Stack sequence:
+
+    (1 2 3) // List pushed onto the stack
+            // REST is called (note that the function 
+            // itself is NOT pushed onto the stack)
+    (2 3)   // Resulting list on the stack
+
+The items on the stack in the above example are items of TypeList.
+The items in managed memory are 1, 2 and 3. Items that are on the 
+stack are not in managed memory.
+
+An item does not use raw pointers to address first and next.
+Instead an index is used which references item memory.
+Item memory (mem.h) is essentially just an array, and indexes
+are used to access items in this array. Such an index is
+call *address* or simply *addr*.
+
+Addresses (indexes) are used to save space by not having to 
+store full pointers to items. This enables type info to be
+kept in the item next field.
+
+See mem.h for details on how managed memory is allocated and 
+how addresses are used to reference items.
+
+Pointers to allocated memory are stored as full pointers in the
+value field. 
+
+Pointers to primitive functions are stored as full pointers in
+the value field in optimized mode.
 */
 
 // -------------------------------------------------------------
@@ -107,6 +136,8 @@ VItem;
 #define VItemPtr(p) ((VItem*)(p))
 
 /*
+TODO: UNUSED - REMOVE
+
 // Use bit shift to multiply to get item offset 
 // 4 byte item size (on 8 bit processors with 16 bit pointers)
 //   #define ItemAddrPtrShift 2 
@@ -134,17 +165,13 @@ VItem;
   ( ((BytePtr(itemPtr) - (memStart)) >> ItemAddrPtrShift) + 1 )
 */
 
-// TODO: Check that addressing works (+/- 1)
-// TODO: Move this to interp and set start to start - sizeof(VItem) in struct
-// We cannot have address zero in items since that is empty list or list end.
-
 // -------------------------------------------------------------
 // Access to data in item next field
 // -------------------------------------------------------------
 
 #define TypeMask         15 // Type bits
 #define MarkMask         16 // Mark bit
-#define NonAddrMask      31 // TypeMask + MarkMask (non-addr bits)
+#define NonAddrMask      31 // TypeMask + MarkMask (non-address bits)
 #define MarkShift        4
 #define AddrShift        5
 
@@ -178,10 +205,8 @@ enum ItemType
   TypeIntNum,
   TypeDecNum,
   TypeList,
-  TypeBuffer,      // Used for strings (and other memory objects)
-  // TODO: Move to object header
-  //TypeString,
-  //TypeSocket,
+  TypeString,
+  TypeBuffer,      // Used for memory objects
   TypeSymbol,      // Pushable types must go before TypeSymbol
   TypePrimFun,     // Primitive function
   TypeFun,         // Vimana function
@@ -194,16 +219,13 @@ enum ItemType
 #define IsTypeList(item)         (TypeList == ItemGetType(item))
 #define IsTypeIntNum(item)       (TypeIntNum == ItemGetType(item))
 #define IsTypeDecNum(item)       (TypeDecNum == ItemGetType(item))
+#define IsTypeString(item)       (TypeString == ItemGetType(item))
 #define IsTypeBuffer(item)       (TypeBuffer == ItemGetType(item))
 #define IsTypeSymbol(item)       (TypeSymbol == ItemGetType(item))
 #define IsTypePrimFun(item)      (TypePrimFun == ItemGetType(item))
 #define IsTypeFun(item)          (TypeFun == ItemGetType(item))
 #define IsTypeFunX(item)         (TypeFunX == ItemGetType(item))
 #define IsTypeBufferPtr(item)    (TypeBufferPtr == ItemGetType(item))
-
-// TODO: Move to object header
-//#define IsTypeString(item)       (TypeString == ItemGetType(item))
-//#define IsTypeSocket(item)       (TypeSocket == ItemGetType(item))
 
 // Pushable items are types that are pushed
 // to the data stack without being evaluated
@@ -215,13 +237,13 @@ enum ItemType
   (IsTypeNone(item)  || IsTypeIntNum(item)  || IsTypeDecNum(item) || \
   IsTypeSymbol(item) || IsTypePrimFun(item) || IsTypeBufferPtr(item))
 
-// Empty list
-#define IsEmpty(item) \
-  (IsTypeList(item) && (0 == (item)->first))
-
 // List types
 #define IsList(item) \
-  (IsTypeList(item) || IsTypeFun(item))
+  (IsTypeList(item) || IsTypeFun(item) || IsTypeFunX(item))
+
+// Empty list
+#define IsEmpty(item) \
+  (IsList(item) && (0 == ItemGetFirst(item)))
 
 // -------------------------------------------------------------
 // Access to data in item value field
@@ -229,7 +251,7 @@ enum ItemType
 
 #define ItemGetFirst(item)  ((item)->first)
 #define ItemGetFirstPtr(item, memStart) ItemAddrToPtr(ItemGetFirst(item), memStart)
-#define ItemGetSymbol(item) ((item)->symbol)
+#define ItemGetSymbol(item) ((item)->intNum)
 #define ItemGetIntNum(item) ((item)->intNum)
 #define ItemGetDecNum(item) ((item)->decNum)
 

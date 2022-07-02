@@ -2,7 +2,7 @@
 File: string.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Basic string functions.
+String functions.
 */
 
 #define StrEquals(s1, s2) (0 == strcmp(s1, s2))
@@ -15,9 +15,10 @@ char* StrCopy(char* str)
   return newStr;
 }
 
-void StrToUpper(char* s)
+// Modifies the string
+void StrToUpper(char* str)
 {
-  char* p = s;
+  char* p = str;
   while (*p)
   {
     *p = toupper((unsigned char) *p);
@@ -25,12 +26,30 @@ void StrToUpper(char* s)
   }
 }
 
-void StrToLower(char* s)
+// Modifies the string
+void StrToLower(char* str)
 {
-  char* p = s;
+  char* p = str;
   while (*p)
   {
     *p = tolower((unsigned char) *p);
     ++ p;
   }
+}
+
+// Check if a string begins with the given substring
+int StrStartsWith(char* str, char* substr)
+{
+  char* pStr = str;
+  char* pSubStr = substr;
+
+  while (('\0' != *pStr) && ('\0' != *pSubStr))
+  {
+    if (*pStr != *pSubStr) return 0; // Not found
+
+    ++ pStr;
+    ++ pSubStr;
+  }
+
+  return 1; // Found
 }

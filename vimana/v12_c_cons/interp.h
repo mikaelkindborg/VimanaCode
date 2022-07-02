@@ -411,10 +411,10 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
       if (IsTypePrimFun(instruction))
       {
         #ifdef OPTIMIZE
-          VPrimFunPtr fun = instruction->primFunPtr;
+          VPrimFunPtr fun = ItemGetPrimFun(instruction);
           fun(interp);
         #else
-          int primFunId = instruction->intNum;
+          int primFunId = ItemGetPrimFun(instruction);
           VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
           fun(interp);
         #endif
@@ -427,7 +427,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
       else
       if (IsTypeSymbol(instruction))
       {
-        VItem* value = InterpGetGlobalVar(interp, instruction->intNum);
+        VItem* value = InterpGetGlobalVar(interp, ItemGetSymbol(instruction));
         if (IsTypeFun(value))
         {
           // Call function

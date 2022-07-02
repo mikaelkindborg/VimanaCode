@@ -74,7 +74,7 @@ int main(int numargs, char* args[])
     }
 
     // Parse source code
-    VItem* list = ParseSourceCode(source, interp);
+    VItem* list = Parse(source, interp);
     SysFree(source);
 
     // Evaluate code
@@ -109,7 +109,7 @@ int main(int numargs, char* args[])
   SymbolTableFree();
   PrimFunTableFree();
 
-  PrintMemStat();
+  SysPrintMemStat();
 
   return 0;
 }

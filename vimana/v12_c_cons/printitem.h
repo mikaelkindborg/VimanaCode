@@ -15,7 +15,7 @@ void InterpPrintItem(VInterp* interp, VItem* item)
 {
   //printf("[T%i]", ItemType(item));
   if (IsTypeNone(item))
-    Print("None");
+    Print("[NONE]");
   else if (IsTypeList(item))
     InterpPrintList(interp, item);
   else if (IsTypeIntNum(item))
@@ -23,14 +23,21 @@ void InterpPrintItem(VInterp* interp, VItem* item)
   else if (IsTypeDecNum(item))
     printf("%g", item->decNum);
   else if (IsTypePrimFun(item))
-    printf("P%li", item->intNum);
+    printf("P%li", item->first); // TODO: Lookup name of primfun
   else if (IsTypeSymbol(item))
-    printf("S%li", item->intNum);
+    printf("%s", SymbolTableGet(ItemGetSymbol(item)));
+  else if (IsTypeString(item))
+    printf("{%s}", (char*)InterpGetBufferPtr(interp, item));
   else if (IsTypeBuffer(item))
-    printf("'%s'", (char*)InterpGetBufferPtr(interp, item));
+    printf("[BUFFER] %lu", (long unsigned)InterpGetBufferPtr(interp, item));
   else if (IsTypeFun(item))
   {
     printf("[FUN] ");
+    InterpPrintList(interp, item);
+  }  
+  else if (IsTypeFunX(item))
+  {
+    printf("[FUNX] ");
     InterpPrintList(interp, item);
   }
 }

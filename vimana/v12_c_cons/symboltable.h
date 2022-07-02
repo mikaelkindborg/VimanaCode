@@ -30,7 +30,7 @@ void SymbolTableFree()
 // Finds or adds a string to the symbol table and 
 // returns the symbol index
 // string is copied
-int SymbolTableFindAddString(char* string)
+int SymbolTableFindAdd(char* string)
 {
   // Grows array if needed
   GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable));
@@ -53,7 +53,7 @@ int SymbolTableFindAddString(char* string)
 }
 
 // Returns string for symbol at index
-char* SymbolTableGetString(int index)
+char* SymbolTableGet(int index)
 {
   return ArrayStringAt(GSymbolTable, index);
 }
