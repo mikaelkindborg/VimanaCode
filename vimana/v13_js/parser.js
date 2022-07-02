@@ -105,14 +105,13 @@ class VimanaParser
 
     // Position is at opening curly
 
-    // Move beyond opening curly
+    // Move past opening curly
     this.pos ++
 
     while (this.pos < code.length)
     {
-      if (this.isDoubleStringChar(code))
+      if (this.isQuotedStringChar(code))
       {
-        result += code[this.pos]
         this.pos ++
         result += code[this.pos]
         this.pos ++
@@ -128,7 +127,7 @@ class VimanaParser
       }
     }
 
-    // Move beyond closing curly
+    // Move past closing curly
     this.pos ++
 
     // Position is at character after closing curly
@@ -203,12 +202,12 @@ class VimanaParser
     return "(" === char || ")" === char || this.isWhiteSpace(char)
   }
 
-  isDoubleStringChar(code) 
+  isQuotedStringChar(code) 
   {
     if (this.pos + 1 < code.length)
     {
       let chars = code.substring(this.pos, this.pos + 2)
-      if (("{{" === chars) || ("}}" === chars))
+      if (("\{" === chars) || ("\}" === chars))
       {
         return true
       }
