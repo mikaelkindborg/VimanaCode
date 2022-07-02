@@ -11,14 +11,14 @@ void PrimFun_sayHi(VInterp* interp)
 void PrimFun_print(VInterp* interp)
 {
   VItem* item = InterpStackPop(interp);
-  InterpPrintItem(interp, item);
+  PrintItem(item, interp);
   PrintNewLine();
 }
 
 void PrimFun_printstack(VInterp* interp)
 {
   Print("STACK: ");
-  InterpPrintItemArray(interp, interp->dataStack, interp->dataStackTop + 1);
+  PrintItemArray(interp->dataStack, interp->dataStackTop + 1, interp);
   PrintNewLine();
 }
 
@@ -67,14 +67,14 @@ void PrimFun_setglobal(VInterp* interp)
 {
   VItem* list = InterpStackPop(interp);
   VItem* value = InterpStackPop(interp);
-  VItem* symbol = InterpGetFirst(interp, list);
+  VItem* symbol = GetFirst(list, interp);
   InterpSetGlobalVar(interp, symbol->intNum, value);
 }
 
 void PrimFun_getglobal(VInterp* interp)
 {
   VItem* item = InterpStackTop(interp);
-  VItem* symbol = InterpGetFirst(interp, item);
+  VItem* symbol = GetFirst(item, interp);
   *item = *(InterpGetGlobalVar(interp, symbol->intNum));
 }
 
@@ -89,25 +89,26 @@ void PrimFun_funify(VInterp* interp)
 void PrimFun_parse(VInterp* interp)
 {
   VItem* item = InterpStackTop(interp);
-  // TODO: Check IsTypeString
-  char* string = InterpGetBufferPtr(interp, item);
+  if (!IsTypeString(item)) GURU_MEDITATION(PARSE_ARG_NOT_STRING);
+  char* string = GetHandlePtr(item, interp);
   VItem* list = Parse(string, interp);
   *item = *list;
 }
 
 void PrimFun_readfile(VInterp* interp)
 {
-  VItem* stringItem = InterpStackPop(interp);
-  // TODO: Check IsTypeString
+  VItem* item = InterpStackPop(interp);
+  if (!IsTypeString(item)) GURU_MEDITATION(READFILE_ARG_NOT_STRING);
 
-  char* fileName = InterpGetBufferPtr(interp, stringItem);
-  char* string = FileRead(fileName);
-  // TODO: Check NULL
+  char* fileName = GetHandlePtr(item, interp);
+  char* data = FileRead(fileName);
 
-  stringItem = InterpAllocBuffer(interp, string);
-  ItemSetType(stringItem, TypeString);
-
-  InterpStackPush(interp, stringItem);
+  if (NULL != data)
+  {
+    item = AllocHandle(data, TypeString, interp);
+    InterpStackPush(interp, item);
+  }
+  // else ??
 }
 
 void PrimFun_plus(VInterp* interp) // +
@@ -311,7 +312,7 @@ void PrimFun_first(VInterp* interp)
   if (!IsList(list)) GURU_MEDITATION(FIRST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
-  VItem* item = InterpGetFirst(interp, list);
+  VItem* item = GetFirst(list, interp);
 
   // Leave empty list on the stack
   // () first => ()
@@ -331,14 +332,14 @@ void PrimFun_rest(VInterp* interp)
   if (!IsList(list)) GURU_MEDITATION(REST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
-  VItem* item = InterpGetFirst(interp, list);
+  VItem* item = GetFirst(list, interp);
 
   // Leave empty list on the stack
   // () rest => ()
   if (NULL == item) goto Exit;
 
   // Get second item in the list
-  item = InterpGetNext(interp, item);
+  item = GetNext(item, interp);
 
   // If empty tail, leave empty list on the stack
   // (1) rest => ()
@@ -349,7 +350,7 @@ void PrimFun_rest(VInterp* interp)
   }
 
   // Set second item as first element of the list
-  InterpSetFirst(interp, list, item);
+  SetFirst(list, item, interp);
 
 Exit:;
 }
@@ -369,28 +370,28 @@ void PrimFun_cons(VInterp* interp)
   ItemSetType(&newList, ItemGetType(list));
 
   // Allocate new element
-  VItem* newFirst = InterpAllocItem(interp);
+  VItem* newFirst = AllocItem(interp);
   if (NULL == newFirst) GURU_MEDITATION(CONS_OUT_OF_MEMORY);
 
   // Copy item to new element
   *newFirst = *item;
 
   // Get first element of the list 
-  VItem* first = InterpGetFirst(interp, list);
+  VItem* first = GetFirst(list, interp);
 
   if (NULL == first)
   {
     // If empty list, the new item is the last and only element
-    InterpSetNext(interp, newFirst, NULL);
+    SetFirst(newFirst, NULL, interp);
   }
   else
   {
     // Link new item to the first element of the list
-    InterpSetNext(interp, newFirst, first);
+    SetFirst(newFirst, first, interp);
   }
 
   // Set first of list to refer to the new element
-  InterpSetFirst(interp, &newList, newFirst);
+  SetFirst(&newList, newFirst, interp);
 
   // Copy new list item to data stack
   *item = newList;
@@ -407,14 +408,14 @@ void PrimFun_setfirst(VInterp* interp)
   if (!IsList(list)) GURU_MEDITATION(SETFIRST_OBJECT_IS_NOT_A_LIST);
 
   // Get first item
-  VItem* first = InterpGetFirst(interp, list);
+  VItem* first = GetFirst(list, interp);
 
   // Set first of empty list
   if (NULL == first)
   {
-    first = InterpAllocItem(interp);
+    first = AllocItem(interp);
     if (NULL == first) GURU_MEDITATION(SETFIRST_OUT_OF_MEMORY);
-    InterpSetFirst(interp, list, first);
+    SetFirst(list, first, interp);
   }
 
   // Preserve address of next item
@@ -423,7 +424,7 @@ void PrimFun_setfirst(VInterp* interp)
   // Copy item
   *first = *item;
 
-  // Restore next
+  // Restore address of next
   ItemSetNext(first, next);
 }
 
@@ -464,6 +465,71 @@ void PrimFun_sleep(VInterp* interp)
 
   sleep(seconds);
   usleep(micros);
+}
+
+void PrimFun_def(VInterp* interp)
+{
+  PrimFun_funify(interp);
+  PrimFun_swap(interp);
+  PrimFun_setglobal(interp);
+}
+
+void PrimFun_evalfile(VInterp* interp)
+{
+  PrimFun_readfile(interp);
+  PrimFun_parse(interp);
+  PrimFun_eval(interp);
+}
+
+void AddCorePrimFuns()
+{
+  PrimFunAdd("sayHi", PrimFun_sayHi);
+  PrimFunAdd("print", PrimFun_print);
+  PrimFunAdd("printstack", PrimFun_printstack);
+  PrimFunAdd("eval", PrimFun_eval);
+  PrimFunAdd("call", PrimFun_call);
+  PrimFunAdd("iftrue", PrimFun_iftrue);
+  PrimFunAdd("iffalse", PrimFun_iffalse);
+  PrimFunAdd("ifelse", PrimFun_ifelse);
+  PrimFunAdd("setglobal", PrimFun_setglobal);
+  PrimFunAdd("getglobal", PrimFun_getglobal);
+  PrimFunAdd("funify", PrimFun_funify);
+  PrimFunAdd("parse", PrimFun_parse);
+  PrimFunAdd("readfile", PrimFun_readfile);
+  PrimFunAdd("+", PrimFun_plus);
+  PrimFunAdd("-", PrimFun_minus);
+  PrimFunAdd("*", PrimFun_times);
+  PrimFunAdd("/", PrimFun_div);
+  PrimFunAdd("1+", PrimFun_1plus);
+  PrimFunAdd("1-", PrimFun_1minus);
+  PrimFunAdd("2+", PrimFun_2plus);
+  PrimFunAdd("2-", PrimFun_2minus);
+  PrimFunAdd("<", PrimFun_lessthan);
+  PrimFunAdd(">", PrimFun_greaterthan);
+  PrimFunAdd("eq", PrimFun_eq);
+  PrimFunAdd("iszero", PrimFun_iszero);
+  PrimFunAdd("not", PrimFun_not);
+  PrimFunAdd("drop", PrimFun_drop);
+  PrimFunAdd("dup", PrimFun_dup);
+  PrimFunAdd("swap", PrimFun_swap);
+  PrimFunAdd("over", PrimFun_over);
+  PrimFunAdd("[A]", PrimFun_local_setA);
+  PrimFunAdd("[AB]", PrimFun_local_setAB);
+  PrimFunAdd("[ABC]", PrimFun_local_setABC);
+  PrimFunAdd("[ABCD]", PrimFun_local_setABCD);
+  PrimFunAdd("A", PrimFun_local_getA);
+  PrimFunAdd("B", PrimFun_local_getB);
+  PrimFunAdd("C", PrimFun_local_getC);
+  PrimFunAdd("D", PrimFun_local_getD);
+  PrimFunAdd("first", PrimFun_first);
+  PrimFunAdd("rest", PrimFun_rest);
+  PrimFunAdd("cons", PrimFun_cons);
+  PrimFunAdd("setfirst", PrimFun_setfirst);
+  PrimFunAdd("gc", PrimFun_gc);
+  PrimFunAdd("millis", PrimFun_millis);
+  PrimFunAdd("sleep", PrimFun_sleep);
+  PrimFunAdd("def", PrimFun_def);
+  PrimFunAdd("evalfile", PrimFun_evalfile);
 }
 
 /*
@@ -584,68 +650,3 @@ void PrimFunx_sockeclose(VInterp* interp)
 close(client_socket);
 }
 */
-
-void PrimFun_def(VInterp* interp)
-{
-  PrimFun_funify(interp);
-  PrimFun_swap(interp);
-  PrimFun_setglobal(interp);
-}
-
-void PrimFun_evalfile(VInterp* interp)
-{
-  PrimFun_readfile(interp);
-  PrimFun_parse(interp);
-  PrimFun_eval(interp);
-}
-
-void AddCorePrimFuns()
-{
-  PrimFunAdd("sayHi", PrimFun_sayHi);
-  PrimFunAdd("print", PrimFun_print);
-  PrimFunAdd("printstack", PrimFun_printstack);
-  PrimFunAdd("eval", PrimFun_eval);
-  PrimFunAdd("call", PrimFun_call);
-  PrimFunAdd("iftrue", PrimFun_iftrue);
-  PrimFunAdd("iffalse", PrimFun_iffalse);
-  PrimFunAdd("ifelse", PrimFun_ifelse);
-  PrimFunAdd("setglobal", PrimFun_setglobal);
-  PrimFunAdd("getglobal", PrimFun_getglobal);
-  PrimFunAdd("funify", PrimFun_funify);
-  PrimFunAdd("parse", PrimFun_parse);
-  PrimFunAdd("readfile", PrimFun_readfile);
-  PrimFunAdd("+", PrimFun_plus);
-  PrimFunAdd("-", PrimFun_minus);
-  PrimFunAdd("*", PrimFun_times);
-  PrimFunAdd("/", PrimFun_div);
-  PrimFunAdd("1+", PrimFun_1plus);
-  PrimFunAdd("1-", PrimFun_1minus);
-  PrimFunAdd("2+", PrimFun_2plus);
-  PrimFunAdd("2-", PrimFun_2minus);
-  PrimFunAdd("<", PrimFun_lessthan);
-  PrimFunAdd(">", PrimFun_greaterthan);
-  PrimFunAdd("eq", PrimFun_eq);
-  PrimFunAdd("iszero", PrimFun_iszero);
-  PrimFunAdd("not", PrimFun_not);
-  PrimFunAdd("drop", PrimFun_drop);
-  PrimFunAdd("dup", PrimFun_dup);
-  PrimFunAdd("swap", PrimFun_swap);
-  PrimFunAdd("over", PrimFun_over);
-  PrimFunAdd("[A]", PrimFun_local_setA);
-  PrimFunAdd("[AB]", PrimFun_local_setAB);
-  PrimFunAdd("[ABC]", PrimFun_local_setABC);
-  PrimFunAdd("[ABCD]", PrimFun_local_setABCD);
-  PrimFunAdd("A", PrimFun_local_getA);
-  PrimFunAdd("B", PrimFun_local_getB);
-  PrimFunAdd("C", PrimFun_local_getC);
-  PrimFunAdd("D", PrimFun_local_getD);
-  PrimFunAdd("first", PrimFun_first);
-  PrimFunAdd("rest", PrimFun_rest);
-  PrimFunAdd("cons", PrimFun_cons);
-  PrimFunAdd("setfirst", PrimFun_setfirst);
-  PrimFunAdd("gc", PrimFun_gc);
-  PrimFunAdd("millis", PrimFun_millis);
-  PrimFunAdd("sleep", PrimFun_sleep);
-  PrimFunAdd("def", PrimFun_def);
-  PrimFunAdd("evalfile", PrimFun_evalfile);
-}

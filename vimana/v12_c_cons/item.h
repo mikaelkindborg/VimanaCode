@@ -127,45 +127,6 @@ typedef struct __VItem
 VItem;
 
 // -------------------------------------------------------------
-// Convert addr to/from pointer
-// -------------------------------------------------------------
-
-#define ItemAddrToPtr(addr, memStart) ((memStart) + ((addr) - 1))
-#define ItemPtrToAddr(itemPtr, memStart) ((itemPtr - memStart) + 1)
-
-#define VItemPtr(p) ((VItem*)(p))
-
-/*
-TODO: UNUSED - REMOVE
-
-// Use bit shift to multiply to get item offset 
-// 4 byte item size (on 8 bit processors with 16 bit pointers)
-//   #define ItemAddrPtrShift 2 
-// 8 byte item size (on 32 bit processors)
-//   #define ItemAddrPtrShift 3 
-// 16 byte item size (on 64 bit processors)
-//   #define ItemAddrPtrShift 4
-//
-// This:
-//   ptr = start + (addr * sizeof(VItem))
-// is equal to:
-//   ptr = start + (addr << ItemAddrPtrShift)
-
-// Use on 64 bit machines
-#define ItemAddrPtrShift 4 
-
-// Convert address to pointer
-// memStart is the beginning of item memory
-#define ItemAddrToPtr(addr, memStart) \
-  ( (VItem*) (BytePtrOffset(memStart, ((addr) - 1) << ItemAddrPtrShift)) ) 
-
-// Convert pointer to address
-// memStart is the beginning of memory
-#define ItemPtrToAddr(itemPtr, memStart) \
-  ( ((BytePtr(itemPtr) - (memStart)) >> ItemAddrPtrShift) + 1 )
-*/
-
-// -------------------------------------------------------------
 // Access to data in item next field
 // -------------------------------------------------------------
 
@@ -178,7 +139,6 @@ TODO: UNUSED - REMOVE
 #define ItemGetType(item)   UInt(((item)->next) & TypeMask)
 #define ItemGetGCMark(item) UInt((((item)->next) & MarkMask) >> MarkShift)
 #define ItemGetNext(item)   (((item)->next) >> AddrShift)
-#define ItemGetNextPtr(item, memStart) ItemAddrToPtr(ItemGetNext(item), memStart)
 
 void ItemSetGCMark(VItem* item, VUInt mark)
 {
@@ -206,12 +166,12 @@ enum ItemType
   TypeDecNum,
   TypeList,
   TypeString,
-  TypeBuffer,      // Used for memory objects
+  TypeHandle,      // Handle to malloc allocated buffer
   TypeSymbol,      // Pushable types must go before TypeSymbol
   TypePrimFun,     // Primitive function
   TypeFun,         // Vimana function
   TypeFunX,        // Vimana "macro" function
-  TypeBufferPtr,   // Never used on the data stack
+  TypeBuffer,      // Never used on the data stack
   __TypeSentinel__
 };
 
@@ -220,12 +180,12 @@ enum ItemType
 #define IsTypeIntNum(item)       (TypeIntNum == ItemGetType(item))
 #define IsTypeDecNum(item)       (TypeDecNum == ItemGetType(item))
 #define IsTypeString(item)       (TypeString == ItemGetType(item))
-#define IsTypeBuffer(item)       (TypeBuffer == ItemGetType(item))
+#define IsTypeHandle(item)       (TypeHandle == ItemGetType(item))
 #define IsTypeSymbol(item)       (TypeSymbol == ItemGetType(item))
 #define IsTypePrimFun(item)      (TypePrimFun == ItemGetType(item))
 #define IsTypeFun(item)          (TypeFun == ItemGetType(item))
 #define IsTypeFunX(item)         (TypeFunX == ItemGetType(item))
-#define IsTypeBufferPtr(item)    (TypeBufferPtr == ItemGetType(item))
+#define IsTypeBuffer(item)       (TypeBuffer == ItemGetType(item))
 
 // Pushable items are types that are pushed
 // to the data stack without being evaluated
@@ -235,7 +195,7 @@ enum ItemType
 // Types that do not reference other items
 #define IsTypeAtomic(item) \
   (IsTypeNone(item)  || IsTypeIntNum(item)  || IsTypeDecNum(item) || \
-  IsTypeSymbol(item) || IsTypePrimFun(item) || IsTypeBufferPtr(item))
+  IsTypeSymbol(item) || IsTypePrimFun(item) || IsTypeBuffer(item))
 
 // List types
 #define IsList(item) \
@@ -250,7 +210,6 @@ enum ItemType
 // -------------------------------------------------------------
 
 #define ItemGetFirst(item)  ((item)->first)
-#define ItemGetFirstPtr(item, memStart) ItemAddrToPtr(ItemGetFirst(item), memStart)
 #define ItemGetSymbol(item) ((item)->intNum)
 #define ItemGetIntNum(item) ((item)->intNum)
 #define ItemGetDecNum(item) ((item)->decNum)

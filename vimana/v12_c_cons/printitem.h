@@ -9,62 +9,78 @@ Functions for printing lists and items.
 // Print lists and items
 // -------------------------------------------------------------
 
-void InterpPrintList(VInterp* interp, VItem* first);
+void PrintList(VItem* list, VInterp* interp);
 
-void InterpPrintItem(VInterp* interp, VItem* item)
+void PrintItem(VItem* item, VInterp* interp)
 {
   //printf("[T%i]", ItemType(item));
   if (IsTypeNone(item))
+  {
     Print("[NONE]");
+  }
   else if (IsTypeList(item))
-    InterpPrintList(interp, item);
+  {
+    PrintList(item, interp);
+  }
   else if (IsTypeIntNum(item))
+  {
     printf("%li", item->intNum);
+  }
   else if (IsTypeDecNum(item))
+  {
     printf("%g", item->decNum);
+  }
   else if (IsTypePrimFun(item))
+  {
     printf("P%li", item->first); // TODO: Lookup name of primfun
+  }
   else if (IsTypeSymbol(item))
+  {
     printf("%s", SymbolTableGet(ItemGetSymbol(item)));
+  }
   else if (IsTypeString(item))
-    printf("{%s}", (char*)InterpGetBufferPtr(interp, item));
-  else if (IsTypeBuffer(item))
-    printf("[BUFFER] %lu", (long unsigned)InterpGetBufferPtr(interp, item));
+  {
+    printf("{%s}", (char*)GetHandlePtr(item, interp));
+  }
+  else if (IsTypeHandle(item))
+  {
+    printf("[HANDLE] %lu", (long unsigned)GetHandlePtr(item, interp));
+  }
   else if (IsTypeFun(item))
   {
     printf("[FUN] ");
-    InterpPrintList(interp, item);
+    PrintList(item, interp);
   }  
   else if (IsTypeFunX(item))
   {
     printf("[FUNX] ");
-    InterpPrintList(interp, item);
+    PrintList(item, interp);
   }
 }
 
-void InterpPrintList(VInterp* interp, VItem* list)
+void PrintList(VItem* list, VInterp* interp)
 {
   PrintChar('(');
 
   int printSpace = FALSE;
-  VItem* item = InterpGetFirst(interp, list);
+  VItem* item = GetFirst(list, interp);
 
   while (item)
   {
     if (printSpace) PrintChar(' ');
-    InterpPrintItem(interp, item);
-    item = InterpGetNext(interp, item);
+    PrintItem(item, interp);
+    item = GetNext(item, interp);
     printSpace = TRUE;
   }
 
   PrintChar(')');
 }
 
-void InterpPrintItemArray(VInterp* interp, VItem* array, int numItems)
+void PrintItemArray(VItem* array, int numItems, VInterp* interp)
 {
   for (int i = 0; i < numItems; ++ i)
   {
-    InterpPrintItem(interp, &(array[i]));
+    PrintItem(&(array[i]), interp);
     PrintChar(' ');
   }
 }

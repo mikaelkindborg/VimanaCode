@@ -126,9 +126,9 @@ void InterpFree(VInterp* interp)
 {
   MemSweep(InterpMem(interp));
 
-#ifdef TRACK_MEMORY_USAGE
-  MemPrintAllocCounter(InterpMem(interp));
-#endif
+  #ifdef TRACK_MEMORY_USAGE
+    MemPrintAllocCounter(InterpMem(interp));
+  #endif
 
   SysFree(interp);
 }
@@ -137,14 +137,24 @@ void InterpFree(VInterp* interp)
 // Item access
 // -------------------------------------------------------------
 
+/*
+// Old style
 #define InterpGetFirst(interp, list) MemGetFirst(InterpMem(interp), list)
 #define InterpGetNext(interp, item) MemGetNext(InterpMem(interp), item)
 #define InterpSetFirst(interp, list, first) MemSetFirst(InterpMem(interp), list, first)
 #define InterpSetNext(interp, item, next) MemSetNext(InterpMem(interp), item, next)
+*/
 
-#define InterpAllocItem(interp) MemAllocItem(InterpMem(interp))
-#define InterpAllocBuffer(interp, data) MemAllocBuffer(InterpMem(interp), data)
-#define InterpGetBufferPtr(interp, item) MemGetBufferPtr(InterpMem(interp), item)
+// The following is an experiment in style, interp is the last argument
+
+#define GetFirst(list, interp) MemGetFirst(InterpMem(interp), list)
+#define GetNext(item, interp) MemGetNext(InterpMem(interp), item)
+#define SetFirst(list, first, interp) MemSetFirst(InterpMem(interp), list, first)
+#define SetNext(item, next, interp) MemSetNext(InterpMem(interp), item, next)
+
+#define AllocItem(interp) MemAlloc(InterpMem(interp))
+#define AllocHandle(data, type, interp) MemAllocHandle(InterpMem(interp), data, type)
+#define GetHandlePtr(item, interp) MemGetHandlePtr(InterpMem(interp), item)
 
 // -------------------------------------------------------------
 // GC
@@ -159,11 +169,7 @@ void InterpGC(VInterp* interp)
     VItem* item = &(stack[i]);
     if (!IsTypeAtomic(item))
     {
-      //PrintLine("STACK MARK:");
-      //MemPrintItem(interp->mem, item); PrintNewLine();
-      
-      // We are screwed if item is a TypeBufferPtr
-      MemMark(InterpMem(interp), InterpGetFirst(interp, item));
+      MemMark(InterpMem(interp), GetFirst(item, interp));
     }
   }
 
@@ -174,21 +180,17 @@ void InterpGC(VInterp* interp)
     VItem* item = &(globalVars[i]);
     if (!IsTypeAtomic(item))
     {
-      //PrintLine("GLOBALVAR MARK:");
-      //MemPrintItem(interp->mem, item); PrintNewLine();
-
-      // We are screwed if item is a TypeBufferPtr
-      MemMark(InterpMem(interp), InterpGetFirst(interp, item));
+      MemMark(InterpMem(interp), GetFirst(item, interp));
     }
   }
 
-  //InterpMark(callstack); // Walk from top and mark localvars
+  // TODO: MemMark(callstack); // Walk from top and mark localvars
 
   MemSweep(InterpMem(interp));
 
-#ifdef TRACK_MEMORY_USAGE
-  MemPrintAllocCounter(InterpMem(interp));
-#endif
+  #ifdef TRACK_MEMORY_USAGE
+    MemPrintAllocCounter(InterpMem(interp));
+  #endif
 }
 
 // -------------------------------------------------------------
@@ -236,7 +238,7 @@ VItem* InterpStackPop(VInterp* interp)
 // Call stack
 // -------------------------------------------------------------
 
-void InterpPushFirstStackFrame(VInterp* interp, VItem* code)
+void InterpPushFirstStackFrame(VInterp* interp, VItem* list)
 {
   // Set first stackframe
   interp->callStackTop = 0;
@@ -244,10 +246,10 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* code)
   current->context = current;
 
   // Set first instruction in the frame
-  current->instruction = InterpGetFirst(interp, code);
+  current->instruction = GetFirst(list, interp);
 }
 
-void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
+void InterpPushEvalStackFrame(VInterp* interp, VItem* list)
 {
   // The current stackframe is the parent for the new stackframe
   VStackFrame* parent = InterpGetStackFrame(interp);
@@ -274,10 +276,10 @@ void InterpPushEvalStackFrame(VInterp* interp, VItem* code)
   }
 
   // Set first instruction in the new frame
-  current->instruction = InterpGetFirst(interp, code);
+  current->instruction = GetFirst(list, interp);
 }
 
-void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
+void InterpPushFunCallStackFrame(VInterp* interp, VItem* list)
 {
   // The current stackframe is the parent for the new stackframe
   VStackFrame* parent = InterpGetStackFrame(interp);
@@ -304,7 +306,7 @@ void InterpPushFunCallStackFrame(VInterp* interp, VItem* code)
   current->context = current;
 
   // Set first instruction in the new frame
-  current->instruction = InterpGetFirst(interp, code);
+  current->instruction = GetFirst(list, interp);
 }
 
 void InterpPopStackFrame(VInterp* interp)
@@ -360,14 +362,14 @@ void InterpSetGlobalVar(VInterp* interp, int index, VItem* item)
 
 int InterpEvalSlice(VInterp* interp, int sliceSize);
 
-void InterpEval(VInterp* interp, VItem* code)
+void InterpEval(VInterp* interp, VItem* list)
 {
-  InterpPushFirstStackFrame(interp, code);
+  InterpPushFirstStackFrame(interp, list);
   InterpEvalSlice(interp, 0);
   InterpGC(interp);
 }
 
-// Evaluate a slice of code. 
+// Evaluate a slice of the program list. 
 // sliceSize specifies the number of instructions to execute.
 // sliceSize 0 means eval as one slice until program ends.
 // Returns done flag (TRUE = done, FALSE = not done).
@@ -406,7 +408,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     if (NULL != instruction)
     {
       // Advance instruction for next loop
-      current->instruction = InterpGetNext(interp, current->instruction);
+      current->instruction = GetNext(current->instruction, interp);
 
       if (IsTypePrimFun(instruction))
       {

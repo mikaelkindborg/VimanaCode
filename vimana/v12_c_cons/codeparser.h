@@ -83,9 +83,9 @@ char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
     }
     else
     {
-      item = MemAllocItem(mem);
+      item = MemAlloc(mem);
 
-      if (NULL == *first) 
+      if (NULL == *first)
         *first = item;
       else
         MemItemSetNext(mem, prev, item);

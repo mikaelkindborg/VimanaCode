@@ -110,9 +110,10 @@ Exit:
 
 VItem* ParseToken(char* token, VInterp* interp)
 {
-  VItem* item = InterpAllocItem(interp);
+  VItem* item = AllocItem(interp);
   VUInt type = TokenType(token);
 
+PrintLine("token1");
   if (TypeIntNum == type)
   {
     int intNum = strtol(token, NULL, 10);
@@ -127,18 +128,23 @@ VItem* ParseToken(char* token, VInterp* interp)
   else
   if (TypeSymbol == type)
   {
+PrintLine("token2");
     int primFunId = LookupPrimFun(token);
+PrintLine("token2b");
     if (primFunId > -1)
     {
       #ifdef OPTIMIZE
+PrintLine("token22");
         VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
         ItemSetPrimFun(item, fun);
+PrintLine("token23");
       #else
         ItemSetPrimFun(item, primFunId);
       #endif
     }
     else
     {
+PrintLine("token3");
       int symbol = SymbolTableFindAdd(token);
       ItemSetSymbol(item, symbol);
     }
@@ -148,6 +154,7 @@ VItem* ParseToken(char* token, VInterp* interp)
     GURU_MEDITATION(PARSER_TOKEN_TYPE_ERROR);
   }
 
+PrintLine("token4");
   return item;
 }
 
@@ -181,14 +188,15 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
   VItem* first = NULL;
   VItem* item  = NULL;
   VItem* prev;
-
-  VItem* list = InterpAllocItem(interp);
+PrintLine("foo1");
+  VItem* list = AllocItem(interp);
   ItemSetType(list, TypeList);
   
   char* p = code;
 
   while (!IsEndOfString(*p))
   {
+PrintLine("foo2");
     if (IsWhiteSpace(*p))
     {
       // Skip whitespace
@@ -197,6 +205,7 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
     else
     if (IsLeftParen(*p))
     {
+PrintLine("foo3");
       // Parse child list
       item = ParseList(p + 1, &p, interp);
     }
@@ -211,10 +220,9 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
     else
     if (IsStringBegin(*p))
     {
+      // Handle takes ownership of string
       char* string = ParseString(p, &p);
-      item = InterpAllocBuffer(interp, StrCopy(string));
-      ItemSetType(item, TypeString);
-      SysFree(string);
+      item = AllocHandle(string, TypeString, interp);
     }
     else
     if (IsStringEnd(*p))
@@ -229,7 +237,9 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
     }
     else
     {
+PrintLine("foo4");
       char* token = GetNextToken(p, &p);
+PrintLine("foo5");
       item = ParseToken(token, interp);
     }
 
@@ -242,7 +252,7 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
       }
       else
       {
-        InterpSetNext(interp, prev, item);
+        SetFirst(prev, item, interp);
       }
 
       prev = item;
@@ -251,7 +261,7 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
   }
 
 Exit:
-  InterpSetFirst(interp, list, first);
+  SetFirst(list, first, interp);
   return list;
 }
 

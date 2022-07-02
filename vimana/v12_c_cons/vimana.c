@@ -38,7 +38,7 @@ int main(int numargs, char* args[])
     return 0;
   }
 
-  for (int i = 1; i < numargs; ++i)
+  for (int i = 1; i < numargs; ++ i)
   {
     if (StrEquals(args[i], "--interactive"))
     {
