@@ -61,11 +61,22 @@ void GuruMeditation(int errorId, char* errorString)
   exit(1); 
 }
 
+int GNumFailedTests = 0;
+
 // For unit testing
 void ShouldHold(char* description, int condition)
 {
   if (!condition) 
   {
+    ++ GNumFailedTests;
     printf("[ShouldHold] %s\n", description);
   }
+}
+
+void PrintNumFailedTests()
+{
+  if (GNumFailedTests > 0)
+    printf("FAILED TESTS: %i\n", GNumFailedTests);
+  else
+    printf("ALL TESTS PASS\n");
 }

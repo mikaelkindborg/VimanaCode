@@ -112,6 +112,9 @@ VItem* MemAllocItem(VMem* mem)
 
   ItemInit(item);
 
+  // Set default type
+  ItemSetType(item, TypeIntNum);
+
   return item;
 }
 
@@ -119,7 +122,7 @@ void MemDeallocItem(VMem* mem, VItem* item)
 {
   if (IsTypeNone(item))
   {
-    //printf("MemDeallocItem: IsTypeNone\n");
+    printf("MemDeallocItem: IsTypeNone\n");
     return;
   }
 
@@ -202,20 +205,17 @@ VItem* MemAllocBuffer(VMem* mem, void* bufferPtr)
 }
 
 // Returns the pointer of the buffer the item refers to.
-void* MemGetBufferPtr(VMem* mem, VItem* bufferItem)
+// TODO: Use GURU_MEDITATION instead of returning NULL?
+void* MemGetBufferPtr(VMem* mem, VItem* item)
 {
-  // TODO: GURU_MEDITATION?
-  if (!IsTypeBuffer(bufferItem)) return NULL;
+  if (!(IsTypeString(item) || IsTypeBuffer(item))) return NULL;
 
-  VItem* bufferPtrItem = MemGetFirst(mem, bufferItem);
+  VItem* bufferPtrItem = MemGetFirst(mem, item);
 
-  // TODO: GURU_MEDITATION?
   if (NULL == bufferPtrItem) return NULL;
-  
-  // TODO: GURU_MEDITATION?
   if (!IsTypeBufferPtr(bufferPtrItem)) return NULL;
 
-  return bufferItem->ptr;
+  return bufferPtrItem->ptr;
 }
 
 // -------------------------------------------------------------

@@ -233,19 +233,20 @@ void TestSetFirst()
   // Last item
   ItemSetFirst(item, 0);
 
-// item = MemItemAt(mem, index)
-
   item = first;
   while (1)
   {
     printf("item: %lu\n", ItemGetNext(item));
-
     if (0 == ItemGetFirst(item)) break;
-
     item = MemGetFirst(mem, item);
   }
 
+  MemSweep(mem);
+
+  ShouldHold("TestSetFirst: 0 == mem->allocCounter", 0 == mem->allocCounter);
+
   MemPrintAllocCounter(mem);
+
   SysFree(mem);
 }
 
@@ -253,48 +254,46 @@ void TestStringItem()
 {
   LogTest("TestStringItem");
 
-  VItem* first;
   VItem* item;
-  VItem* next;
-  VAddr addr;
   
-TODO!!
-
   VMem* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
 
-  first = MemAllocItem(mem);
-  item = first;
-  ItemSetNext(item, 1); // Using next for the item value in this test
+  char* str1 = "Hi there";
+  item = MemAllocBuffer(mem, StrCopy(str1));
+  ItemSetType(item, TypeString);
 
-  next = MemAllocItem(mem);
-  ItemSetNext(next, 2);
-  addr = ItemPtrToAddr(next, mem->start);
-  printf("addr: %lu\n", addr);
-  ItemSetFirst(item, addr);
-  item = next;
+  VItem* bufferPtrItem = MemGetFirst(mem, item);
+  char* str2 = (char*) ItemGetFirst(bufferPtrItem);
+  printf("String: %s\n", str2);
 
-  next = MemAllocItem(mem);
-  ItemSetNext(next, 3);
-  addr = ItemPtrToAddr(next, mem->start);
-  printf("addr: %lu\n", addr);
-  ItemSetFirst(item, addr);
-  item = next;
+  ShouldHold("TestStringItem: Strings should equal", StrEquals(str1, str2));
 
-  // Last item
-  ItemSetFirst(item, 0);
+  MemSweep(mem);
 
-// item = MemItemAt(mem, index)
+  MemPrintAllocCounter(mem);
+  SysFree(mem);
+}
 
-  item = first;
-  while (1)
-  {
-    printf("item: %lu\n", ItemGetNext(item));
+void TestMemGetBufferPtr()
+{
+  LogTest("TestMemGetBufferPtr");
 
-    if (0 == ItemGetFirst(item)) break;
+  VItem* item;
+  
+  VMem* mem = SysAlloc(MemGetByteSize(10));
+  MemInit(mem, 10);
 
-    item = MemGetFirst(mem, item);
-  }
+  char* str1 = "Hi there";
+  item = MemAllocBuffer(mem, StrCopy(str1));
+  ItemSetType(item, TypeString);
+
+  char* str2 = MemGetBufferPtr(mem, item);
+  printf("String: %s\n", str2);
+
+  ShouldHold("TestMemGetBufferPtr: Strings should equal", StrEquals(str1, str2));
+
+  MemSweep(mem);
 
   MemPrintAllocCounter(mem);
   SysFree(mem);
@@ -359,38 +358,34 @@ void TestArrayWithStringItems()
 
   VArray* array = ArrayNew(sizeof(VItem*), 5);
 
+  char* str1 = "Hi there";
+
   for (int i = 0; i < 5; ++ i)
   {
     array = ArrayGrow(array, i + 1);
 
-    char* str = "Hi there";
-    item = MemAllocBuffer(mem, StrCopy(str));
+    item = MemAllocBuffer(mem, StrCopy(str1));
     ItemSetType(item, TypeString);
 
-    VItem** p = ArrayAt(array, i);
-    *p = item;
+    VItem* p = ArrayAt(array, i);
+    *p = *item;
   }
 
   for (int i = 0; i < ArrayLength(array); ++ i)
   {
-    PrintLine("foo");
     VItem* item = ArrayAt(array, i);
-    printf("Item first: %lu\n", ItemGetFirst(item));
-    PrintLine("foo2");
+    //printf("Item first: %lu\n", ItemGetFirst(item));
     VItem* buffer = MemGetFirst(mem, item);
-    PrintLine("foo3");
-    //char* str = (char*) ItemGetFirst(buffer);
-    //printf("String: %s\n", str);
+    char* str2 = (char*) ItemGetFirst(buffer);
+    ShouldHold("TestArrayWithStringItems: StrEquals(str1, str2)", StrEquals(str1, str2));
+    //printf("String: %s\n", str2);
   }
 
-  PrintLine("foo4");
+  ShouldHold("TestArrayWithStringItems: 10 == mem->allocCounter", 10 == mem->allocCounter);
 
-  MemMark(mem, ArrayAt(array, 2));
-  MemMark(mem, ArrayAt(array, 3));
-  MemSweep(mem);
   MemSweep(mem);
 
-  PrintLine("foo5");
+  ShouldHold("TestArrayWithStringItems: 0 == mem->allocCounter", 0 == mem->allocCounter);
 
   ArrayFree(array);
 
@@ -400,18 +395,22 @@ void TestArrayWithStringItems()
 int main()
 {
   LogTest("Welcome to VimanaCode tests");
-/*
-  TestPrintBinary();
-  TestItemAttributes();
+
+  //TestPrintBinary();
+  TestItemAttributes();/*
   TestFoo();
   TestMemAlloc();
   TestAllocDealloc();
   TestArray();
-  TestSymbolTable();*/
+  TestSymbolTable();
   TestSetFirst();
-  //TestArrayWithStringItems();
-
+  TestStringItem();
+  TestMemGetBufferPtr();
+  TestArrayWithStringItems();
+*/
   SysPrintMemStat();
+
+  PrintNumFailedTests();
 
   return 0;
 }
