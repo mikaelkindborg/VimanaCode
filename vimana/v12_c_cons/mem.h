@@ -30,10 +30,10 @@ VMem;
 #define MemStart(mem) ((mem)->start)
 
 #define AddrToPtr(addr, start) (((start) + (addr)) - 1)
-#define PtrToAddr(ptr, start) (((ptr) - (start)) + 1)
+#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) + 1)
 
-#define MemGet(mem, addr) (AddrToPtr(addr, MemStart(mem)))
-#define MemGetAddr(mem, ptr) (PtrToAddr(ptr, MemStart(mem)))
+#define MemGet(mem, addr) VItemPtr(AddrToPtr(addr, MemStart(mem)))
+#define MemGetAddr(mem, ptr) (PtrToAddr(BytePtr(ptr), MemStart(mem)))
 
 #define MemGetFirst(mem, item) \
   (ItemGetFirst(item) ? MemGet(mem, ItemGetFirst(item)) : NULL)
@@ -65,11 +65,11 @@ int MemGetByteSize(int numItems)
 
 void MemInit(VMem* mem, int numItems)
 {
-  VAddr memByteSize = MemByteSize(numItems);
+  VAddr memByteSize = MemGetByteSize(numItems);
 
   mem->firstFree = 0;
   mem->start = BytePtr(mem) + sizeof(VMem);
-  men->free = mem->start;
+  mem->free = mem->start;
   mem->end = mem->start + (memByteSize - sizeof(VMem));
 
   #ifdef TRACK_MEMORY_USAGE
@@ -111,9 +111,8 @@ VItem* MemAlloc(VMem* mem)
     if (mem->free < mem->end)
     {
       //PrintLine("Allocate from free space");
-      addr = freeAddr;
-      item = mem->free;
-      free->free += sizeof(VItem);
+      item = VItemPtr(mem->free);
+      mem->free += sizeof(VItem);
     }
     else
     {
@@ -249,21 +248,21 @@ void MemMark(VMem* mem, VItem* item)
 
 void MemSweep(VMem* mem)
 {
-  VItem* item = mem->start;
+  VByte* ptr = mem->start;
 
-  while (item < mem->end)
+  while (ptr < mem->free)
   {
-    if (ItemGetGCMark(item))
+    if (ItemGetGCMark(VItemPtr(ptr)))
     {
       //PrintLine("MemSweep unmark");
-      ItemSetGCMark(item, 0);
+      ItemSetGCMark(VItemPtr(ptr), 0);
     }
     else
     {
       //PrintLine("MemSweep dealloc");
-      MemDeallocItem(mem, item);
+      MemDeallocItem(mem, VItemPtr(ptr));
     }
 
-    ++ item;
+    ptr += sizeof(VItem);
   }
 }

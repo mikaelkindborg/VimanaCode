@@ -9,7 +9,7 @@ Basic data types and functions.
 // Types
 // -------------------------------------------------------------
 
-// All Vimana types are prefixed with 'V'
+// Vimana types are prefixed with 'V'
 
 typedef unsigned char    VByte;
 typedef unsigned int     VUInt;
@@ -20,6 +20,8 @@ typedef          long    VIntNum;
 typedef          double  VDecNum;
 
 #define UInt(n) ((VUInt)(n))
+#define BytePtr(ptr) ((VByte*)(ptr))
+#define PointerOffset(ptr, offset) ((void*)(BytePtr(ptr) + (offset)))
 
 // -------------------------------------------------------------
 // Boolean values
@@ -27,13 +29,6 @@ typedef          double  VDecNum;
 
 #define FALSE 0
 #define TRUE  1
-
-// -------------------------------------------------------------
-// Byte pointers
-// -------------------------------------------------------------
-
-#define BytePtr(ptr) ((VByte*)(ptr))
-#define BytePtrOffset(ptr, offset) (BytePtr(ptr) + (offset))
 
 // -------------------------------------------------------------
 // Forward declarations

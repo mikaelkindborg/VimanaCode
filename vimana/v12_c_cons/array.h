@@ -21,7 +21,7 @@ VArray* ArrayNew(int itemSize, int size)
   array->itemSize = itemSize;
   array->size = size;
   array->length = 0;
-  array->buffer = (void*) BytePtrOffset(array, sizeof(VArray));
+  array->buffer = (void*) PointerOffset(array, sizeof(VArray));
 
   return array;
 }
@@ -48,7 +48,7 @@ void* ArrayAt(VArray* array, int index)
     array->length = index + 1;
   }
 
-  return BytePtrOffset(array->buffer, array->itemSize * index);
+  return PointerOffset(array->buffer, array->itemSize * index);
 }
 
 VArray* ArrayGrow(VArray* array, int newLength)
@@ -59,7 +59,7 @@ VArray* ArrayGrow(VArray* array, int newLength)
     int totalSize = sizeof(VArray) + (newSize * array->itemSize);
     array = realloc(array, totalSize);
     array->size = newSize;
-    array->buffer = (void*) BytePtrOffset(array, sizeof(VArray));
+    array->buffer = PointerOffset(array, sizeof(VArray));
   }
 
   return array;
