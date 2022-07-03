@@ -14,4 +14,4 @@ typedef          double  VDecNum;
 #define FALSE 0
 #define TRUE  1
 
-typedef char* BytePtr;
+typedef unsigned char* BytePtr;

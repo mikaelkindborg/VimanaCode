@@ -15,15 +15,18 @@ typedef struct __VMem
 {
   VAddr firstFree;
   VAddr size;
-  BytePtr end;
-  BytePtr start;
+  //BytePtr end;
+  //BytePtr start;
+  VItem* end;
+  VItem* start;
 #ifdef TRACK_MEMORY_USAGE
   int   allocCounter;
 #endif
 }
 VMem;
 
-#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + (addr) - 1) ) 
+//#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + (addr) - 1) ) 
+#define MemItemPointer(mem, addr) ( (VItem*) ((mem)->start + ((addr) - 1)) ) 
 
 // Return the number of bytes needed to hold VMem header plus numItems
 int MemByteSize(int numItems)
@@ -38,8 +41,9 @@ void MemInit(VMem* mem, int numItems)
   VAddr memByteSize = MemByteSize(numItems);
 
   mem->firstFree = 0;
-  mem->size = memByteSize - sizeof(VMem);
-  mem->start = ((BytePtr)mem) + sizeof(VMem);
+  //mem->size = memByteSize - sizeof(VMem);
+  mem->size = numItems;
+  mem->start = (VItem*) (((BytePtr)mem) + sizeof(VMem));
   mem->end = mem->start;
 #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
@@ -53,8 +57,11 @@ void MemInit(VMem* mem, int numItems)
   }
 #endif
 
-#define MemItemAddr(mem, item) \
+//#define MemItemAddr(mem, item) \
   ( (NULL != (item)) ? ( ((BytePtr)(item)) - (mem)->start ) + 1 : 0 )
+
+#define MemItemAddr(mem, item) \
+  ( (NULL != (item)) ? ( ((VItem*)(item)) - ((mem)->start) ) + 1 : 0 )
 
 // -------------------------------------------------------------
 // Alloc and dealloc
@@ -75,7 +82,8 @@ VItem* MemAllocItem(VMem* mem)
     VAddr memUsed = mem->end - mem->start;
     //printf("memUsed: %i\n", memUsed);
     //printf("mem->size: %i\n", mem->size);
-    if (!(memUsed < (mem->size + sizeof(VItem))))
+    //if (!(memUsed < (mem->size + sizeof(VItem))))
+    if (!(memUsed < mem->size))
     {
       // For debugging
       printf("[GURU_MEDITATION: -1] MEM OUT OF MEMORY\n");
@@ -84,7 +92,8 @@ VItem* MemAllocItem(VMem* mem)
     }
     //printf("Free space available\n");
     item = (VItem*) mem->end;
-    mem->end += sizeof(VItem);
+    //mem->end += sizeof(VItem);
+    mem->end += 1;
   }
 
   ItemInit(item);
@@ -275,7 +284,8 @@ void MemSweep(VMem* mem)
 {
   VItem* item = (VItem*) mem->start;
 
-  while ((BytePtr)item < mem->end)
+  //while ((BytePtr)item < mem->end)
+  while (item < mem->end)
   {
     if (ItemGCMark(item))
     {
