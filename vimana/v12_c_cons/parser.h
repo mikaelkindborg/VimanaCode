@@ -91,8 +91,10 @@ VUInt TokenType(char* token)
   // Check number
   while (!IsEndOfString(*p))
   {
-    if ('.' == *p) ++ dec;
-    else goto Exit; // Not a number
+    if ('.' == *p) 
+      ++ dec;
+    else 
+      goto Exit; // Not a number
 
     ++ p;
   }
@@ -239,13 +241,9 @@ Print("Token: ");PrintLine(token);
     if (NULL != item)
     {
       if (NULL == first)
-      {PrintLine("set first");
         first = item;
-      }
       else
-      {PrintLine("add next");
-        SetFirst(prev, item, interp);
-      }
+        SetNext(prev, item, interp);
 
       prev = item;
       item = NULL;
@@ -253,7 +251,6 @@ Print("Token: ");PrintLine(token);
   }
 
 Exit:
-PrintLine("return parsed list");
   SetFirst(list, first, interp);
   return list;
 }
