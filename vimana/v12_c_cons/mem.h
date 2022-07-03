@@ -14,9 +14,9 @@ See item.h for an explanation of memory layout.
 typedef struct __VMem
 {
   VAddr  firstFree;
-  VAddr  maxNumItems;
-  VItem* start;
-  VItem* end;
+  VByte* start;
+  VByte* free;
+  VByte* end;
   #ifdef TRACK_MEMORY_USAGE
   int    allocCounter;
   #endif
@@ -29,8 +29,8 @@ VMem;
 
 #define MemStart(mem) ((mem)->start)
 
-#define AddrToPtr(addr, start) ((start) + ((addr) - 1))
-#define PtrToAddr(ptr, start) ((ptr - start) + 1)
+#define AddrToPtr(addr, start) (((start) + (addr)) - 1)
+#define PtrToAddr(ptr, start) (((ptr) - (start)) + 1)
 
 #define MemGet(mem, addr) (AddrToPtr(addr, MemStart(mem)))
 #define MemGetAddr(mem, ptr) (PtrToAddr(ptr, MemStart(mem)))
@@ -65,10 +65,13 @@ int MemGetByteSize(int numItems)
 
 void MemInit(VMem* mem, int numItems)
 {
+  VAddr memByteSize = MemByteSize(numItems);
+
   mem->firstFree = 0;
-  mem->maxNumItems = numItems;
-  mem->start = (VItem*) (BytePtr(mem) + sizeof(VMem));
-  mem->end = mem->start;
+  mem->start = BytePtr(mem) + sizeof(VMem);
+  men->free = mem->start;
+  mem->end = mem->start + (memByteSize - sizeof(VMem));
+
   #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
   #endif
@@ -104,14 +107,13 @@ VItem* MemAlloc(VMem* mem)
   else
   {
     // Allocate item from free memory
-    VAddr freeAddr = mem->end - mem->start;
-    //printf("memoryUsed: %lu\n", freeAddr);
-    if (freeAddr < mem->maxNumItems)
+    //printf("memoryUsed: %lu\n", (mem->free - mem->start));
+    if (mem->free < mem->end)
     {
       //PrintLine("Allocate from free space");
       addr = freeAddr;
-      item = mem->end;
-      ++ mem->end;
+      item = mem->free;
+      free->free += sizeof(VItem);
     }
     else
     {
