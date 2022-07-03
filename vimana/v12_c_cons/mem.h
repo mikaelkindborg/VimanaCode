@@ -15,8 +15,8 @@ typedef struct __VMem
 {
   VAddr firstFree;
   VAddr size;
-  void* end;
-  void* start;
+  BytePtr end;
+  BytePtr start;
 #ifdef TRACK_MEMORY_USAGE
   int   allocCounter;
 #endif
@@ -39,7 +39,7 @@ void MemInit(VMem* mem, int numItems)
 
   mem->firstFree = 0;
   mem->size = memByteSize - sizeof(VMem);
-  mem->start = mem + sizeof(VMem);
+  mem->start = ((BytePtr)mem) + sizeof(VMem);
   mem->end = mem->start;
 #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
@@ -54,7 +54,7 @@ void MemInit(VMem* mem, int numItems)
 #endif
 
 #define MemItemAddr(mem, item) \
-  ( (NULL != (item)) ? ( ((void*)(item)) - (mem)->start ) + 1 : 0 )
+  ( (NULL != (item)) ? ( ((BytePtr)(item)) - (mem)->start ) + 1 : 0 )
 
 // -------------------------------------------------------------
 // Alloc and dealloc
@@ -83,7 +83,7 @@ VItem* MemAllocItem(VMem* mem)
       // GURU(MEM_OUT_OF_MEMORY);
     }
     //printf("Free space available\n");
-    item = mem->end;
+    item = (VItem*) mem->end;
     mem->end += sizeof(VItem);
   }
 
@@ -273,9 +273,9 @@ void MemMark(VMem* mem, VItem* item)
 
 void MemSweep(VMem* mem)
 {
-  VItem* item = mem->start;
+  VItem* item = (VItem*) mem->start;
 
-  while ((void*)item < mem->end)
+  while ((BytePtr)item < mem->end)
   {
     if (ItemGCMark(item))
     {

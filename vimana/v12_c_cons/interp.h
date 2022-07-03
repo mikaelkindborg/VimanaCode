@@ -91,18 +91,18 @@ VInterp* InterpNewWithSize(
     dataStackByteSize + callStackByteSize + 
     memByteSize);
 
-  interp->globalVars = (void*)interp + sizeof(VInterp);
+  interp->globalVars = (VItem*) ((BytePtr)interp + sizeof(VInterp));
   interp->numGlobalVars = numGlobalVars;
 
-  interp->dataStack = (void*)interp->globalVars + globalVarsByteSize;
+  interp->dataStack = (VItem*) ((BytePtr)interp->globalVars + globalVarsByteSize);
   interp->numDataStackItems = numDataStackItems;
   interp->dataStackTop = -1;
 
-  interp->callStack = (void*)interp->dataStack + dataStackByteSize;
+  interp->callStack = (VStackFrame*) ((BytePtr)interp->dataStack + dataStackByteSize);
   interp->numCallStackFrames = numCallStackFrames;
   interp->callStackTop = 0;
 
-  interp->mem = (void*)interp->callStack + callStackByteSize;
+  interp->mem = (VMem*) ((BytePtr)interp->callStack + callStackByteSize);
   MemInit(interp->mem, numMemItems);
 
   return interp;
