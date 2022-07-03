@@ -102,7 +102,7 @@ typedef struct __VInterp
   VStackFrame* callStack;
 
   VMem*        mem;                 // Item memory
-
+  VItem*       memStart;
 }
 VInterp;
 
@@ -149,6 +149,8 @@ VInterp* InterpNewWithSize(
   interp->mem = (VMem*) BytePtrOffset(interp->callStack, callStackByteSize);
   MemInit(InterpMem(interp), numItems);
 
+  interp->memStart = interp->mem->start;
+
   return interp;
 }
 
@@ -177,19 +179,18 @@ void InterpFree(VInterp* interp)
 // Item access
 // -------------------------------------------------------------
 
-/*
-// Old style
-#define InterpGetFirst(interp, list) MemGetFirst(InterpMem(interp), list)
-#define InterpGetNext(interp, item) MemGetNext(InterpMem(interp), item)
-#define InterpSetFirst(interp, list, first) MemSetFirst(InterpMem(interp), list, first)
-#define InterpSetNext(interp, item, next) MemSetNext(InterpMem(interp), item, next)
-*/
-
 // The following is an experiment in style, interp is the last argument
 
-#define GetFirst(list, interp) MemGetFirst(InterpMem(interp), list)
-#define GetNext(item, interp) MemGetNext(InterpMem(interp), item)
-#define SetFirst(list, first, interp) MemSetFirst(InterpMem(interp), list, first)
+//#define GetFirst(item, interp) MemGetFirst(InterpMem(interp), item)
+//#define GetNext(item, interp) MemGetNext(InterpMem(interp), item)
+
+#define GetFirst(item, interp) \
+  (ItemGetFirst(item) ? AddrToPtr(ItemGetFirst(item), (interp)->memStart) : NULL)
+
+#define GetNext(item, interp) \
+  (ItemGetNext(item) ? AddrToPtr(ItemGetNext(item), (interp)->memStart) : NULL)
+
+#define SetFirst(item, first, interp) MemSetFirst(InterpMem(interp), item, first)
 #define SetNext(item, next, interp) MemSetNext(InterpMem(interp), item, next)
 
 #define AllocItem(interp) MemAlloc(InterpMem(interp))

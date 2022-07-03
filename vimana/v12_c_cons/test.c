@@ -10,7 +10,7 @@ void ShouldHold(char* description, int condition)
   if (!condition) 
   {
     ++ GNumFailedTests;
-    printf("[ShouldHold] %s\n", description);
+    printf("[SHOULD_HOLD] %s\n", description);
   }
 }
 
@@ -60,8 +60,8 @@ void TestItemAttributes()
 
   printf("Type:  %i\n",  ItemGetType(item));
   printf("Mark:  %i\n",  ItemGetGCMark(item));
-  printf("Next:  %lu\n", ItemGetNext(item));
-  printf("First: %lu\n", ItemGetFirst(item));
+  printf("Next:  %lu\n", (VULong) ItemGetNext(item));
+  printf("First: %lu\n", (VULong) ItemGetFirst(item));
 
   ShouldHold("Item type should equal", 1 == ItemGetType(item));
   ShouldHold("Item gc mark should be set", 1 == ItemGetGCMark(item));
@@ -124,9 +124,13 @@ void TestMemAlloc()
   ItemSetGCMark(item, 1);
   ItemSetType(item, 1);
   ItemSetNext(item, 4);
-  PrintBinaryUInt(item->next);
+
+  PrintBinaryUInt(ItemGetNext(item));
+  ShouldHold("TestMemAlloc: Next should equal", 4 == ItemGetNext(item));
+
   MemDeallocItem(mem, item);
-  
+  MemSweep(mem);
+
   SysFree(mem);
 }
 
@@ -211,7 +215,7 @@ void TestAllocDealloc()
 
   MemSweep(mem);
 
-  ShouldHold("Allocated items should be equal", numItems == numItems2);
+  ShouldHold("TestAllocDealloc: Allocated items should be equal", numItems == numItems2);
 
   MemPrintAllocCounter(mem);
   SysFree(mem);
@@ -237,14 +241,14 @@ void TestSetFirst()
   next = MemAlloc(mem);
   ItemSetNext(next, 2);
   addr = MemGetAddr(mem, next);
-  printf("addr: %lu\n", addr);
+  printf("addr: %lu\n", (VULong) addr);
   ItemSetFirst(item, addr);
   item = next;
 
   next = MemAlloc(mem);
   ItemSetNext(next, 3);
   addr = MemGetAddr(mem, next);
-  printf("addr: %lu\n", addr);
+  printf("addr: %lu\n", (VULong) addr);
   ItemSetFirst(item, addr);
   item = next;
 
@@ -254,7 +258,7 @@ void TestSetFirst()
   item = first;
   while (1)
   {
-    printf("item: %lu\n", ItemGetNext(item));
+    printf("item: %lu\n", (VULong) ItemGetNext(item));
     if (0 == ItemGetFirst(item)) break;
     item = MemGetFirst(mem, item);
   }
@@ -282,7 +286,7 @@ void TestStringItem()
   ItemSetType(item, TypeString);
 
   VItem* bufferPtrItem = MemGetFirst(mem, item);
-  char* str2 = (char*) ItemGetFirst(bufferPtrItem);
+  char* str2 = (char*) ItemGetPtr(bufferPtrItem);
   printf("String: %s\n", str2);
 
   ShouldHold("TestStringItem: Strings should equal", StrEquals(str1, str2));
@@ -394,7 +398,7 @@ void TestArrayWithStringItems()
     VItem* item = ArrayAt(array, i);
     //printf("Item first: %lu\n", ItemGetFirst(item));
     VItem* buffer = MemGetFirst(mem, item);
-    char* str2 = (char*) ItemGetFirst(buffer);
+    char* str2 = (char*) ItemGetPtr(buffer);
     ShouldHold("TestArrayWithStringItems: StrEquals(str1, str2)", StrEquals(str1, str2));
     //printf("String: %s\n", str2);
   }
@@ -535,6 +539,8 @@ int main()
 
   SysPrintMemStat();
   PrintTestResult();
+
+  printf("sizeof(VItem): %lu\n", sizeof(VItem));
 
   return 0;
 }

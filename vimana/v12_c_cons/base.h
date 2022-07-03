@@ -13,7 +13,9 @@ Basic data types and functions.
 
 typedef unsigned char    VByte;
 typedef unsigned int     VUInt;
-typedef unsigned long    VAddr;
+//typedef unsigned long    VAddr;
+typedef unsigned int     VAddr;
+typedef unsigned long    VULong;
 typedef          long    VIntNum;
 typedef          double  VDecNum;
 

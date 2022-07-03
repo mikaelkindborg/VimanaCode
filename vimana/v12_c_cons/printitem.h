@@ -32,7 +32,7 @@ void PrintItem(VItem* item, VInterp* interp)
   }
   else if (IsTypePrimFun(item))
   {
-    printf("P%li", item->first); // TODO: Lookup name of primfun
+    printf("P%lu", (VULong) ItemGetPtr(item)); // TODO: Lookup name of primfun
   }
   else if (IsTypeSymbol(item))
   {
