@@ -158,7 +158,7 @@ void MemDeallocItem(VMem* mem, VItem* item)
       PrintLine("FREE BUFFER");
     #endif
 
-    if (item->ptr) SysFree(item->ptr);
+    if (ItemGetPtr(item)) SysFree(ItemGetPtr(item));
   }
 
   ItemSetType(item, TypeNone);

@@ -459,7 +459,7 @@ void PrimFun_sleep(VInterp* interp)
     GURU_MEDITATION(SLEEP_NOT_INTNUM);
   }
 
-  int millis = item->intNum;
+  int millis = ItemGetIntNum(item);
   int seconds = millis / 1000;
   int micros = (millis % 1000) * 1000;
 

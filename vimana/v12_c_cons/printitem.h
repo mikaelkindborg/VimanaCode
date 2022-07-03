@@ -24,11 +24,11 @@ void PrintItem(VItem* item, VInterp* interp)
   }
   else if (IsTypeIntNum(item))
   {
-    printf("%li", item->intNum);
+    printf("%li", ItemGetIntNum(item));
   }
   else if (IsTypeDecNum(item))
   {
-    printf("%g", item->decNum);
+    printf("%g", ItemGetDecNum(item));
   }
   else if (IsTypePrimFun(item))
   {

@@ -115,7 +115,7 @@ typedef struct __VItem
     VPrimFunPtr primFunPtr; // Pointer to a primitive function
     void*       ptr;        // Pointer to memory block
   };
-    
+
   // Layout of field "next":
   // Bit 1-4: Type info  
   // Bit 5:   GC mark bit
