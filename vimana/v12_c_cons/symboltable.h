@@ -25,6 +25,8 @@ void SymbolTableFree()
   }
 
   ArrayFree(GSymbolTable);
+
+  GSymbolTable = NULL;
 }
 
 // Finds or adds a string to the symbol table and 

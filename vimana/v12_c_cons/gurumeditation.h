@@ -36,7 +36,7 @@ enum GURU_TABLE
   CALL_STACK_OVERFLOW,
   CALL_STACK_IS_EMPTY,
   GLOBALVARS_OVERFLOW,
-  ALLOC_OUT_OF_ITEM_MEMORY,
+  ALLOC_ITEM_OUT_OF_MEMORY,
   PARSER_TOKEN_TYPE_ERROR,
   INTERP_UNEXPECTED_TYPE,
   FIRST_OBJECT_IS_NOT_A_LIST,
@@ -61,24 +61,4 @@ void GuruMeditation(int errorId, char* errorString)
 {
   printf("[GURU_MEDITATION] %i %s\n", errorId, errorString);
   exit(1); 
-}
-
-int GNumFailedTests = 0;
-
-// For unit testing
-void ShouldHold(char* description, int condition)
-{
-  if (!condition) 
-  {
-    ++ GNumFailedTests;
-    printf("[ShouldHold] %s\n", description);
-  }
-}
-
-void PrintNumFailedTests()
-{
-  if (GNumFailedTests > 0)
-    printf("FAILED TESTS: %i\n", GNumFailedTests);
-  else
-    printf("ALL TESTS PASS\n");
 }

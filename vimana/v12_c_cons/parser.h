@@ -22,7 +22,7 @@ char* ParseString(char* p, char** next)
   int   bufSize = 1024; // TODO: Hardcoded max length
   char* buf = SysAlloc(bufSize);
   char* pBuf = buf;
-  int   level = 0;
+  int   level = 1;
 
   // Position is at opening curly
 
@@ -91,11 +91,13 @@ VUInt TokenType(char* token)
   // Check number
   while (!IsEndOfString(*p))
   {
-    if ('.' == *p) 
-      ++ dec;
-    else 
-      goto Exit; // Not a number
-
+    if (!isdigit(*p))
+    {
+      if ('.' == *p)
+        ++ dec;
+      else
+        goto Exit; // Not a number
+    }
     ++ p;
   }
 
@@ -183,7 +185,7 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
   VItem* first = NULL;
   VItem* item  = NULL;
   VItem* prev;
-  
+
   VItem* list = AllocItem(interp);
   ItemSetType(list, TypeList);
   
@@ -199,10 +201,8 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
     else
     if (IsLeftParen(*p))
     {
-PrintLine("Child list begin");
       // Parse child list
       item = ParseList(p + 1, &p, interp);
-PrintLine("Child list end");
     }
     else
     if (IsRightParen(*p))
@@ -233,7 +233,6 @@ PrintLine("Child list end");
     else
     {
       char* token = GetNextToken(p, &p);
-Print("Token: ");PrintLine(token);
       item = ParseToken(token, interp);
     }
 
@@ -251,7 +250,10 @@ Print("Token: ");PrintLine(token);
   }
 
 Exit:
-  SetFirst(list, first, interp);
+
+  if (NULL != first)
+    SetFirst(list, first, interp);
+
   return list;
 }
 

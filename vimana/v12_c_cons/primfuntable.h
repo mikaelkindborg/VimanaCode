@@ -36,6 +36,8 @@ void PrimFunTableFree()
   }
 
   ArrayFree(GPrimFunTable);
+
+  GPrimFunTable = NULL;
 }
 
 // name is not copied

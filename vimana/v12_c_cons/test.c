@@ -1,8 +1,26 @@
-
 #define TRACK_MEMORY_USAGE
 #define DEBUG
 
 #include "vimana.h"
+
+int GNumFailedTests = 0;
+
+void ShouldHold(char* description, int condition)
+{
+  if (!condition) 
+  {
+    ++ GNumFailedTests;
+    printf("[ShouldHold] %s\n", description);
+  }
+}
+
+void PrintTestResult()
+{
+  if (GNumFailedTests > 0)
+    printf("FAILED TESTS: %i\n", GNumFailedTests);
+  else
+    printf("ALL TESTS PASS\n");
+}
 
 void LogTest(char* testName)
 {
@@ -410,43 +428,88 @@ void TestParse()
   PrintItem(list, interp);
   PrintNewLine();
 
-/*
-  char* code = "1 2 (((3 4) 5))";
+  code = "1 2 (((3 4) 5))";
   list = Parse(code, interp);
   PrintItem(list, interp);
   PrintNewLine();
 
-  char* empty = "";
-  list = Parse(empty, interp);
+  code = "";
+  list = Parse(code, interp);
   PrintItem(list, interp);
   PrintNewLine();
-  //ShouldHold("first should be NULL", NULL == first);
+  ShouldHold("TestParse: List should be empty", IsEmpty(list));
+  ShouldHold("TestParse: First should be 0", 0 == ItemGetFirst(list));
 
-  char* empty2 = "()";
-  list = Parse(empty2, interp);
+  code = "()";
+  list = Parse(code, interp);
   PrintItem(list, interp);
+  PrintNewLine();
+  ShouldHold("TestParse: Child should be empty", IsEmpty(GetFirst(list, interp)));
+
+  code = "   (( ( ) ))   ";
+  list = Parse(code, interp);
+  PrintItem(list, interp);
+  PrintNewLine();
+  ShouldHold("TestParse: Innermost should be empty", 
+    IsEmpty(GetFirst(GetFirst(GetFirst(list, interp), interp), interp)));
+
+  code = "{Hi World}";
+  list = Parse(code, interp);
+  PrintItem(list, interp);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be string", IsTypeString(GetFirst(list, interp)));
+
+  code = "{hi {bar}} foo";
+  list = Parse(code, interp);
+  PrintItem(list, interp);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be string", IsTypeString(GetFirst(list, interp)));
+
+  code = "42";
+  list = Parse(code, interp);
+  PrintItem(list, interp);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be intnum", IsTypeIntNum(GetFirst(list, interp)));
+
+  code = "42.2";
+  list = Parse(code, interp);
+  PrintItem(list, interp);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be decnum", IsTypeDecNum(GetFirst(list, interp)));
+
+  code = "42.2.3";
+  list = Parse(code, interp);
+  PrintItem(list, interp);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be symbol", IsTypeSymbol(GetFirst(list, interp)));
+
+  InterpFree(interp);
+  SymbolTableFree();
+  PrimFunTableFree();
+}
+
+void TestInterp()
+{
+  LogTest("TestInterp");
+
+  PrimFunTableCreate();
+  AddCorePrimFuns();
+  SymbolTableCreate();
+
+  VInterp* interp = InterpNew();
+
+  VItem* list;
+  char*  code;
+
+  code = "1 2 3 1 2 3 + + + + + (SUM) setglobal SUM print";
+  list = Parse(code, interp);
+  PrintList(list, interp);
   PrintNewLine();
 
-  char* empty3 = "   (( ( ) ))   ";
-  list = Parse(empty3, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
+  InterpEval(interp, list);
 
-  char* string = "{Hi World}";
-  list = Parse(string, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
+  ShouldHold("TestInterp: callStackTop should be -1", -1 == interp->callStackTop);
 
-  char* string2 = "({Hi foo}) {foo bar}";
-  list = Parse(string2, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-
-  char* code2 = "1 2 3.33 foo bar bar sayHi";
-  list = Parse(code2, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-*/
   InterpFree(interp);
   SymbolTableFree();
   PrimFunTableFree();
@@ -456,7 +519,7 @@ int main()
 {
   LogTest("Welcome to VimanaCode tests");
 
-  /*TestPrintBinary();
+  TestPrintBinary();
   TestItemAttributes();
   TestFoo();
   TestMemAlloc();
@@ -466,19 +529,17 @@ int main()
   TestSetFirst();
   TestStringItem();
   TestMemGetHandlePtr();
-  TestArrayWithStringItems();*/
+  TestArrayWithStringItems();
   TestParse();
+  TestInterp();
 
   SysPrintMemStat();
-
-  PrintNumFailedTests();
+  PrintTestResult();
 
   return 0;
 }
 
 // --------------------------------------------------------
-
-#ifdef FOOBAR
 
 /*
 void TestParseSymbolicCode()
@@ -490,318 +551,4 @@ void TestParseSymbolicCode()
   PrintNewLine();
   MemFree(mem);
 }
-*/
-
-void TestInterp()
-{
-  LogTest("TestInterp");
-
-  VInterp* interp = InterpNew();
-
-  // Test data stack
-  VItem* item = MemAlloc(interp->mem);
-  ItemSetIntNum(item, 42);
-  printf("item value 1: %li\n", item->intNum);
-
-  InterpStackPush(interp, item);
-  VItem* item2 = InterpStackPop(interp);
-  printf("item value 2: %li\n", item2->intNum);
-
-  // Tests for underflow/overflow
-  // InterpStackPop(interp);
-  // while (1) InterpStackPush(interp, *item);
-
-  // Test callstack
-  InterpPushEvalStackFrame(interp, item);
-  printf("code : %li\n", interp->callStackTop->code->intNum);
-  printf("instr: %li\n", interp->callStackTop->instruction->intNum);
-
-  InterpPushEvalStackFrame(interp, item);
-  printf("code : %li\n", interp->callStackTop->code->intNum);
-  printf("instr: %li\n", interp->callStackTop->instruction->intNum);
-
-  InterpPopContext(interp);
-  ShouldHold("CALLSTACK TOP SHOULD NOT BE NULL", NULL != interp->callStackTop);
-
-  printf("code : %li\n", interp->callStackTop->code->intNum);
-  printf("instr: %li\n", interp->callStackTop->instruction->intNum);
-
-  InterpPopContext(interp);
-  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
-
-  // Tests for underflow/overflow
-  // InterpPopContext(interp);
-  // while (1) InterpPushEvalStackFrame(interp, item);
-
-  // Free interpreter
-  InterpFree(interp);
-}
-
-void TestInterpEval()
-{
-  LogTest("TestInterpEval");
-
-  VInterp* interp = InterpNew();
-
-  char* source = "1 2 3 sayHi 1 2 3 + + + + + (SUM)setglobal SUM print";
-  VItem* code = ParseSourceCode(source, interp->mem);
-  MemPrintList(interp->mem, code);
-  PrintNewLine();
-
-  InterpEval(interp, code);
-
-  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
-
-  InterpFree(interp);
-}
-
-void TestInterpEvalFun()
-{
-  LogTest("TestInterpEvalFun");
-
-  VInterp* interp = InterpNew();
-
-  //char* source = "(+ print)funify(ADD)setglobal 1 2 ADD sayHi ('My name is Ruma' print)funify(RUMA)setglobal (RUMA RUMA)funify(RUMA2)setglobal RUMA2";
-  char* source = "(88 print 1 2 + print) eval";
-  VItem* code = ParseSourceCode(source, interp->mem);
-  MemPrintList(interp->mem, code);
-  PrintNewLine();
-
-  InterpEval(interp, code);
-
-  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
-
-  InterpFree(interp);
-}
-
-void TestInterpEvalFunInfiniteTail()
-{
-  LogTest("TestInterpEvalFunInfiniteTail");
-
-  VInterp* interp = InterpNew();
-
-  char* source = "('Hi Ruma' print RUMA)funify(RUMA)setglobal RUMA";
-  VItem* code = ParseSourceCode(source, interp->mem);
-  MemPrintList(interp->mem, code);
-  PrintNewLine();
-
-  InterpEval(interp, code);
-
-  ShouldHold("CALLSTACK TOP SHOULD BE NULL", NULL == interp->callStackTop);
-
-  InterpFree(interp);
-}
-
-int main()
-{
-  PrintLine("Welcome to the wonderful world of Vimana");
-
-  TestPrintBinary();
-  TestItemAttributes();
-  TestAllocDealloc();
-  TestConsDealloc();
-
-  //TestParseSymbolicCode();
-  TestSymbolTable();
-  TestParseSourceCode();
-
-  TestArray();
-  TestArrayWithStrings();
-  TestInterp();
-  
-  TestInterpEval();
-  TestInterpEvalFun();
-  //TestInterpEvalFunInfiniteTail();
-
-  LogTest("DONE");
-
-  SysPrintMemStat();
-}
-
-#endif
-
-/*
-#define ArrayStringPtrAt(array, index) \
-  ((char**)ArrayAt(array, index))
-
-int main(int numargs, char* args[])
-{
-  VArray* array = ArrayNew(sizeof(char*), 2);
-
-  char* s = StrCopy("I am index zero");
-  PrintLine(s);
-
-  // *((char**)ArraySetAt(array, 0)) = s;
-  //((char**)(array->buffer))[0] = s;
-  //char** p = ArrayAt(array, 0);
-  // *p = s;
-  //PrintLine(*p);
-  //PrintLine(*(char**)ArrayAt(array, 0));
-
-  ArrayStringAt(array, 0) = s;
-
-  array = ArrayGrow(array, 11);
-
-  ArrayStringAt(array, 10) = StrCopy("I am index 10");
-
-  PrintLine(ArrayStringAt(array, 0));
-  PrintLine(*ArrayStringPtrAt(array, 0));
-  PrintLine(ArrayStringAt(array, 10));
-
-  printf("Array length: %i\n", array->length);
-
-
-  void* pvoid = 0;
-  ++ pvoid;
-  printf("pvoid:   %li\n", (long)pvoid);
-  printf("pvoid:   %li\n", (long)pvoid + 1);
-
-  VInterp* pInterp = 0;
-  ++ pInterp;
-  printf("pInterp: %li\n", (long)pInterp);
-  printf("pInterp: %li\n", (long)(pInterp + 1));
-  printf("pInterp: %li\n", (long)(((void*)pInterp) + 1));
-  printf("pInterp: %li\n", (long)(((unsigned long)pInterp) + 1));
-
-  return 0;
-}
-*/
-
-/*
-int main(int numargs, char* args[])
-{
-  SymbolTableCreate();
-
-  SymbolTableFindAdd("foo");
-  SymbolTableFindAdd("bar");
-  SymbolTableFindAdd("foo");
-
-  PrintLine(SymbolTableGet(1));
-
-  SymbolTableFree();
-
-  return 0;
-}
-*/
-
-/*
-int hash = 7;
-for (int i = 0; i < strlen; i++) {
-    hash = hash*31 + charAt(i);
-}
-
-unsigned int DJBHash(char* str, unsigned int len)
-{
-   unsigned int hash = 5381;
-   unsigned int i    = 0;
-
-   for(i = 0; i < len; str++, i++)
-   {   
-      hash = ((hash << 5) + hash) + (*str);
-   }   
-
-   return hash;
-}
-unsigned long hash = 5381;
-int c;
-
-while (c = *str++)
-    hash = ((hash << 5) + hash) + c; // hash * 33 + c
-
-http://www.cse.yorku.ca/~oz/hash.html
-*/
-
-/*
-#define PROGMEM 
-
-//const 
-typedef struct __VPrimFunEntry 
-{
-  char *name;
-  int index;
-  int x;
-} 
-VPrimFunEntry;
-
-VPrimFunEntry primFuns[] PROGMEM = 
-{
-  { "Item_one", 0, 1 },
-  { "Item_two", 1, 1 },
-  { "Item_three", 2, 1},
-  { "Item_four", 3, 1 }
-};
-
-  //printf ("primfun: %s\n", primFuns[3].name);
-*/
-
-/*
-https://forum.arduino.cc/t/call-function-pointer-from-progmem/338748
-
-boolean fun1() {
-  Serial.println(F("Function 1"));
-}
-boolean fun2() {
-  Serial.println(F("Function 2"));
-}
-boolean fun3() {
-  Serial.println(F("Function 3"));
-}
-boolean fun4() {
-  Serial.println(F("Function 4"));
-}
-
-typedef boolean (*Item_Function)();
-
-const typedef struct MenuItem_t {
-  char *text;
-  Item_Function func;
-} MenuItem;
-
-MenuItem firstList[4] PROGMEM = {
-  { "Item_one", &fun1 }, // need to have reference to the function
-  { "Item_two", &fun2 },
-  { "Item_three", &fun3},
-  { "Item_four", &fun4 }
-};
-
-MenuItem* itemPtr = firstList;
-
-void setup() {
-
-  // Here I want to use the itemPtr to call the function from the
-  //      struct instance it is currently pointing to.
-  // In this case it should call fun1()
-
-  boolean (*function)(void); // function buffer
-
-  Serial.begin(115200);
-  for (byte i = 0; i < 4; i++)
-  {
-    Serial.println((char*)pgm_read_word(&(firstList[i].text)));
-    function = (Item_Function)pgm_read_word(&(firstList[i].func)); // this needs to be assigned to another function pointer in order to use it.
-
-    function(); // run the function.
-    Serial.println();
-  }
-
-}
-void loop() {}
-
-
-https://www.arduino.cc/reference/en/language/variables/utilities/progmem/
-
-https://cexamples.com/examples/using-function-pointer-from-struct-in-progmem-in-c-on-arduino
-
-http://www.nongnu.org/avr-libc/user-manual/group__avr__pgmspace.html
-
-https://www.arduino.cc/en/pmwiki.php?n=Reference/PROGMEM
-
-https://www.e-tinkers.com/2020/05/do-you-know-arduino-progmem-demystified/
-*/
-
-/*
-https://justine.lol/sectorlisp2/lisp.c
-https://justine.lol/sectorlisp2/
-https://github.com/technoblogy/ulisp/blob/master/ulisp.ino
-http://www.newlisp.org/index.cgi?page=Differences_to_Other_LISPs
 */

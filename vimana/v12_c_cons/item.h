@@ -127,6 +127,26 @@ typedef struct __VItem
 VItem;
 
 // -------------------------------------------------------------
+// Item types
+// -------------------------------------------------------------
+
+enum ItemType
+{
+  TypeNone = 0,
+  TypeIntNum,
+  TypeDecNum,
+  TypeList,
+  TypeString,
+  TypeHandle,      // Handle to malloc allocated buffer
+  TypeSymbol,      // Pushable types must go before TypeSymbol
+  TypePrimFun,     // Primitive function
+  TypeFun,         // Vimana function
+  TypeFunX,        // Vimana "macro" function
+  TypeBuffer,      // Never used on the data stack
+  __TypeSentinel__
+};
+
+// -------------------------------------------------------------
 // Access to data in item next field
 // -------------------------------------------------------------
 
@@ -156,24 +176,8 @@ void ItemSetNext(VItem* item, VAddr addr)
 }
 
 // -------------------------------------------------------------
-// Item types
+// Item type access
 // -------------------------------------------------------------
-
-enum ItemType
-{
-  TypeNone = 0,
-  TypeIntNum,
-  TypeDecNum,
-  TypeList,
-  TypeString,
-  TypeHandle,      // Handle to malloc allocated buffer
-  TypeSymbol,      // Pushable types must go before TypeSymbol
-  TypePrimFun,     // Primitive function
-  TypeFun,         // Vimana function
-  TypeFunX,        // Vimana "macro" function
-  TypeBuffer,      // Never used on the data stack
-  __TypeSentinel__
-};
 
 #define IsTypeNone(item)         (TypeNone == ItemGetType(item))
 #define IsTypeList(item)         (TypeList == ItemGetType(item))

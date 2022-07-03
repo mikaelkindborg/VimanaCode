@@ -96,7 +96,7 @@ VItem* MemAlloc(VMem* mem)
   if (mem->firstFree)
   {
     // Allocate item from the freelist
-    PrintLine("Allocate from freelist");
+    //PrintLine("Allocate from freelist");
     addr = mem->firstFree;
     item = MemGet(mem, addr);
     mem->firstFree = ItemGetNext(item);
@@ -108,7 +108,7 @@ VItem* MemAlloc(VMem* mem)
     //printf("memoryUsed: %lu\n", freeAddr);
     if (freeAddr < mem->maxNumItems)
     {
-      PrintLine("Allocate from free space");
+      //PrintLine("Allocate from free space");
       addr = freeAddr;
       item = mem->end;
       ++ mem->end;
@@ -116,17 +116,17 @@ VItem* MemAlloc(VMem* mem)
     else
     {
       #ifdef DEBUG
-        PrintLine("[GURU_MEDITATION] ALLOC_OUT_OF_ITEM_MEMORY");
+        PrintLine("[GURU_MEDITATION] ALLOC_ITEM_OUT_OF_MEMORY");
         return NULL;
       #else
-        GURU_MEDITATION(ALLOC_OUT_OF_ITEM_MEMORY);
+        GURU_MEDITATION(ALLOC_ITEM_OUT_OF_MEMORY);
       #endif
     }
   }
 
   #ifdef TRACK_MEMORY_USAGE
     ++ mem->allocCounter;
-    MemPrintAllocCounter(mem);
+    //MemPrintAllocCounter(mem);
   #endif
 
   // Init and set default type
@@ -140,20 +140,23 @@ void MemDeallocItem(VMem* mem, VItem* item)
 {
   if (IsTypeNone(item))
   {
-    printf("MemDeallocItem: IsTypeNone\n");
+    //printf("MemDeallocItem: IsTypeNone\n");
     return;
   }
 
-  PrintLine("Dealloc item");
+  //PrintLine("Dealloc item");
 
   #ifdef TRACK_MEMORY_USAGE
     -- mem->allocCounter;
-    MemPrintAllocCounter(mem);
+    //MemPrintAllocCounter(mem);
   #endif
 
   if (IsTypeBuffer(item))
   {
-    PrintLine("FREE BUFFER");
+    #ifdef DEBUG
+      PrintLine("FREE BUFFER");
+    #endif
+
     if (item->ptr) SysFree(item->ptr);
   }
 
@@ -161,7 +164,7 @@ void MemDeallocItem(VMem* mem, VItem* item)
   ItemSetNext(item, mem->firstFree);
   mem->firstFree = PtrToAddr(item, mem->start);
 
-  printf("firstFree: %lu\n", mem->firstFree);
+  //printf("mem->firstFree: %lu\n", mem->firstFree);
 }
 
 // -------------------------------------------------------------
@@ -221,7 +224,10 @@ void MemMark(VMem* mem, VItem* item)
   {
     if (ItemGetGCMark(item))
     {
-      PrintLine("ALREADY MARKED");
+      #ifdef DEBUG
+        PrintLine("ALREADY MARKED");
+      #endif
+      
       return;
     }
 
@@ -247,12 +253,12 @@ void MemSweep(VMem* mem)
   {
     if (ItemGetGCMark(item))
     {
-      PrintLine("MemSweep unmark");
+      //PrintLine("MemSweep unmark");
       ItemSetGCMark(item, 0);
     }
     else
     {
-      PrintLine("MemSweep dealloc");
+      //PrintLine("MemSweep dealloc");
       MemDeallocItem(mem, item);
     }
 
