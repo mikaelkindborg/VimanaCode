@@ -50,7 +50,7 @@ void TestItemAttributes()
   VItem* item = &theItem;
 
   ItemInit(item);
-  ItemSetGCMark(item, 1);
+  ItemGCMarkSet(item);
   ItemSetType(item, 1);
   ItemSetNext(item, 3);
   ItemSetFirst(item, 3);
@@ -63,10 +63,10 @@ void TestItemAttributes()
   printf("Next:  %lu\n", (VULong) ItemGetNext(item));
   printf("First: %lu\n", (VULong) ItemGetFirst(item));
 
-  ShouldHold("Item type should equal", 1 == ItemGetType(item));
-  ShouldHold("Item gc mark should be set", 1 == ItemGetGCMark(item));
-  ShouldHold("Item next should equal", 3 == ItemGetNext(item));
-  ShouldHold("Item first should equal", 3 == ItemGetFirst(item));
+  ShouldHold("TestItemAttributes: Item type should equal", 1 == ItemGetType(item));
+  ShouldHold("TestItemAttributes: Item gc mark should be set", 128 == ItemGetGCMark(item));
+  ShouldHold("TestItemAttributes: Item next should equal", 3 == ItemGetNext(item));
+  ShouldHold("TestItemAttributes: Item first should equal", 3 == ItemGetFirst(item));
 }
 
 void TestFoo()
@@ -120,16 +120,28 @@ void TestMemAlloc()
   VMem* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
 
-  VItem* item = MemAlloc(mem);
-  ItemSetGCMark(item, 1);
+  VItem* item;
+
+  item = MemAlloc(mem);
+  ItemGCMarkSet(item);
   ItemSetType(item, 1);
   ItemSetNext(item, 4);
 
-  PrintBinaryUInt(ItemGetNext(item));
+  item = MemAlloc(mem);
+  ItemGCMarkSet(item);
+  ItemSetType(item, 1);
+  ItemSetNext(item, 4);
+
+  //PrintBinaryUInt(ItemGetNext(item));
   ShouldHold("TestMemAlloc: Next should equal", 4 == ItemGetNext(item));
 
-  MemDeallocItem(mem, item);
   MemSweep(mem);
+  MemPrintAllocCounter(mem);
+  ShouldHold("TestMemAlloc: Next should equal", 2 == mem->allocCounter);
+
+  MemSweep(mem);
+  MemPrintAllocCounter(mem);
+  ShouldHold("TestMemAlloc: Next should equal", 0 == mem->allocCounter);
 
   SysFree(mem);
 }

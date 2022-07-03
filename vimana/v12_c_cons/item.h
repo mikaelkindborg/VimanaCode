@@ -146,22 +146,45 @@ enum ItemType
 // Access to data in item next field
 // -------------------------------------------------------------
 
-// Layout of field "type" on 64 bit machines:
+// Layout of field "type":
 // Bit 1:    mark bit
-// Bit 1-31: type info
+// Bit 1-n:  type info
 
-#define ItemGetType(item)   ( ((item)->type) >> 1 )
-#define ItemGetGCMark(item) ( ((item)->type) &  1 )
+
+// Layout of field "type":
+// Bit 1-7: type info
+// Bit 8:   mark bit 
+
+//#define ItemGetType(item)   ( ((item)->type) >> 1 )
+//#define ItemGetGCMark(item) ( ((item)->type) &  1 )
+#define ItemGetType(item)   ( ((item)->type) & 127 )
+#define ItemGetGCMark(item) ( ((item)->type) & 128 )
 #define ItemGetNext(item)   ( (item)->next )
 
+/*
 void ItemSetGCMark(VItem* item, VUInt mark)
 {
   item->type = (item->type & ~1) | (mark & 1);
 }
-
 void ItemSetType(VItem* item, VUInt type)
 {
   item->type = (type << 1) | (item->type & 1);
+}
+*/
+
+void ItemGCMarkSet(VItem* item)
+{
+  item->type = item->type | 128;
+}
+
+void ItemGCMarkUnset(VItem* item)
+{
+  item->type = item->type & 127;
+}
+
+void ItemSetType(VItem* item, VUInt type)
+{
+  item->type = (item->type & 128) | (type & 127);
 }
 
 void ItemSetNext(VItem* item, VAddr addr)

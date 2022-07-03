@@ -233,7 +233,7 @@ void MemMark(VMem* mem, VItem* item)
     }
 
     //Print("MARK ITEM: "); MemPrintItem(mem, item); PrintNewLine();
-    ItemSetGCMark(item, 1);
+    ItemGCMarkSet(item);
 
     // Mark children
     if (!IsTypeAtomic(item))
@@ -255,7 +255,7 @@ void MemSweep(VMem* mem)
     if (ItemGetGCMark(VItemPtr(ptr)))
     {
       //PrintLine("MemSweep unmark");
-      ItemSetGCMark(VItemPtr(ptr), 0);
+      ItemGCMarkUnset(VItemPtr(ptr));
     }
     else
     {

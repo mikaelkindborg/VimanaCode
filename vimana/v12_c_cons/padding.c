@@ -11,9 +11,10 @@
 typedef struct MyItem
 {
   //void* ptr;
-  //unsigned long addr;
+  unsigned long addr;
   int a;
   unsigned int b;
+  unsigned int c;
 }
 Item;
 
