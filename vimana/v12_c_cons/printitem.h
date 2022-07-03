@@ -20,6 +20,7 @@ void PrintItem(VItem* item, VInterp* interp)
   }
   else if (IsTypeList(item))
   {
+    PrintLine("print list");
     PrintList(item, interp);
   }
   else if (IsTypeIntNum(item))
@@ -36,7 +37,8 @@ void PrintItem(VItem* item, VInterp* interp)
   }
   else if (IsTypeSymbol(item))
   {
-    printf("%s", SymbolTableGet(ItemGetSymbol(item)));
+    //printf("%s", SymbolTableGet(ItemGetSymbol(item)));
+    printf("S%li", ItemGetSymbol(item));
   }
   else if (IsTypeString(item))
   {

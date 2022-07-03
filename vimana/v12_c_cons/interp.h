@@ -46,9 +46,49 @@ struct __VStackFrame
 
 // mindfulness = ta kontroll över sitt tänkande, sina tankar
 
+/*
+
+Make pointers to structs:
+data stack
+call stack
+globals
+symbols
+memory
+primfuns
+string memory
+
+make allocate/init method
+
+struct VArray
+{
+  int   capacity;
+  int   length;
+  void* array;
+}
+
+struct
+{
+  int   capacity;
+  int   top;
+  void* stack;
+} 
+datastack;
+
+char** symbolTable;
+
+
+  VGlobalVars globalVars
+  VDataStack
+  VCallStack
+
+  VSymbolTable  symbolTable;
+  VSstringMem   stringMem;
+  VPrimFunTable primFunTable;
+*/
+
 typedef struct __VInterp
 {
-  int          run; 
+  int          run;
 
   int          numGlobalVars;
   VItem*       globalVars;

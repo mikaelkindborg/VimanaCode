@@ -113,7 +113,6 @@ VItem* ParseToken(char* token, VInterp* interp)
   VItem* item = AllocItem(interp);
   VUInt type = TokenType(token);
 
-PrintLine("token1");
   if (TypeIntNum == type)
   {
     int intNum = strtol(token, NULL, 10);
@@ -128,23 +127,18 @@ PrintLine("token1");
   else
   if (TypeSymbol == type)
   {
-PrintLine("token2");
     int primFunId = LookupPrimFun(token);
-PrintLine("token2b");
     if (primFunId > -1)
     {
       #ifdef OPTIMIZE
-PrintLine("token22");
         VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
         ItemSetPrimFun(item, fun);
-PrintLine("token23");
       #else
         ItemSetPrimFun(item, primFunId);
       #endif
     }
     else
     {
-PrintLine("token3");
       int symbol = SymbolTableFindAdd(token);
       ItemSetSymbol(item, symbol);
     }
@@ -154,7 +148,6 @@ PrintLine("token3");
     GURU_MEDITATION(PARSER_TOKEN_TYPE_ERROR);
   }
 
-PrintLine("token4");
   return item;
 }
 
@@ -188,7 +181,7 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
   VItem* first = NULL;
   VItem* item  = NULL;
   VItem* prev;
-PrintLine("foo1");
+  
   VItem* list = AllocItem(interp);
   ItemSetType(list, TypeList);
   
@@ -196,7 +189,6 @@ PrintLine("foo1");
 
   while (!IsEndOfString(*p))
   {
-PrintLine("foo2");
     if (IsWhiteSpace(*p))
     {
       // Skip whitespace
@@ -205,9 +197,10 @@ PrintLine("foo2");
     else
     if (IsLeftParen(*p))
     {
-PrintLine("foo3");
+PrintLine("Child list begin");
       // Parse child list
       item = ParseList(p + 1, &p, interp);
+PrintLine("Child list end");
     }
     else
     if (IsRightParen(*p))
@@ -237,9 +230,8 @@ PrintLine("foo3");
     }
     else
     {
-PrintLine("foo4");
       char* token = GetNextToken(p, &p);
-PrintLine("foo5");
+Print("Token: ");PrintLine(token);
       item = ParseToken(token, interp);
     }
 
@@ -247,11 +239,11 @@ PrintLine("foo5");
     if (NULL != item)
     {
       if (NULL == first)
-      {
+      {PrintLine("set first");
         first = item;
       }
       else
-      {
+      {PrintLine("add next");
         SetFirst(prev, item, interp);
       }
 
@@ -261,6 +253,7 @@ PrintLine("foo5");
   }
 
 Exit:
+PrintLine("return parsed list");
   SetFirst(list, first, interp);
   return list;
 }

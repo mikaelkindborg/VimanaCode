@@ -403,7 +403,14 @@ void TestParse()
   VInterp* interp = InterpNew();
 
   VItem* list;
+  char*  code;
 
+  code = "foo bar 8888";
+  list = Parse(code, interp);
+  PrintItem(list, interp);
+  PrintNewLine();
+
+/*
   char* code = "1 2 (((3 4) 5))";
   list = Parse(code, interp);
   PrintItem(list, interp);
@@ -439,7 +446,7 @@ void TestParse()
   list = Parse(code2, interp);
   PrintItem(list, interp);
   PrintNewLine();
-
+*/
   InterpFree(interp);
   SymbolTableFree();
   PrimFunTableFree();
