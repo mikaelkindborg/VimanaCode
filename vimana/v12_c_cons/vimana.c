@@ -38,7 +38,7 @@ int main(int numargs, char* args[])
     return 0;
   }
 
-  for (int i = 1; i < numargs; ++i)
+  for (int i = 1; i < numargs; ++ i)
   {
     if (StrEquals(args[i], "--interactive"))
     {
@@ -74,7 +74,7 @@ int main(int numargs, char* args[])
     }
 
     // Parse source code
-    VItem* list = ParseSourceCode(source, interp->mem);
+    VItem* list = Parse(source, interp);
     SysFree(source);
 
     // Evaluate code
@@ -109,7 +109,7 @@ int main(int numargs, char* args[])
   SymbolTableFree();
   PrimFunTableFree();
 
-  PrintMemStat();
+  SysPrintMemStat();
 
   return 0;
 }

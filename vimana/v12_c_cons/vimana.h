@@ -29,6 +29,7 @@
 #include "primfuntable.h"
 #include "interp.h"
 #include "parser.h"
+#include "printitem.h"
 #include "primfuns.h"
 
 #endif

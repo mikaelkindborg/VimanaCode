@@ -14,7 +14,6 @@ Memory allocation tracking.
     ++ GSysAllocCounter;
   }
 
-  // TODO: Zero-initialize allocated buffer
   void* SysAlloc(int size)
   {
     SysAllocCounterIncr();
@@ -27,9 +26,11 @@ Memory allocation tracking.
     free(obj);
   }
 
-  void PrintMemStat()
+  void SysPrintMemStat()
   {
-    Print("SysAllocCounter: "); PrintIntNum(GSysAllocCounter); PrintNewLine();
+    Print("SysAllocCounter: "); 
+    PrintIntNum(GSysAllocCounter); 
+    PrintNewLine();
   }
 
 #else
@@ -37,6 +38,6 @@ Memory allocation tracking.
   #define SysAllocCounterIncr()
   #define SysAlloc(size) malloc(size)
   #define SysFree(obj) free(obj)
-  #define PrintMemStat()
+  #define SysPrintMemStat()
 
 #endif

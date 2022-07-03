@@ -83,9 +83,9 @@ char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
     }
     else
     {
-      item = MemAllocItem(mem);
+      item = MemAlloc(mem);
 
-      if (NULL == *first) 
+      if (NULL == *first)
         *first = item;
       else
         MemItemSetNext(mem, prev, item);
@@ -131,7 +131,7 @@ char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
           ItemSetSymbol(item, number);
         }
         else
-          GURU(CODE_PARSER_UNDEFINED_TYPE);
+          GURU_MEDITATION(CODE_PARSER_UNDEFINED_TYPE);
       }
 
       prev = item;

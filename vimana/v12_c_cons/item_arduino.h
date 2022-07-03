@@ -115,12 +115,16 @@ typedef struct __VItem
     VPrimFunPtr primFunPtr; // Pointer to a primitive function
     void*       ptr;        // Pointer to memory block
   };
-  VUInt         type;
-  VAddr         next;  
+    
+  // Layout of field "next":
+  // Bit 1-4: Type info  
+  // Bit 5:   GC mark bit
+  // Bit 6-n: Address of next item
+
+  // Address of next item in a list - also holds GC mark bit and type info
+  VAddr         next;       
 }
 VItem;
-
-#define VItemPtr(ptr) ((VItem*)(ptr))
 
 // -------------------------------------------------------------
 // Item types
@@ -146,50 +150,29 @@ enum ItemType
 // Access to data in item next field
 // -------------------------------------------------------------
 
-// Layout of field "type":
-// Bit 1:    mark bit
-// Bit 1-n:  type info
+#define TypeMask         15 // Type bits
+#define MarkMask         16 // Mark bit
+#define NonAddrMask      31 // TypeMask + MarkMask (non-address bits)
+#define MarkShift        4
+#define AddrShift        5
 
+#define ItemGetType(item)   UInt(((item)->next) & TypeMask)
+#define ItemGetGCMark(item) UInt((((item)->next) & MarkMask) >> MarkShift)
+#define ItemGetNext(item)   (((item)->next) >> AddrShift)
 
-// Layout of field "type":
-// Bit 1-7: type info
-// Bit 8:   mark bit 
-
-//#define ItemGetType(item)   ( ((item)->type) >> 1 )
-//#define ItemGetGCMark(item) ( ((item)->type) &  1 )
-#define ItemGetType(item)   ( ((item)->type) & 127 )
-#define ItemGetGCMark(item) ( ((item)->type) & 128 )
-#define ItemGetNext(item)   ( (item)->next )
-
-/*
 void ItemSetGCMark(VItem* item, VUInt mark)
 {
-  item->type = (item->type & ~1) | (mark & 1);
-}
-void ItemSetType(VItem* item, VUInt type)
-{
-  item->type = (type << 1) | (item->type & 1);
-}
-*/
-
-void ItemGCMarkSet(VItem* item)
-{
-  item->type = item->type | 128;
-}
-
-void ItemGCMarkUnset(VItem* item)
-{
-  item->type = item->type & 127;
+  item->next = (item->next & ~MarkMask) | (mark << MarkShift);
 }
 
 void ItemSetType(VItem* item, VUInt type)
 {
-  item->type = (item->type & 128) | (type & 127);
+  item->next = (item->next & ~TypeMask) | type;
 }
 
 void ItemSetNext(VItem* item, VAddr addr)
 {
-  item->next = addr;
+  item->next = (item->next & NonAddrMask) | (addr << AddrShift);
 }
 
 // -------------------------------------------------------------
@@ -234,7 +217,6 @@ void ItemSetNext(VItem* item, VAddr addr)
 #define ItemGetSymbol(item) ((item)->intNum)
 #define ItemGetIntNum(item) ((item)->intNum)
 #define ItemGetDecNum(item) ((item)->decNum)
-#define ItemGetPtr(item)    ((item)->ptr)
 
 // Set first of child list
 void ItemSetFirst(VItem* item, VAddr addr)

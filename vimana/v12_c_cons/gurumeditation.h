@@ -14,20 +14,21 @@ Cool macros :)
 
 #define CODE_PARSER_UNDEFINED_TYPE 1
 
-#define GURU(name) GuruMeditation(name, #name)
+#define GURU_MEDITATION(name) GuruMeditation(name, #name)
 
-GURU(CODE_PARSER_UNDEFINED_TYPE);
+GURU_MEDITATION(CODE_PARSER_UNDEFINED_TYPE);
 
 STRINGIFY(CODE_PARSER_UNDEFINED_TYPE)
 STRVALUE(CODE_PARSER_UNDEFINED_TYPE)
 */
 
-#define GURU(name) GuruMeditation(name, #name)
+#define GURU_MEDITATION(name) GuruMeditation(name, #name)
 
 enum GURU_TABLE
 {
   GURU_MEDITATION = 0,
   CODE_PARSER_UNDEFINED_TYPE,
+  PARSER_UNBALANCED_STRING_END,
   DATA_STACK_OVERFLOW,
   DATA_STACK_IS_EMPTY,
   CONTEXT_STACK_OVERFLOW,
@@ -35,7 +36,7 @@ enum GURU_TABLE
   CALL_STACK_OVERFLOW,
   CALL_STACK_IS_EMPTY,
   GLOBALVARS_OVERFLOW,
-  MEM_OUT_OF_MEMORY,
+  ALLOC_ITEM_OUT_OF_MEMORY,
   PARSER_TOKEN_TYPE_ERROR,
   INTERP_UNEXPECTED_TYPE,
   FIRST_OBJECT_IS_NOT_A_LIST,
@@ -51,6 +52,8 @@ enum GURU_TABLE
   SOCKET_LISTEN_ERROR,
   SOCKET_ACCEPT_ERROR,
   ARRAY_OUT_OF_BOUNDS,
+  PARSE_ARG_NOT_STRING,
+  READFILE_ARG_NOT_STRING,
   __GURU_SENTINEL__
 };
 
@@ -58,13 +61,4 @@ void GuruMeditation(int errorId, char* errorString)
 {
   printf("[GURU_MEDITATION] %i %s\n", errorId, errorString);
   exit(1); 
-}
-
-// For unit testing
-void ShouldHold(char* description, int condition)
-{
-  if (!condition) 
-  {
-    printf("[SHOULD_HOLD_FAILED] %s\n", description);
-  }
 }

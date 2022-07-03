@@ -10,7 +10,7 @@ typedef struct __VArray
   int    itemSize;
   int    length;
   int    size;
-  void** buffer;
+  void*  buffer;
 }
 VArray;
 
@@ -21,7 +21,7 @@ VArray* ArrayNew(int itemSize, int size)
   array->itemSize = itemSize;
   array->size = size;
   array->length = 0;
-  array->buffer = (void*)array + sizeof(VArray);
+  array->buffer = (void*) PointerOffset(array, sizeof(VArray));
 
   return array;
 }
@@ -40,7 +40,7 @@ void* ArrayAt(VArray* array, int index)
 {
   if (index >= array->size)
   {
-    GURU(ARRAY_OUT_OF_BOUNDS);
+    GURU_MEDITATION(ARRAY_OUT_OF_BOUNDS);
   }
 
   if (index >= array->length)
@@ -48,7 +48,7 @@ void* ArrayAt(VArray* array, int index)
     array->length = index + 1;
   }
 
-  return (void*)array->buffer + (array->itemSize * index);
+  return PointerOffset(array->buffer, array->itemSize * index);
 }
 
 VArray* ArrayGrow(VArray* array, int newLength)
@@ -59,12 +59,11 @@ VArray* ArrayGrow(VArray* array, int newLength)
     int totalSize = sizeof(VArray) + (newSize * array->itemSize);
     array = realloc(array, totalSize);
     array->size = newSize;
-    array->buffer = (void*)array + sizeof(VArray);
+    array->buffer = PointerOffset(array, sizeof(VArray));
   }
 
   return array;
 }
 
 // Access a char* in the array
-#define ArrayStringAt(array, index) \
-  (*((char**)ArrayAt(array, index)))
+#define ArrayStringAt(array, index) (*((char**)ArrayAt(array, index)))
