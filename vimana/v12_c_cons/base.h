@@ -14,7 +14,6 @@ Basic data types and functions.
 typedef unsigned char    VByte;
 typedef unsigned int     VType;
 typedef unsigned int     VAddr;
-typedef unsigned long    VULong;
 typedef          long    VIntNum;
 typedef          double  VDecNum;
 
@@ -38,3 +37,4 @@ typedef          double  VDecNum;
 
 typedef struct __VInterp VInterp;
 typedef void (*VPrimFunPtr) (VInterp*);
+VPrimFunPtr LookupPrimFunPtr(int index);

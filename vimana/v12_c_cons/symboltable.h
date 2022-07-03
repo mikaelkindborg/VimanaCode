@@ -34,7 +34,7 @@ void SymbolTableFree()
 // string is copied
 int SymbolTableFindAdd(char* string)
 {
-  // Grows array if needed
+  // Grow array if needed
   GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable));
   
   int index;

@@ -32,7 +32,8 @@ void PrintItem(VItem* item, VInterp* interp)
   }
   else if (IsTypePrimFun(item))
   {
-    printf("P%lu", (VULong) ItemGetPtr(item)); // TODO: Lookup name of primfun
+    //printf("P%lu", (unsigned long) ItemGetPtr(item)); 
+    printf("%s", LookupPrimFunName(ItemGetPtr(item)));
   }
   else if (IsTypeSymbol(item))
   {
@@ -45,7 +46,7 @@ void PrintItem(VItem* item, VInterp* interp)
   }
   else if (IsTypeHandle(item))
   {
-    printf("[HANDLE] %lu", (long unsigned)GetHandlePtr(item, interp));
+    printf("[HANDLE] %lu", (unsigned long)GetHandlePtr(item, interp));
   }
   else if (IsTypeFun(item))
   {

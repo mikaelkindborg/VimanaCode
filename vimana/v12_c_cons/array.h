@@ -7,10 +7,10 @@ Growable arrays.
 
 typedef struct __VArray
 {
+  void*  buffer;
+  int    size;
   int    itemSize;
   int    length;
-  int    size;
-  void*  buffer;
 }
 VArray;
 
@@ -21,7 +21,7 @@ VArray* ArrayNew(int itemSize, int size)
   array->itemSize = itemSize;
   array->size = size;
   array->length = 0;
-  array->buffer = (void*) PtrOffset(array, sizeof(VArray));
+  array->buffer = PtrOffset(array, sizeof(VArray));
 
   return array;
 }

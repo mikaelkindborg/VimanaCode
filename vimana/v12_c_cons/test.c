@@ -60,8 +60,8 @@ void TestItemAttributes()
 
   printf("Type:  %i\n",  ItemGetType(item));
   printf("Mark:  %i\n",  ItemGetGCMark(item));
-  printf("Next:  %lu\n", (VULong) ItemGetNext(item));
-  printf("First: %lu\n", (VULong) ItemGetFirst(item));
+  printf("Next:  %lu\n", (unsigned long) ItemGetNext(item));
+  printf("First: %lu\n", (unsigned long) ItemGetFirst(item));
 
   ShouldHold("TestItemAttributes: Item type should equal", 1 == ItemGetType(item));
   ShouldHold("TestItemAttributes: Item gc mark should be set", 128 == ItemGetGCMark(item));
@@ -253,14 +253,14 @@ void TestSetFirst()
   next = MemAlloc(mem);
   ItemSetNext(next, 2);
   addr = MemGetAddr(mem, next);
-  printf("addr: %lu\n", (VULong) addr);
+  printf("addr: %lu\n", (unsigned long) addr);
   ItemSetFirst(item, addr);
   item = next;
 
   next = MemAlloc(mem);
   ItemSetNext(next, 3);
   addr = MemGetAddr(mem, next);
-  printf("addr: %lu\n", (VULong) addr);
+  printf("addr: %lu\n", (unsigned long) addr);
   ItemSetFirst(item, addr);
   item = next;
 
@@ -270,7 +270,7 @@ void TestSetFirst()
   item = first;
   while (1)
   {
-    printf("item: %lu\n", (VULong) ItemGetNext(item));
+    printf("item: %lu\n", (unsigned long) ItemGetNext(item));
     if (0 == ItemGetFirst(item)) break;
     item = MemGetFirst(mem, item);
   }

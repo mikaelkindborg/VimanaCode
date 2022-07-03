@@ -247,18 +247,20 @@ void ItemSetDecNum(VItem* item, VDecNum number)
 
   #define ItemGetPrimFun(item) ((item)->primFunPtr)
 
-  void ItemSetPrimFun(VItem* item, VPrimFunPtr primFun)
+  void ItemSetPrimFun(VItem* item, VIntNum primFunId)
   {
+    VPrimFunPtr primFun = LookupPrimFunPtr(primFunId);
     item->primFunPtr = primFun;
     ItemSetType(item, TypePrimFun);
   }
+
 #else
 
-  #define ItemGetPrimFun(item) ((item)->intNum)
+  #define ItemGetPrimFun(item) LookupPrimFunPtr(ItemGetIntNum(item))
 
-  void ItemSetPrimFun(VItem* item, VIntNum primFun)
+  void ItemSetPrimFun(VItem* item, VIntNum primFunId)
   {
-    item->intNum = primFun;
+    ItemSetIntNum(item, primFunId);
     ItemSetType(item, TypePrimFun);
   }
 

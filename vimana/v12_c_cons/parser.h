@@ -24,7 +24,7 @@ char* ParseString(char* p, char** next)
   char* pBuf = buf;
   int   level = 1;
 
-  // Position is at opening curly
+  // Position now is at opening curly
 
   // Move past opening curly
   ++ p;
@@ -55,7 +55,7 @@ char* ParseString(char* p, char** next)
   // Move past closing curly
   *next = p + 1;
 
-  // Position is at character after closing curly
+  // Position is now at character after closing curly
 
   return buf;
 }
@@ -85,7 +85,7 @@ VType TokenType(char* token)
   // Default token type
   VType type = TypeSymbol;
 
-  // Single minus sign is not a number
+  // A single minus sign is not a number
   if ( ('-' == *p) && (1 == strlen(token)) ) goto Exit;
 
   // Check number
@@ -134,12 +134,7 @@ VItem* ParseToken(char* token, VInterp* interp)
     int primFunId = LookupPrimFun(token);
     if (primFunId > -1)
     {
-      #ifdef OPTIMIZE
-        VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
-        ItemSetPrimFun(item, fun);
-      #else
-        ItemSetPrimFun(item, primFunId);
-      #endif
+      ItemSetPrimFun(item, primFunId);
     }
     else
     {

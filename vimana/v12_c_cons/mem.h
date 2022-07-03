@@ -98,14 +98,16 @@ VItem* MemAlloc(VMem* mem)
 
   if (mem->firstFree)
   {
-    // Allocate item from the freelist
+    // ALLOCATE FROM FREELIST
+
     addr = mem->firstFree;
     item = MemGet(mem, addr);
     mem->firstFree = ItemGetNext(item);
   }
   else
   {
-    // Allocate item from unused memory
+    // ALLOCATE FROM UNUSED MEMORY
+
     if (mem->end < mem->start + mem->size)
     {
       item = VItemPtr(mem->end);
@@ -124,7 +126,6 @@ VItem* MemAlloc(VMem* mem)
 
   #ifdef TRACK_MEMORY_USAGE
     ++ mem->allocCounter;
-    //MemPrintAllocCounter(mem);
   #endif
 
   // Init and set default type
@@ -136,26 +137,16 @@ VItem* MemAlloc(VMem* mem)
 
 void MemDeallocItem(VMem* mem, VItem* item)
 {
-  if (IsTypeNone(item))
-  {
-    //printf("MemDeallocItem: IsTypeNone\n");
-    return;
-  }
-
-  //PrintLine("Dealloc item");
+  if (IsTypeNone(item)) return;
 
   #ifdef TRACK_MEMORY_USAGE
     -- mem->allocCounter;
-    //MemPrintAllocCounter(mem);
   #endif
 
   if (IsTypeBuffer(item))
   {
-    #ifdef DEBUG
-      PrintLine("FREE BUFFER");
-    #endif
-
-    if (item->ptr) SysFree(item->ptr);
+    //PrintLine("FREE BUFFER");
+    if (ItemGetPtr(item)) SysFree(ItemGetPtr(item));
   }
 
   ItemSetType(item, TypeNone);
@@ -213,7 +204,7 @@ void* MemGetHandlePtr(VMem* mem, VItem* item)
 }
 
 // -------------------------------------------------------------
-// GC
+// Garbage collection
 // -------------------------------------------------------------
 
 void MemMark(VMem* mem, VItem* item)
@@ -222,10 +213,7 @@ void MemMark(VMem* mem, VItem* item)
   {
     if (ItemGetGCMark(item))
     {
-      #ifdef DEBUG
-        PrintLine("ALREADY MARKED");
-      #endif
-      
+      //PrintLine("ALREADY MARKED");
       return;
     }
 

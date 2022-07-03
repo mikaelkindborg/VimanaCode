@@ -52,9 +52,9 @@ Make pointers to structs:
 data stack
 call stack
 globals
-symbols
 memory
 primfuns
+symbols
 string memory
 
 make allocate/init method
@@ -102,12 +102,8 @@ typedef struct __VInterp
   VStackFrame* callStack;
 
   VMem*        mem;                 // Item memory
-  //VByte*       memStart;
 }
 VInterp;
-
-// Prim fun lookup function
-VPrimFunPtr LookupPrimFunPtr(int index);
 
 #define InterpMem(interp) ((interp)->mem)
 
@@ -149,8 +145,6 @@ VInterp* InterpNewWithSize(
   interp->mem = PtrOffset(interp->callStack, callStackByteSize);
   MemInit(InterpMem(interp), numItems);
 
-  //interp->memStart = interp->mem->start;
-
   return interp;
 }
 
@@ -182,12 +176,6 @@ void InterpFree(VInterp* interp)
 #define GetFirst(item, interp) MemGetFirst(InterpMem(interp), item)
 #define GetNext(item, interp) MemGetNext(InterpMem(interp), item)
 
-//#define GetFirst(item, interp) \
-//  (ItemGetFirst(item) ? VItemPtr(AddrToPtr(ItemGetFirst(item), (interp)->memStart)) : NULL)
-
-//#define GetNext(item, interp) \
-//  (ItemGetNext(item) ? VItemPtr(AddrToPtr(ItemGetNext(item), (interp)->memStart)) : NULL)
-
 #define SetFirst(item, first, interp) MemSetFirst(InterpMem(interp), item, first)
 #define SetNext(item, next, interp) MemSetNext(InterpMem(interp), item, next)
 
@@ -196,7 +184,7 @@ void InterpFree(VInterp* interp)
 #define GetHandlePtr(item, interp) MemGetHandlePtr(InterpMem(interp), item)
 
 // -------------------------------------------------------------
-// GC
+// Garbage collection
 // -------------------------------------------------------------
 
 void InterpGC(VInterp* interp)
@@ -236,7 +224,7 @@ void InterpGC(VInterp* interp)
 // Data stack
 // -------------------------------------------------------------
 
-// Copies item
+// Copies the item to the stack
 void InterpStackPush(VInterp* interp, VItem* item)
 {
   ++ interp->dataStackTop;
@@ -455,14 +443,8 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
 
       if (IsTypePrimFun(instruction))
       {
-        #ifdef OPTIMIZE
-          VPrimFunPtr fun = ItemGetPrimFun(instruction);
-          fun(interp);
-        #else
-          int primFunId = ItemGetPrimFun(instruction);
-          VPrimFunPtr fun = LookupPrimFunPtr(primFunId);
-          fun(interp);
-        #endif
+        VPrimFunPtr fun = ItemGetPrimFun(instruction);
+        fun(interp);
       }
       else
       if (IsTypePushable(instruction))

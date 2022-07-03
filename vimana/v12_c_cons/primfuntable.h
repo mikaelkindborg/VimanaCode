@@ -1,5 +1,5 @@
 /*
-File: symbols.h
+File: primfuntable.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
 Lookup table for primfuns.
@@ -43,7 +43,7 @@ void PrimFunTableFree()
 // name is not copied
 void PrimFunAdd(char* name, VPrimFunPtr fun)
 {
-  // Grows array if needed
+  // Grow array if needed
   GPrimFunTable = ArrayGrow(GPrimFunTable, ArrayLength(GPrimFunTable));
 
   PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, ArrayLength(GPrimFunTable));
@@ -69,4 +69,18 @@ int LookupPrimFun(char* name)
 VPrimFunPtr LookupPrimFunPtr(int index)
 {
   return ArrayPrimFunEntryAt(GPrimFunTable, index)->fun;
+}
+
+char* LookupPrimFunName(VPrimFunPtr primFun)
+{
+  for (int i = 0; i < ArrayLength(GPrimFunTable); ++ i)
+  {
+    PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, i);
+    if (primFun == entry->fun)
+    {
+      return entry->name;
+    }
+  }
+
+  return NULL;
 }
