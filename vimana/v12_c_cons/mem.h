@@ -13,10 +13,10 @@ See item.h for an explanation of memory layout.
 
 typedef struct __VMem
 {
-  VAddr  firstFree;
-  VByte* start;
-  VByte* free;
-  VByte* end;
+  VByte* start;     // Start of item memory
+  VByte* end;       // End of used memory (first free)
+  VAddr  firstFree; // Address to first item in freelist
+  VAddr  size;      // Total size of item memory
   #ifdef TRACK_MEMORY_USAGE
   int    allocCounter;
   #endif
@@ -67,10 +67,10 @@ void MemInit(VMem* mem, int numItems)
 {
   VAddr memByteSize = MemGetByteSize(numItems);
 
-  mem->firstFree = 0;
+  mem->firstFree = 0; // Freelist is empty
   mem->start = BytePtr(mem) + sizeof(VMem);
-  mem->free = mem->start;
-  mem->end = mem->start + (memByteSize - sizeof(VMem));
+  mem->end = mem->start; // End of used space
+  mem->size = (memByteSize - sizeof(VMem));
 
   #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
@@ -99,20 +99,17 @@ VItem* MemAlloc(VMem* mem)
   if (mem->firstFree)
   {
     // Allocate item from the freelist
-    //PrintLine("Allocate from freelist");
     addr = mem->firstFree;
     item = MemGet(mem, addr);
     mem->firstFree = ItemGetNext(item);
   }
   else
   {
-    // Allocate item from free memory
-    //printf("memoryUsed: %lu\n", (mem->free - mem->start));
-    if (mem->free < mem->end)
+    // Allocate item from unused memory
+    if (mem->end < mem->start + mem->size)
     {
-      //PrintLine("Allocate from free space");
-      item = VItemPtr(mem->free);
-      mem->free += sizeof(VItem);
+      item = VItemPtr(mem->end);
+      mem->end += sizeof(VItem);
     }
     else
     {
@@ -186,7 +183,7 @@ void MemDeallocItem(VMem* mem, VItem* item)
 // Ownership of bufferPtr goes to the memory manager
 // bufferPtr must be allocated with SysAlloc (malloc)
 //
-VItem* MemAllocHandle(VMem* mem, void* bufferPtr, VUInt type)
+VItem* MemAllocHandle(VMem* mem, void* bufferPtr, VType type)
 {
   VItem* item = MemAlloc(mem);
   ItemSetType(item, type);
@@ -250,7 +247,7 @@ void MemSweep(VMem* mem)
 {
   VByte* ptr = mem->start;
 
-  while (ptr < mem->free)
+  while (ptr < mem->end)
   {
     if (ItemGetGCMark(VItemPtr(ptr)))
     {

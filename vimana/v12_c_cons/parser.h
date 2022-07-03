@@ -77,13 +77,13 @@ char* GetNextToken(char* p, char** next)
   return GTokenBuffer;
 }
 
-VUInt TokenType(char* token)
+VType TokenType(char* token)
 {
   char* p = token;
   int   dec = 0; // Decimal sign counter
 
   // Default token type
-  VUInt type = TypeSymbol;
+  VType type = TypeSymbol;
 
   // Single minus sign is not a number
   if ( ('-' == *p) && (1 == strlen(token)) ) goto Exit;
@@ -115,7 +115,7 @@ Exit:
 VItem* ParseToken(char* token, VInterp* interp)
 {
   VItem* item = AllocItem(interp);
-  VUInt type = TokenType(token);
+  VType type = TokenType(token);
 
   if (TypeIntNum == type)
   {

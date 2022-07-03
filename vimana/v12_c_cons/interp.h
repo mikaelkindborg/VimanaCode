@@ -102,7 +102,7 @@ typedef struct __VInterp
   VStackFrame* callStack;
 
   VMem*        mem;                 // Item memory
-  VByte*       memStart;
+  //VByte*       memStart;
 }
 VInterp;
 
@@ -135,21 +135,21 @@ VInterp* InterpNewWithSize(
     dataStackByteSize + callStackByteSize + 
     memByteSize);
 
-  interp->globalVars = PointerOffset(interp, sizeof(VInterp));
+  interp->globalVars = PtrOffset(interp, sizeof(VInterp));
   interp->numGlobalVars = numGlobalVars;
 
-  interp->dataStack = PointerOffset(interp->globalVars, globalVarsByteSize);
+  interp->dataStack = PtrOffset(interp->globalVars, globalVarsByteSize);
   interp->numDataStackItems = numDataStackItems;
   interp->dataStackTop = -1;
 
-  interp->callStack = PointerOffset(interp->dataStack, dataStackByteSize);
+  interp->callStack = PtrOffset(interp->dataStack, dataStackByteSize);
   interp->numCallStackFrames = numCallStackFrames;
   interp->callStackTop = 0;
 
-  interp->mem = PointerOffset(interp->callStack, callStackByteSize);
+  interp->mem = PtrOffset(interp->callStack, callStackByteSize);
   MemInit(InterpMem(interp), numItems);
 
-  interp->memStart = interp->mem->start;
+  //interp->memStart = interp->mem->start;
 
   return interp;
 }

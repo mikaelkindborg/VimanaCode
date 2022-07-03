@@ -156,16 +156,16 @@ enum ItemType
 #define MarkShift        4
 #define AddrShift        5
 
-#define ItemGetType(item)   UInt(((item)->next) & TypeMask)
-#define ItemGetGCMark(item) UInt((((item)->next) & MarkMask) >> MarkShift)
+#define ItemGetType(item)   ((VType)(((item)->next) & TypeMask))
+#define ItemGetGCMark(item) ((VType)((((item)->next) & MarkMask) >> MarkShift))
 #define ItemGetNext(item)   (((item)->next) >> AddrShift)
 
-void ItemSetGCMark(VItem* item, VUInt mark)
+void ItemSetGCMark(VItem* item, VType mark)
 {
   item->next = (item->next & ~MarkMask) | (mark << MarkShift);
 }
 
-void ItemSetType(VItem* item, VUInt type)
+void ItemSetType(VItem* item, VType type)
 {
   item->next = (item->next & ~TypeMask) | type;
 }
