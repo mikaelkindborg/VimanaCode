@@ -42,8 +42,23 @@ struct __VStackFrame
   VItem        localVars[4]; // Space for 4 local vars
 };
 
-// Mind control for hackers
+/*
+struct __VStackFrame
+{
+  VItem*       instruction;  // Current instruction
+  VStackFrame* context;      // Stack frame that holds local vars
+  VItem*       localVars;    // List of localvars
+};
 
+struct __VStackFrame
+{
+  VItem*       instruction;  // Current instruction
+  VStackFrame* context;      // Stack frame that holds local vars
+  int          numlocals;    // number of localvars
+};
+*/
+
+// Mind control for hackers
 // mindfulness = ta kontroll över sitt tänkande, sina tankar
 
 /*
@@ -55,7 +70,7 @@ globals
 memory
 primfuns
 symbols
-string memory
+string memory (string constants)
 
 make allocate/init method
 
@@ -100,7 +115,19 @@ typedef struct __VInterp
   int          numCallStackFrames;
   int          callStackTop;        // Current stackframe
   VStackFrame* callStack;
+/*
+  int stringMemSize;
+  char* firstFree;
+  char* stringMem;
 
+  int numSymbols;
+  int firstFree;
+  char** symbolTable;
+
+  int numPrims;
+  int firstFree;
+  PrimFunEntry* primFunTable;
+*/
   VMem*        mem;                 // Item memory
 }
 VInterp;
@@ -116,6 +143,18 @@ VInterp;
 // -------------------------------------------------------------
 // Interp
 // -------------------------------------------------------------
+
+//#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
+//#define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
+
+void PrintAlignedPtr(char* text, void* ptr)
+{
+  unsigned long addr = (unsigned long)ptr;
+  unsigned long offset = addr % 8;
+
+  printf("PTR %s: %lu\n", text, addr);
+  printf("ALN %s: %lu\n", text, offset);
+}
 
 VInterp* InterpNewWithSize(
   int numGlobalVars, int numDataStackItems,
@@ -144,6 +183,14 @@ VInterp* InterpNewWithSize(
 
   interp->mem = PtrOffset(interp->callStack, callStackByteSize);
   MemInit(InterpMem(interp), numItems);
+
+  #ifdef DEBUG
+    PrintAlignedPtr("INTERP", interp);
+    PrintAlignedPtr("GLOBVR", interp->globalVars);
+    PrintAlignedPtr("DATAST", interp->dataStack);
+    PrintAlignedPtr("CALLST", interp->callStack);
+    PrintAlignedPtr("MEMORY", interp->mem);
+  #endif
 
   return interp;
 }
@@ -439,7 +486,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     if (NULL != instruction)
     {
       // Advance instruction for next loop
-      current->instruction = GetNext(current->instruction, interp);
+      current->instruction = GetNext(instruction, interp);
 
       if (IsTypePrimFun(instruction))
       {
@@ -466,15 +513,9 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
           // Push value
           InterpStackPush(interp, value);
         }
-        else
-        {
-          // TODO: Allow unbound symbols?
-          // Push unbound symbol
-          //InterpStackPush(interp, instruction);
-        }
       }
     }
-    else // NULL == instruction
+    else // (NULL == instruction)
     {
       InterpPopStackFrame(interp);
 

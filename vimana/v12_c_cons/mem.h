@@ -29,8 +29,11 @@ VMem;
 
 #define MemStart(mem) ((mem)->start)
 
-#define AddrToPtr(addr, start) (((start) + (addr)) - 1)
-#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) + 1)
+//#define AddrToPtr(addr, start) (((start) + (addr)) - 1)
+//#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) + 1)
+
+#define AddrToPtr(addr, start) ((start) + (addr))
+#define PtrToAddr(ptr, start) (BytePtr(ptr) - (start))
 
 #define MemGet(mem, addr) VItemPtr(AddrToPtr(addr, MemStart(mem)))
 #define MemGetAddr(mem, ptr) (PtrToAddr(BytePtr(ptr), MemStart(mem)))
@@ -68,7 +71,7 @@ void MemInit(VMem* mem, int numItems)
   VAddr memByteSize = MemGetByteSize(numItems);
 
   mem->firstFree = 0; // Freelist is empty
-  mem->start = BytePtr(mem) + sizeof(VMem);
+  mem->start = BytePtr(mem) + (sizeof(VMem));
   mem->end = mem->start; // End of used space
   mem->size = (memByteSize - sizeof(VMem));
 
@@ -110,6 +113,10 @@ VItem* MemAlloc(VMem* mem)
 
     if (mem->end < mem->start + mem->size)
     {
+      // We have a bit of truble here, because the first item will have addr 0,
+      // and address zero is the list terminator. This means you won't be able 
+      // to reference the first item allocated in the next field.
+      // This can be fixed, but I will leave it as is for now.
       item = VItemPtr(mem->end);
       mem->end += sizeof(VItem);
     }

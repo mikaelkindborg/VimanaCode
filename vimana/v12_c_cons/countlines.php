@@ -119,6 +119,12 @@ Version v12_c_cons:
   NumLinesCode:     1385
   NumLinesComments: 581
   NumLinesBlank:    336
+220704:
+  // Cleanup of memory management
+  NumLines:         2518
+  NumLinesCode:     1445
+  NumLinesComments: 683
+  NumLinesBlank:    390
 
 Version v11_c_minimal:
 

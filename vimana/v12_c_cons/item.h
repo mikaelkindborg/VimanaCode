@@ -58,7 +58,7 @@ ListHead   --> ListHead   --> SecondItem
                  !
                FirstItem  --> SecondItem
 
-Note that a list item always is of TypeList (or TypeFun/FunX).
+Note that a list item always is of TypeList or TypeFun.
 The list item functions as the head of the list. The elements
 of the list have types that correspond to the data they hold.
 
@@ -138,7 +138,6 @@ enum ItemType
   TypeSymbol,      // Pushable types must go before TypeSymbol
   TypePrimFun,     // Primitive function
   TypeFun,         // Vimana function
-  TypeFunX,        // Vimana "macro" function
   TypeBuffer,      // Never used on the data stack
   __TypeSentinel__
 };
@@ -188,7 +187,6 @@ void ItemSetNext(VItem* item, VAddr addr)
 #define IsTypeSymbol(item)       (TypeSymbol == ItemGetType(item))
 #define IsTypePrimFun(item)      (TypePrimFun == ItemGetType(item))
 #define IsTypeFun(item)          (TypeFun == ItemGetType(item))
-#define IsTypeFunX(item)         (TypeFunX == ItemGetType(item))
 #define IsTypeBuffer(item)       (TypeBuffer == ItemGetType(item))
 
 // Pushable items are types that are pushed
@@ -202,8 +200,7 @@ void ItemSetNext(VItem* item, VAddr addr)
   IsTypeSymbol(item) || IsTypePrimFun(item) || IsTypeBuffer(item))
 
 // List types
-#define IsList(item) \
-  (IsTypeList(item) || IsTypeFun(item) || IsTypeFunX(item))
+#define IsList(item) (IsTypeList(item) || IsTypeFun(item))
 
 // Empty list
 #define IsEmpty(item) \

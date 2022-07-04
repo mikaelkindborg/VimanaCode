@@ -16,6 +16,16 @@ MemAllocCounter: 0
 SysAllocCounter: 0
 ./a.out fib3.vimana  2.36s user 0.00s system 96% cpu 2.444 total
 
+Vimana 2022-07-04 (37 fib)
+miki@mikis-Air v12_c_cons % cc vimana.c -Ofast      
+miki@mikis-Air v12_c_cons % time ./a.out fib3.vimana
+24157817
+MemAllocCounter: 12
+MemAllocCounter: 0
+SysAllocCounter: 0
+./a.out fib3.vimana  2.36s user 0.01s system 85% cpu 2.776 total
+miki@mikis-Air v12_c_cons % cc vimana.c -Ofast      
+
 Vimana 2022-06-08 (40 fib)
 miki@mikis-MacBook-Air v12_c_cons % cc vimana.c -Ofast      
 miki@mikis-MacBook-Air v12_c_cons % time ./a.out fib3.vimana

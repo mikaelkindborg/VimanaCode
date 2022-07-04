@@ -53,10 +53,9 @@ void PrintItem(VItem* item, VInterp* interp)
     printf("[FUN] ");
     PrintList(item, interp);
   }  
-  else if (IsTypeFunX(item))
+  else
   {
-    printf("[FUNX] ");
-    PrintList(item, interp);
+    GURU_MEDITATION(PRINT_ITEM_UNKNOWN_TYPE);
   }
 }
 
