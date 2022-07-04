@@ -35,10 +35,23 @@ Steam punk engine
 
 programmable model steam engine
 
+https://en.wikipedia.org/wiki/List_of_emoticons
+
+
+(1 2 3 4 5) (2 *) map 
+
+=^_^=
+
+[^_^]
+
+-_-
 
 
 
-(1 2 3 4 5) (2 *) map
+(1 2 3 4 5) (2 *) (map) do
+(1 2 3 4 5) (2 *) (map)!
+(1 2 3 4 5) (2 *) (map)[o_o]  ascii art language 
+(1 2 3 4 5) (2 *) (map)@
 
 (map)
   ([xy] x isempty
@@ -55,8 +68,8 @@ programmable model steam engine
 (map)
   ([aba] isempty
     ([] [] ())
-    ([aba] rest [aba] first [aa] call map cons)
-  ifelse) def
+    ([aba] rest [aba] first [bb] call map cons)
+  ifelse) defx
 
 (map)
   (over isempty
@@ -64,7 +77,7 @@ programmable model steam engine
     (over rest 
       over first dup call 
         map cons)
-  ifelse) def
+  ifelse) defx
 
 */
 
