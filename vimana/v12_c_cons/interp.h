@@ -61,87 +61,35 @@ struct __VStackFrame
 // Mind control for hackers
 // mindfulness = ta kontroll över sitt tänkande, sina tankar
 
-/*
-
-Make pointers to structs:
-data stack
-call stack
-globals
-memory
-primfuns
-symbols
-string memory (string constants)
-
-make allocate/init method
-
-struct VArray
+struct __VStringArray
 {
-  int   capacity;
-  int   length;
-  void* array;
+  char**          start;
+  char**          end;
+  int             size;
 }
-
-struct
-{
-  int   capacity;
-  int   top;
-  void* stack;
-} 
-datastack;
-
-char** symbolTable;
-
-
-  VGlobalVars globalVars
-  VDataStack
-  VCallStack
-
-  VSymbolTable  symbolTable;
-  VSstringMem   stringMem;
-  VPrimFunTable primFunTable;
-*/
+VStringArray;
 
 typedef struct __VInterp
 {
-  int          run;
+  int             run;                 // Run flag
 
-  VItemArray    globalVars;
-  VItemArray    dataStack;
-  VCallStack    callStack;
-  VPtrArray     symbolTable;
-  VPtrArray     primFunTable;
-  VStringTable  stringTable;
-  VItemMemory   itemMemory;
+  VItem*          globalVars;          // Global items
+  int             globalVarsSize;      // Max number of global vars
 
-  int          globalNumVars;
-  VItem*       globalVars;
+  VPrimFun*       primFunTable;        // PrimFun pointers
+  int             primFunTableSize;    // Max number of primfuns
 
-  int          dataStackNumItems;
-  int          dataStackTop;
-  VItem*       dataStack;
+  VItem*          dataStack;           // Data stack items
+  int             dataStackSize;       // Max number of item on the stack
+  int             dataStackTop;        // Top of datastack
 
-  int          callStackNumFrames;
-  int          callStackTop;        // Current stackframe
-  VStackFrame* callStack;
+  VStackFrame*    callStack;           // Callstack frames
+  int             callStackSize;       // Max number of frames
+  int             callStackTop;        // Current stackframe
 
-  int          symbolTableSize;
-  int          symbolTableLength;
-  char**       symbolTable;
-
-  int          primFunTableSize;
-  int          primFunTableLength;
-  VPrimFun**   primFunTable;
-
-/*
-  int stringMemSize;
-  char* firstFree;
-  char* stringMem;
-
-  int numPrims;
-  int firstFree;
-  PrimFunEntry* primFunTable;
-*/
-  VItemMemory*        mem;                 // Item memory
+  VStringArray*   symbolNames;         // Name of global vars
+  VStringArray*   primFunNames;        // Name of primfuns
+  VItemMemory*    itemMemory;          // "Lisp" memory
 }
 VInterp;
 
