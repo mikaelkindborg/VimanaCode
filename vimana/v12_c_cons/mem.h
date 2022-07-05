@@ -8,10 +8,10 @@ See item.h for an explanation of memory layout.
 */
 
 // -------------------------------------------------------------
-// VMem struct
+// VItemMemory struct
 // -------------------------------------------------------------
 
-typedef struct __VMem
+typedef struct __VItemMemory
 {
   VByte* start;     // Start of item memory
   VByte* end;       // End of used memory (first free)
@@ -21,7 +21,7 @@ typedef struct __VMem
   int    allocCounter;
   #endif
 }
-VMem;
+VItemMemory;
 
 // -------------------------------------------------------------
 // Item access
@@ -44,12 +44,12 @@ VMem;
 #define MemGetNext(mem, item) \
   (ItemGetNext(item) ? MemGet(mem, ItemGetNext(item)) : NULL)
 
-void MemSetFirst(VMem* mem, VItem* item, VItem* first)
+void MemSetFirst(VItemMemory* mem, VItem* item, VItem* first)
 {
   ItemSetFirst(item, MemGetAddr(mem, first));
 }
 
-void MemSetNext(VMem* mem, VItem* item, VItem* next)
+void MemSetNext(VItemMemory* mem, VItem* item, VItem* next)
 {
   ItemSetNext(item, MemGetAddr(mem, next));
 }
@@ -61,19 +61,19 @@ void MemSetNext(VMem* mem, VItem* item, VItem* next)
 // Return number of bytes needed to hold header struct plus items
 int MemGetByteSize(int numItems)
 {
-  // Size of VMem header plus item memory space in bytes
-  int byteSize = sizeof(VMem) + (numItems * sizeof(VItem));
+  // Size of VItemMemory header plus item memory space in bytes
+  int byteSize = sizeof(VItemMemory) + (numItems * sizeof(VItem));
   return byteSize;
 }
 
-void MemInit(VMem* mem, int numItems)
+void MemInit(VItemMemory* mem, int numItems)
 {
   VAddr memByteSize = MemGetByteSize(numItems);
 
   mem->firstFree = 0; // Freelist is empty
-  mem->start = BytePtr(mem) + (sizeof(VMem));
+  mem->start = BytePtr(mem) + (sizeof(VItemMemory));
   mem->end = mem->start; // End of used space
-  mem->size = (memByteSize - sizeof(VMem));
+  mem->size = (memByteSize - sizeof(VItemMemory));
 
   #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
@@ -81,7 +81,7 @@ void MemInit(VMem* mem, int numItems)
 }
 
 #ifdef TRACK_MEMORY_USAGE
-void MemPrintAllocCounter(VMem* mem)
+void MemPrintAllocCounter(VItemMemory* mem)
 {
   Print("MemAllocCounter: "); 
   PrintIntNum(mem->allocCounter); 
@@ -94,7 +94,7 @@ void MemPrintAllocCounter(VMem* mem)
 // -------------------------------------------------------------
 
 // Allocate an item
-VItem* MemAlloc(VMem* mem)
+VItem* MemAlloc(VItemMemory* mem)
 {
   VItem* item;
   VAddr  addr;
@@ -142,7 +142,7 @@ VItem* MemAlloc(VMem* mem)
   return item;
 }
 
-void MemDeallocItem(VMem* mem, VItem* item)
+void MemDeallocItem(VItemMemory* mem, VItem* item)
 {
   if (IsTypeNone(item)) return;
 
@@ -181,7 +181,7 @@ void MemDeallocItem(VMem* mem, VItem* item)
 // Ownership of bufferPtr goes to the memory manager
 // bufferPtr must be allocated with SysAlloc (malloc)
 //
-VItem* MemAllocHandle(VMem* mem, void* bufferPtr, VType type)
+VItem* MemAllocHandle(VItemMemory* mem, void* bufferPtr, VType type)
 {
   VItem* item = MemAlloc(mem);
   ItemSetType(item, type);
@@ -198,7 +198,7 @@ VItem* MemAllocHandle(VMem* mem, void* bufferPtr, VType type)
 
 // Returns the pointer of the buffer the item refers to.
 // TODO: Use GURU_MEDITATION instead of returning NULL?
-void* MemGetHandlePtr(VMem* mem, VItem* item)
+void* MemGetHandlePtr(VItemMemory* mem, VItem* item)
 {
   if (!(IsTypeString(item) || IsTypeHandle(item))) return NULL;
 
@@ -214,7 +214,7 @@ void* MemGetHandlePtr(VMem* mem, VItem* item)
 // Garbage collection
 // -------------------------------------------------------------
 
-void MemMark(VMem* mem, VItem* item)
+void MemMark(VItemMemory* mem, VItem* item)
 {
   while (item)
   {
@@ -238,7 +238,7 @@ void MemMark(VMem* mem, VItem* item)
   }
 }
 
-void MemSweep(VMem* mem)
+void MemSweep(VItemMemory* mem)
 {
   VByte* ptr = mem->start;
 

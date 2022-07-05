@@ -20,7 +20,7 @@ datastack   10 x 4  =   40 bytes
 globalvars  20 x 4  =   80 bytes
 items      200 x 4  =  800 bytes
 + sizeof(VInterp)       20 bytes
-+ sizeof(VMem)           8 bytes
++ sizeof(VItemMemory)           8 bytes
                       ----------
 Core memory           1068 bytes
 
@@ -105,30 +105,43 @@ typedef struct __VInterp
 {
   int          run;
 
-  int          numGlobalVars;
+  VItemArray    globalVars;
+  VItemArray    dataStack;
+  VCallStack    callStack;
+  VPtrArray     symbolTable;
+  VPtrArray     primFunTable;
+  VStringTable  stringTable;
+  VItemMemory   itemMemory;
+
+  int          globalNumVars;
   VItem*       globalVars;
 
-  int          numDataStackItems;
+  int          dataStackNumItems;
   int          dataStackTop;
   VItem*       dataStack;
 
-  int          numCallStackFrames;
+  int          callStackNumFrames;
   int          callStackTop;        // Current stackframe
   VStackFrame* callStack;
+
+  int          symbolTableSize;
+  int          symbolTableLength;
+  char**       symbolTable;
+
+  int          primFunTableSize;
+  int          primFunTableLength;
+  VPrimFun**   primFunTable;
+
 /*
   int stringMemSize;
   char* firstFree;
   char* stringMem;
 
-  int numSymbols;
-  int firstFree;
-  char** symbolTable;
-
   int numPrims;
   int firstFree;
   PrimFunEntry* primFunTable;
 */
-  VMem*        mem;                 // Item memory
+  VItemMemory*        mem;                 // Item memory
 }
 VInterp;
 
@@ -156,6 +169,7 @@ void PrintAlignedPtr(char* text, void* ptr)
   printf("ALN %s: %lu\n", text, offset);
 }
 
+// TODO: Check aligntment of pointers
 VInterp* InterpNewWithSize(
   int numGlobalVars, int numDataStackItems,
   int numCallStackFrames, int numItems)

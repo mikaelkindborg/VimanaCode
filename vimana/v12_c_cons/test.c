@@ -117,7 +117,7 @@ void TestMemAlloc()
 {
   LogTest("TestMemAlloc");
 
-  VMem* mem = SysAlloc(MemGetByteSize(10));
+  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
 
   VItem* item;
@@ -147,7 +147,7 @@ void TestMemAlloc()
 }
 
 // Helper function
-VItem* AllocMaxItems(VMem* mem)
+VItem* AllocMaxItems(VItemMemory* mem)
 {
   // Alloc items until out of memory
 
@@ -180,7 +180,7 @@ VItem* AllocMaxItems(VMem* mem)
 }
 
 // Helper function
-int CountItems(VItem* first, VMem* mem)
+int CountItems(VItem* first, VItemMemory* mem)
 {
   int counter = 0;
   VItem* item = first;
@@ -193,7 +193,7 @@ int CountItems(VItem* first, VMem* mem)
 }
 
 // Helper function
-void PrintItems(VItem* first, VMem* mem)
+void PrintItems(VItem* first, VItemMemory* mem)
 {
   VItem* item = first;
   while (item)
@@ -208,7 +208,7 @@ void TestAllocDealloc()
 {
   LogTest("TestAllocDealloc");
 
-  VMem* mem = SysAlloc(MemGetByteSize(10));
+  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
 
   PrintLine("Alloc max");
@@ -243,7 +243,7 @@ void TestSetFirst()
   VItem* next;
   VAddr addr;
 
-  VMem* mem = SysAlloc(MemGetByteSize(10));
+  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
 
   first = MemAlloc(mem);
@@ -290,7 +290,7 @@ void TestStringItem()
 
   VItem* item;
   
-  VMem* mem = SysAlloc(MemGetByteSize(10));
+  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
 
   char* str1 = "Hi there";
@@ -315,7 +315,7 @@ void TestMemGetHandlePtr()
 
   VItem* item;
   
-  VMem* mem = SysAlloc(MemGetByteSize(10));
+  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
 
   char* str1 = "Hi there";
@@ -385,7 +385,7 @@ void TestArrayWithStringItems()
   LogTest("TestArrayWithStringItems");
 
   // Make room for 5 string items and 5 buffer items
-  VMem* mem = SysAlloc(MemGetByteSize(10));
+  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
   MemInit(mem, 10);
 
   VItem* item;
@@ -562,7 +562,7 @@ int main()
 /*
 void TestParseSymbolicCode()
 {
-  VMem* mem = MemNew(1000);
+  VItemMemory* mem = MemNew(1000);
   char* code = "N-42 N44 (P1 N2 (N3 (P4)) N5 N6) N0 (((N88";
   VItem* first = ParseSymbolicCode(code, mem);
   MemPrintList(mem, first);

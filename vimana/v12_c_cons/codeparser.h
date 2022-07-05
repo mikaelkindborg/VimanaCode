@@ -55,7 +55,7 @@ char* ParseString(char* p, VString** pString)
 // p is the current position in the string.
 // Returns the new current position. 
 // Parsed list is returned in first.
-char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
+char* __ParseSymbolicCode(char* p, VItem** first, VItemMemory* mem)
 {
   VItem*   item;
   VItem*   child;
@@ -143,7 +143,7 @@ char* __ParseSymbolicCode(char* p, VItem** first, VMem* mem)
 }
 
 // Returns list. 
-VItem* ParseSymbolicCode(char* p, VMem* mem)
+VItem* ParseSymbolicCode(char* p, VItemMemory* mem)
 {
   VItem* list;
   __ParseSymbolicCode(p, &list, mem);
