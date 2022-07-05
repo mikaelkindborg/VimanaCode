@@ -22,26 +22,25 @@ void PrimFun_printstack(VInterp* interp)
   PrintNewLine();
 }
 
-// Eval in current context
 void PrimFun_eval(VInterp* interp)
 {
   VItem* codeBlock = InterpStackPop(interp);
-  InterpPushEvalStackFrame(interp, codeBlock);
+  InterpPushStackFrame(interp, codeBlock);
 }
-
+/*
 // Eval in new context (function call)
 void PrimFun_call(VInterp* interp)
 {
   VItem* codeBlock = InterpStackPop(interp);
   InterpPushFunCallStackFrame(interp, codeBlock);
 }
-
+*/
 void PrimFun_iftrue(VInterp* interp)
 {
   VItem* trueBlock = InterpStackPop(interp);
   VItem* trueOrFalse = InterpStackPop(interp);
   if (trueOrFalse->intNum)
-    InterpPushEvalStackFrame(interp, trueBlock);
+    InterpPushStackFrame(interp, trueBlock);
 }
 
 void PrimFun_iffalse(VInterp* interp)
@@ -49,7 +48,7 @@ void PrimFun_iffalse(VInterp* interp)
   VItem* falseBlock = InterpStackPop(interp);
   VItem* trueOrFalse = InterpStackPop(interp);
   if (! trueOrFalse->intNum)
-    InterpPushEvalStackFrame(interp, falseBlock);
+    InterpPushStackFrame(interp, falseBlock);
 }
 
 void PrimFun_ifelse(VInterp* interp)
@@ -58,9 +57,9 @@ void PrimFun_ifelse(VInterp* interp)
   VItem* trueBlock = InterpStackPop(interp);
   VItem* trueOrFalse = InterpStackPop(interp);
   if (trueOrFalse->intNum)
-    InterpPushEvalStackFrame(interp, trueBlock);
+    InterpPushStackFrame(interp, trueBlock);
   else
-    InterpPushEvalStackFrame(interp, falseBlock);
+    InterpPushStackFrame(interp, falseBlock);
 }
 
 void PrimFun_setglobal(VInterp* interp)

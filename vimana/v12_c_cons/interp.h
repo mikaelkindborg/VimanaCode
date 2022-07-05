@@ -43,6 +43,8 @@ struct __VStackFrame
 };
 
 /*
+Alternatives for dynamic number local vars:
+
 struct __VStackFrame
 {
   VItem*       instruction;  // Current instruction
@@ -54,8 +56,18 @@ struct __VStackFrame
 {
   VItem*       instruction;  // Current instruction
   VStackFrame* context;      // Stack frame that holds local vars
-  int          numlocals;    // number of localvars
+  int          numlocals;    // number of localvars that follow the stackframe
 };
+
+struct __VStackFrame
+{
+  VItem*       instruction;  // Current instruction
+  VStackFrame* context;      // Stack frame that holds local vars
+  int          hasLocals; 
+  int          numlocals;    // number of localvars that follow the stackframe
+};
+
+
 */
 
 // Mind control for hackers
@@ -278,7 +290,7 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* list)
   current->instruction = GetFirst(list, interp);
 }
 
-void InterpPushEvalStackFrame(VInterp* interp, VItem* list)
+void InterpPushStackFrame(VInterp* interp, VItem* list)
 {
   // The current stackframe is the parent for the new stackframe
   VStackFrame* parent = InterpGetStackFrame(interp);
@@ -300,39 +312,9 @@ void InterpPushEvalStackFrame(VInterp* interp, VItem* list)
 
     current = InterpGetStackFrame(interp);
 
-    // Eval uses the parent environment
+    // Access the local vars of the parent until new scope is introduced
     current->context = parent;
   }
-
-  // Set first instruction in the new frame
-  current->instruction = GetFirst(list, interp);
-}
-
-void InterpPushFunCallStackFrame(VInterp* interp, VItem* list)
-{
-  // The current stackframe is the parent for the new stackframe
-  VStackFrame* parent = InterpGetStackFrame(interp);
-
-  // Assume tailcall
-  VStackFrame* current = parent;
-
-  // Check tailcall (are there any instructions left?)
-  if (parent->instruction)
-  {
-    // NON-TAILCALL - PUSH NEW STACK FRAME
-
-    ++ interp->callStackTop;
-
-    if (interp->callStackTop >= interp->numCallStackFrames)
-    {
-      GURU_MEDITATION(CALL_STACK_OVERFLOW);
-    }
-
-    current = InterpGetStackFrame(interp);
-  }
-
-  // Functions have their own local environment
-  current->context = current;
 
   // Set first instruction in the new frame
   current->instruction = GetFirst(list, interp);
@@ -356,6 +338,12 @@ void InterpPopStackFrame(VInterp* interp)
 void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
 {
   VStackFrame* frame = InterpGetStackFrame(interp);
+
+  // Set context to this stackframe when a local variable is introduced.
+  // This creates a new "scope".
+  // Note: Function cannot alter the variables in the parent scope, 
+  // only read them. This is by design.
+  frame->context = frame;
 
   // Copy item
   frame->context->localVars[index] = *item;
@@ -460,7 +448,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         if (IsTypeFun(value))
         {
           // Call function
-          InterpPushFunCallStackFrame(interp, value);
+          InterpPushStackFrame(interp, value);
         }
         else
         if (!IsTypeNone(value))
