@@ -61,14 +61,6 @@ struct __VStackFrame
 // Mind control for hackers
 // mindfulness = ta kontroll över sitt tänkande, sina tankar
 
-struct __VStringArray
-{
-  char**          start;
-  char**          end;
-  int             size;
-}
-VStringArray;
-
 typedef struct __VInterp
 {
   int             run;                 // Run flag
@@ -87,9 +79,10 @@ typedef struct __VInterp
   int             callStackSize;       // Max number of frames
   int             callStackTop;        // Current stackframe
 
-  VStringArray*   symbolNames;         // Name of global vars
-  VStringArray*   primFunNames;        // Name of primfuns
   VItemMemory*    itemMemory;          // "Lisp" memory
+  VStringTable*   symbolNames;         // Name of global vars
+  VStringTable*   primFunNames;        // Name of primfuns
+  VStringMemory*  stringMemory;        // Mostly immutable strings
 }
 VInterp;
 

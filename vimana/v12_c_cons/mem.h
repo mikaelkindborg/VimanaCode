@@ -70,10 +70,10 @@ void MemInit(VItemMemory* mem, int numItems)
 {
   VAddr memByteSize = MemGetByteSize(numItems);
 
-  mem->firstFree = 0; // Freelist is empty
   mem->start = BytePtr(mem) + (sizeof(VItemMemory));
   mem->end = mem->start; // End of used space
   mem->size = (memByteSize - sizeof(VItemMemory));
+  mem->firstFree = 0; // Freelist is empty
 
   #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;

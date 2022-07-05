@@ -1,0 +1,16 @@
+Debugging notes:
+
+https://sourceforge.net/projects/randompausedemo/
+https://books.google.dk/books?id=8A43E1UFs_YC&hl=da
+https://stackoverflow.com/questions/375913/how-can-i-profile-c-code-running-on-linux/378024#378024
+https://stackoverflow.com/questions/926266/performance-optimization-strategies-of-last-resort/927773#927773
+
+https://www.developerfiles.com/debugging-c-with-clang-compiler-and-lldb/
+https://lldb.llvm.org/use/tutorial.html#controlling-your-program
+https://developer.apple.com/library/archive/documentation/IDEs/Conceptual/gdb_to_lldb_transition_guide/document/lldb-command-examples.html
+
+cc -g vimana.c
+lldb a.out
+process launch
+ctrl-c
+c (continue)

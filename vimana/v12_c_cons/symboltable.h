@@ -1,61 +1,65 @@
 /*
-File: symbols.h
+File: SymbolTable.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Lookup table for symbols. Used for parsing and printing.
+The symbol table is an array of string pointers.
 */
 
-// Global symbol table
-VArray* GSymbolTable = NULL;
-
-void SymbolTableCreate()
+struct __VSymbolTable
 {
-  if (NULL == GSymbolTable) 
-  {
-    GSymbolTable = ArrayNew(sizeof(char*), 20);
-  }
+  char**  start;
+  int     size;
+  int     length;
+}
+VSymbolTable;
+
+void SymbolTableInit(VSymbolTable* table, int size)
+{
+  VArray* array = SysAlloc(sizeof(VSymbolTable) + (size * sizeof(char*));
+
+  table->start = (char**) PtrOffset(array, sizeof(VSymbolTable));
+  table->size = size;
+  table->length = 0;
 }
 
-void SymbolTableFree()
+char* SymbolTableGet(VSymbolTable* table, int index)
 {
-  for (int i = 0; i < ArrayLength(GSymbolTable); ++ i)
+  if (index >= table->size)
   {
-    char* str = ArrayStringAt(GSymbolTable, i);
-    SysFree(str);
+    GURU_MEDITATION(SYMBOL_TABLE_OUT_OF_BOUNDS);
   }
 
-  ArrayFree(GSymbolTable);
-
-  GSymbolTable = NULL;
+  return table[index];
 }
 
-// Finds or adds a string to the symbol table and 
-// returns the symbol index
-// string is copied
-int SymbolTableFindAdd(char* string)
+// Return index of added item
+int SymbolTableAdd(VSymbolTable* table, char* str)
 {
-  // Grow array if needed
-  GSymbolTable = ArrayGrow(GSymbolTable, ArrayLength(GSymbolTable));
-  
-  int index;
+   table[array->length] = str;
+   ++ table->length;
+   return table->length;
+}
 
-  for (index = 0; index < ArrayLength(GSymbolTable); ++ index)
+int SymbolTableAddIfNew(VSymbolTable* table, char* str)
+{
+   table[array->length] = str;
+   ++ table->length;
+   return table->length;
+}
+
+// Return index of existing or added string
+// The string is not copied
+int SymbolTableFind(VSymbolTable* table, char* str)
+{
+  for (int index = 0; index < table->length; ++ index)
   {
-    char* str = ArrayStringAt(GSymbolTable, index);
-    if (StrEquals(str, string))
+    char* str2 = SymbolTableGet(table, index);
+    if (StrEquals(str, str2))
     {
       return index; // Found existing symbol
     }
   }
 
   // Symbol not found, add it
-  ArrayStringAt(GSymbolTable, index) = StrCopy(string);
-  
-  return index;
-}
-
-// Returns string for symbol at index
-char* SymbolTableGet(int index)
-{
-  return ArrayStringAt(GSymbolTable, index);
+  return SymbolTableAdd(table, str);
 }
