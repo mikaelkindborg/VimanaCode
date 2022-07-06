@@ -1,5 +1,5 @@
 /*
-File: printlist.h
+File: printitem.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
 Functions for printing lists and items.

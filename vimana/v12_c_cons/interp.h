@@ -77,28 +77,29 @@ typedef struct __VInterp
 {
   int             run;                 // Run flag
 
-  VItem*          globalVars;          // Global items
-  int             globalVarsSize;      // Max number of global vars
+  VItem*          globalVarTable;      // Global items
+  int             globalVarTableMax;   // Max number of global vars
 
-  VPrimFun*       primFunTable;        // PrimFun pointers
-  int             primFunTableSize;    // Max number of primfuns
+  VPrimFun*       primFunTable;        // PrimFun function pointer table
+  int             primFunTableMax;     // Max number of primfuns
 
   VItem*          dataStack;           // Data stack items
-  int             dataStackSize;       // Max number of item on the stack
+  int             dataStackMax;        // Max number of item on the stack
   int             dataStackTop;        // Top of datastack
 
   VStackFrame*    callStack;           // Callstack frames
-  int             callStackSize;       // Max number of frames
+  int             callStackMax;        // Max number of frames
   int             callStackTop;        // Current stackframe
 
   VItemMemory*    itemMemory;          // "Lisp" memory
-  VStringTable*   symbolNames;         // Name of global vars
-  VStringTable*   primFunNames;        // Name of primfuns
-  VStringMemory*  stringMemory;        // Mostly immutable strings
+  VSymbolTable*   symbolNames;         // Names of global vars
+  VSymbolTable*   primFunNames;        // Names of primfuns
+  VSymbolMemory*  symbolMemory;        // Immutable symbol memory
 }
 VInterp;
 
-#define InterpMem(interp) ((interp)->mem)
+#define InterpMem(interp) ((interp)->itemMemory)
+#define InterpSymbolMem(interp) ((interp)->symbolMemory)
 
 // Seems to be slower?
 //#define InterpGetStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
@@ -109,9 +110,6 @@ VInterp;
 // -------------------------------------------------------------
 // Interp
 // -------------------------------------------------------------
-
-//#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
-//#define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
 
 void PrintAlignedPtr(char* text, void* ptr)
 {
@@ -124,39 +122,51 @@ void PrintAlignedPtr(char* text, void* ptr)
 
 // TODO: Check aligntment of pointers
 VInterp* InterpNewWithSize(
-  int numGlobalVars, int numDataStackItems,
-  int numCallStackFrames, int numItems)
+  int sizeGlobalVarTable, int sizeDataStack, int sizeCallStack, 
+  int sizePrimFunTable, int sizeItemMemory, int sizeSymbolMemory)
 {
-  int globalVarsByteSize = numGlobalVars * sizeof(VItem);
-  int dataStackByteSize  = numDataStackItems * sizeof(VItem);
-  int callStackByteSize  = numCallStackFrames * sizeof(VStackFrame);
-  int memByteSize        = MemGetByteSize(numItems);
-
+  // This block holds everything except strings, which are allocated in new blocks
   VInterp* interp = SysAlloc(
-    sizeof(VInterp) + globalVarsByteSize + 
-    dataStackByteSize + callStackByteSize + 
-    memByteSize);
+    sizeof(VInterp) + 
+    sizeof(VItemMemory) + 
+    (2 * sizeof(VSymbolMemory)) + 
+    sizeGlobalVarTable +
+    sizeDataStack +
+    sizeCallStack +
+    sizePrimFunTable +
+    sizeItemMemory +
+    sizeSymbolMemory);
 
-  interp->globalVars = PtrOffset(interp, sizeof(VInterp));
-  interp->numGlobalVars = numGlobalVars;
+  interp->globalVarTable = PtrOffset(interp, sizeof(VInterp));
+  interp->numGlobalVars = sizeGlobalVars / sizeof(VItem);
 
-  interp->dataStack = PtrOffset(interp->globalVars, globalVarsByteSize);
-  interp->numDataStackItems = numDataStackItems;
+  interp->primFunTable = PtrOffset(interp, sizeof(VInterp));
+  interp->numGlobalVars = sizeGlobalVars / sizeof(VItem);
+  
+  VPrimFun*       primFunTable;        // PrimFun pointers
+  int             primFunTableSize;    // Max number of primfuns
+
+  interp->dataStack = PtrOffset(interp->globalVars, sizeGlobalVars);
+  interp->numDataStackItems = sizeDataStack / sizeof(VItem);
   interp->dataStackTop = -1;
 
-  interp->callStack = PtrOffset(interp->dataStack, dataStackByteSize);
-  interp->numCallStackFrames = numCallStackFrames;
+  interp->callStack = PtrOffset(interp->dataStack, sizeDataStack);
+  interp->numCallStackFrames = sizeCallStack / sizeof(VStackFrame);
   interp->callStackTop = 0;
 
-  interp->mem = PtrOffset(interp->callStack, callStackByteSize);
-  MemInit(InterpMem(interp), numItems);
+  interp->itemMemory = PtrOffset(interp->callStack, sizeCallStack);
+  MemInit(interp->itemMemory, sizeItemMemory);
+
+  interp->symbolMemory = PtrOffset(interp->callStack, sizeCallStack);
+  MemInit(interp->symbolMemory, sizeSymbolMemory);
 
   #ifdef DEBUG
     PrintAlignedPtr("INTERP", interp);
     PrintAlignedPtr("GLOBVR", interp->globalVars);
     PrintAlignedPtr("DATAST", interp->dataStack);
     PrintAlignedPtr("CALLST", interp->callStack);
-    PrintAlignedPtr("MEMORY", interp->mem);
+    PrintAlignedPtr("MEMORY", interp->itemMemory);
+    PrintAlignedPtr("SYMMEM", interp->symbolMemory);
   #endif
 
   return interp;
@@ -165,10 +175,11 @@ VInterp* InterpNewWithSize(
 VInterp* InterpNew()
 {
   return InterpNewWithSize(
-    100, // numGlobalVars,
-    100, // numDataStackItems, 
-    100, // numCallStackFrames
-    1000 // numItems
+    100  * sizeof(VItem),       // sizeGlobalVars
+    100  * sizeof(VItem),       // sizeDataStack
+    100  * sizeof(VStackFrame), // sizeCallStack
+    1000 * sizeof(VItem),       // sizeItemMemory 
+    1024 * sizeof(char)         // sizeSymbolMemory
   );
 }
 
@@ -234,6 +245,50 @@ void InterpGC(VInterp* interp)
   #endif
 }
 
+// -------------------------------------------------------------
+// Prim funs
+// -------------------------------------------------------------
+
+void InterpPrimFunAdd(char* name, VPrimFunPtr fun)
+{
+  PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, ArrayLength(GPrimFunTable));
+
+  entry->name = name; //StrCopy(name);
+  entry->fun = fun;
+}
+
+VPrimFunPtr LookupPrimFunPtr(int index)
+{
+  return ArrayPrimFunEntryAt(GPrimFunTable, index)->fun;
+}
+
+int LookupPrimFun(char* name)
+{
+  for (int i = 0; i < ArrayLength(GPrimFunTable); ++ i)
+  {
+    PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, i);
+    if (StrEquals(entry->name, name))
+    {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+char* LookupPrimFunName(VPrimFunPtr primFun)
+{
+  for (int i = 0; i < ArrayLength(GPrimFunTable); ++ i)
+  {
+    PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, i);
+    if (primFun == entry->fun)
+    {
+      return entry->name;
+    }
+  }
+
+  return NULL;
+}
 // -------------------------------------------------------------
 // Data stack
 // -------------------------------------------------------------

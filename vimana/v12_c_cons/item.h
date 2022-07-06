@@ -6,7 +6,7 @@ Items are like conses in Lisp. They hold a value and
 an address to the next item.
 
 Items are equal size and allocated from a larger block by the
-memory manager in mem.h. 
+memory manager in itemmemory.h. 
 
 Items are copied when pushed onto the data stack and 
 assigned to variables. The data stack and global variables
@@ -82,7 +82,7 @@ stack are not in managed memory.
 
 An item does not use raw pointers to address first and next.
 Instead an index is used which references item memory.
-Item memory (mem.h) is essentially just an array, and indexes
+Item memory (itemmemory.h) is essentially just an array, and indexes
 are used to access items in this array. Such an index is
 call *address* or simply *addr*.
 
@@ -90,7 +90,7 @@ Addresses (indexes) are used to save space by not having to
 store full pointers to items. This enables type info to be
 kept in the item next field.
 
-See mem.h for details on how managed memory is allocated and 
+See itemmemory.h for details on how managed memory is allocated and 
 how addresses are used to reference items.
 
 Pointers to allocated memory are stored as full pointers in the

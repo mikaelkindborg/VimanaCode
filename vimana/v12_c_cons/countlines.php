@@ -53,14 +53,14 @@ $files = [
   "print.h",
   "alloc.h",
   "string.h",
-  "array.h",
   "file.h",
-  "item.h",
-  "mem.h",
+  "symbolmemory.h",
   "symboltable.h",
-  "primfuntable.h",
+  "item.h",
+  "itemmemory.h",
   "interp.h",
   "parser.h",
+  "printitem.h",
   "primfuns.h",
 ];
 

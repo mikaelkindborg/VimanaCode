@@ -1,5 +1,5 @@
 /*
-File: mem.h
+File: itemmemory.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
 Memory manager for Lisp-style linked lists.
@@ -13,8 +13,8 @@ See item.h for an explanation of memory layout.
 
 typedef struct __VItemMemory
 {
-  VByte* start;     // Start of item memory
-  VByte* end;       // End of used memory (first free)
+  VByte* start;     // Start of memory block
+  VByte* nextFree;  // First free item in memory block
   VAddr  firstFree; // Address to first item in freelist
   VAddr  size;      // Total size of item memory
   #ifdef TRACK_MEMORY_USAGE
@@ -58,12 +58,10 @@ void MemSetNext(VItemMemory* mem, VItem* item, VItem* next)
 // Initialize
 // -------------------------------------------------------------
 
-// Return number of bytes needed to hold header struct plus items
+// Return size of VItemMemory header plus item memory space in bytes
 int MemGetByteSize(int numItems)
 {
-  // Size of VItemMemory header plus item memory space in bytes
-  int byteSize = sizeof(VItemMemory) + (numItems * sizeof(VItem));
-  return byteSize;
+  return sizeof(VItemMemory) + (numItems * sizeof(VItem));
 }
 
 void MemInit(VItemMemory* mem, int numItems)
@@ -71,7 +69,7 @@ void MemInit(VItemMemory* mem, int numItems)
   VAddr memByteSize = MemGetByteSize(numItems);
 
   mem->start = BytePtr(mem) + (sizeof(VItemMemory));
-  mem->end = mem->start; // End of used space
+  mem->nextFree = mem->start;
   mem->size = (memByteSize - sizeof(VItemMemory));
   mem->firstFree = 0; // Freelist is empty
 
@@ -111,14 +109,14 @@ VItem* MemAlloc(VItemMemory* mem)
   {
     // ALLOCATE FROM UNUSED MEMORY
 
-    if (mem->end < mem->start + mem->size)
+    if (mem->nextFree < mem->start + mem->size)
     {
       // We have a bit of truble here, because the first item will have addr 0,
       // and address zero is the list terminator. This means you won't be able 
       // to reference the first item allocated in the next field.
       // This can be fixed, but I will leave it as is for now.
-      item = VItemPtr(mem->end);
-      mem->end += sizeof(VItem);
+      item = VItemPtr(mem->nextFree);
+      mem->nextFree += sizeof(VItem);
     }
     else
     {
@@ -242,7 +240,7 @@ void MemSweep(VItemMemory* mem)
 {
   VByte* ptr = mem->start;
 
-  while (ptr < mem->end)
+  while (ptr < mem->nextFree)
   {
     if (ItemGetGCMark(VItemPtr(ptr)))
     {

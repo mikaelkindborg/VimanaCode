@@ -14,3 +14,9 @@ lldb a.out
 process launch
 ctrl-c
 c (continue)
+
+Cool video about Forth:
+https://www.youtube.com/watch?v=7PHPQcO0O2Y
+
+Forth in Lisp:
+https://www.youtube.com/watch?v=SJB17deTOFs

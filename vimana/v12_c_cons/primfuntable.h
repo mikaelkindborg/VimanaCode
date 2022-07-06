@@ -52,6 +52,11 @@ void PrimFunAdd(char* name, VPrimFunPtr fun)
   entry->fun = fun;
 }
 
+VPrimFunPtr LookupPrimFunPtr(int index)
+{
+  return ArrayPrimFunEntryAt(GPrimFunTable, index)->fun;
+}
+
 int LookupPrimFun(char* name)
 {
   for (int i = 0; i < ArrayLength(GPrimFunTable); ++ i)
@@ -64,11 +69,6 @@ int LookupPrimFun(char* name)
   }
 
   return -1;
-}
-
-VPrimFunPtr LookupPrimFunPtr(int index)
-{
-  return ArrayPrimFunEntryAt(GPrimFunTable, index)->fun;
 }
 
 char* LookupPrimFunName(VPrimFunPtr primFun)

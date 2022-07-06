@@ -14,13 +14,11 @@ Author: Mikael Kindborg (mikael@kindborg.com)
   (IsEndOfString(c) || IsLeftParen(c)  || IsStringBegin(c) || \
    IsWhiteSpace(c)  || IsRightParen(c) || IsStringEnd(c))
 
-char GTokenBuffer[512]; // TODO: Hardcoded max length
-
 char* ParseString(char* p, char** next)
 {
   int   length = 0;
-  int   bufSize = 1024; // TODO: Hardcoded max length
-  char* buf = SysAlloc(bufSize);
+  int   bufSize = 1024; // TODO: Replace hardcoded max length with counting string length
+  char* buf = SysAlloc(bufSize); // TODO: Check NULL != buf
   char* pBuf = buf;
   int   level = 1;
 
@@ -60,24 +58,7 @@ char* ParseString(char* p, char** next)
   return buf;
 }
 
-char* GetNextToken(char* p, char** next)
-{
-  char* pbuf = GTokenBuffer;
-
-  while (!IsWhiteSpaceOrSeparatorOrEndOfString(*p))
-  {
-    *pbuf = *p;
-    ++ pbuf;
-    ++ p;
-  }
-
-  *pbuf = 0;
-  *next = p;
-
-  return GTokenBuffer;
-}
-
-VType TokenType(char* token)
+VType ParseTokenType(char* token)
 {
   char* p = token;
   int   dec = 0; // Decimal sign counter
@@ -114,8 +95,9 @@ Exit:
 
 VItem* ParseToken(char* token, VInterp* interp)
 {
+  VType type = ParseTokenType(token);
+
   VItem* item = AllocItem(interp);
-  VType type = TokenType(token);
 
   if (TypeIntNum == type)
   {
@@ -135,11 +117,25 @@ VItem* ParseToken(char* token, VInterp* interp)
     if (primFunId > -1)
     {
       ItemSetPrimFun(item, primFunId);
+      SymbolMemResetPos(InterpSymbolMem(interp));
     }
     else
     {
-      int symbol = SymbolTableFindAdd(token);
-      ItemSetSymbol(item, symbol);
+      int symbolIndex = SymbolTableFind(InterpGetSymbolTable(interp), token);
+      if (symbolIndex < 0)
+      {
+        // New symbol - add it to symbol table
+        SymbolMemWriteFinish(InterpSymbolMem(interp));
+        symbolIndex = SymbolTableAdd(InterpGetSymbolTable(interp), token);
+      }
+      else
+      {
+        // Existing symbol, free token string
+        SymbolMemResetPos(InterpSymbolMem(interp));
+      }
+
+      // Set symbol index of item
+      ItemSetSymbol(item, symbolIndex);
     }
   }
   else
@@ -148,6 +144,22 @@ VItem* ParseToken(char* token, VInterp* interp)
   }
 
   return item;
+}
+
+// Read next token into string memory
+char* ReadNextToken(char* p, char** next, VInterp* interp)
+{
+  char* token = SymbolMemGetNextFree(InterpSymbolMem(interp));
+
+  while (!IsWhiteSpaceOrSeparatorOrEndOfString(*p))
+  {
+    SymbolMemWriteChar(InterpSymbolMem(interp), *p);
+    ++ p;
+  }
+
+  *next = p;
+
+  return token;
 }
 
 // A comment looks like this: /-- comment --/
@@ -227,7 +239,7 @@ VItem* ParseList(char* code, char** next, VInterp* interp)
     }
     else
     {
-      char* token = GetNextToken(p, &p);
+      char* token = ReadNextToken(p, &p, interp);
       item = ParseToken(token, interp);
     }
 
