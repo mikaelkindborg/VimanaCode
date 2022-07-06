@@ -6,6 +6,22 @@ Interpreter data structures and functions.
 */
 
 // -------------------------------------------------------------
+// System memory
+// -------------------------------------------------------------
+
+static VByte* GlobalSystemMemory = NULL;
+
+void SystemMemoryAlloc(size_t numBytes)
+{
+  GlobalSystemMemory = SysAlloc(numBytes);
+}
+
+VByte* SystemMemoryGet()
+{
+  return GlobalSystemMemory;
+}
+
+// -------------------------------------------------------------
 // Data types and structs
 // -------------------------------------------------------------
 
@@ -78,28 +94,21 @@ typedef struct __VInterp
   int             run;                 // Run flag
 
   VItem*          globalVarTable;      // Global items
-  int             globalVarTableMax;   // Max number of global vars
-
-  VPrimFun*       primFunTable;        // PrimFun function pointer table
-  int             primFunTableMax;     // Max number of primfuns
+  int             globalVarTableSize;  // Max number of global vars
 
   VItem*          dataStack;           // Data stack items
-  int             dataStackMax;        // Max number of item on the stack
+  int             dataStackSize;       // Max number of item on the stack
   int             dataStackTop;        // Top of datastack
 
   VStackFrame*    callStack;           // Callstack frames
-  int             callStackMax;        // Max number of frames
+  int             callStackSize;       // Max number of frames
   int             callStackTop;        // Current stackframe
 
   VItemMemory*    itemMemory;          // "Lisp" memory
-  VSymbolTable*   symbolNames;         // Names of global vars
-  VSymbolTable*   primFunNames;        // Names of primfuns
-  VSymbolMemory*  symbolMemory;        // Immutable symbol memory
 }
 VInterp;
 
 #define InterpMem(interp) ((interp)->itemMemory)
-#define InterpSymbolMem(interp) ((interp)->symbolMemory)
 
 // Seems to be slower?
 //#define InterpGetStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
@@ -122,8 +131,8 @@ void PrintAlignedPtr(char* text, void* ptr)
 
 // TODO: Check aligntment of pointers
 VInterp* InterpNewWithSize(
-  int sizeGlobalVarTable, int sizeDataStack, int sizeCallStack, 
-  int sizePrimFunTable, int sizeItemMemory, int sizeSymbolMemory)
+  int byteSizeGlobalVarTable, int byteSizeDataStack, int byteSizeCallStack, 
+  int byteSizeItemMemory, int byteSizeSymbolMemory)
 {
   // This block holds everything except strings, which are allocated in new blocks
   VInterp* interp = SysAlloc(

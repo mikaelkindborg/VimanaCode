@@ -2,43 +2,51 @@
 File: symboltable.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-A symbol table is an array of string pointers 
-that maps symbol ids (indexes) to strings.
+The symbol table maps symbol ids (indexes) to strings.
 */
 
-struct __VSymbolTable
-{
-  char**  start;
-  int     size;
-  int     length;
-}
-VSymbolTable;
+// Global symbol table
+// This pointer is set elsewhere
+static char** GlobalSymbolTable = NULL;
 
-void SymbolTableInit(VSymbolTable* table, int size)
+// Number of entries in the table
+static int GlobalSymbolTableSize = 0;
+
+// Max number of entries
+static int GlobalSymbolTableMaxSize = 0;
+
+void SymbolTableInit(void* table, int maxSize)
 {
-  table->start = (char**) PtrOffset(table, sizeof(VSymbolTable));
-  table->size = size;
-  table->length = 0;
+  GlobalSymbolTable = table;
+  GlobalSymbolTableMaxSize = maxSize;
 }
 
-// Return symbol string at index
-char* SymbolTableGet(VSymbolTable* table, int index)
+// Add symbol at the end of the array
+int SymbolTableAdd(char* symbol)
 {
-  if (index >= table->length)
+  if (GlobalSymbolTableSize < GlobalSymbolTableMaxSize)
   {
-    GURU_MEDITATION(SYMBOL_TABLE_INDEX_OUT_OF_BOUNDS);
+    GlobalSymbolTable[GlobalSymbolTableSize] = symbol;
+    ++ GlobalSymbolTableSize;
   }
+  else
+  {
+    GURU_MEDITATION(SYMBOL_TABLE_OUR_OF_MEMORY);
+  }
+}
 
-  return table->start[index];
+char* SymbolTableGet(int index)
+{
+  return GlobalSymbolTable[index];
 }
 
 // Return index of symbol, return -1 if not found
-int SymbolTableFind(VSymbolTable* table, char* symbol)
+int SymbolTableFind(char* symbol)
 {
-  for (int index = 0; index < table->length; ++ index)
+  for (int index = 0; index < GlobalSymbolTableSize; ++ index)
   {
-    char* str = SymbolTableGet(table, index);
-    if (StrEquals(symbol, str))
+    char* name = SymbolTableGet(index);
+    if (StrEquals(symbol, name))
     {
       return index; // Found symbol
     }
@@ -46,19 +54,4 @@ int SymbolTableFind(VSymbolTable* table, char* symbol)
 
   // Symbol not found
   return -1;
-}
-
-// Add symbol at the end of the array
-// Return the index for the new symbol
-// The symbol string is not copied
-int SymbolTableAdd(VSymbolTable* table, char* symbol)
-{
-  if (table->length >= table->size)
-  {
-    GURU_MEDITATION(SYMBOL_TABLE_OUT_OF_SPACE);
-  }
-
-   table->start[table->length] = symbol;
-   ++ table->length;
-   return table->length;
 }

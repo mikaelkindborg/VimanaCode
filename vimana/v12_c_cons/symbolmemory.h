@@ -24,6 +24,20 @@ struct __VSymbolMemory
 }
 VSymbolMemory;
 
+// Global symbol memory
+static VSymbolMemory* GlobalSymbolMemory = NULL;  
+
+void GlobalSymbolMemoryInit(void* mem, int size)
+{
+  GlobalSymbolMemory = mem;
+  SymbolMemInit(mem, size);
+}
+
+VSymbolMemory* GlobalSymbolMemoryGet()
+{
+  return GlobalSymbolMemory;
+}
+
 // Return number of bytes needed to hold header struct plus array
 int SymbolMemGetByteSize(int size)
 {

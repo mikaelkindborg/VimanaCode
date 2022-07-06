@@ -54,6 +54,7 @@ $files = [
   "alloc.h",
   "string.h",
   "file.h",
+  "primfuntable.h",
   "symbolmemory.h",
   "symboltable.h",
   "item.h",
