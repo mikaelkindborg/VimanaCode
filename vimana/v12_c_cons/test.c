@@ -3,21 +3,21 @@
 
 #include "vimana.h"
 
-int GNumFailedTests = 0;
+static int GlobalNumFailedTests = 0;
 
 void ShouldHold(char* description, int condition)
 {
   if (!condition) 
   {
-    ++ GNumFailedTests;
+    ++ GlobalNumFailedTests;
     printf("[SHOULD_HOLD] %s\n", description);
   }
 }
 
 void PrintTestResult()
 {
-  if (GNumFailedTests > 0)
-    printf("FAILED TESTS: %i\n", GNumFailedTests);
+  if (GlobalNumFailedTests > 0)
+    printf("FAILED TESTS: %i\n", G_NumFailedTests);
   else
     printf("ALL TESTS PASS\n");
 }

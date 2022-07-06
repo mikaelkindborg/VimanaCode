@@ -5,64 +5,51 @@ Author: Mikael Kindborg (mikael@kindborg.com)
 Lookup table for primfuns.
 */
 
-typedef struct __PrimFunEntry
+typedef struct __VPrimFunEntry
 {
   char*       name;
   VPrimFunPtr fun;
 }
-PrimFunEntry;
+VPrimFunEntry;
 
 // Global primfun table
-VArray* GPrimFunTable = NULL;
+// This pointer is set elsewhere
+VPrimFunEntry* GlobalPrimFunTable = NULL;
 
-// Access a PrimFunEntry in the array
-#define ArrayPrimFunEntryAt(array, index) \
-  ((PrimFunEntry*)ArrayAt(array, index))
+// Number of entries in the table
+int GlobalPrimFunTableSize = 0;
 
-void PrimFunTableCreate()
+// Add a primfun to the table
+// Param name is not copied
+// Updates index of last entry
+void PrimFunTableAdd(char* name, VPrimFunPtr fun)
 {
-  if (NULL == GPrimFunTable) 
-  {
-    GPrimFunTable = ArrayNew(sizeof(PrimFunEntry), 20);
-  }
-}
+  VPrimFunEntry* entry = GPrimFunTable[GPrimFunTableSize];
 
-void PrimFunTableFree()
-{
-  for (int i = 0; i < ArrayLength(GPrimFunTable); ++ i)
-  {
-    PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, i);
-    //SysFree(entry->name);
-  }
-
-  ArrayFree(GPrimFunTable);
-
-  GPrimFunTable = NULL;
-}
-
-// name is not copied
-void PrimFunAdd(char* name, VPrimFunPtr fun)
-{
-  // Grow array if needed
-  GPrimFunTable = ArrayGrow(GPrimFunTable, ArrayLength(GPrimFunTable));
-
-  PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, ArrayLength(GPrimFunTable));
-
-  entry->name = name; //StrCopy(name);
+  entry->name = name;
   entry->fun = fun;
+
+  ++ GPrimFunTableSize;
+}
+
+VPrimFunEntry* PrimFunTableGetEntry(int index)
+{
+  return GPrimFunTable[index];
 }
 
 VPrimFunPtr LookupPrimFunPtr(int index)
 {
-  return ArrayPrimFunEntryAt(GPrimFunTable, index)->fun;
+  return PrimFunTableGetEntry(index)->fun;
 }
 
-int LookupPrimFun(char* name)
+// Lookup index of entry by name
+// Return -1 if the entry does not exist
+int PrimFunTableLookupByName(char* name)
 {
-  for (int i = 0; i < ArrayLength(GPrimFunTable); ++ i)
+  for (int i = 0; i < GPrimFunTableSize; ++ i)
   {
-    PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, i);
-    if (StrEquals(entry->name, name))
+    VPrimFunEntry* entry = PrimFunTableGetEntry(i);
+    if (name == entry->name)
     {
       return i;
     }
@@ -71,16 +58,18 @@ int LookupPrimFun(char* name)
   return -1;
 }
 
-char* LookupPrimFunName(VPrimFunPtr primFun)
+// Lookup index of entry by name
+// Return -1 if the entry does not exist
+int PrimFunTableLookupByFunPtr(VPrimFunPtr funPtr)
 {
-  for (int i = 0; i < ArrayLength(GPrimFunTable); ++ i)
+  for (int i = 0; i < GPrimFunTableSize; ++ i)
   {
-    PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, i);
-    if (primFun == entry->fun)
+    VPrimFunEntry* entry = PrimFunTableGetEntry(i);
+    if (funPtr == entry->fun)
     {
-      return entry->name;
+      return i;
     }
   }
 
-  return NULL;
+  return -1;
 }

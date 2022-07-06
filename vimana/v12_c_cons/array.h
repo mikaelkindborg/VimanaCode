@@ -1,4 +1,6 @@
 /*
+TODO: Unused - remove file
+
 File: array.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 

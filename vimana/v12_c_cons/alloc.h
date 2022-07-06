@@ -7,11 +7,11 @@ Memory allocation tracking.
 
 #ifdef TRACK_MEMORY_USAGE
 
-  int GSysAllocCounter = 0;
+  static int GlobalSysAllocCounter = 0;
 
   void SysAllocCounterIncr()
   {
-    ++ GSysAllocCounter;
+    ++ GlobalSysAllocCounter;
   }
 
   void* SysAlloc(int size)
@@ -22,14 +22,14 @@ Memory allocation tracking.
 
   void SysFree(void* obj)
   {
-    -- GSysAllocCounter; 
+    -- GlobalSysAllocCounter; 
     free(obj);
   }
 
   void SysPrintMemStat()
   {
     Print("SysAllocCounter: "); 
-    PrintIntNum(GSysAllocCounter); 
+    PrintIntNum(GlobalSysAllocCounter); 
     PrintNewLine();
   }
 

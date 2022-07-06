@@ -246,50 +246,6 @@ void InterpGC(VInterp* interp)
 }
 
 // -------------------------------------------------------------
-// Prim funs
-// -------------------------------------------------------------
-
-void InterpPrimFunAdd(char* name, VPrimFunPtr fun)
-{
-  PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, ArrayLength(GPrimFunTable));
-
-  entry->name = name; //StrCopy(name);
-  entry->fun = fun;
-}
-
-VPrimFunPtr LookupPrimFunPtr(int index)
-{
-  return ArrayPrimFunEntryAt(GPrimFunTable, index)->fun;
-}
-
-int LookupPrimFun(char* name)
-{
-  for (int i = 0; i < ArrayLength(GPrimFunTable); ++ i)
-  {
-    PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, i);
-    if (StrEquals(entry->name, name))
-    {
-      return i;
-    }
-  }
-
-  return -1;
-}
-
-char* LookupPrimFunName(VPrimFunPtr primFun)
-{
-  for (int i = 0; i < ArrayLength(GPrimFunTable); ++ i)
-  {
-    PrimFunEntry* entry = ArrayPrimFunEntryAt(GPrimFunTable, i);
-    if (primFun == entry->fun)
-    {
-      return entry->name;
-    }
-  }
-
-  return NULL;
-}
-// -------------------------------------------------------------
 // Data stack
 // -------------------------------------------------------------
 

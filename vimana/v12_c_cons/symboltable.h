@@ -2,8 +2,8 @@
 File: symboltable.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-The symbol table is an array of string pointers 
-mapping symbol ids (indexes) to strings.
+A symbol table is an array of string pointers 
+that maps symbol ids (indexes) to strings.
 */
 
 struct __VSymbolTable
@@ -13,12 +13,6 @@ struct __VSymbolTable
   int     length;
 }
 VSymbolTable;
-
-// Return number of bytes needed to hold header struct plus array
-int SymbolTableGetByteSize(int size)
-{
-  return sizeof(VSymbolTable) + (sizeof(char**) * size);
-}
 
 void SymbolTableInit(VSymbolTable* table, int size)
 {

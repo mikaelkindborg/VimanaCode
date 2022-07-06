@@ -20,7 +20,7 @@ struct __VSymbolMemory
   char*  start;    // Start of string memory
   char*  nextFree; // Points to next free block in string memory
   char*  pos;      // Current position to write to
-  int    size;     // Number of chars in string memory
+  int    size;     // Max number of chars that can be stored in string memory
 }
 VSymbolMemory;
 
@@ -62,7 +62,7 @@ void SymbolMemWriteChar(VSymbolMemory* mem, char c)
 {
   if (mem->pos + 2 >= mem->start + size)
   {
-    GURU_MEDITATION(STRING_MEMORY_OUT_OF_SPACE);
+    GURU_MEDITATION(SYMBOL_MEMORY_OUT_OF_SPACE);
   }
 
   *(mem->pos) = c;

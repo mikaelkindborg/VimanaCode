@@ -5,7 +5,7 @@
 #include "vimana.h"
 
 // TODO: Provide hook for exiting interactive mode from Vimana
-int GInteractiveMode = FALSE;
+static int GlobalInteractiveMode = FALSE;
 
 int main(int numargs, char* args[])
 {
@@ -43,7 +43,7 @@ int main(int numargs, char* args[])
   {
     if (StrEquals(args[i], "--interactive"))
     {
-      GInteractiveMode = TRUE;
+      GlobalInteractiveMode = TRUE;
     }
     else
     {
@@ -91,7 +91,7 @@ int main(int numargs, char* args[])
 
         if (FILE_STAT_ERROR == result)
         {
-          GInteractiveMode = FALSE;
+          GlobalInteractiveMode = FALSE;
           break;
         }
 
