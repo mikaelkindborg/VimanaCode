@@ -6,19 +6,25 @@ The symbol table maps symbol ids (indexes) to strings.
 */
 
 // Global symbol table
-// This pointer is set elsewhere
-static char** GlobalSymbolTable = NULL;
+static char** GlobalSymbolTable;
+static int    GlobalSymbolTableSize;
+static int    GlobalSymbolTableMaxSize;
 
-// Number of entries in the table
-static int GlobalSymbolTableSize = 0;
-
-// Max number of entries
-static int GlobalSymbolTableMaxSize = 0;
-
-void SymbolTableInit(void* table, int maxSize)
+void SymbolTableInit(void* mem, int size)
 {
-  GlobalSymbolTable = table;
-  GlobalSymbolTableMaxSize = maxSize;
+  GlobalSymbolTable = mem;
+  GlobalSymbolTableSize = 0;
+  GlobalSymbolTableMaxSize = size;
+}
+
+int SymbolTableByteSize()
+{
+  return sizeof(char*) * GlobalSymbolTableMaxSize;
+}
+
+int SymbolTableMaxSize()
+{
+  return GlobalSymbolTableMaxSize;
 }
 
 // Add symbol at the end of the array

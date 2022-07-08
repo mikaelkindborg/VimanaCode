@@ -6,22 +6,6 @@ Interpreter data structures and functions.
 */
 
 // -------------------------------------------------------------
-// System memory
-// -------------------------------------------------------------
-
-static VByte* GlobalSystemMemory = NULL;
-
-void SystemMemoryAlloc(size_t numBytes)
-{
-  GlobalSystemMemory = SysAlloc(numBytes);
-}
-
-VByte* SystemMemoryGet()
-{
-  return GlobalSystemMemory;
-}
-
-// -------------------------------------------------------------
 // Data types and structs
 // -------------------------------------------------------------
 

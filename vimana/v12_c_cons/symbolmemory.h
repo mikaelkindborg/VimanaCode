@@ -15,41 +15,55 @@ Example with three symbol entries (0 is char zero '\0'):
   One0Two0Tree0
 */
 
+// -------------------------------------------------------------
+// Symbol memory struct
+// -------------------------------------------------------------
+
 struct __VSymbolMemory
 {
   char*  start;    // Start of string memory
   char*  nextFree; // Points to next free block in string memory
   char*  pos;      // Current position to write to
-  int    size;     // Max number of chars that can be stored in string memory
+  int    size;     // Number of chars that can be stored in string memory
 }
 VSymbolMemory;
 
-// Global symbol memory
-static VSymbolMemory* GlobalSymbolMemory = NULL;  
+// -------------------------------------------------------------
+// Global instance
+// -------------------------------------------------------------
 
-void GlobalSymbolMemoryInit(void* mem, int size)
-{
-  GlobalSymbolMemory = mem;
-  SymbolMemInit(mem, size);
-}
+// Global symbol memory instance
+static VSymbolMemory* GlobalSymbolMemory;  
 
-VSymbolMemory* GlobalSymbolMemoryGet()
+// Get global instance
+VSymbolMemory* SymbolMemory()
 {
   return GlobalSymbolMemory;
 }
 
-// Return number of bytes needed to hold header struct plus array
-int SymbolMemGetByteSize(int size)
+// Initialize global instance
+void SymbolMemoryInit(void* mem, int numChars)
 {
-  return sizeof(VSymbolMemory) + (sizeof(char) * size);
+  GlobalSymbolMemory = mem;
+  SymbolMemInit(mem, numChars);
 }
 
-void SymbolMemInit(VSymbolMemory* mem, int size)
+// Return number of bytes needed to hold header struct plus array
+int SymbolMemoryByteSize()
 {
-  mem->start = (char**) PtrOffset(mem, sizeof(VSymbolMemory));
+  return sizeof(VSymbolMemory) + (sizeof(char) * (GlobalSymbolMemory->size));
+}
+
+// -------------------------------------------------------------
+// Symbol memory functions
+// -------------------------------------------------------------
+
+void SymbolMemInit(VSymbolMemory* mem, int numChars)
+{
+  mem->start = (char*) PtrOffset(mem, sizeof(VSymbolMemory));
   mem->nextFree = mem->start;
   mem->pos = mem->nextFree;
-  mem->size = size;
+  mem->size = numChars;
 }
 
 // Return pointer to next free block

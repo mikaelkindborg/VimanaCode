@@ -15,19 +15,22 @@ typedef struct __VPrimFunEntry
 VPrimFunEntry;
 
 // Global primfun table
-VPrimFunEntry* GlobalPrimFunTable = NULL;
+static VPrimFunEntry* GlobalPrimFunTable;
+static int GlobalPrimFunTableSize;
 
-// Number of entries in the table
-int GlobalPrimFunTableSize = 0;
-
-void PrimFunTableInit(void* table)
+void PrimFunTableInit(void* mem)
 {
-  GlobalPrimFunTable = table;
+  GlobalPrimFunTable = mem;
+  GlobalPrimFunTableSize = 0;
+}
+
+int PrimFunTableByteSize()
+{
+  return sizeof(VPrimFunEntry) * GlobalPrimFunTableSize;
 }
 
 // Add a primfun to the table
 // Param name is not copied
-// Updates index of last entry
 void PrimFunTableAdd(char* name, VPrimFunPtr fun)
 {
   VPrimFunEntry* entry = GPrimFunTable[GlobalPrimFunTableSize];
@@ -35,20 +38,14 @@ void PrimFunTableAdd(char* name, VPrimFunPtr fun)
   entry->name = name;
   entry->fun = fun;
 
+  // Update index of last entry
   ++ GlobalPrimFunTableSize;
 }
 
-VPrimFunEntry* PrimFunTableGetEntry(int index)
+VPrimFunEntry* PrimFunTableGet(int index)
 {
   return GlobalPrimFunTable[index];
 }
-
-/*
-VPrimFunPtr LookupPrimFunPtr(int index)
-{
-  return PrimFunTableGetEntry(index)->fun;
-}
-*/
 
 // Lookup index of entry by name
 // Return -1 if the entry does not exist
@@ -56,7 +53,7 @@ int PrimFunTableLookupByName(char* name)
 {
   for (int i = 0; i < GlobalPrimFunTableSize; ++ i)
   {
-    VPrimFunEntry* entry = PrimFunTableGetEntry(i);
+    VPrimFunEntry* entry = PrimFunTableGet(i);
     if (name == entry->name)
     {
       return i;
@@ -66,13 +63,13 @@ int PrimFunTableLookupByName(char* name)
   return -1;
 }
 
-// Lookup index of entry by name
+// Lookup index of entry by function pointer
 // Return -1 if the entry does not exist
 int PrimFunTableLookupByFunPtr(VPrimFunPtr funPtr)
 {
   for (int i = 0; i < GlobalPrimFunTableSize; ++ i)
   {
-    VPrimFunEntry* entry = PrimFunTableGetEntry(i);
+    VPrimFunEntry* entry = PrimFunTableGet(i);
     if (funPtr == entry->fun)
     {
       return i;
