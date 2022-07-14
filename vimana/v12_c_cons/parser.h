@@ -36,7 +36,7 @@ char* ParseString(char* p, char** next)
     // Check if this was the ending closing curly
     if (level <= 0) break;
 
-    // TODO: Quoted curlies
+    // TODO: Quoted curlies \{ inside a string
 
     // Copy character to string
     *pBuf = *p;
@@ -113,25 +113,30 @@ VItem* ParseToken(char* token, VInterp* interp)
   else
   if (TypeSymbol == type)
   {
-    int primFunId = LookupPrimFun(token);
+    // Check if it is a primfun
+    int primFunId = PrimFunTableLookupByName(token);
     if (primFunId > -1)
     {
+      // Set primfun
       ItemSetPrimFun(item, primFunId);
-      SymbolMemResetPos(InterpSymbolMem(interp));
+
+      // Free token
+      SymbolMemResetPos(SymbolMemGlobal());
     }
     else
     {
-      int symbolIndex = SymbolTableFind(InterpGetSymbolTable(interp), token);
+      // Does the symbol exist?
+      int symbolIndex = SymbolTableFind(token);
       if (symbolIndex < 0)
       {
         // New symbol - add it to symbol table
-        SymbolMemWriteFinish(InterpSymbolMem(interp));
-        symbolIndex = SymbolTableAdd(InterpGetSymbolTable(interp), token);
+        SymbolMemWriteFinish(SymbolMemGlobal());
+        symbolIndex = SymbolTableAdd(token);
       }
       else
       {
-        // Existing symbol, free token string
-        SymbolMemResetPos(InterpSymbolMem(interp));
+        // Existing symbol - free token string
+        SymbolMemResetPos(SymbolMemGlobal());
       }
 
       // Set symbol index of item
@@ -149,11 +154,11 @@ VItem* ParseToken(char* token, VInterp* interp)
 // Read next token into string memory
 char* ReadNextToken(char* p, char** next, VInterp* interp)
 {
-  char* token = SymbolMemGetNextFree(InterpSymbolMem(interp));
+  char* token = SymbolMemGetNextFree(SymbolMemGlobal());
 
   while (!IsWhiteSpaceOrSeparatorOrEndOfString(*p))
   {
-    SymbolMemWriteChar(InterpSymbolMem(interp), *p);
+    SymbolMemWriteChar(SymbolMemGlobal(), *p);
     ++ p;
   }
 
@@ -264,8 +269,8 @@ Exit:
   return list;
 }
 
-VItem* Parse(char* sourceCode, VInterp* interp)
+VItem* InterpParse(VInterp* interp, char* code)
 {
   char* p;
-  return ParseList(sourceCode, &p, interp);
+  return ParseList(code, &p, interp);
 }

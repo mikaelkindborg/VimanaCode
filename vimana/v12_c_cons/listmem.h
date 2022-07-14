@@ -1,5 +1,5 @@
 /*
-File: itemmemory.h
+File: listmem.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
 Memory manager for Lisp-style linked lists.
@@ -8,10 +8,10 @@ See item.h for an explanation of memory layout.
 */
 
 // -------------------------------------------------------------
-// VItemMemory struct
+// VListMemory struct
 // -------------------------------------------------------------
 
-typedef struct __VItemMemory
+typedef struct __VListMemory
 {
   VByte* start;     // Start of memory block
   VByte* nextFree;  // First free item in memory block
@@ -21,13 +21,13 @@ typedef struct __VItemMemory
   int    allocCounter;
   #endif
 }
-VItemMemory;
+VListMemory;
 
 // -------------------------------------------------------------
 // Item access
 // -------------------------------------------------------------
 
-#define MemStart(mem) ((mem)->start)
+#define ListMemStart(mem) ((mem)->start)
 
 //#define AddrToPtr(addr, start) (((start) + (addr)) - 1)
 //#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) + 1)
@@ -35,42 +35,42 @@ VItemMemory;
 #define AddrToPtr(addr, start) ((start) + (addr))
 #define PtrToAddr(ptr, start) (BytePtr(ptr) - (start))
 
-#define MemGet(mem, addr) VItemPtr(AddrToPtr(addr, MemStart(mem)))
-#define MemGetAddr(mem, ptr) (PtrToAddr(BytePtr(ptr), MemStart(mem)))
+#define ListMemGet(mem, addr) VItemPtr(AddrToPtr(addr, ListMemStart(mem)))
+#define ListMemGetAddr(mem, ptr) (PtrToAddr(BytePtr(ptr), ListMemStart(mem)))
 
-#define MemGetFirst(mem, item) \
-  (ItemGetFirst(item) ? MemGet(mem, ItemGetFirst(item)) : NULL)
+#define ListMemGetFirst(mem, item) \
+  (ItemGetFirst(item) ? ListMemGet(mem, ItemGetFirst(item)) : NULL)
 
-#define MemGetNext(mem, item) \
-  (ItemGetNext(item) ? MemGet(mem, ItemGetNext(item)) : NULL)
+#define ListMemGetNext(mem, item) \
+  (ItemGetNext(item) ? ListMemGet(mem, ItemGetNext(item)) : NULL)
 
-void MemSetFirst(VItemMemory* mem, VItem* item, VItem* first)
+void ListMemSetFirst(VListMemory* mem, VItem* item, VItem* first)
 {
-  ItemSetFirst(item, MemGetAddr(mem, first));
+  ItemSetFirst(item, ListMemGetAddr(mem, first));
 }
 
-void MemSetNext(VItemMemory* mem, VItem* item, VItem* next)
+void ListMemSetNext(VListMemory* mem, VItem* item, VItem* next)
 {
-  ItemSetNext(item, MemGetAddr(mem, next));
+  ItemSetNext(item, ListMemGetAddr(mem, next));
 }
 
 // -------------------------------------------------------------
 // Initialize
 // -------------------------------------------------------------
 
-// Return size of VItemMemory header plus item memory space in bytes
-int MemGetByteSize(int numItems)
+// Return size of VListMemory header plus item memory space in bytes
+int ListMemGetByteSize(int numItems)
 {
-  return sizeof(VItemMemory) + (numItems * sizeof(VItem));
+  return sizeof(VListMemory) + (numItems * sizeof(VItem));
 }
 
-void MemInit(VItemMemory* mem, int numItems)
+void ListMemInit(VListMemory* mem, int numItems)
 {
-  VAddr memByteSize = MemGetByteSize(numItems);
+  VAddr memByteSize = ListMemGetByteSize(numItems);
 
-  mem->start = BytePtr(mem) + (sizeof(VItemMemory));
+  mem->start = BytePtr(mem) + (sizeof(VListMemory));
   mem->nextFree = mem->start;
-  mem->size = (memByteSize - sizeof(VItemMemory));
+  mem->size = (memByteSize - sizeof(VListMemory));
   mem->firstFree = 0; // Freelist is empty
 
   #ifdef TRACK_MEMORY_USAGE
@@ -79,7 +79,7 @@ void MemInit(VItemMemory* mem, int numItems)
 }
 
 #ifdef TRACK_MEMORY_USAGE
-void MemPrintAllocCounter(VItemMemory* mem)
+void ListMemPrintAllocCounter(VListMemory* mem)
 {
   Print("MemAllocCounter: "); 
   PrintIntNum(mem->allocCounter); 
@@ -92,7 +92,7 @@ void MemPrintAllocCounter(VItemMemory* mem)
 // -------------------------------------------------------------
 
 // Allocate an item
-VItem* MemAlloc(VItemMemory* mem)
+VItem* ListMemAlloc(VListMemory* mem)
 {
   VItem* item;
   VAddr  addr;
@@ -102,7 +102,7 @@ VItem* MemAlloc(VItemMemory* mem)
     // ALLOCATE FROM FREELIST
 
     addr = mem->firstFree;
-    item = MemGet(mem, addr);
+    item = ListMemGet(mem, addr);
     mem->firstFree = ItemGetNext(item);
   }
   else
@@ -140,7 +140,7 @@ VItem* MemAlloc(VItemMemory* mem)
   return item;
 }
 
-void MemDeallocItem(VItemMemory* mem, VItem* item)
+void ListMemDeallocItem(VListMemory* mem, VItem* item)
 {
   if (IsTypeNone(item)) return;
 
@@ -179,28 +179,28 @@ void MemDeallocItem(VItemMemory* mem, VItem* item)
 // Ownership of bufferPtr goes to the memory manager
 // bufferPtr must be allocated with SysAlloc (malloc)
 //
-VItem* MemAllocHandle(VItemMemory* mem, void* bufferPtr, VType type)
+VItem* ListMemAllocHandle(VListMemory* mem, void* bufferPtr, VType type)
 {
-  VItem* item = MemAlloc(mem);
+  VItem* item = ListMemAlloc(mem);
   ItemSetType(item, type);
 
-  VItem* buffer = MemAlloc(mem);
+  VItem* buffer = ListMemAlloc(mem);
   ItemSetType(buffer, TypeBuffer);
 
   buffer->ptr = bufferPtr;
   
-  MemSetFirst(mem, item, buffer);
+  ListMemSetFirst(mem, item, buffer);
 
   return item;
 }
 
 // Returns the pointer of the buffer the item refers to.
 // TODO: Use GURU_MEDITATION instead of returning NULL?
-void* MemGetHandlePtr(VItemMemory* mem, VItem* item)
+void* ListMemGetHandlePtr(VListMemory* mem, VItem* item)
 {
   if (!(IsTypeString(item) || IsTypeHandle(item))) return NULL;
 
-  VItem* buffer = MemGetFirst(mem, item);
+  VItem* buffer = ListMemGetFirst(mem, item);
 
   if (NULL == buffer) return NULL;
   if (!IsTypeBuffer(buffer)) return NULL;
@@ -212,7 +212,7 @@ void* MemGetHandlePtr(VItemMemory* mem, VItem* item)
 // Garbage collection
 // -------------------------------------------------------------
 
-void MemMark(VItemMemory* mem, VItem* item)
+void ListMemMark(VListMemory* mem, VItem* item)
 {
   while (item)
   {
@@ -222,21 +222,21 @@ void MemMark(VItemMemory* mem, VItem* item)
       return;
     }
 
-    //Print("MARK ITEM: "); MemPrintItem(mem, item); PrintNewLine();
+    //Print("MARK ITEM: "); ListMemPrintItem(mem, item); PrintNewLine();
     ItemGCMarkSet(item);
 
     // Mark children
     if (!IsTypeAtomic(item))
     {
-      VItem* child = MemGetFirst(mem, item);
-      MemMark(mem, child);
+      VItem* child = ListMemGetFirst(mem, item);
+      ListMemMark(mem, child);
     }
 
-    item = MemGetNext(mem, item);
+    item = ListMemGetNext(mem, item);
   }
 }
 
-void MemSweep(VItemMemory* mem)
+void ListMemSweep(VListMemory* mem)
 {
   VByte* ptr = mem->start;
 
@@ -250,7 +250,7 @@ void MemSweep(VItemMemory* mem)
     else
     {
       //PrintLine("MemSweep dealloc");
-      MemDeallocItem(mem, VItemPtr(ptr));
+      ListMemDeallocItem(mem, VItemPtr(ptr));
     }
 
     ptr += sizeof(VItem);

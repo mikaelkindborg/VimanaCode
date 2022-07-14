@@ -246,19 +246,31 @@ void ItemSetDecNum(VItem* item, VDecNum number)
 
   void ItemSetPrimFun(VItem* item, VIntNum primFunId)
   {
-    VPrimFunPtr primFun = LookupPrimFunPtr(primFunId);
+    VPrimFunPtr primFun = PrimFunTableGet(primFunId)->fun;
     item->primFunPtr = primFun;
     ItemSetType(item, TypePrimFun);
   }
 
+  char* ItemGetPrimFunName(VItem* item)
+  {
+    int index = PrimFunTableLookupByFunPtr(ItemGetPtr(item));
+    return PrimFunTableGet(index)->name;
+  }
+
 #else
 
-  #define ItemGetPrimFun(item) LookupPrimFunPtr(ItemGetIntNum(item))
+  #define ItemGetPrimFun(item) (PrimFunTableGet(ItemGetIntNum(item))->fun)
 
   void ItemSetPrimFun(VItem* item, VIntNum primFunId)
   {
     ItemSetIntNum(item, primFunId);
     ItemSetType(item, TypePrimFun);
+  }
+
+  char* ItemGetPrimFunName(VItem* item)
+  {
+    int index = ItemGetIntNum(item);
+    return PrimFunTableGet(index)->name;
   }
 
 #endif

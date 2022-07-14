@@ -4,6 +4,7 @@ $NumLines = 0;
 $NumLinesCode = 0;
 $NumLinesComments = 0;
 $NumLinesBlank = 0;
+$NumLinesOpenCurly = 0;
 
 function StringContains($string, $substring)
 {
@@ -23,6 +24,7 @@ function CountLines($file)
   global $NumLinesCode;
   global $NumLinesComments;
   global $NumLinesBlank;
+  global $NumLinesOpenCurly;
 
   $insideMultiLineComment = false;
 
@@ -41,6 +43,8 @@ function CountLines($file)
       ++ $NumLinesComments;
     elseif (0 == strlen(trim($line))):
       ++ $NumLinesBlank;
+    elseif (preg_match('/^\s*\{/', $line)):
+      ++ $NumLinesOpenCurly;
     else:
       ++ $NumLinesCode;
     endif;
@@ -55,24 +59,26 @@ $files = [
   "string.h",
   "file.h",
   "primfuntable.h",
-  "symbolmemory.h",
+  "symbolmem.h",
   "symboltable.h",
   "item.h",
-  "itemmemory.h",
+  "listmem.h",
   "interp.h",
   "parser.h",
-  "printitem.h",
+  "printlist.h",
   "primfuns.h",
+  "machine.h",
 ];
 
 foreach ($files as $file):
   CountLines($file);
 endforeach;
 
-echo "NumLines:         " . ($NumLines) . "\n";
-echo "NumLinesCode:     " . ($NumLinesCode) . "\n";
-echo "NumLinesComments: " . ($NumLinesComments) . "\n";
-echo "NumLinesBlank:    " . ($NumLinesBlank) . "\n";
+echo "NumLines:          " . ($NumLines) . "\n";
+echo "NumLinesCode:      " . ($NumLinesCode) . "\n";
+echo "NumLinesOpenCurly: " . ($NumLinesOpenCurly) . "\n";
+echo "NumLinesComments:  " . ($NumLinesComments) . "\n";
+echo "NumLinesBlank:     " . ($NumLinesBlank) . "\n";
 
 /***
 

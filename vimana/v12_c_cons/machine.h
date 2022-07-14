@@ -2,21 +2,56 @@
 File: machine.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
-Functions for creating the machine that runs VimanaCode.
+High-level functions for creating the machine that runs VimanaCode.
+
+Creates a single interpreter (multiple interpreters would also be possible).
+
+The primfun table and the symbol table are global and shared by interpreters.
+
+Memory is preallocated in a single block. This is by design to support Arduino 
+and other small computers with memory of known size.
+
+How to use:
+
+  #define MACHINE_BYTE_SIZE (128 * 1024)  // Size in bytes
+  #define SYMBOL_TABLE_SIZE 100           // Number of symbols in symbol table
+  #define DATA_STACK_SIZE 100             // Number of items on the data stack
+  #define CALL_STACK_SIZE 100             // Number of stack frames
+  #define LIST_MEMORY_SIZE 1000           // Number of items in garbage collected memory
+
+  MachineAllocate(MACHINE_BYTE_SIZE);
+  MachineAddCorePrimFuns();
+  //AddCustomPrimFuns();
+  MachineCreate(
+    SYMBOL_TABLE_SIZE, 
+    DATA_STACK_SIZE, 
+    CALL_STACK_SIZE, 
+    LIST_MEMORY_SIZE);
+  MachineEval("(Hi World) print");
 */
+
+// -------------------------------------------------------------
+// Globals
+// -------------------------------------------------------------
+
+// System memory
+static VByte*  GlobalMemory;
+static VByte*  GlobalMemoryEnd;
+static int     GlobalMemoryByteSize;
+
+// Single global interpreter instance (note that it would be  
+// possible to have multiple interperter instances)
+static VByte*  GlobalInterp;
+static int     GlobalInterpByteSize;
+
 
 // -------------------------------------------------------------
 // System memory
 // -------------------------------------------------------------
 
-static VByte* GlobalMemory;
-static VByte* GlobalInterpMemoryStart;
-static size_t GlobalMemoryByteSize;
-
 void MachineAllocate(size_t numBytes)
 {
   GlobalMemory = SysAlloc(numBytes);
-  GlobalMemoryFirstFree = GlobalMemory;
   GlobalMemoryByteSize = numBytes;
 }
 
@@ -25,40 +60,18 @@ void MachineDeallocate()
   SysFree(GlobalMemory);
 }
 
-// Single global interpreter instance (note that it would be  
-// possible to have multiple interperter instances)
-static VInterp* GlobalMachineInterp;
+// -------------------------------------------------------------
+// Interpreter instance
+// -------------------------------------------------------------
 
 VInterp* MachineInterp()
 {
-  return GlobalMachineInterp;
+  return (VInterp*) GlobalInterp;
 }
 
 // -------------------------------------------------------------
 // Create the machine
 // -------------------------------------------------------------
-
-/*
-How to use:
-
-#define MACHINE_BYTE_SIZE (1024 * 16)  // 16KB
-#define NUM_SYMBOLS 100
-#define DATA_STACK_SIZE 100
-#define CALL_STACK_SIZE 100
-// Item memory takes the rest of free memory
-
-MachineAllocate(MACHINE_BYTE_SIZE);
-MachineAddCorePrimFuns();
-AddExtraPrimFuns();
-MachineCreateSymbolTable(NUM_SYMBOLS);
-MachineCreateInterp(DATA_STACK_SIZE, CALL_STACK_SIZE);
-
-MachineAllocate(numBytes);
-MachineAddCorePrimFuns();
-AddExtraPrimFuns();
-MachineCreateSymbolTable(numSymbols);
-MachineCreateInterp(dataStackSize, callStackSize);
-*/
 
 void MachineAddCorePrimFuns()
 {
@@ -66,41 +79,67 @@ void MachineAddCorePrimFuns()
   AddCorePrimFuns();
 }
 
-void MachineCreateSymbolTable(int numSymbols)
+void MachineCreateSymbolTable(int symbolTableSize)
 {
   VByte* symbolTableStart = GlobalMemory + PrimFunTableByteSize();
-  SymbolTableInit(symbolTableStart, numSymbols);
+  SymbolTableInit(symbolTableStart, symbolTableSize);
 
   VByte* symbolMemoryStart = symbolTableStart + SymbolTableByteSize();
-  int numChars = numSymbols * 10; // Estimate 10 chars per symbol
-  SymbolMemoryInit(symbolMemoryStart, numChars);
+  int numChars = symbolTableSize * 10; // Estimate 10 chars per symbol
+  SymbolMemInitGlobal(symbolMemoryStart, numChars);
 
-  GlobalInterpMemoryStart = symbolMemoryStart + SymbolMemoryByteSize();
+  GlobalInterp = symbolMemoryStart + SymbolMemByteSizeGlobal();
 }
 
-VInterp* MachineCreateInterp(int dataStackSize, int callStackSize)
+void MachineCreateInterp(int dataStackSize, int callStackSize, int listMemorySize)
 {
   int numSymbols = SymbolTableMaxSize();
-  int interpBaseByteSize = InterpByteSizeExcludingItemMemory(numSymbols, dataStackSize, callStackSize);
-  int itemMemoryByteSize =  interpBaseByteSize GlobalMemoryByteSize
 
+  GlobalInterpByteSize = InterpByteSize(numSymbols, dataStackSize, callStackSize, listMemorySize);
 
-  GlobalMachineInterp = InterpInit(GlobalInterpMemoryStart, dataStackSize, callStackSize, itemMemorySize)
+  GlobalMemoryEnd = GlobalInterp + GlobalInterpByteSize;
 
-  VByte* symbolTableStart = MachineMemory() + PrimFunTableByteSize();
-  SymbolTableInit(symbolTableStart, numSymbols);
+  // Check that interpreter will fit in allocated memory
+  if (GlobalMemoryEnd > GlobalMemory + GlobalMemoryByteSize)
+  {
+    GURU_MEDITATION(MACHINE_OUT_OF_MEMORY);
+  }
 
-  VByte* symbolMemoryStart = symbolTableStart + SymbolTableByteSize(numSymbols);
-  int numChars = numSymbols * 10; // Estimate 10 chars per symbol
-  SymbolMemoryInit(symbolMemoryStart, numChars);
-
-  GlobalMemoryFirstFree = symbolMemoryStart + SymbolMemoryByteSize(numChars);
+  InterpInit(
+    (VInterp*) GlobalInterp, 
+    numSymbols, dataStackSize, callStackSize, listMemorySize);
 }
 
-void MachineParse()
+void MachineCreate(
+  int symbolTableSize, int dataStackSize, 
+  int callStackSize,   int listMemorySize)
 {
+  MachineCreateSymbolTable(symbolTableSize);
+  MachineCreateInterp(dataStackSize, callStackSize, listMemorySize);
 }
 
-void MachineEval()
+void MachineFree()
 {
+  InterpFree(MachineInterp());
+  MachineDeallocate();
+}
+
+void MachinePrintMemoryUse()
+{
+  int memoryUsed = GlobalMemoryEnd - GlobalMemory;
+
+  printf("Vimana Machine Memory Use\n");
+  printf("-------------------------\n");
+  printf("Allocated:      %i\n", GlobalMemoryByteSize);
+  printf("Used:           %i\n", memoryUsed);
+  printf("Primfun table:  %i\n", PrimFunTableByteSize());
+  printf("Symbol table:   %i\n", SymbolTableByteSize());
+  printf("Symbol memory:  %i\n", SymbolMemByteSizeGlobal());
+  printf("Interpreter:    %i\n", GlobalInterpByteSize);
+}
+
+void MachineEval(char* code)
+{
+  InterpEval(MachineInterp(), 
+    InterpParse(MachineInterp(), code));
 }

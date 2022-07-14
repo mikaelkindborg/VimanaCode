@@ -37,8 +37,9 @@ int SymbolTableAdd(char* symbol)
   }
   else
   {
-    GURU_MEDITATION(SYMBOL_TABLE_OUR_OF_MEMORY);
+    GURU_MEDITATION(SYMBOL_TABLE_OUT_OF_MEMORY);
   }
+  return GlobalSymbolTableSize;
 }
 
 char* SymbolTableGet(int index)

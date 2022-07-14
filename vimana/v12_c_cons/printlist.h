@@ -1,5 +1,5 @@
 /*
-File: printitem.h
+File: printlist.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
 Functions for printing lists and items.
@@ -33,7 +33,7 @@ void PrintItem(VItem* item, VInterp* interp)
   else if (IsTypePrimFun(item))
   {
     //printf("P%lu", (unsigned long) ItemGetPtr(item)); 
-    printf("%s", LookupPrimFunName(ItemGetPtr(item)));
+    printf("%s", ItemGetPrimFunName(item));
   }
   else if (IsTypeSymbol(item))
   {
@@ -84,4 +84,9 @@ void PrintItemArray(VItem* array, int numItems, VInterp* interp)
     PrintItem(&(array[i]), interp);
     PrintChar(' ');
   }
+}
+
+void InterpPrint(VInterp* interp, VItem* item)
+{
+  PrintItem(item, interp);
 }

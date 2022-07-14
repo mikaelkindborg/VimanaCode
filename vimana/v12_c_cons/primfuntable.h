@@ -16,7 +16,7 @@ VPrimFunEntry;
 
 // Global primfun table
 static VPrimFunEntry* GlobalPrimFunTable;
-static int GlobalPrimFunTableSize;
+static int            GlobalPrimFunTableSize;
 
 void PrimFunTableInit(void* mem)
 {
@@ -33,7 +33,7 @@ int PrimFunTableByteSize()
 // Param name is not copied
 void PrimFunTableAdd(char* name, VPrimFunPtr fun)
 {
-  VPrimFunEntry* entry = GPrimFunTable[GlobalPrimFunTableSize];
+  VPrimFunEntry* entry = & GlobalPrimFunTable[GlobalPrimFunTableSize];
 
   entry->name = name;
   entry->fun = fun;
@@ -44,7 +44,7 @@ void PrimFunTableAdd(char* name, VPrimFunPtr fun)
 
 VPrimFunEntry* PrimFunTableGet(int index)
 {
-  return GlobalPrimFunTable[index];
+  return & GlobalPrimFunTable[index];
 }
 
 // Lookup index of entry by name

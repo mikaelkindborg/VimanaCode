@@ -19,7 +19,7 @@ Example with three symbol entries (0 is char zero '\0'):
 // Symbol memory struct
 // -------------------------------------------------------------
 
-struct __VSymbolMemory
+typedef struct __VSymbolMemory
 {
   char*  start;    // Start of string memory
   char*  nextFree; // Points to next free block in string memory
@@ -36,20 +36,22 @@ VSymbolMemory;
 static VSymbolMemory* GlobalSymbolMemory;  
 
 // Get global instance
-VSymbolMemory* SymbolMemory()
+VSymbolMemory* SymbolMemGlobal()
 {
   return GlobalSymbolMemory;
 }
 
+void SymbolMemInit(VSymbolMemory* mem, int numChars);
+
 // Initialize global instance
-void SymbolMemoryInit(void* mem, int numChars)
+void SymbolMemInitGlobal(void* mem, int numChars)
 {
   GlobalSymbolMemory = mem;
   SymbolMemInit(mem, numChars);
 }
 
 // Return number of bytes needed to hold header struct plus array
-int SymbolMemoryByteSize()
+int SymbolMemByteSizeGlobal()
 {
   return sizeof(VSymbolMemory) + (sizeof(char) * (GlobalSymbolMemory->size));
 }
@@ -88,9 +90,9 @@ void SymbolMemResetPos(VSymbolMemory* mem)
 // Write a character
 void SymbolMemWriteChar(VSymbolMemory* mem, char c)
 {
-  if (mem->pos + 2 >= mem->start + size)
+  if (mem->pos + 2 >= mem->start + mem->size)
   {
-    GURU_MEDITATION(SYMBOL_MEMORY_OUT_OF_SPACE);
+    GURU_MEDITATION(STRING_MEMORY_OUT_OF_SPACE);
   }
 
   *(mem->pos) = c;

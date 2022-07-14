@@ -3,6 +3,13 @@
 #define OPTIMIZE
 
 #include "vimana.h"
+//#include "socket.h"
+
+#define MACHINE_BYTE_SIZE (128 * 1024)  // Size in bytes
+#define SYMBOL_TABLE_SIZE 100           // Number of symbols in symbol table
+#define DATA_STACK_SIZE   100           // Number of items on the data stack
+#define CALL_STACK_SIZE   100           // Number of stack frames
+#define LIST_MEMORY_SIZE  1000          // Number of items in garbage collected memory
 
 // TODO: Provide hook for exiting interactive mode from Vimana
 static int GlobalInteractiveMode = FALSE;
@@ -51,13 +58,16 @@ int main(int numargs, char* args[])
     }
   }
 
-  // Create tables for primfuns and symbols
-  PrimFunTableCreate();
-  AddCorePrimFuns();
-  SymbolTableCreate();
+  // Create the Vimana machine
 
-  // Create interpeter
-  VInterp* interp = InterpNew();
+  MachineAllocate(MACHINE_BYTE_SIZE);
+  MachineAddCorePrimFuns();
+  //SocketPrimFunsAdd();
+  MachineCreate(
+    SYMBOL_TABLE_SIZE, 
+    DATA_STACK_SIZE, 
+    CALL_STACK_SIZE, 
+    LIST_MEMORY_SIZE);
 
   time_t lastUpdate = 0;
 /*
@@ -67,22 +77,22 @@ int main(int numargs, char* args[])
   do
   {
     // Read source file
-    char* source = FileRead(fileName);
-    if (NULL == source) 
+    char* code = FileRead(fileName);
+    if (NULL == code) 
     {
       PrintLine("Cannot read source code file");
       break;
     }
 
     // Parse source code
-    VItem* list = Parse(source, interp);
-    SysFree(source);
+    VItem* list = InterpParse(MachineInterp(), code);
+    SysFree(code);
 
     // Evaluate code
-    InterpEval(interp, list);
+    InterpEval(MachineInterp(), list);
 
     // Handle interactive mode
-    if (GInteractiveMode)
+    if (GlobalInteractiveMode)
     {
       printf("Interactive mode (quit with CTRL-C)\n");
       while (TRUE)
@@ -104,11 +114,9 @@ int main(int numargs, char* args[])
       }
     }
   }
-  while (GInteractiveMode);
+  while (GlobalInteractiveMode);
 
-  InterpFree(interp);
-  SymbolTableFree();
-  PrimFunTableFree();
+  MachineFree();
 
   SysPrintMemStat();
 

@@ -13,14 +13,14 @@ Interpreter data structures and functions.
 Arduino Uno example memory layout, fit in 2K
 
 item         4 bytes (2+2)
-stackframe  12 bytes (2+2+4+4)
+stackframe  12 bytes (2+2+4+4) // 2 local vars
 
 callstack   10 x 12 =  120 bytes
 datastack   10 x 4  =   40 bytes
 globalvars  20 x 4  =   80 bytes
 items      200 x 4  =  800 bytes
 + sizeof(VInterp)       20 bytes
-+ sizeof(VItemMemory)           8 bytes
++ sizeof(VListMemory)    8 bytes
                       ----------
 Core memory           1068 bytes
 
@@ -37,16 +37,18 @@ typedef struct __VStackFrame VStackFrame;
 
 struct __VStackFrame
 {
+  VItem*       list;         // List that is evaluated
   VItem*       instruction;  // Current instruction
   VStackFrame* context;      // Stack frame that holds local vars
   VItem        localVars[4]; // Space for 4 local vars
 };
 
 /*
-Alternatives for dynamic number local vars:
+Alternatives for dynamic number of local vars:
 
 struct __VStackFrame
 {
+  VItem*       list;         // List that is evaluated
   VItem*       instruction;  // Current instruction
   VStackFrame* context;      // Stack frame that holds local vars
   VItem*       localVars;    // List of localvars
@@ -54,20 +56,12 @@ struct __VStackFrame
 
 struct __VStackFrame
 {
+  VItem*       list;         // List that is evaluated
   VItem*       instruction;  // Current instruction
+  VStackFrame* parent;       // Parent stack frame
   VStackFrame* context;      // Stack frame that holds local vars
   int          numlocals;    // number of localvars that follow the stackframe
 };
-
-struct __VStackFrame
-{
-  VItem*       instruction;  // Current instruction
-  VStackFrame* context;      // Stack frame that holds local vars
-  int          hasLocals; 
-  int          numlocals;    // number of localvars that follow the stackframe
-};
-
-
 */
 
 // Mind control for hackers
@@ -88,11 +82,11 @@ typedef struct __VInterp
   int             callStackSize;       // Max number of frames
   int             callStackTop;        // Current stackframe
 
-  VItemMemory*    itemMemory;          // "Lisp" memory
+  VListMemory*    listMemory;          // Lisp-style list memory
 }
 VInterp;
 
-#define InterpMem(interp) ((interp)->itemMemory)
+#define InterpListMem(interp) ((interp)->listMemory)
 
 // Seems to be slower?
 //#define InterpGetStackFrame(interp) ( ((interp)->callStack) + ((interp)->callStackTop) )
@@ -113,93 +107,83 @@ void PrintAlignedPtr(char* text, void* ptr)
   printf("ALN %s: %lu\n", text, offset);
 }
 
-// TODO: Check aligntment of pointers
-VInterp* InterpNewWithSize(
-  int byteSizeGlobalVarTable, int byteSizeDataStack, int byteSizeCallStack, 
-  int byteSizeItemMemory, int byteSizeSymbolMemory)
+int InterpByteSize(
+  int sizeGlobalVarTable, int sizeDataStack, 
+  int sizeCallStack,      int sizeListMemory)
 {
-  // This block holds everything except strings, which are allocated in new blocks
-  VInterp* interp = SysAlloc(
-    sizeof(VInterp) + 
-    sizeof(VItemMemory) + 
-    (2 * sizeof(VSymbolMemory)) + 
-    sizeGlobalVarTable +
-    sizeDataStack +
-    sizeCallStack +
-    sizePrimFunTable +
-    sizeItemMemory +
-    sizeSymbolMemory);
+  int byteSizeInterpStruct = sizeof(VInterp);
+  int byteSizeGlobalVarTable = sizeGlobalVarTable * sizeof(VItem);
+  int byteSizeDataStack = sizeDataStack * sizeof(VItem);
+  int byteSizeCallStack = sizeCallStack * sizeof(VStackFrame);
+  int byteSizeListMemory = ListMemGetByteSize(sizeListMemory);
 
-  interp->globalVarTable = PtrOffset(interp, sizeof(VInterp));
-  interp->numGlobalVars = sizeGlobalVars / sizeof(VItem);
+  int byteSizeInterp = 
+    byteSizeInterpStruct +
+    byteSizeGlobalVarTable +
+    byteSizeDataStack +
+    byteSizeCallStack +
+    byteSizeListMemory;
 
-  interp->primFunTable = PtrOffset(interp, sizeof(VInterp));
-  interp->numGlobalVars = sizeGlobalVars / sizeof(VItem);
+  return byteSizeInterp;
+}
+
+// TODO: Check aligntment of pointers
+void InterpInit(
+  VInterp* interp,   
+  int sizeGlobalVarTable, int sizeDataStack, 
+  int sizeCallStack,      int sizeListMemory)
+{
+  int byteSizeInterpStruct = sizeof(VInterp);
+  int byteSizeGlobalVarTable = sizeGlobalVarTable * sizeof(VItem);
+  int byteSizeDataStack = sizeDataStack * sizeof(VItem);
+  int byteSizeCallStack = sizeCallStack * sizeof(VStackFrame);
+  int byteSizeListMemory = ListMemGetByteSize(sizeListMemory);
+
+  interp->globalVarTable = PtrOffset(interp, byteSizeInterpStruct);
+  interp->globalVarTableSize = sizeGlobalVarTable;
   
-  VPrimFun*       primFunTable;        // PrimFun pointers
-  int             primFunTableSize;    // Max number of primfuns
-
-  interp->dataStack = PtrOffset(interp->globalVars, sizeGlobalVars);
-  interp->numDataStackItems = sizeDataStack / sizeof(VItem);
+  interp->dataStack = PtrOffset(interp->globalVarTable, byteSizeGlobalVarTable);
+  interp->dataStackSize = sizeDataStack;
   interp->dataStackTop = -1;
 
-  interp->callStack = PtrOffset(interp->dataStack, sizeDataStack);
-  interp->numCallStackFrames = sizeCallStack / sizeof(VStackFrame);
-  interp->callStackTop = 0;
+  interp->callStack = PtrOffset(interp->dataStack, byteSizeDataStack);
+  interp->callStackSize = sizeCallStack;
+  interp->callStackTop = -1;
 
-  interp->itemMemory = PtrOffset(interp->callStack, sizeCallStack);
-  MemInit(interp->itemMemory, sizeItemMemory);
-
-  interp->symbolMemory = PtrOffset(interp->callStack, sizeCallStack);
-  MemInit(interp->symbolMemory, sizeSymbolMemory);
+  interp->listMemory = PtrOffset(interp->callStack, byteSizeListMemory);
+  ListMemInit(interp->listMemory, sizeListMemory);
 
   #ifdef DEBUG
     PrintAlignedPtr("INTERP", interp);
-    PrintAlignedPtr("GLOBVR", interp->globalVars);
+    PrintAlignedPtr("GLOBVR", interp->globalVarTable);
     PrintAlignedPtr("DATAST", interp->dataStack);
     PrintAlignedPtr("CALLST", interp->callStack);
-    PrintAlignedPtr("MEMORY", interp->itemMemory);
-    PrintAlignedPtr("SYMMEM", interp->symbolMemory);
+    PrintAlignedPtr("MEMORY", interp->listMemory);
   #endif
-
-  return interp;
-}
-
-VInterp* InterpNew()
-{
-  return InterpNewWithSize(
-    100  * sizeof(VItem),       // sizeGlobalVars
-    100  * sizeof(VItem),       // sizeDataStack
-    100  * sizeof(VStackFrame), // sizeCallStack
-    1000 * sizeof(VItem),       // sizeItemMemory 
-    1024 * sizeof(char)         // sizeSymbolMemory
-  );
 }
 
 void InterpFree(VInterp* interp)
 {
-  MemSweep(InterpMem(interp));
+  ListMemSweep(InterpListMem(interp));
 
   #ifdef TRACK_MEMORY_USAGE
-    MemPrintAllocCounter(InterpMem(interp));
+    ListMemPrintAllocCounter(InterpListMem(interp));
   #endif
-
-  SysFree(interp);
 }
 
 // -------------------------------------------------------------
 // Item access
 // -------------------------------------------------------------
 
-#define GetFirst(item, interp) MemGetFirst(InterpMem(interp), item)
-#define GetNext(item, interp) MemGetNext(InterpMem(interp), item)
+#define GetFirst(item, interp) ListMemGetFirst(InterpListMem(interp), item)
+#define GetNext(item, interp) ListMemGetNext(InterpListMem(interp), item)
 
-#define SetFirst(item, first, interp) MemSetFirst(InterpMem(interp), item, first)
-#define SetNext(item, next, interp) MemSetNext(InterpMem(interp), item, next)
+#define SetFirst(item, first, interp) ListMemSetFirst(InterpListMem(interp), item, first)
+#define SetNext(item, next, interp) ListMemSetNext(InterpListMem(interp), item, next)
 
-#define AllocItem(interp) MemAlloc(InterpMem(interp))
-#define AllocHandle(data, type, interp) MemAllocHandle(InterpMem(interp), data, type)
-#define GetHandlePtr(item, interp) MemGetHandlePtr(InterpMem(interp), item)
+#define AllocItem(interp) ListMemAlloc(InterpListMem(interp))
+#define AllocHandle(data, type, interp) ListMemAllocHandle(InterpListMem(interp), data, type)
+#define GetHandlePtr(item, interp) ListMemGetHandlePtr(InterpListMem(interp), item)
 
 // -------------------------------------------------------------
 // Garbage collection
@@ -214,27 +198,27 @@ void InterpGC(VInterp* interp)
     VItem* item = &(stack[i]);
     if (!IsTypeAtomic(item))
     {
-      MemMark(InterpMem(interp), GetFirst(item, interp));
+      ListMemMark(InterpListMem(interp), GetFirst(item, interp));
     }
   }
 
   // Mark global vars
-  VItem* globalVars = interp->globalVars;
-  for (int i = 0; i < interp->numGlobalVars; ++ i)
+  VItem* table = interp->globalVarTable;
+  for (int i = 0; i < interp->globalVarTableSize; ++ i)
   {
-    VItem* item = &(globalVars[i]);
+    VItem* item = & (table[i]);
     if (!IsTypeAtomic(item))
     {
-      MemMark(InterpMem(interp), GetFirst(item, interp));
+      ListMemMark(InterpListMem(interp), GetFirst(item, interp));
     }
   }
 
-  // TODO: MemMark(callstack); // Walk from top and mark localvars
+  // TODO: ListMemMark(callstack); // Walk from top and mark localvars
 
-  MemSweep(InterpMem(interp));
+  ListMemSweep(InterpListMem(interp));
 
   #ifdef TRACK_MEMORY_USAGE
-    MemPrintAllocCounter(InterpMem(interp));
+    ListMemPrintAllocCounter(InterpListMem(interp));
   #endif
 }
 
@@ -247,7 +231,7 @@ void InterpStackPush(VInterp* interp, VItem* item)
 {
   ++ interp->dataStackTop;
 
-  if (interp->dataStackTop >= interp->numDataStackItems)
+  if (interp->dataStackTop >= interp->dataStackSize)
   {
     GURU_MEDITATION(DATA_STACK_OVERFLOW);
   }
@@ -309,15 +293,15 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
 
     ++ interp->callStackTop;
 
-    if (interp->callStackTop >= interp->numCallStackFrames)
+    if (interp->callStackTop >= interp->callStackSize)
     {
       GURU_MEDITATION(CALL_STACK_OVERFLOW);
     }
 
     current = InterpGetStackFrame(interp);
 
-    // Access the local vars of the parent until new scope is introduced
-    current->context = parent;
+    // Access the local vars of the parent context until new scope is introduced
+    current->context = parent->context;
   }
 
   // Set first instruction in the new frame
@@ -345,7 +329,7 @@ void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
 
   // Set context to this stackframe when a local variable is introduced.
   // This creates a new "scope".
-  // Note: Function cannot alter the variables in the parent scope, 
+  // Note: Functions cannot access variables in the parent scope, 
   // only read them. This is by design.
   frame->context = frame;
 
@@ -363,19 +347,19 @@ void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
 // Copies item
 void InterpSetGlobalVar(VInterp* interp, int index, VItem* item)
 {
-  if (index < interp->numGlobalVars)
+  if (index < interp->globalVarTableSize)
   {
     // Copy item
-    (interp->globalVars)[index] = *item;
+    (interp->globalVarTable)[index] = *item;
   }
   else
   {
-    GURU_MEDITATION(GLOBALVARS_OVERFLOW);
+    GURU_MEDITATION(GLOBAL_VAR_TABLE_OVERFLOW);
   }
 }
 
 #define InterpGetGlobalVar(interp, index) \
-  (& (((interp)->globalVars)[index]))
+  (& (((interp)->globalVarTable)[index]))
 
 // -------------------------------------------------------------
 // Eval
@@ -432,7 +416,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     // Evaluate current instruction.
     if (NULL != instruction)
     {
-      // Advance instruction for next loop
+      // Advance instruction for *NEXT* loop
       current->instruction = GetNext(instruction, interp);
 
       if (IsTypePrimFun(instruction))
@@ -466,12 +450,15 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     {
       InterpPopStackFrame(interp);
 
+      interp->run = interp->callStackTop > -1;
+/*
       // Exit if this was the last stackframe.
       if (interp->callStackTop < 0)
       {
         interp->run = FALSE;
         goto Exit; // Exit loop
       }
+*/
     }
   }
   // while

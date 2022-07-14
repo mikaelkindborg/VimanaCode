@@ -11,7 +11,7 @@ void PrimFun_sayHi(VInterp* interp)
 void PrimFun_print(VInterp* interp)
 {
   VItem* item = InterpStackPop(interp);
-  PrintItem(item, interp);
+  InterpPrint(interp, item);
   PrintNewLine();
 }
 
@@ -27,14 +27,7 @@ void PrimFun_eval(VInterp* interp)
   VItem* codeBlock = InterpStackPop(interp);
   InterpPushStackFrame(interp, codeBlock);
 }
-/*
-// Eval in new context (function call)
-void PrimFun_call(VInterp* interp)
-{
-  VItem* codeBlock = InterpStackPop(interp);
-  InterpPushFunCallStackFrame(interp, codeBlock);
-}
-*/
+
 void PrimFun_iftrue(VInterp* interp)
 {
   VItem* trueBlock = InterpStackPop(interp);
@@ -83,14 +76,12 @@ void PrimFun_funify(VInterp* interp)
   ItemSetType(list, TypeFun);
 }
 
-//VItem* Parse(char* sourceCode, VInterp* interp);
-
 void PrimFun_parse(VInterp* interp)
 {
   VItem* item = InterpStackTop(interp);
   if (!IsTypeString(item)) GURU_MEDITATION(PARSE_ARG_NOT_STRING);
   char* string = GetHandlePtr(item, interp);
-  VItem* list = Parse(string, interp);
+  VItem* list = InterpParse(interp, string);
   *item = *list;
 }
 
@@ -482,53 +473,56 @@ void PrimFun_evalfile(VInterp* interp)
 
 void AddCorePrimFuns()
 {
-  PrimFunAdd("sayHi", PrimFun_sayHi);
-  PrimFunAdd("print", PrimFun_print);
-  PrimFunAdd("printstack", PrimFun_printstack);
-  PrimFunAdd("eval", PrimFun_eval);
-  PrimFunAdd("call", PrimFun_call);
-  PrimFunAdd("iftrue", PrimFun_iftrue);
-  PrimFunAdd("iffalse", PrimFun_iffalse);
-  PrimFunAdd("ifelse", PrimFun_ifelse);
-  PrimFunAdd("setglobal", PrimFun_setglobal);
-  PrimFunAdd("getglobal", PrimFun_getglobal);
-  PrimFunAdd("funify", PrimFun_funify);
-  PrimFunAdd("parse", PrimFun_parse);
-  PrimFunAdd("readfile", PrimFun_readfile);
-  PrimFunAdd("+", PrimFun_plus);
-  PrimFunAdd("-", PrimFun_minus);
-  PrimFunAdd("*", PrimFun_times);
-  PrimFunAdd("/", PrimFun_div);
-  PrimFunAdd("1+", PrimFun_1plus);
-  PrimFunAdd("1-", PrimFun_1minus);
-  PrimFunAdd("2+", PrimFun_2plus);
-  PrimFunAdd("2-", PrimFun_2minus);
-  PrimFunAdd("<", PrimFun_lessthan);
-  PrimFunAdd(">", PrimFun_greaterthan);
-  PrimFunAdd("eq", PrimFun_eq);
-  PrimFunAdd("iszero", PrimFun_iszero);
-  PrimFunAdd("not", PrimFun_not);
-  PrimFunAdd("drop", PrimFun_drop);
-  PrimFunAdd("dup", PrimFun_dup);
-  PrimFunAdd("swap", PrimFun_swap);
-  PrimFunAdd("over", PrimFun_over);
-  PrimFunAdd("[A]", PrimFun_local_setA);
-  PrimFunAdd("[AB]", PrimFun_local_setAB);
-  PrimFunAdd("[ABC]", PrimFun_local_setABC);
-  PrimFunAdd("[ABCD]", PrimFun_local_setABCD);
-  PrimFunAdd("A", PrimFun_local_getA);
-  PrimFunAdd("B", PrimFun_local_getB);
-  PrimFunAdd("C", PrimFun_local_getC);
-  PrimFunAdd("D", PrimFun_local_getD);
-  PrimFunAdd("first", PrimFun_first);
-  PrimFunAdd("rest", PrimFun_rest);
-  PrimFunAdd("cons", PrimFun_cons);
-  PrimFunAdd("setfirst", PrimFun_setfirst);
-  PrimFunAdd("gc", PrimFun_gc);
-  PrimFunAdd("millis", PrimFun_millis);
-  PrimFunAdd("sleep", PrimFun_sleep);
-  PrimFunAdd("def", PrimFun_def);
-  PrimFunAdd("evalfile", PrimFun_evalfile);
+  PrimFunTableAdd("sayHi", PrimFun_sayHi);
+  PrimFunTableAdd("print", PrimFun_print);
+  PrimFunTableAdd("printstack", PrimFun_printstack);
+  PrimFunTableAdd("eval", PrimFun_eval);
+  PrimFunTableAdd("iftrue", PrimFun_iftrue);
+  PrimFunTableAdd("iffalse", PrimFun_iffalse);
+  PrimFunTableAdd("ifelse", PrimFun_ifelse);
+  PrimFunTableAdd("setglobal", PrimFun_setglobal);
+  PrimFunTableAdd("getglobal", PrimFun_getglobal);
+  PrimFunTableAdd("funify", PrimFun_funify);
+  PrimFunTableAdd("parse", PrimFun_parse);
+  PrimFunTableAdd("readfile", PrimFun_readfile);
+  PrimFunTableAdd("+", PrimFun_plus);
+  PrimFunTableAdd("-", PrimFun_minus);
+  PrimFunTableAdd("*", PrimFun_times);
+  PrimFunTableAdd("/", PrimFun_div);
+  PrimFunTableAdd("1+", PrimFun_1plus);
+  PrimFunTableAdd("1-", PrimFun_1minus);
+  PrimFunTableAdd("2+", PrimFun_2plus);
+  PrimFunTableAdd("2-", PrimFun_2minus);
+  PrimFunTableAdd("<", PrimFun_lessthan);
+  PrimFunTableAdd(">", PrimFun_greaterthan);
+  PrimFunTableAdd("eq", PrimFun_eq);
+  PrimFunTableAdd("iszero", PrimFun_iszero);
+  PrimFunTableAdd("not", PrimFun_not);
+  PrimFunTableAdd("drop", PrimFun_drop);
+  PrimFunTableAdd("[]", PrimFun_drop);
+  PrimFunTableAdd("dup", PrimFun_dup);
+  PrimFunTableAdd("[aa]", PrimFun_dup);
+  PrimFunTableAdd("swap", PrimFun_swap);
+  PrimFunTableAdd("[ba]", PrimFun_swap);
+  PrimFunTableAdd("over", PrimFun_over);
+  PrimFunTableAdd("[aba]", PrimFun_over);
+  PrimFunTableAdd("[x]", PrimFun_local_setA);
+  PrimFunTableAdd("[xy]", PrimFun_local_setAB);
+  PrimFunTableAdd("[xyz]", PrimFun_local_setABC);
+  PrimFunTableAdd("[xyzq]", PrimFun_local_setABCD);
+  PrimFunTableAdd("x", PrimFun_local_getA);
+  PrimFunTableAdd("y", PrimFun_local_getB);
+  PrimFunTableAdd("z", PrimFun_local_getC);
+  PrimFunTableAdd("q", PrimFun_local_getD);
+  PrimFunTableAdd("first", PrimFun_first);
+  PrimFunTableAdd("rest", PrimFun_rest);
+  PrimFunTableAdd("cons", PrimFun_cons);
+  PrimFunTableAdd("setfirst", PrimFun_setfirst);
+  PrimFunTableAdd("gc", PrimFun_gc);
+  PrimFunTableAdd("millis", PrimFun_millis);
+  PrimFunTableAdd("sleep", PrimFun_sleep);
+  PrimFunTableAdd("def", PrimFun_def);
+  PrimFunTableAdd("evalfile", PrimFun_evalfile);
 }
 
 /*
