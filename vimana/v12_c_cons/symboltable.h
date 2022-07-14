@@ -10,16 +10,16 @@ static char** GlobalSymbolTable;
 static int    GlobalSymbolTableSize;
 static int    GlobalSymbolTableMaxSize;
 
+int SymbolTableByteSize(int size)
+{
+  return sizeof(char*) * size;
+}
+
 void SymbolTableInit(void* mem, int size)
 {
   GlobalSymbolTable = mem;
   GlobalSymbolTableSize = 0;
   GlobalSymbolTableMaxSize = size;
-}
-
-int SymbolTableByteSize()
-{
-  return sizeof(char*) * GlobalSymbolTableMaxSize;
 }
 
 int SymbolTableMaxSize()
@@ -28,6 +28,7 @@ int SymbolTableMaxSize()
 }
 
 // Add symbol at the end of the array
+// Return index of added item
 int SymbolTableAdd(char* symbol)
 {
   if (GlobalSymbolTableSize < GlobalSymbolTableMaxSize)
@@ -39,7 +40,7 @@ int SymbolTableAdd(char* symbol)
   {
     GURU_MEDITATION(SYMBOL_TABLE_OUT_OF_MEMORY);
   }
-  return GlobalSymbolTableSize;
+  return GlobalSymbolTableSize - 1;
 }
 
 char* SymbolTableGet(int index)

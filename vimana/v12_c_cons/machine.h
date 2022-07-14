@@ -49,7 +49,7 @@ static int     GlobalInterpByteSize;
 // System memory
 // -------------------------------------------------------------
 
-void MachineAllocate(size_t numBytes)
+void MachineAllocate(int numBytes)
 {
   GlobalMemory = SysAlloc(numBytes);
   GlobalMemoryByteSize = numBytes;
@@ -84,11 +84,11 @@ void MachineCreateSymbolTable(int symbolTableSize)
   VByte* symbolTableStart = GlobalMemory + PrimFunTableByteSize();
   SymbolTableInit(symbolTableStart, symbolTableSize);
 
-  VByte* symbolMemoryStart = symbolTableStart + SymbolTableByteSize();
+  VByte* symbolMemoryStart = symbolTableStart + SymbolTableByteSize(symbolTableSize);
   int numChars = symbolTableSize * 10; // Estimate 10 chars per symbol
   SymbolMemInitGlobal(symbolMemoryStart, numChars);
 
-  GlobalInterp = symbolMemoryStart + SymbolMemByteSizeGlobal();
+  GlobalInterp = symbolMemoryStart + SymbolMemByteSize(numChars);
 }
 
 void MachineCreateInterp(int dataStackSize, int callStackSize, int listMemorySize)
@@ -133,13 +133,28 @@ void MachinePrintMemoryUse()
   printf("Allocated:      %i\n", GlobalMemoryByteSize);
   printf("Used:           %i\n", memoryUsed);
   printf("Primfun table:  %i\n", PrimFunTableByteSize());
-  printf("Symbol table:   %i\n", SymbolTableByteSize());
-  printf("Symbol memory:  %i\n", SymbolMemByteSizeGlobal());
+  printf("Num primfuns:   %i\n", GlobalPrimFunTableSize);
+  printf("Symbol table:   %i\n", SymbolTableByteSize(SymbolTableMaxSize()));
+  printf("Symbol memory:  %i\n", SymbolMemByteSize(SymbolMemGlobal()->size));
   printf("Interpreter:    %i\n", GlobalInterpByteSize);
 }
 
-void MachineEval(char* code)
+VItem* MachineParse(char* code)
 {
-  InterpEval(MachineInterp(), 
-    InterpParse(MachineInterp(), code));
+  return InterpParse(MachineInterp(), code);
+}
+
+void MachineEval(VItem* list)
+{
+  InterpEval(MachineInterp(), list);
+}
+
+void MachineEvalString(char* code)
+{
+  MachineEval(MachineParse(code));
+}
+
+void MachinePrint(VItem* item)
+{
+  InterpPrint(MachineInterp(), item);
 }

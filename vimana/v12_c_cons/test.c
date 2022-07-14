@@ -3,6 +3,10 @@
 
 #include "vimana.h"
 
+// -------------------------------------------------------------
+// Test helpers
+// -------------------------------------------------------------
+
 static int GlobalNumFailedTests = 0;
 
 void ShouldHold(char* description, int condition)
@@ -17,7 +21,7 @@ void ShouldHold(char* description, int condition)
 void PrintTestResult()
 {
   if (GlobalNumFailedTests > 0)
-    printf("FAILED TESTS: %i\n", G_NumFailedTests);
+    printf("FAILED TESTS: %i\n", GlobalNumFailedTests);
   else
     printf("ALL TESTS PASS\n");
 }
@@ -28,6 +32,10 @@ void LogTest(char* testName)
   PrintLine(testName);
   PrintLine("================================================");
 }
+
+// -------------------------------------------------------------
+// Tests
+// -------------------------------------------------------------
 
 void TestPrintBinary()
 {
@@ -69,8 +77,10 @@ void TestItemAttributes()
   ShouldHold("TestItemAttributes: Item first should equal", 3 == ItemGetFirst(item));
 }
 
-void TestFoo()
+void TestMemoryLayout()
 {
+  LogTest("TestMemoryLayout");
+
   long numbers[4] = { 1, 2, 3, 4 };
 
   long* n1 = numbers;
@@ -117,17 +127,17 @@ void TestMemAlloc()
 {
   LogTest("TestMemAlloc");
 
-  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
-  MemInit(mem, 10);
+  VListMemory* mem = SysAlloc(ListMemByteSize(10));
+  ListMemInit(mem, 10);
 
   VItem* item;
 
-  item = MemAlloc(mem);
+  item = ListMemAlloc(mem);
   ItemGCMarkSet(item);
   ItemSetType(item, 1);
   ItemSetNext(item, 4);
 
-  item = MemAlloc(mem);
+  item = ListMemAlloc(mem);
   ItemGCMarkSet(item);
   ItemSetType(item, 1);
   ItemSetNext(item, 4);
@@ -135,19 +145,19 @@ void TestMemAlloc()
   //PrintBinaryUInt(ItemGetNext(item));
   ShouldHold("TestMemAlloc: Next should equal", 4 == ItemGetNext(item));
 
-  MemSweep(mem);
-  MemPrintAllocCounter(mem);
+  ListMemSweep(mem);
+  ListMemPrintAllocCounter(mem);
   ShouldHold("TestMemAlloc: Next should equal", 2 == mem->allocCounter);
 
-  MemSweep(mem);
-  MemPrintAllocCounter(mem);
+  ListMemSweep(mem);
+  ListMemPrintAllocCounter(mem);
   ShouldHold("TestMemAlloc: Next should equal", 0 == mem->allocCounter);
 
   SysFree(mem);
 }
 
 // Helper function
-VItem* AllocMaxItems(VItemMemory* mem)
+VItem* AllocMaxItems(VListMemory* mem)
 {
   // Alloc items until out of memory
 
@@ -159,7 +169,7 @@ VItem* AllocMaxItems(VItemMemory* mem)
 
   while (1)
   {
-    next = MemAlloc(mem);
+    next = ListMemAlloc(mem);
 
     if (NULL == next) break;
 
@@ -171,7 +181,7 @@ VItem* AllocMaxItems(VItemMemory* mem)
     else
     {
       ItemSetIntNum(next, ItemGetIntNum(item) + 1);
-      MemSetNext(mem, item, next);
+      ListMemSetNext(mem, item, next);
     }
 
     item = next;
@@ -180,26 +190,26 @@ VItem* AllocMaxItems(VItemMemory* mem)
 }
 
 // Helper function
-int CountItems(VItem* first, VItemMemory* mem)
+int CountItems(VItem* first, VListMemory* mem)
 {
   int counter = 0;
   VItem* item = first;
   while (item)
   {
     ++ counter;
-    item = MemGetNext(mem, item);
+    item = ListMemGetNext(mem, item);
   }
   return counter;
 }
 
 // Helper function
-void PrintItems(VItem* first, VItemMemory* mem)
+void PrintItems(VItem* first, VListMemory* mem)
 {
   VItem* item = first;
   while (item)
   {
     printf("%li ", ItemGetIntNum(item));
-    item = MemGetNext(mem, item);
+    item = ListMemGetNext(mem, item);
   }
   PrintNewLine();
 }
@@ -208,8 +218,8 @@ void TestAllocDealloc()
 {
   LogTest("TestAllocDealloc");
 
-  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
-  MemInit(mem, 10);
+  VListMemory* mem = SysAlloc(ListMemByteSize(10));
+  ListMemInit(mem, 10);
 
   PrintLine("Alloc max");
   VItem* first = AllocMaxItems(mem);
@@ -217,7 +227,7 @@ void TestAllocDealloc()
   int numItems = CountItems(first, mem);
   printf("Num items: %i\n", numItems);
 
-  MemSweep(mem);
+  ListMemSweep(mem);
 
   PrintLine("Alloc max again");
   first = AllocMaxItems(mem);
@@ -225,11 +235,11 @@ void TestAllocDealloc()
   int numItems2 = CountItems(first, mem);
   printf("Num items: %i\n", numItems2);
 
-  MemSweep(mem);
+  ListMemSweep(mem);
 
   ShouldHold("TestAllocDealloc: Allocated items should be equal", numItems == numItems2);
 
-  MemPrintAllocCounter(mem);
+  ListMemPrintAllocCounter(mem);
   SysFree(mem);
   SysPrintMemStat();
 }
@@ -243,23 +253,23 @@ void TestSetFirst()
   VItem* next;
   VAddr addr;
 
-  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
-  MemInit(mem, 10);
+  VListMemory* mem = SysAlloc(ListMemByteSize(10));
+  ListMemInit(mem, 10);
 
-  first = MemAlloc(mem);
+  first = ListMemAlloc(mem);
   item = first;
   ItemSetNext(item, 1); // Using next for the item value in this test
 
-  next = MemAlloc(mem);
+  next = ListMemAlloc(mem);
   ItemSetNext(next, 2);
-  addr = MemGetAddr(mem, next);
+  addr = ListMemGetAddr(mem, next);
   printf("addr: %lu\n", (unsigned long) addr);
   ItemSetFirst(item, addr);
   item = next;
 
-  next = MemAlloc(mem);
+  next = ListMemAlloc(mem);
   ItemSetNext(next, 3);
-  addr = MemGetAddr(mem, next);
+  addr = ListMemGetAddr(mem, next);
   printf("addr: %lu\n", (unsigned long) addr);
   ItemSetFirst(item, addr);
   item = next;
@@ -272,40 +282,15 @@ void TestSetFirst()
   {
     printf("item: %lu\n", (unsigned long) ItemGetNext(item));
     if (0 == ItemGetFirst(item)) break;
-    item = MemGetFirst(mem, item);
+    item = ListMemGetFirst(mem, item);
   }
 
-  MemSweep(mem);
+  ListMemSweep(mem);
 
   ShouldHold("TestSetFirst: 0 == mem->allocCounter", 0 == mem->allocCounter);
 
-  MemPrintAllocCounter(mem);
+  ListMemPrintAllocCounter(mem);
 
-  SysFree(mem);
-}
-
-void TestStringItem()
-{
-  LogTest("TestStringItem");
-
-  VItem* item;
-  
-  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
-  MemInit(mem, 10);
-
-  char* str1 = "Hi there";
-  item = MemAllocHandle(mem, StrCopy(str1), TypeString);
-  ItemSetType(item, TypeString);
-
-  VItem* bufferPtrItem = MemGetFirst(mem, item);
-  char* str2 = (char*) ItemGetPtr(bufferPtrItem);
-  printf("String: %s\n", str2);
-
-  ShouldHold("TestStringItem: Strings should equal", StrEquals(str1, str2));
-
-  MemSweep(mem);
-
-  MemPrintAllocCounter(mem);
   SysFree(mem);
 }
 
@@ -315,22 +300,340 @@ void TestMemGetHandlePtr()
 
   VItem* item;
   
-  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
-  MemInit(mem, 10);
+  VListMemory* mem = SysAlloc(ListMemByteSize(10));
+  ListMemInit(mem, 10);
 
   char* str1 = "Hi there";
-  item = MemAllocHandle(mem, StrCopy(str1), TypeString);
+  item = ListMemAllocHandle(mem, StrCopy(str1), TypeString);
   ItemSetType(item, TypeString);
 
-  char* str2 = MemGetHandlePtr(mem, item);
+  char* str2 = ListMemGetHandlePtr(mem, item);
   printf("String: %s\n", str2);
 
   ShouldHold("TestMemGetHandlePtr: Strings should equal", StrEquals(str1, str2));
 
-  MemSweep(mem);
+  ListMemSweep(mem);
 
-  MemPrintAllocCounter(mem);
+  ListMemPrintAllocCounter(mem);
   SysFree(mem);
+}
+
+void TestStringItem()
+{
+  LogTest("TestStringItem");
+
+  VItem* item;
+  
+  VListMemory* mem = SysAlloc(ListMemByteSize(10));
+  ListMemInit(mem, 10);
+
+  char* str1 = "Hi there";
+  item = ListMemAllocHandle(mem, StrCopy(str1), TypeString);
+  ItemSetType(item, TypeString);
+
+  VItem* bufferPtrItem = ListMemGetFirst(mem, item);
+  char* str2 = (char*) ItemGetPtr(bufferPtrItem);
+  printf("String: %s\n", str2);
+
+  ShouldHold("TestStringItem: Strings should equal", StrEquals(str1, str2));
+
+  ListMemSweep(mem);
+
+  ListMemPrintAllocCounter(mem);
+  SysFree(mem);
+}
+
+void TestArrayWithStringItems()
+{
+  LogTest("TestArrayWithStringItems");
+
+  // Make room for 5 string items and 5 buffer items
+  VListMemory* mem = SysAlloc(ListMemByteSize(10));
+  ListMemInit(mem, 10);
+
+  VItem* array[5];
+  VItem* item;
+
+  char* str1 = "Hi there";
+
+  for (int i = 0; i < 5; ++ i)
+  {
+    item = ListMemAllocHandle(mem, StrCopy(str1), TypeString);
+    ItemSetType(item, TypeString);
+    array[i] = item;
+  }
+
+  for (int i = 0; i < 5; ++ i)
+  {
+    VItem* item = array[i];
+    //printf("Item first: %lu\n", ItemGetFirst(item));
+    VItem* buffer = ListMemGetFirst(mem, item);
+    char* str2 = (char*) ItemGetPtr(buffer);
+    ShouldHold("TestArrayWithStringItems: StrEquals(str1, str2)", StrEquals(str1, str2));
+    //printf("String: %s\n", str2);
+  }
+
+  ShouldHold("TestArrayWithStringItems: 10 == mem->allocCounter", 10 == mem->allocCounter);
+
+  ListMemSweep(mem);
+
+  ShouldHold("TestArrayWithStringItems: 0 == mem->allocCounter", 0 == mem->allocCounter);
+
+  SysFree(mem);
+}
+
+void TestSymbolTable()
+{
+  LogTest("TestSymbolTable");
+
+  char* s1 = "First";
+  char* s2 = "Second";
+  char* s3 = "Third";
+
+  int index;
+
+  void* mem = SysAlloc(SymbolTableByteSize(3));
+
+  SymbolTableInit(mem, 3);
+
+  SymbolTableAdd(s1);
+  SymbolTableAdd(s2);
+  index = SymbolTableAdd(s3);
+
+  ShouldHold("TestSymbolTable: last add index should equal 2", 2 == index);
+
+  index = SymbolTableFind(s3);
+  char* s = SymbolTableGet(index);
+
+  ShouldHold("TestSymbolTable: find index should equal 2", 2 == index);
+  ShouldHold("TestSymbolTable: symbols shold equal", StrEquals(s3, s));
+
+  printf("Symbol: %i %s\n", index, s);
+
+  SysFree(mem);
+}
+
+void TestSymbolMemory()
+{
+  LogTest("TestSymbolMemory");
+
+  void* mem = SysAlloc(SymbolMemByteSize(100));
+
+  SymbolMemInit(mem, 100);
+
+  char* s1 = SymbolMemGetNextFree(mem);
+  SymbolMemWriteChar(mem, 'H');
+  SymbolMemWriteChar(mem, 'I');
+  SymbolMemWriteFinish(mem);
+
+  char* s2 = SymbolMemGetNextFree(mem);
+  SymbolMemWriteChar(mem, 'H');
+  SymbolMemWriteChar(mem, 'I');
+  SymbolMemResetPos(mem);
+  SymbolMemWriteChar(mem, ' ');
+  SymbolMemWriteChar(mem, 'W');
+  SymbolMemWriteChar(mem, 'O');
+  SymbolMemWriteChar(mem, 'R');
+  SymbolMemWriteChar(mem, 'L');
+  SymbolMemWriteChar(mem, 'D');
+  SymbolMemWriteFinish(mem);
+
+  ShouldHold("TestSymbolMemory: s1 shold equal", StrEquals(s1, "HI"));
+  ShouldHold("TestSymbolMemory: s2 shold equal", StrEquals(s2, " WORLD"));
+
+  printf("s1: %s%s\n", s1 , s2);
+
+  SysFree(mem);
+}
+
+// Helper function
+void CreateMachine()
+{
+  MachineAllocate(3976);
+  MachineAddCorePrimFuns();
+  MachineCreate(
+    12, // symbolTableSize
+    10, // dataStackSize
+    10, // callStackSize
+    100 // listMemorySize
+    );
+}
+
+void TestMachineCreate()
+{
+  LogTest("TestMachineCreate");
+
+  CreateMachine();
+
+  MachinePrintMemoryUse();
+  //MachineEval("42 print");
+
+  MachineFree();
+}
+
+void TestParse()
+{
+  LogTest("TestParse");
+
+  CreateMachine();
+
+  VInterp* interp = MachineInterp();
+  VItem* list;
+  char*  code;
+
+  code = "foo bar 8888";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+
+  code = "1 2 (((3 4) 5))";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+
+  code = "";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+  ShouldHold("TestParse: List should be empty", IsEmpty(list));
+  ShouldHold("TestParse: First should be 0", 0 == ItemGetFirst(list));
+
+  code = "()";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+  ShouldHold("TestParse: Child should be empty", IsEmpty(GetFirst(list, interp)));
+
+  code = "   (( ( ) ))   ";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+  ShouldHold("TestParse: Innermost should be empty", 
+    IsEmpty(GetFirst(GetFirst(GetFirst(list, interp), interp), interp)));
+
+  code = "{Hi World}";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be string", IsTypeString(GetFirst(list, interp)));
+
+  code = "{hi {bar}} foo";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be string", IsTypeString(GetFirst(list, interp)));
+
+  code = "42";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be intnum", IsTypeIntNum(GetFirst(list, interp)));
+
+  code = "42.2";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be decnum", IsTypeDecNum(GetFirst(list, interp)));
+
+  code = "42.2.3";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+  ShouldHold("TestParse: First should be symbol", IsTypeSymbol(GetFirst(list, interp)));
+
+  MachineFree();
+}
+
+void TestInterp()
+{
+  LogTest("TestInterp");
+
+  CreateMachine();
+
+  VInterp* interp = MachineInterp();
+  VItem* list;
+  char*  code;
+
+  code = "1 2 3 1 2 3 + + + + + (SUM) setglobal SUM print";
+  list = MachineParse(code);
+  MachinePrint(list);
+  PrintNewLine();
+
+  MachineEval(list);
+
+  PrimFun_printstack(interp);
+
+  ShouldHold("TestInterp: callStackTop should be -1", -1 == interp->callStackTop);
+
+  MachineFree();
+}
+
+void TestMachine()
+{
+  LogTest("TestMachine");
+
+  CreateMachine();
+
+  VInterp* interp = MachineInterp();
+  char*  code;
+
+  code = "(fib) (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def 8 fib";
+  MachineEvalString(code);
+
+  ShouldHold(
+    "TestMachine: callStackTop should be -1", 
+    -1 == interp->callStackTop);
+
+  PrimFun_printstack(interp);
+
+  ShouldHold(
+    "TestMachine: top of stack should be 21", 
+    21 == ItemGetIntNum(InterpStackTop(interp)));
+
+  MachineFree();
+}
+
+// -------------------------------------------------------------
+// Main
+// -------------------------------------------------------------
+
+int main()
+{
+  LogTest("Welcome to VimanaCode tests");
+
+  /*TestPrintBinary();
+  TestItemAttributes();
+  TestMemoryLayout();
+  TestMemAlloc();
+  TestAllocDealloc();
+  TestSetFirst();
+  TestMemGetHandlePtr();
+  TestStringItem();
+  TestArrayWithStringItems();
+  TestSymbolTable();
+  TestSymbolMemory();
+  TestMachineCreate();
+  TestParse();
+  TestInterp();*/
+  TestMachine();
+
+  SysPrintMemStat();
+  PrintTestResult();
+
+  return 0;
+}
+
+// --------------------------------------------------------
+
+/*
+void TestParseSymbolicCode()
+{
+  VListMemory* mem = ListMemNew(1000);
+  char* code = "N-42 N44 (P1 N2 (N3 (P4)) N5 N6) N0 (((N88";
+  VItem* first = ParseSymbolicCode(code, mem);
+  ListMemPrintList(mem, first);
+  PrintNewLine();
+  ListMemFree(mem);
 }
 
 void TestArray()
@@ -356,217 +659,5 @@ void TestArray()
   }
 
   ArrayFree(array);
-}
-
-void TestSymbolTable()
-{
-  LogTest("TestSymbolTable");
-
-  char* s1 = "First";
-  char* s2 = "Second";
-  char* s3 = "Third";
-
-  SymbolTableCreate();
-
-  SymbolTableFindAdd(s1);
-  SymbolTableFindAdd(s2);
-  SymbolTableFindAdd(s3);
-
-  int index = SymbolTableFindAdd(s3);
-  char* s = SymbolTableGet(index);
-
-  printf("Symbol: %i %s\n", index, s);
-
-  SymbolTableFree();
-}
-
-void TestArrayWithStringItems()
-{
-  LogTest("TestArrayWithStringItems");
-
-  // Make room for 5 string items and 5 buffer items
-  VItemMemory* mem = SysAlloc(MemGetByteSize(10));
-  MemInit(mem, 10);
-
-  VItem* item;
-
-  VArray* array = ArrayNew(sizeof(VItem*), 5);
-
-  char* str1 = "Hi there";
-
-  for (int i = 0; i < 5; ++ i)
-  {
-    array = ArrayGrow(array, i + 1);
-
-    item = MemAllocHandle(mem, StrCopy(str1), TypeString);
-    ItemSetType(item, TypeString);
-
-    VItem* p = ArrayAt(array, i);
-    *p = *item;
-  }
-
-  for (int i = 0; i < ArrayLength(array); ++ i)
-  {
-    VItem* item = ArrayAt(array, i);
-    //printf("Item first: %lu\n", ItemGetFirst(item));
-    VItem* buffer = MemGetFirst(mem, item);
-    char* str2 = (char*) ItemGetPtr(buffer);
-    ShouldHold("TestArrayWithStringItems: StrEquals(str1, str2)", StrEquals(str1, str2));
-    //printf("String: %s\n", str2);
-  }
-
-  ShouldHold("TestArrayWithStringItems: 10 == mem->allocCounter", 10 == mem->allocCounter);
-
-  MemSweep(mem);
-
-  ShouldHold("TestArrayWithStringItems: 0 == mem->allocCounter", 0 == mem->allocCounter);
-
-  ArrayFree(array);
-
-  SysFree(mem);
-}
-
-void TestParse()
-{
-  LogTest("TestParse");
-
-  PrimFunTableCreate();
-  AddCorePrimFuns();
-  SymbolTableCreate();
-
-  VInterp* interp = InterpNew();
-
-  VItem* list;
-  char*  code;
-
-  code = "foo bar 8888";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-
-  code = "1 2 (((3 4) 5))";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-
-  code = "";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-  ShouldHold("TestParse: List should be empty", IsEmpty(list));
-  ShouldHold("TestParse: First should be 0", 0 == ItemGetFirst(list));
-
-  code = "()";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-  ShouldHold("TestParse: Child should be empty", IsEmpty(GetFirst(list, interp)));
-
-  code = "   (( ( ) ))   ";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-  ShouldHold("TestParse: Innermost should be empty", 
-    IsEmpty(GetFirst(GetFirst(GetFirst(list, interp), interp), interp)));
-
-  code = "{Hi World}";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-  ShouldHold("TestParse: First should be string", IsTypeString(GetFirst(list, interp)));
-
-  code = "{hi {bar}} foo";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-  ShouldHold("TestParse: First should be string", IsTypeString(GetFirst(list, interp)));
-
-  code = "42";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-  ShouldHold("TestParse: First should be intnum", IsTypeIntNum(GetFirst(list, interp)));
-
-  code = "42.2";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-  ShouldHold("TestParse: First should be decnum", IsTypeDecNum(GetFirst(list, interp)));
-
-  code = "42.2.3";
-  list = Parse(code, interp);
-  PrintItem(list, interp);
-  PrintNewLine();
-  ShouldHold("TestParse: First should be symbol", IsTypeSymbol(GetFirst(list, interp)));
-
-  InterpFree(interp);
-  SymbolTableFree();
-  PrimFunTableFree();
-}
-
-void TestInterp()
-{
-  LogTest("TestInterp");
-
-  PrimFunTableCreate();
-  AddCorePrimFuns();
-  SymbolTableCreate();
-
-  VInterp* interp = InterpNew();
-
-  VItem* list;
-  char*  code;
-
-  code = "1 2 3 1 2 3 + + + + + (SUM) setglobal SUM print";
-  list = Parse(code, interp);
-  PrintList(list, interp);
-  PrintNewLine();
-
-  InterpEval(interp, list);
-
-  ShouldHold("TestInterp: callStackTop should be -1", -1 == interp->callStackTop);
-
-  InterpFree(interp);
-  SymbolTableFree();
-  PrimFunTableFree();
-}
-
-int main()
-{
-  LogTest("Welcome to VimanaCode tests");
-
-  TestPrintBinary();
-  TestItemAttributes();
-  TestFoo();
-  TestMemAlloc();
-  TestAllocDealloc();
-  TestArray();
-  TestSymbolTable();
-  TestSetFirst();
-  TestStringItem();
-  TestMemGetHandlePtr();
-  TestArrayWithStringItems();
-  TestParse();
-  TestInterp();
-
-  SysPrintMemStat();
-  PrintTestResult();
-
-  printf("sizeof(VItem): %lu\n", sizeof(VItem));
-
-  return 0;
-}
-
-// --------------------------------------------------------
-
-/*
-void TestParseSymbolicCode()
-{
-  VItemMemory* mem = MemNew(1000);
-  char* code = "N-42 N44 (P1 N2 (N3 (P4)) N5 N6) N0 (((N88";
-  VItem* first = ParseSymbolicCode(code, mem);
-  MemPrintList(mem, first);
-  PrintNewLine();
-  MemFree(mem);
 }
 */

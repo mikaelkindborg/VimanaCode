@@ -5,11 +5,11 @@
 #include "vimana.h"
 //#include "socket.h"
 
-#define MACHINE_BYTE_SIZE (128 * 1024)  // Size in bytes
-#define SYMBOL_TABLE_SIZE 100           // Number of symbols in symbol table
-#define DATA_STACK_SIZE   100           // Number of items on the data stack
-#define CALL_STACK_SIZE   100           // Number of stack frames
-#define LIST_MEMORY_SIZE  1000          // Number of items in garbage collected memory
+#define MACHINE_BYTE_SIZE 30728  // Size in bytes
+#define SYMBOL_TABLE_SIZE 100    // Number of symbols in symbol table
+#define DATA_STACK_SIZE   100    // Number of items on the data stack
+#define CALL_STACK_SIZE   100    // Number of stack frames
+#define LIST_MEMORY_SIZE  1000   // Number of items in garbage collected memory
 
 // TODO: Provide hook for exiting interactive mode from Vimana
 static int GlobalInteractiveMode = FALSE;
@@ -68,6 +68,10 @@ int main(int numargs, char* args[])
     DATA_STACK_SIZE, 
     CALL_STACK_SIZE, 
     LIST_MEMORY_SIZE);
+
+#ifdef DEBUG
+  MachinePrintMemoryUse();
+#endif
 
   time_t lastUpdate = 0;
 /*

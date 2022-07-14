@@ -115,7 +115,7 @@ int InterpByteSize(
   int byteSizeGlobalVarTable = sizeGlobalVarTable * sizeof(VItem);
   int byteSizeDataStack = sizeDataStack * sizeof(VItem);
   int byteSizeCallStack = sizeCallStack * sizeof(VStackFrame);
-  int byteSizeListMemory = ListMemGetByteSize(sizeListMemory);
+  int byteSizeListMemory = ListMemByteSize(sizeListMemory);
 
   int byteSizeInterp = 
     byteSizeInterpStruct +
@@ -137,7 +137,7 @@ void InterpInit(
   int byteSizeGlobalVarTable = sizeGlobalVarTable * sizeof(VItem);
   int byteSizeDataStack = sizeDataStack * sizeof(VItem);
   int byteSizeCallStack = sizeCallStack * sizeof(VStackFrame);
-  int byteSizeListMemory = ListMemGetByteSize(sizeListMemory);
+  int byteSizeListMemory = ListMemByteSize(sizeListMemory);
 
   interp->globalVarTable = PtrOffset(interp, byteSizeInterpStruct);
   interp->globalVarTableSize = sizeGlobalVarTable;
@@ -159,6 +159,7 @@ void InterpInit(
     PrintAlignedPtr("DATAST", interp->dataStack);
     PrintAlignedPtr("CALLST", interp->callStack);
     PrintAlignedPtr("MEMORY", interp->listMemory);
+    PrintLine("------------------------------------------------");
   #endif
 }
 
@@ -416,7 +417,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     // Evaluate current instruction.
     if (NULL != instruction)
     {
-      // Advance instruction for *NEXT* loop
+      // Advance instruction for the *NEXT* loop
       current->instruction = GetNext(instruction, interp);
 
       if (IsTypePrimFun(instruction))

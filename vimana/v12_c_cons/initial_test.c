@@ -277,10 +277,10 @@ VItem;
 #define ITEMMEM
 
 #ifdef MALLOC
-void MemInit()
+void ListMemInit()
 {
 }
-void MemFree()
+void ListMemFree()
 {
 }
 VItem* ItemAlloc()
@@ -300,12 +300,12 @@ long ItemMemSize = 50000010;
 long ItemMemOffset = 0;
 VItem* FreeList = NULL;
 
-void MemInit()
+void ListMemInit()
 {
   ItemMem = malloc(sizeof(VItem) * ItemMemSize);
 }
 
-void MemFree()
+void ListMemFree()
 {
   free(ItemMem);
 }
@@ -392,8 +392,8 @@ void TestItemList()
 int main()
 {
   printf("Hi World\n");
-  MemInit();
+  ListMemInit();
   TestItemAlloc();
   TestItemList();
-  MemFree();
+  ListMemFree();
 }

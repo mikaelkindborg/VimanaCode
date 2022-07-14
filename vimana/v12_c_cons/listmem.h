@@ -29,11 +29,11 @@ VListMemory;
 
 #define ListMemStart(mem) ((mem)->start)
 
-//#define AddrToPtr(addr, start) (((start) + (addr)) - 1)
-//#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) + 1)
+#define AddrToPtr(addr, start) (((start) + (addr)) - 1)
+#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) + 1)
 
-#define AddrToPtr(addr, start) ((start) + (addr))
-#define PtrToAddr(ptr, start) (BytePtr(ptr) - (start))
+//#define AddrToPtr(addr, start) ((start) + (addr))
+//#define PtrToAddr(ptr, start) (BytePtr(ptr) - (start))
 
 #define ListMemGet(mem, addr) VItemPtr(AddrToPtr(addr, ListMemStart(mem)))
 #define ListMemGetAddr(mem, ptr) (PtrToAddr(BytePtr(ptr), ListMemStart(mem)))
@@ -59,14 +59,14 @@ void ListMemSetNext(VListMemory* mem, VItem* item, VItem* next)
 // -------------------------------------------------------------
 
 // Return size of VListMemory header plus item memory space in bytes
-int ListMemGetByteSize(int numItems)
+int ListMemByteSize(int numItems)
 {
   return sizeof(VListMemory) + (numItems * sizeof(VItem));
 }
 
 void ListMemInit(VListMemory* mem, int numItems)
 {
-  VAddr memByteSize = ListMemGetByteSize(numItems);
+  VAddr memByteSize = ListMemByteSize(numItems);
 
   mem->start = BytePtr(mem) + (sizeof(VListMemory));
   mem->nextFree = mem->start;

@@ -50,15 +50,15 @@ void SymbolMemInitGlobal(void* mem, int numChars)
   SymbolMemInit(mem, numChars);
 }
 
-// Return number of bytes needed to hold header struct plus array
-int SymbolMemByteSizeGlobal()
-{
-  return sizeof(VSymbolMemory) + (sizeof(char) * (GlobalSymbolMemory->size));
-}
-
 // -------------------------------------------------------------
 // Symbol memory functions
 // -------------------------------------------------------------
+
+// Return number of bytes needed to hold header struct plus array
+int SymbolMemByteSize(int numChars)
+{
+  return sizeof(VSymbolMemory) + (sizeof(char) * numChars);
+}
 
 void SymbolMemInit(VSymbolMemory* mem, int numChars)
 {

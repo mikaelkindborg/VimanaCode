@@ -38,7 +38,7 @@ void PrimFunTableAdd(char* name, VPrimFunPtr fun)
   entry->name = name;
   entry->fun = fun;
 
-  // Update index of last entry
+  // Update size of table
   ++ GlobalPrimFunTableSize;
 }
 
@@ -54,12 +54,12 @@ int PrimFunTableLookupByName(char* name)
   for (int i = 0; i < GlobalPrimFunTableSize; ++ i)
   {
     VPrimFunEntry* entry = PrimFunTableGet(i);
-    if (name == entry->name)
+    if (StrEquals(name, entry->name))
     {
       return i;
     }
   }
-
+  
   return -1;
 }
 

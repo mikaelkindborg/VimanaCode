@@ -132,6 +132,13 @@ Version v12_c_cons:
   NumLinesCode:     1445
   NumLinesComments: 683
   NumLinesBlank:    390
+220714
+  // New abstraction "Machine" grows code size a bit
+  NumLines:          2760
+  NumLinesCode:      1369
+  NumLinesOpenCurly: 242
+  NumLinesComments:  730
+  NumLinesBlank:     419
 
 Version v11_c_minimal:
 

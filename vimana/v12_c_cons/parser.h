@@ -95,6 +95,8 @@ Exit:
 
 VItem* ParseToken(char* token, VInterp* interp)
 {
+  int keepSymbolString = FALSE;
+
   VType type = ParseTokenType(token);
 
   VItem* item = AllocItem(interp);
@@ -119,9 +121,6 @@ VItem* ParseToken(char* token, VInterp* interp)
     {
       // Set primfun
       ItemSetPrimFun(item, primFunId);
-
-      // Free token
-      SymbolMemResetPos(SymbolMemGlobal());
     }
     else
     {
@@ -132,11 +131,9 @@ VItem* ParseToken(char* token, VInterp* interp)
         // New symbol - add it to symbol table
         SymbolMemWriteFinish(SymbolMemGlobal());
         symbolIndex = SymbolTableAdd(token);
-      }
-      else
-      {
-        // Existing symbol - free token string
-        SymbolMemResetPos(SymbolMemGlobal());
+        
+        // This is the only case where we keep the token in symbol memory
+        keepSymbolString = TRUE;
       }
 
       // Set symbol index of item
@@ -146,6 +143,12 @@ VItem* ParseToken(char* token, VInterp* interp)
   else
   {
     GURU_MEDITATION(PARSER_TOKEN_TYPE_ERROR);
+  }
+
+  if (!keepSymbolString)
+  {
+    // Free token string
+    SymbolMemResetPos(SymbolMemGlobal());
   }
 
   return item;
