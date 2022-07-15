@@ -14,6 +14,7 @@ lldb a.out
 process launch
 ctrl-c
 c (continue)
+exit
 
 Cool video about Forth:
 https://www.youtube.com/watch?v=7PHPQcO0O2Y

@@ -37,6 +37,28 @@ void LogTest(char* testName)
 // Tests
 // -------------------------------------------------------------
 
+void TestPointerArithmetic()
+{
+  long buf[10];
+  char* c = (char*) buf;
+  long* p = buf;
+
+  printf("p start: %lu\n", (unsigned long) p);
+  printf("c start: %lu\n", (unsigned long) c);
+
+  buf[2] = 2;
+  *(p + 3) = 3;
+
+  printf("item 0: %lu\n", (unsigned long) buf[0]);
+  printf("item 2: %lu\n", (unsigned long) buf[2]);
+  printf("item 3: %lu\n", (unsigned long) *(p + 3));
+
+  printf("p 3: %lu\n", (unsigned long) ((p + 3) - p));
+
+  printf("c 3a: %lu\n", (unsigned long) ((c + 3) - (char*)p));
+  printf("c 3b: %lu\n", (unsigned long) ((char*)(p + 3) - (char*)p));
+}
+
 void TestPrintBinary()
 {
   LogTest("TestPrintBinary");
@@ -601,7 +623,8 @@ int main()
 {
   LogTest("Welcome to VimanaCode tests");
 
-  /*TestPrintBinary();
+  TestPointerArithmetic();/*
+  TestPrintBinary();
   TestItemAttributes();
   TestMemoryLayout();
   TestMemAlloc();
@@ -614,8 +637,8 @@ int main()
   TestSymbolMemory();
   TestMachineCreate();
   TestParse();
-  TestInterp();*/
-  TestMachine();
+  TestInterp();
+  TestMachine();*/
 
   SysPrintMemStat();
   PrintTestResult();
