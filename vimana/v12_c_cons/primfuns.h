@@ -301,12 +301,12 @@ void PrimFun_first(VInterp* interp)
   // Must be a list type
   if (!IsList(list)) GURU_MEDITATION(FIRST_OBJECT_IS_NOT_A_LIST);
 
-  // Get first item
-  VItem* item = GetFirst(list, interp);
-
   // Leave empty list on the stack
   // () first => ()
-  if (IsNil(item)) goto Exit;
+  if (IsEmpty(list)) goto Exit;
+
+  // Get first item
+  VItem* item = GetFirst(list, interp);
 
   // Copy first item to data stack
   *list = *item;
@@ -321,23 +321,23 @@ void PrimFun_rest(VInterp* interp)
   // Must be a list type
   if (!IsList(list)) GURU_MEDITATION(REST_OBJECT_IS_NOT_A_LIST);
 
+  // Leave empty list on the stack
+  // () rest => ()
+  if (IsEmpty(list)) goto Exit;
+
   // Get first item
   VItem* item = GetFirst(list, interp);
 
-  // Leave empty list on the stack
-  // () rest => ()
-  if (IsNil(item)) goto Exit;
-
-  // Get second item in the list
-  item = GetNext(item, interp);
-
   // If empty tail, leave empty list on the stack
   // (1) rest => ()
-  if (IsNil(item))
+  if (!ItemGetNext(item))
   {
     list->first = 0;
     goto Exit;
   }
+
+  // Get second item in the list
+  item = GetNext(item, interp);
 
   // Set second item as first element of the list
   SetFirst(list, item, interp);
@@ -366,18 +366,18 @@ void PrimFun_cons(VInterp* interp)
   // Copy item to new element
   *newFirst = *item;
 
-  // Get first element of the list 
-  VItem* first = GetFirst(list, interp);
-
-  if (IsNil(first))
+  if (IsEmpty(list))
   {
     // If empty list, the new item is the last and only element
-    SetFirst(newFirst, NULL, interp);
+    // BUG? ItemSetFirst(newFirst, NULL);
+    ItemSetNext(newFirst, 0);
   }
   else
   {
     // Link new item to the first element of the list
-    SetFirst(newFirst, first, interp);
+    VItem* first = GetFirst(list, interp);
+    // BUG? SetFirst(newFirst, first, interp);
+    SetNext(newFirst, first, interp);
   }
 
   // Set first of list to refer to the new element
@@ -387,7 +387,7 @@ void PrimFun_cons(VInterp* interp)
   *item = newList;
 }
 
-// Leaves list on the stack
+// TODO: Change this? --> Leaves list on the stack
 // list item setfirst --> list
 void PrimFun_setfirst(VInterp* interp)
 {

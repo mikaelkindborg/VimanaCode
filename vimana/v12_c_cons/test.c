@@ -146,7 +146,7 @@ void TestNil()
   VItem* next;
 
   printf("start ptr: %lu\n", (unsigned long) mem->start);
-  printf("firstfree: %lu\n", (unsigned long) mem->firstFree);
+  printf("firstfree: %lu\n", (unsigned long) mem->addrFirstFree);
 
   item = ListMemAlloc(mem);
   ItemSetIntNum(item, 2000);
@@ -156,7 +156,7 @@ void TestNil()
   next = ListMemGetNext(mem, item);
   printf("next ptr:  %lu\n", (unsigned long) next);
   printf("start ptr: %lu\n", (unsigned long) mem->start);
-  printf("firstfree: %lu\n", (unsigned long) mem->firstFree);
+  printf("firstfree: %lu\n", (unsigned long) mem->addrFirstFree);
 
   PrintItems(item, mem);
 
@@ -353,6 +353,7 @@ void TestMemGetHandlePtr()
   ListMemSweep(mem);
 
   ListMemPrintAllocCounter(mem);
+
   SysFree(mem);
 }
 
@@ -378,6 +379,7 @@ void TestStringItem()
   ListMemSweep(mem);
 
   ListMemPrintAllocCounter(mem);
+
   SysFree(mem);
 }
 
@@ -414,6 +416,8 @@ void TestArrayWithStringItems()
   ShouldHold("TestArrayWithStringItems: 10 == mem->allocCounter", 10 == mem->allocCounter);
 
   ListMemSweep(mem);
+
+  ListMemPrintAllocCounter(mem);
 
   ShouldHold("TestArrayWithStringItems: 0 == mem->allocCounter", 0 == mem->allocCounter);
 
@@ -655,13 +659,13 @@ void TestMachineX()
 int main()
 {
   LogTest("Welcome to VimanaCode tests");
-
-  /*TestPrintBinary();
+/*
+  TestPrintBinary();
   TestItemAttributes();
   TestMemoryLayout();
   TestNil();
-  TestMemAlloc();
-  TestAllocDealloc();
+  TestMemAlloc();*/
+  TestAllocDealloc();/*
   TestSetFirst();
   TestMemGetHandlePtr();
   TestStringItem();
@@ -671,8 +675,8 @@ int main()
   TestMachineCreate();
   TestParse();
   TestInterp();
-  TestMachine();*/
-  TestMachineX();
+  TestMachine();
+  TestMachineX();*/
 
   SysPrintMemStat();
   PrintTestResult();
@@ -683,6 +687,12 @@ int main()
 // --------------------------------------------------------
 
 /*
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_null.h:30:15: note: expanded from macro 'NULL'
+#define NULL  __DARWIN_NULL
+              ^~~~~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types.h:52:23: note: expanded from macro '__DARWIN_NULL'
+#define __DARWIN_NULL ((void *)0)
+
 void TestParseSymbolicCode()
 {
   VListMemory* mem = ListMemNew(1000);

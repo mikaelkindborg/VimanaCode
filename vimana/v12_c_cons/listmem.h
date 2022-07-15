@@ -18,10 +18,10 @@ typedef struct __VListMemory
 {
   //VByte* start;     // Start of memory block
   //VByte* nextFree;  // First free item in memory block
-  VItem* start;     // Start of memory block
-  VItem* nextFree;  // First free item in memory block
-  VItem* firstFree; // First item in freelist
-  VAddr  size;      // Total size of item memory
+  VByte* start;     // Start of memory block
+  VAddr  addrNextFree;  // First free item in memory block
+  VAddr  addrFirstFree; // First item in freelist
+  VAddr  addrEnd;   // End of memory
   #ifdef TRACK_MEMORY_USAGE
   int    allocCounter;
   #endif
@@ -34,17 +34,14 @@ VListMemory;
 
 #define ListMemStart(mem) ((mem)->start)
 
-//#define AddrToPtr(addr, start) (((start) + (addr)) - 1)
-//#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) + 1)
+#define AddrToPtr(addr, start) (((start) + (addr)) - 1)
+#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) + 1)
 
 // Address is an index
-#define AddrToPtr(addr, start) ((start) + (addr))
-#define PtrToAddr(ptr, start) ((ptr) - (start))
+//#define AddrToPtr(addr, start) ((start) + ((addr) << 4)) //* sizeof(VItem)))
+//#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) >> 4) // sizeof(VItem))
 
-//#define ListMemGet(mem, addr) VItemPtr(AddrToPtr(addr, ListMemStart(mem)))
-//#define ListMemGetAddr(mem, ptr) (PtrToAddr(BytePtr(ptr), ListMemStart(mem)))
-
-#define ListMemGet(mem, addr) AddrToPtr(addr, ListMemStart(mem))
+#define ListMemGet(mem, addr) VItemPtr(AddrToPtr(addr, ListMemStart(mem)))
 #define ListMemGetAddr(mem, ptr) PtrToAddr(ptr, ListMemStart(mem))
 
 //#define ListMemGetFirst(mem, item) \
@@ -80,16 +77,14 @@ void ListMemInit(VListMemory* mem, int numItems)
 {
   VAddr memByteSize = ListMemByteSize(numItems);
 
-  //mem->start = BytePtr(mem) + (sizeof(VListMemory));
-  mem->start = VItemPtr(BytePtr(mem) + sizeof(VListMemory));
+  mem->start = BytePtr(mem) + sizeof(VListMemory);
 
-  // First item represents nil
-  GlobalNil = mem->start;
-  ItemInit(GlobalNil); // Sets TypeNone
+  // Pointer address that represents nil
+  GlobalNil = mem->start - 1;
 
-  mem->nextFree = mem->start + 1; // Next free is second item
-  mem->firstFree = GlobalNil;     // Freelist is empty
-  mem->size = 1 + numItems;       // Total number of items
+  mem->addrNextFree = 0;
+  mem->addrFirstFree = 0; // Freelist is empty
+  mem->addrEnd = numItems * sizeof(VItem); // Address of last item
 
   #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
@@ -115,14 +110,14 @@ VItem* ListMemAlloc(VListMemory* mem)
   VItem* item;
   VAddr  addr;
 
-  if (IsNotNil(mem->firstFree))
+  if (0 < mem->addrFirstFree)
   {
     // ALLOCATE FROM FREELIST
 
     //PrintLine("Alloc from freelist");
 
-    item = mem->firstFree;
-    mem->firstFree = ListMemGetNext(mem, item);
+    item = ListMemGet(mem, mem->addrFirstFree);
+    mem->addrFirstFree = ItemGetNext(item);
   }
   else
   {
@@ -130,10 +125,11 @@ VItem* ListMemAlloc(VListMemory* mem)
 
     //PrintLine("Alloc from memory");
 
-    if (mem->nextFree - mem->start < mem->size)
+    if (mem->addrNextFree <= mem->addrEnd)
     {
-      item = mem->nextFree;
-      ++ (mem->nextFree);
+      item = ListMemGet(mem, mem->addrNextFree);
+      mem->addrNextFree += sizeof(VItem);
+      // ++ mem->addrNextFree;
     }
     else
     {
@@ -174,10 +170,10 @@ void ListMemDeallocItem(VListMemory* mem, VItem* item)
 
   // Set type None and add deallocated item to freelist
   ItemSetType(item, TypeNone);
-  ListMemSetNext(mem, item, mem->firstFree);
-  mem->firstFree = item;
+  ItemSetNext(item, mem->addrFirstFree);
+  mem->addrFirstFree = ListMemGetAddr(mem, item);
 
-  //printf("mem->firstFree: %lu\n", (unsigned long) mem->firstFree);
+  printf("dealloc mem->addrFirstFree: %lu\n", (unsigned long) mem->addrFirstFree);
 }
 
 // -------------------------------------------------------------
@@ -257,10 +253,12 @@ void ListMemMark(VListMemory* mem, VItem* item)
 
 void ListMemSweep(VListMemory* mem)
 {
-  VItem* item = 1 + mem->start;
+  VAddr itemAddr = 1;
 
-  while (item < mem->nextFree)
+  while (itemAddr < mem->addrNextFree)
   {
+    VItem* item = ListMemGet(mem, itemAddr);
+
     if (ItemGetGCMark(item))
     {
       //PrintLine("MemSweep unmark");
@@ -272,6 +270,7 @@ void ListMemSweep(VListMemory* mem)
       ListMemDeallocItem(mem, item);
     }
 
-    ++ item;
+    //++ itemAddr;
+    itemAddr += sizeof(VItem);
   }
 }
