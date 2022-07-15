@@ -66,7 +66,7 @@ void PrintList(VItem* list, VInterp* interp)
   int printSpace = FALSE;
   VItem* item = GetFirst(list, interp);
 
-  while (item)
+  while (IsNotNil(item))
   {
     if (printSpace) PrintChar(' ');
     PrintItem(item, interp);

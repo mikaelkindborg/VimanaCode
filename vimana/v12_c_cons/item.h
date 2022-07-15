@@ -206,6 +206,12 @@ void ItemSetNext(VItem* item, VAddr addr)
 #define IsEmpty(item) \
   (IsList(item) && (0 == ItemGetFirst(item)))
 
+VItem* GlobalNil;
+
+// Nil
+#define IsNil(item)    (GlobalNil == (item))
+#define IsNotNil(item) (GlobalNil != (item))
+
 // -------------------------------------------------------------
 // Access to data in item value field
 // -------------------------------------------------------------
@@ -281,8 +287,9 @@ void ItemSetDecNum(VItem* item, VDecNum number)
 
 void ItemInit(VItem* item)
 {
-  item->first = 0;
-  item->next = 0;
+  item->ptr   = 0;
+  item->type  = TypeNone;
+  item->next  = 0;
 }
 
 // -------------------------------------------------------------

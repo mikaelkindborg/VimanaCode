@@ -306,7 +306,7 @@ void PrimFun_first(VInterp* interp)
 
   // Leave empty list on the stack
   // () first => ()
-  if (NULL == item) goto Exit;
+  if (IsNil(item)) goto Exit;
 
   // Copy first item to data stack
   *list = *item;
@@ -326,14 +326,14 @@ void PrimFun_rest(VInterp* interp)
 
   // Leave empty list on the stack
   // () rest => ()
-  if (NULL == item) goto Exit;
+  if (IsNil(item)) goto Exit;
 
   // Get second item in the list
   item = GetNext(item, interp);
 
   // If empty tail, leave empty list on the stack
   // (1) rest => ()
-  if (NULL == item)
+  if (IsNil(item))
   {
     list->first = 0;
     goto Exit;
@@ -369,7 +369,7 @@ void PrimFun_cons(VInterp* interp)
   // Get first element of the list 
   VItem* first = GetFirst(list, interp);
 
-  if (NULL == first)
+  if (IsNil(first))
   {
     // If empty list, the new item is the last and only element
     SetFirst(newFirst, NULL, interp);

@@ -415,7 +415,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     instruction = current->instruction;
 
     // Evaluate current instruction.
-    if (NULL != instruction)
+    if (IsNotNil(instruction))
     {
       // Advance instruction for the *NEXT* loop
       current->instruction = GetNext(instruction, interp);

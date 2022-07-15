@@ -5,7 +5,7 @@
 #include "vimana.h"
 //#include "socket.h"
 
-#define MACHINE_BYTE_SIZE 30728  // Size in bytes
+#define MACHINE_BYTE_SIZE 230728  // Size in bytes
 #define SYMBOL_TABLE_SIZE 100    // Number of symbols in symbol table
 #define DATA_STACK_SIZE   100    // Number of items on the data stack
 #define CALL_STACK_SIZE   100    // Number of stack frames
