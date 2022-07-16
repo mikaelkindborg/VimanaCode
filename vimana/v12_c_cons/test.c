@@ -126,11 +126,12 @@ void TestMemoryLayout()
 // Helper function
 void PrintItems(VItem* first, VListMemory* mem)
 {
-  VItem* item = first;
-  while (IsNotNil(item))
+  VAddr addr = ListMemGetAddr(mem, first);
+  while (addr)
   {
+    VItem* item = ListMemGet(mem, addr);
     printf("%li ", ItemGetIntNum(item));
-    item = ListMemGetNext(mem, item);
+    addr = ItemGetNext(item);
   }
   PrintNewLine();
 }
@@ -234,11 +235,12 @@ VItem* AllocMaxItems(VListMemory* mem)
 int CountItems(VItem* first, VListMemory* mem)
 {
   int counter = 0;
-  VItem* item = first;
-  while (IsNotNil(item))
+  VAddr itemAddr = ListMemGetAddr(mem, first);
+  while (itemAddr)
   {
+    VItem* item = ListMemGet(mem, itemAddr);
+    itemAddr = ItemGetNext(item);
     ++ counter;
-    item = ListMemGetNext(mem, item);
   }
   return counter;
 }
@@ -252,7 +254,7 @@ void TestAllocDealloc()
 
   PrintLine("Alloc max");
   VItem* first = AllocMaxItems(mem);
-  PrintItems(first, mem);
+  //PrintItems(first, mem);
   int numItems = CountItems(first, mem);
   printf("Num items: %i\n", numItems);
 
@@ -659,24 +661,24 @@ void TestMachineX()
 int main()
 {
   LogTest("Welcome to VimanaCode tests");
-/*
-  TestPrintBinary();
+
+  /*TestPrintBinary();
   TestItemAttributes();
   TestMemoryLayout();
   TestNil();
-  TestMemAlloc();*/
-  TestAllocDealloc();/*
+  TestMemAlloc();
+  TestAllocDealloc();
   TestSetFirst();
   TestMemGetHandlePtr();
   TestStringItem();
   TestArrayWithStringItems();
   TestSymbolTable();
-  TestSymbolMemory();
+  TestSymbolMemory();*/
   TestMachineCreate();
   TestParse();
   TestInterp();
   TestMachine();
-  TestMachineX();*/
+  TestMachineX();
 
   SysPrintMemStat();
   PrintTestResult();

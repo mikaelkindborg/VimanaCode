@@ -205,11 +205,6 @@ void ItemSetNext(VItem* item, VAddr addr)
 // Empty list
 #define IsEmpty(list) (0 == ItemGetFirst(list))
 
-// Nil
-VByte* GlobalNil;
-//#define IsNil(item)    (GlobalNil == (item))
-#define IsNotNil(item) (GlobalNil != BytePtr(item))
-
 // -------------------------------------------------------------
 // Access to data in item value field
 // -------------------------------------------------------------

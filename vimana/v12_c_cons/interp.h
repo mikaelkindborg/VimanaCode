@@ -37,10 +37,10 @@ typedef struct __VStackFrame VStackFrame;
 
 struct __VStackFrame
 {
-  VItem*       list;         // List that is evaluated
-  VItem*       instruction;  // Current instruction
-  VStackFrame* context;      // Stack frame that holds local vars
-  VItem        localVars[4]; // Space for 4 local vars
+  VAddr        listAddr;         // List that is evaluated
+  VAddr        instructionAddr;  // Current instruction
+  VStackFrame* context;          // Stack frame that holds local vars
+  VItem        localVars[4];     // Space for 4 local vars
 };
 
 /*
@@ -275,8 +275,11 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* list)
   VStackFrame* current = InterpGetStackFrame(interp);
   current->context = current;
 
+  // Set list (TODO: for error messages)
+  current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
+
   // Set first instruction in the frame
-  current->instruction = GetFirst(list, interp);
+  current->instructionAddr = ItemGetFirst(list);
 }
 
 void InterpPushStackFrame(VInterp* interp, VItem* list)
@@ -288,7 +291,7 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
   VStackFrame* current = parent;
 
   // Check tailcall (are there any instructions left?)
-  if (parent->instruction)
+  if (parent->instructionAddr)
   {
     // NON-TAILCALL - PUSH NEW STACK FRAME
 
@@ -305,8 +308,8 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
     current->context = parent->context;
   }
 
-  // Set first instruction in the new frame
-  current->instruction = GetFirst(list, interp);
+  current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
+  current->instructionAddr = ItemGetFirst(list);
 }
 
 void InterpPopStackFrame(VInterp* interp)
@@ -384,8 +387,10 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
   VStackFrame* current;
   VItem*       instruction;
   VItem*       symbolValue;
+  VAddr        instructionAddr;
   int          primFun;
   int          sliceCounter = 0;
+
 
   #ifdef DEBUG
     int  callstackMax = 0;
@@ -410,15 +415,18 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         goto Exit; // Exit loop
     }
 
-    // Get instruction pointer
+    // Get instruction address
     current = InterpGetStackFrame(interp);
-    instruction = current->instruction;
+    instructionAddr = current->instructionAddr;
 
     // Evaluate current instruction.
-    if (IsNotNil(instruction))
+    if (instructionAddr)
     {
-      // Advance instruction for the *NEXT* loop
-      current->instruction = GetNext(instruction, interp);
+      // Get instruction pointer
+      instruction = ListMemGet(InterpListMem(interp), instructionAddr);
+
+      // Advance instruction address for the *NEXT* loop
+      current->instructionAddr = ItemGetNext(instruction);
 
       if (IsTypePrimFun(instruction))
       {
@@ -447,7 +455,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         }
       }
     }
-    else // (NULL == instruction)
+    else // (0 == instructionAddr)
     {
       InterpPopStackFrame(interp);
 
