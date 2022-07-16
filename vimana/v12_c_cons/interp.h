@@ -37,10 +37,10 @@ typedef struct __VStackFrame VStackFrame;
 
 struct __VStackFrame
 {
-  //VAddr        listAddr;         // List that is evaluated
-  VAddr        instructionAddr;  // Current instruction
+  VItem*       instruction;
+  //VItem*       list;
   VStackFrame* context;          // Stack frame that holds local vars
-  VItem        localVars[4];     // Space for 4 local vars
+  //VItem        localVars[4];     // Space for 4 local vars
 };
 
 /*
@@ -277,9 +277,9 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* list)
 
   // Set list (TODO: for error messages)
   //current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
-
   // Set first instruction in the frame
-  current->instructionAddr = ItemGetFirst(list);
+  //current->instructionAddr = ItemGetFirst(list);
+  current->instruction = GetFirst(list, interp);
 }
 
 void InterpPushStackFrame(VInterp* interp, VItem* list)
@@ -291,7 +291,8 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
   VStackFrame* current = parent;
 
   // Check tailcall (are there any instructions left?)
-  if (parent->instructionAddr)
+  //if (parent->instructionAddr)
+  if (parent->instruction)
   {
     // NON-TAILCALL - PUSH NEW STACK FRAME
 
@@ -309,7 +310,8 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
   }
 
   //current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
-  current->instructionAddr = ItemGetFirst(list);
+  //current->instructionAddr = ItemGetFirst(list);
+  current->instruction = GetFirst(list, interp);
 }
 
 void InterpPopStackFrame(VInterp* interp)
@@ -338,11 +340,11 @@ void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
   frame->context = frame;
 
   // Copy item
-  frame->context->localVars[index] = *item;
+  // TODO frame->context->localVars[index] = *item;
 }
 
-#define InterpGetLocalVar(interp, index) \
-  ( & (InterpGetStackFrame(interp)->context->localVars[index]) )
+#define InterpGetLocalVar(interp, index) (0) //\
+  //TODO ( & (InterpGetStackFrame(interp)->context->localVars[index]) )
 
 // -------------------------------------------------------------
 // Global vars
@@ -387,10 +389,8 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
   VStackFrame* current;
   VItem*       instruction;
   VItem*       symbolValue;
-  VAddr        instructionAddr;
   int          primFun;
   int          sliceCounter = 0;
-
 
   #ifdef DEBUG
     int  callstackMax = 0;
@@ -415,18 +415,26 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         goto Exit; // Exit loop
     }
 
-    // Get instruction address
+    // Get instruction
     current = InterpGetStackFrame(interp);
-    instructionAddr = current->instructionAddr;
+    //instructionAddr = current->instructionAddr;
+    instruction = current->instruction;
 
     // Evaluate current instruction.
-    if (instructionAddr)
+    if (instruction)
     {
       // Get instruction pointer
-      instruction = ListMemGet(InterpListMem(interp), instructionAddr);
+      //instruction = ListMemGet(InterpListMem(interp), instructionAddr);
 
-      // Advance instruction address for the *NEXT* loop
-      current->instructionAddr = ItemGetNext(instruction);
+      // Advance instruction for the NEXT loop
+      //current->instruction = ListMemGetNext(InterpListMem(interp), instruction);
+      //current->instruction = //(ItemGetNext(instruction) ? ListMemGet(InterpListMem(interp), ItemGetNext(instruction)) : NULL);
+      //  (ItemGetNext(instruction) ? VItemPtr(AddrToPtr(ItemGetNext(instruction), InterpListMem(interp)->start)) : NULL);
+
+      if (ItemGetNext(instruction)) 
+        current->instruction = GetNext(instruction, interp); //VItemPtr(AddrToPtr(ItemGetNext(instruction), InterpListMem(interp)->start));
+      else
+        current->instruction = NULL;
 
       if (IsTypePrimFun(instruction))
       {
@@ -459,15 +467,15 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     {
       InterpPopStackFrame(interp);
 
-      interp->run = interp->callStackTop > -1;
-/*
+      //interp->run = interp->callStackTop > -1;
+
       // Exit if this was the last stackframe.
       if (interp->callStackTop < 0)
       {
         interp->run = FALSE;
         goto Exit; // Exit loop
       }
-*/
+
     }
   }
   // while
