@@ -37,7 +37,7 @@ typedef struct __VStackFrame VStackFrame;
 
 struct __VStackFrame
 {
-  VAddr        listAddr;         // List that is evaluated
+  //VAddr        listAddr;         // List that is evaluated
   VAddr        instructionAddr;  // Current instruction
   VStackFrame* context;          // Stack frame that holds local vars
   VItem        localVars[4];     // Space for 4 local vars
@@ -276,7 +276,7 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* list)
   current->context = current;
 
   // Set list (TODO: for error messages)
-  current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
+  //current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
 
   // Set first instruction in the frame
   current->instructionAddr = ItemGetFirst(list);
@@ -308,7 +308,7 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
     current->context = parent->context;
   }
 
-  current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
+  //current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
   current->instructionAddr = ItemGetFirst(list);
 }
 

@@ -98,6 +98,11 @@ value field.
 
 Pointers to primitive functions are stored as full pointers in
 the value field in optimized mode.
+
+Using pointers as an alternative to addresses:
+
+https://stackoverflow.com/questions/16198700/using-the-extra-16-bits-in-64-bit-pointers
+https://craftinginterpreters.com/optimization.html
 */
 
 // -------------------------------------------------------------
