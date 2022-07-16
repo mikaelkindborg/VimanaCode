@@ -18,10 +18,10 @@ typedef struct __VListMemory
 {
   //VByte* start;     // Start of memory block
   //VByte* nextFree;  // First free item in memory block
-  VByte* start;     // Start of memory block
+  VByte* start;         // Start of memory block
   VAddr  addrNextFree;  // First free item in memory block
   VAddr  addrFirstFree; // First item in freelist
-  VAddr  addrEnd;   // End of memory
+  VAddr  addrEnd;       // End of memory
   #ifdef TRACK_MEMORY_USAGE
   int    allocCounter;
   #endif
@@ -120,8 +120,7 @@ VItem* ListMemAlloc(VListMemory* mem)
   {
     // ALLOCATE FROM FREELIST
 
-    PrintLine("Alloc from freelist");
-
+    //PrintLine("Alloc from freelist");
     item = ListMemGet(mem, mem->addrFirstFree);
     mem->addrFirstFree = ItemGetNext(item);
   }
@@ -131,7 +130,7 @@ VItem* ListMemAlloc(VListMemory* mem)
 
     if (mem->addrNextFree <= mem->addrEnd)
     {
-      PrintLine("Alloc from memory");
+      //PrintLine("Alloc from memory");
       item = ListMemGet(mem, mem->addrNextFree);
       mem->addrNextFree += GlobalItemAddressOffset;
       // ++ mem->addrNextFree;
@@ -178,7 +177,7 @@ void ListMemDeallocItem(VListMemory* mem, VItem* item)
   ItemSetNext(item, mem->addrFirstFree);
   mem->addrFirstFree = ListMemGetAddr(mem, item);
 
-  printf("dealloc mem->addrFirstFree: %lu\n", (unsigned long) mem->addrFirstFree);
+  //printf("dealloc mem->addrFirstFree: %lu\n", (unsigned long) mem->addrFirstFree);
 }
 
 // -------------------------------------------------------------
