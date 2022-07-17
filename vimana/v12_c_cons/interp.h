@@ -39,7 +39,7 @@ struct __VStackFrame
 {
   VItem*       instruction;
   //VItem*       list;
-  VStackFrame* context;          // Stack frame that holds local vars
+  //VStackFrame* context;          // Stack frame that holds local vars
   //VItem        localVars[4];     // Space for 4 local vars
 };
 
@@ -273,7 +273,7 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* list)
   // Set first stackframe
   interp->callStackTop = 0;
   VStackFrame* current = InterpGetStackFrame(interp);
-  current->context = current;
+  //current->context = current;
 
   // Set list (TODO: for error messages)
   //current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
@@ -306,7 +306,7 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
     current = InterpGetStackFrame(interp);
 
     // Access the local vars of the parent context until new scope is introduced
-    current->context = parent->context;
+    //current->context = parent->context;
   }
 
   //current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
@@ -337,7 +337,7 @@ void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
   // This creates a new "scope".
   // Note: Functions cannot access variables in the parent scope, 
   // only read them. This is by design.
-  frame->context = frame;
+  //frame->context = frame;
 
   // Copy item
   // TODO frame->context->localVars[index] = *item;
