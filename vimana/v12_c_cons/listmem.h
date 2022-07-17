@@ -221,7 +221,7 @@ VItem* ListMemAllocHandle(VListMemory* mem, void* bufferPtr, VType type)
 // TODO: Use GURU_MEDITATION instead of returning NULL?
 void* ListMemGetHandlePtr(VListMemory* mem, VItem* item)
 {
-  if (!(IsTypeString(item) || IsTypeHandle(item))) return NULL;
+  if (! (IsTypeString(item) || IsTypeHandle(item)) ) return NULL;
 
   VItem* buffer = ListMemGetFirst(mem, item);
 

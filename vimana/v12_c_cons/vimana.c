@@ -69,15 +69,12 @@ int main(int numargs, char* args[])
     CALL_STACK_SIZE, 
     LIST_MEMORY_SIZE);
 
-#ifdef DEBUG
+//#ifdef DEBUG
   MachinePrintMemoryUse();
-#endif
+//#endif
 
   time_t lastUpdate = 0;
-/*
-  int sourceSize = 0;
-  int prevSourceSize = 0;
-*/
+
   do
   {
     // Read source file

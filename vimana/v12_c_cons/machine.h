@@ -129,7 +129,7 @@ void MachinePrintMemoryUse()
   int memoryUsed = GlobalMemoryEnd - GlobalMemory;
 
   printf("Vimana Machine Memory Use\n");
-  printf("-------------------------\n");
+  printf("------------------------------------------------\n");
   printf("Allocated:      %i\n", GlobalMemoryByteSize);
   printf("Used:           %i\n", memoryUsed);
   printf("Primfun table:  %i\n", PrimFunTableByteSize());

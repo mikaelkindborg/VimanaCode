@@ -592,8 +592,9 @@ void TestInterp()
   VItem* list;
   char*  code;
 
-  code = "1 2 3 1 2 3 + + + + + (SUM) setglobal SUM print";
+  code = "1 2 3 1 2 3 + + + + + (SUM) setglobal SUM dup print";
   list = MachineParse(code);
+
   MachinePrint(list);
   PrintNewLine();
 
@@ -601,8 +602,14 @@ void TestInterp()
 
   PrimFun_printstack(interp);
 
-  ShouldHold("TestInterp: callStackTop should be -1", -1 == interp->callStackTop);
+  ShouldHold(
+    "TestMachine: top of stack should be 12", 
+    12 == ItemGetIntNum(InterpStackTop(interp)));
 
+  ShouldHold(
+    "TestInterp: callStackTop should be < callStack", 
+    interp->callStackTop < interp->callStack);
+  
   MachineFree();
 }
 
@@ -636,8 +643,8 @@ void TestMachineX()
   MachineEvalString(code);
 
   ShouldHold(
-    "TestMachine: callStackTop should be -1", 
-    -1 == interp->callStackTop);
+    "TestMachine: callStackTop should be < callStack", 
+    interp->callStackTop < interp->callStack);
 
   PrimFun_printstack(interp);
 
@@ -688,39 +695,4 @@ int main()
               ^~~~~~~~~~~~~
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types.h:52:23: note: expanded from macro '__DARWIN_NULL'
 #define __DARWIN_NULL ((void *)0)
-
-void TestParseSymbolicCode()
-{
-  VListMemory* mem = ListMemNew(1000);
-  char* code = "N-42 N44 (P1 N2 (N3 (P4)) N5 N6) N0 (((N88";
-  VItem* first = ParseSymbolicCode(code, mem);
-  ListMemPrintList(mem, first);
-  PrintNewLine();
-  ListMemFree(mem);
-}
-
-void TestArray()
-{
-  LogTest("TestArray");
-
-  VItem item;
-
-  VArray* array = ArrayNew(sizeof(VItem), 5);
-
-  for (int i = 0; i < 20; ++ i)
-  {
-    item.intNum = i + 1;
-    array = ArrayGrow(array, i + 5);
-    VItem* p = ArrayAt(array, i);
-    *p = item;
-  }
-
-  for (int i = 0; i < ArrayLength(array); ++ i)
-  {
-    VItem* item = ArrayAt(array, i);
-    printf("value: %li\n", item->intNum);
-  }
-
-  ArrayFree(array);
-}
 */

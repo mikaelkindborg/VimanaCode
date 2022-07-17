@@ -81,9 +81,10 @@ void PrintList(VItem* list, VInterp* interp)
 
 void PrintItemArray(VItem* array, int numItems, VInterp* interp)
 {
-  for (int i = 0; i < numItems; ++ i)
+  VItem* p = array;
+  for (int i = 0; i < numItems; ++ i, ++ p)
   {
-    PrintItem(&(array[i]), interp);
+    PrintItem(p, interp);
     PrintChar(' ');
   }
 }
