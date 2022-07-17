@@ -29,12 +29,6 @@ typedef struct __VListMemory
 VListMemory;
 
 // -------------------------------------------------------------
-// Global
-// -------------------------------------------------------------
-
-static int GlobalItemAddressOffset;
-
-// -------------------------------------------------------------
 // Item access
 // -------------------------------------------------------------
 
@@ -76,21 +70,19 @@ void ListMemSetNext(VListMemory* mem, VItem* item, VItem* next)
 // One extra item is reserved for the nil value
 int ListMemByteSize(int numItems)
 {
-  return sizeof(VListMemory) + ((1 + numItems) * sizeof(VItem));
+  return sizeof(VListMemory) + ((1 + numItems) * ItemSize());
 }
 
 void ListMemInit(VListMemory* mem, int numItems)
 {
-  GlobalItemAddressOffset = sizeof(VItem);
-
   VAddr memByteSize = ListMemByteSize(numItems);
 
   mem->start = BytePtr(mem) + sizeof(VListMemory);
-  mem->start -= GlobalItemAddressOffset;
+  mem->start -= ItemSize();
 
-  mem->addrNextFree = GlobalItemAddressOffset;
-  mem->addrFirstFree = 0; // Freelist is empty
-  mem->addrEnd = numItems * GlobalItemAddressOffset; // End of address space
+  mem->addrNextFree = ItemSize();       // Next free item
+  mem->addrFirstFree = 0;               // Freelist is empty
+  mem->addrEnd = numItems * ItemSize(); // End of address space
 
   #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
@@ -132,7 +124,7 @@ VItem* ListMemAlloc(VListMemory* mem)
     {
       //PrintLine("Alloc from memory");
       item = ListMemGet(mem, mem->addrNextFree);
-      mem->addrNextFree += GlobalItemAddressOffset;
+      mem->addrNextFree += ItemSize();
       // ++ mem->addrNextFree;
     }
     else
@@ -259,7 +251,8 @@ void ListMemMark(VListMemory* mem, VItem* item)
 
 void ListMemSweep(VListMemory* mem)
 {
-  VAddr itemAddr = GlobalItemAddressOffset;
+  // This is the address of the first item
+  VAddr itemAddr = ItemSize();
 
   while (itemAddr < mem->addrNextFree)
   {
@@ -276,7 +269,7 @@ void ListMemSweep(VListMemory* mem)
       ListMemDeallocItem(mem, item);
     }
 
+    itemAddr += ItemSize();
     //++ itemAddr;
-    itemAddr += sizeof(VItem);
   }
 }

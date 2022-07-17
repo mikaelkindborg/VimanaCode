@@ -112,8 +112,8 @@ int InterpByteSize(
   int sizeCallStack,      int sizeListMemory)
 {
   int byteSizeInterpStruct = sizeof(VInterp);
-  int byteSizeGlobalVarTable = sizeGlobalVarTable * sizeof(VItem);
-  int byteSizeDataStack = sizeDataStack * sizeof(VItem);
+  int byteSizeGlobalVarTable = sizeGlobalVarTable * ItemSize();
+  int byteSizeDataStack = sizeDataStack * ItemSize();
   int byteSizeCallStack = sizeCallStack * sizeof(VStackFrame);
   int byteSizeListMemory = ListMemByteSize(sizeListMemory);
 
@@ -134,8 +134,8 @@ void InterpInit(
   int sizeCallStack,      int sizeListMemory)
 {
   int byteSizeInterpStruct = sizeof(VInterp);
-  int byteSizeGlobalVarTable = sizeGlobalVarTable * sizeof(VItem);
-  int byteSizeDataStack = sizeDataStack * sizeof(VItem);
+  int byteSizeGlobalVarTable = sizeGlobalVarTable * ItemSize();
+  int byteSizeDataStack = sizeDataStack * ItemSize();
   int byteSizeCallStack = sizeCallStack * sizeof(VStackFrame);
   int byteSizeListMemory = ListMemByteSize(sizeListMemory);
 

@@ -128,6 +128,9 @@ VItem;
 // Cast to VItem*
 #define VItemPtr(ptr) ((VItem*)(ptr))
 
+// This looks better
+#define ItemSize() sizeof(VItem)
+
 // -------------------------------------------------------------
 // Item types
 // -------------------------------------------------------------
