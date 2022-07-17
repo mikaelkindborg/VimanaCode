@@ -98,6 +98,11 @@ value field.
 
 Pointers to primitive functions are stored as full pointers in
 the value field in optimized mode.
+
+Using pointers as an alternative to addresses:
+
+https://stackoverflow.com/questions/16198700/using-the-extra-16-bits-in-64-bit-pointers
+https://craftinginterpreters.com/optimization.html
 */
 
 // -------------------------------------------------------------
@@ -122,6 +127,9 @@ VItem;
 
 // Cast to VItem*
 #define VItemPtr(ptr) ((VItem*)(ptr))
+
+// This looks better
+#define ItemSize() sizeof(VItem)
 
 // -------------------------------------------------------------
 // Item types
@@ -203,8 +211,7 @@ void ItemSetNext(VItem* item, VAddr addr)
 #define IsList(item) (IsTypeList(item) || IsTypeFun(item))
 
 // Empty list
-#define IsEmpty(item) \
-  (IsList(item) && (0 == ItemGetFirst(item)))
+#define IsEmpty(list) (0 == ItemGetFirst(list))
 
 // -------------------------------------------------------------
 // Access to data in item value field
@@ -281,8 +288,9 @@ void ItemSetDecNum(VItem* item, VDecNum number)
 
 void ItemInit(VItem* item)
 {
-  item->first = 0;
-  item->next = 0;
+  item->ptr   = 0;
+  item->type  = TypeNone;
+  item->next  = 0;
 }
 
 // -------------------------------------------------------------

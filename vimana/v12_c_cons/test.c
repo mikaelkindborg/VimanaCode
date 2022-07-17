@@ -145,6 +145,19 @@ void TestMemoryLayout()
   PrintBinaryUInt(1024*256);
 }
 
+// Helper function
+void PrintItems(VItem* first, VListMemory* mem)
+{
+  VAddr addr = ListMemGetAddr(mem, first);
+  while (addr)
+  {
+    VItem* item = ListMemGet(mem, addr);
+    printf("%li ", ItemGetIntNum(item));
+    addr = ItemGetNext(item);
+  }
+  PrintNewLine();
+}
+
 void TestMemAlloc()
 {
   LogTest("TestMemAlloc");
@@ -165,15 +178,15 @@ void TestMemAlloc()
   ItemSetNext(item, 4);
 
   //PrintBinaryUInt(ItemGetNext(item));
-  ShouldHold("TestMemAlloc: Next should equal", 4 == ItemGetNext(item));
+  ShouldHold("TestMemAlloc: Next should equal 4", 4 == ItemGetNext(item));
 
   ListMemSweep(mem);
   ListMemPrintAllocCounter(mem);
-  ShouldHold("TestMemAlloc: Next should equal", 2 == mem->allocCounter);
+  ShouldHold("TestMemAlloc: allocCounter should equal 2", 2 == mem->allocCounter);
 
   ListMemSweep(mem);
   ListMemPrintAllocCounter(mem);
-  ShouldHold("TestMemAlloc: Next should equal", 0 == mem->allocCounter);
+  ShouldHold("TestMemAlloc: allocCounter should equal 0", 0 == mem->allocCounter);
 
   SysFree(mem);
 }
@@ -208,6 +221,7 @@ VItem* AllocMaxItems(VListMemory* mem)
 
     item = next;
   }
+
   return first;
 }
 
@@ -215,25 +229,14 @@ VItem* AllocMaxItems(VListMemory* mem)
 int CountItems(VItem* first, VListMemory* mem)
 {
   int counter = 0;
-  VItem* item = first;
-  while (item)
+  VAddr itemAddr = ListMemGetAddr(mem, first);
+  while (itemAddr)
   {
+    VItem* item = ListMemGet(mem, itemAddr);
+    itemAddr = ItemGetNext(item);
     ++ counter;
-    item = ListMemGetNext(mem, item);
   }
   return counter;
-}
-
-// Helper function
-void PrintItems(VItem* first, VListMemory* mem)
-{
-  VItem* item = first;
-  while (item)
-  {
-    printf("%li ", ItemGetIntNum(item));
-    item = ListMemGetNext(mem, item);
-  }
-  PrintNewLine();
 }
 
 void TestAllocDealloc()
@@ -245,7 +248,7 @@ void TestAllocDealloc()
 
   PrintLine("Alloc max");
   VItem* first = AllocMaxItems(mem);
-  PrintItems(first, mem);
+  //PrintItems(first, mem);
   int numItems = CountItems(first, mem);
   printf("Num items: %i\n", numItems);
 
@@ -259,9 +262,18 @@ void TestAllocDealloc()
 
   ListMemSweep(mem);
 
-  ShouldHold("TestAllocDealloc: Allocated items should be equal", numItems == numItems2);
+  PrintLine("Alloc max yet again");
+  first = AllocMaxItems(mem);
+  PrintItems(first, mem);
+  int numItems3 = CountItems(first, mem);
+  printf("Num items: %i\n", numItems3);
+
+  ListMemSweep(mem);
+
+  ShouldHold("TestAllocDealloc: Allocated items should be equal", numItems == numItems3);
 
   ListMemPrintAllocCounter(mem);
+
   SysFree(mem);
   SysPrintMemStat();
 }
@@ -337,6 +349,7 @@ void TestMemGetHandlePtr()
   ListMemSweep(mem);
 
   ListMemPrintAllocCounter(mem);
+
   SysFree(mem);
 }
 
@@ -362,6 +375,7 @@ void TestStringItem()
   ListMemSweep(mem);
 
   ListMemPrintAllocCounter(mem);
+
   SysFree(mem);
 }
 
@@ -398,6 +412,8 @@ void TestArrayWithStringItems()
   ShouldHold("TestArrayWithStringItems: 10 == mem->allocCounter", 10 == mem->allocCounter);
 
   ListMemSweep(mem);
+
+  ListMemPrintAllocCounter(mem);
 
   ShouldHold("TestArrayWithStringItems: 0 == mem->allocCounter", 0 == mem->allocCounter);
 
@@ -471,7 +487,7 @@ void TestSymbolMemory()
 // Helper function
 void CreateMachine()
 {
-  MachineAllocate(3976);
+  MachineAllocate(3992);
   MachineAddCorePrimFuns();
   MachineCreate(
     12, // symbolTableSize
@@ -599,7 +615,24 @@ void TestMachine()
   VInterp* interp = MachineInterp();
   char*  code;
 
-  code = "(fib) (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def 8 fib";
+  code = "(foo) (bar) def (foo) ({foo} print) def foo";
+  MachineEvalString(code);
+
+  PrimFun_printstack(interp);
+
+  MachineFree();
+}
+
+void TestMachineX()
+{
+  LogTest("TestMachine");
+
+  CreateMachine();
+
+  VInterp* interp = MachineInterp();
+  char*  code;
+
+  code = "(fib) (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def 5 fib";
   MachineEvalString(code);
 
   ShouldHold(
@@ -609,8 +642,8 @@ void TestMachine()
   PrimFun_printstack(interp);
 
   ShouldHold(
-    "TestMachine: top of stack should be 21", 
-    21 == ItemGetIntNum(InterpStackTop(interp)));
+    "TestMachine: top of stack should be 5", 
+    5 == ItemGetIntNum(InterpStackTop(interp)));
 
   MachineFree();
 }
@@ -623,7 +656,7 @@ int main()
 {
   LogTest("Welcome to VimanaCode tests");
 
-  TestPointerArithmetic();/*
+  TestPointerArithmetic();
   TestPrintBinary();
   TestItemAttributes();
   TestMemoryLayout();
@@ -638,7 +671,8 @@ int main()
   TestMachineCreate();
   TestParse();
   TestInterp();
-  TestMachine();*/
+  TestMachine();
+  TestMachineX();
 
   SysPrintMemStat();
   PrintTestResult();
@@ -649,6 +683,12 @@ int main()
 // --------------------------------------------------------
 
 /*
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_null.h:30:15: note: expanded from macro 'NULL'
+#define NULL  __DARWIN_NULL
+              ^~~~~~~~~~~~~
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types.h:52:23: note: expanded from macro '__DARWIN_NULL'
+#define __DARWIN_NULL ((void *)0)
+
 void TestParseSymbolicCode()
 {
   VListMemory* mem = ListMemNew(1000);

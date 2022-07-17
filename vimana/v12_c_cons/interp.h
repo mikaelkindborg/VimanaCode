@@ -37,10 +37,10 @@ typedef struct __VStackFrame VStackFrame;
 
 struct __VStackFrame
 {
-  VItem*       list;         // List that is evaluated
-  VItem*       instruction;  // Current instruction
-  VStackFrame* context;      // Stack frame that holds local vars
-  VItem        localVars[4]; // Space for 4 local vars
+  VItem*       instruction;
+  //VItem*       list;
+  VStackFrame* context;          // Stack frame that holds local vars
+  VItem        localVars[4];     // Space for 4 local vars
 };
 
 /*
@@ -112,8 +112,8 @@ int InterpByteSize(
   int sizeCallStack,      int sizeListMemory)
 {
   int byteSizeInterpStruct = sizeof(VInterp);
-  int byteSizeGlobalVarTable = sizeGlobalVarTable * sizeof(VItem);
-  int byteSizeDataStack = sizeDataStack * sizeof(VItem);
+  int byteSizeGlobalVarTable = sizeGlobalVarTable * ItemSize();
+  int byteSizeDataStack = sizeDataStack * ItemSize();
   int byteSizeCallStack = sizeCallStack * sizeof(VStackFrame);
   int byteSizeListMemory = ListMemByteSize(sizeListMemory);
 
@@ -134,8 +134,8 @@ void InterpInit(
   int sizeCallStack,      int sizeListMemory)
 {
   int byteSizeInterpStruct = sizeof(VInterp);
-  int byteSizeGlobalVarTable = sizeGlobalVarTable * sizeof(VItem);
-  int byteSizeDataStack = sizeDataStack * sizeof(VItem);
+  int byteSizeGlobalVarTable = sizeGlobalVarTable * ItemSize();
+  int byteSizeDataStack = sizeDataStack * ItemSize();
   int byteSizeCallStack = sizeCallStack * sizeof(VStackFrame);
   int byteSizeListMemory = ListMemByteSize(sizeListMemory);
 
@@ -275,6 +275,9 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* list)
   VStackFrame* current = InterpGetStackFrame(interp);
   current->context = current;
 
+  // Set list (TODO: for error messages)
+  //current->list = list;
+
   // Set first instruction in the frame
   current->instruction = GetFirst(list, interp);
 }
@@ -301,11 +304,13 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
 
     current = InterpGetStackFrame(interp);
 
+    // Set list (TODO: for error messages)
+    //current->list = list;
+
     // Access the local vars of the parent context until new scope is introduced
     current->context = parent->context;
   }
 
-  // Set first instruction in the new frame
   current->instruction = GetFirst(list, interp);
 }
 
@@ -410,14 +415,14 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         goto Exit; // Exit loop
     }
 
-    // Get instruction pointer
+    // Get current instruction
     current = InterpGetStackFrame(interp);
     instruction = current->instruction;
 
     // Evaluate current instruction.
-    if (NULL != instruction)
+    if (instruction)
     {
-      // Advance instruction for the *NEXT* loop
+      // Advance instruction for the NEXT loop
       current->instruction = GetNext(instruction, interp);
 
       if (IsTypePrimFun(instruction))
@@ -451,15 +456,14 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     {
       InterpPopStackFrame(interp);
 
-      interp->run = interp->callStackTop > -1;
-/*
+      //interp->run = interp->callStackTop > -1;
+
       // Exit if this was the last stackframe.
       if (interp->callStackTop < 0)
       {
         interp->run = FALSE;
         goto Exit; // Exit loop
       }
-*/
     }
   }
   // while
