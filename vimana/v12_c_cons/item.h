@@ -114,11 +114,10 @@ typedef struct __VItem
   // Value of the item
   union
   {
-    VAddr       first;      // Address of first item in a child list
     VIntNum     intNum;     // Integer value (symbol, integers)
     VDecNum     decNum;     // Floating point number
     VPrimFunPtr primFunPtr; // Pointer to a primitive function
-    void*       ptr;        // Pointer to memory block
+    void*       ptr;        // Pointer to memory block or first child in a list
   };
   VType         type;
   VAddr         next;  
@@ -217,16 +216,16 @@ void ItemSetNext(VItem* item, VAddr addr)
 // Access to data in item value field
 // -------------------------------------------------------------
 
-#define ItemGetFirst(item)  ((item)->first)
 #define ItemGetSymbol(item) ((item)->intNum)
 #define ItemGetIntNum(item) ((item)->intNum)
 #define ItemGetDecNum(item) ((item)->decNum)
+#define ItemGetFirst(item)  VItemPtr((item)->ptr)
 #define ItemGetPtr(item)    ((item)->ptr)
 
 // Set first of child list
-void ItemSetFirst(VItem* item, VAddr addr)
+void ItemSetFirst(VItem* item, VItem* first)
 {
-  item->first = addr;
+  item->ptr = VItemPtr(first);
 }
 
 void ItemSetSymbol(VItem* item, VIntNum symbol)

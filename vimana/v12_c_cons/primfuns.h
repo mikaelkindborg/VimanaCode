@@ -333,7 +333,7 @@ void PrimFun_rest(VInterp* interp)
   // (1) rest => ()
   if (!ItemGetNext(item))
   {
-    list->first = 0;
+    list->ptr = NULL;
     goto Exit;
   }
 

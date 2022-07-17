@@ -65,14 +65,12 @@ void PrintList(VItem* list, VInterp* interp)
 
   int printSpace = FALSE;
  
-
-  VAddr addr = ItemGetFirst(list);
-  while (addr)
+  VItem* item = GetFirst(list, interp);
+  while (item)
   {
-    VItem* item = ListMemGet(InterpListMem(interp), addr);
     if (printSpace) PrintChar(' ');
     PrintItem(item, interp);
-    addr = ItemGetNext(item);
+    item = GetNext(item, interp);
     printSpace = TRUE;
   }
 

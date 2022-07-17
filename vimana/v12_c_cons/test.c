@@ -83,10 +83,10 @@ void TestItemAttributes()
   ItemGCMarkSet(item);
   ItemSetType(item, 1);
   ItemSetNext(item, 3);
-  ItemSetFirst(item, 3);
+  ItemSetIntNum(item, 3);
 
   PrintBinaryULong(item->next);
-  PrintBinaryULong(item->first);
+  PrintBinaryULong((unsigned long)(item->ptr));
 
   printf("Type:  %i\n",  ItemGetType(item));
   printf("Mark:  %i\n",  ItemGetGCMark(item));
@@ -96,7 +96,7 @@ void TestItemAttributes()
   ShouldHold("TestItemAttributes: Item type should equal", 1 == ItemGetType(item));
   ShouldHold("TestItemAttributes: Item gc mark should be set", 128 == ItemGetGCMark(item));
   ShouldHold("TestItemAttributes: Item next should equal", 3 == ItemGetNext(item));
-  ShouldHold("TestItemAttributes: Item first should equal", 3 == ItemGetFirst(item));
+  ShouldHold("TestItemAttributes: Item first should equal", 3 == ItemGetIntNum(item));
 }
 
 void TestMemoryLayout()
@@ -290,32 +290,31 @@ void TestSetFirst()
   VListMemory* mem = SysAlloc(ListMemByteSize(10));
   ListMemInit(mem, 10);
 
+  // Link items by first pointer
+
   first = ListMemAlloc(mem);
   item = first;
   ItemSetNext(item, 1); // Using next for the item value in this test
 
   next = ListMemAlloc(mem);
-  ItemSetNext(next, 2);
-  addr = ListMemGetAddr(mem, next);
-  printf("addr: %lu\n", (unsigned long) addr);
-  ItemSetFirst(item, addr);
+  ItemSetNext(next, 2); // Using next for the item value in this test
+  ItemSetFirst(item, next);
   item = next;
 
   next = ListMemAlloc(mem);
-  ItemSetNext(next, 3);
+  ItemSetNext(next, 3); // Using next for the item value in this test
   addr = ListMemGetAddr(mem, next);
-  printf("addr: %lu\n", (unsigned long) addr);
-  ItemSetFirst(item, addr);
+  ItemSetFirst(item, next);
   item = next;
 
   // Last item
-  ItemSetFirst(item, 0);
+  ItemSetFirst(item, NULL);
 
   item = first;
   while (1)
   {
     printf("item: %lu\n", (unsigned long) ItemGetNext(item));
-    if (0 == ItemGetFirst(item)) break;
+    if (NULL == ItemGetFirst(item)) break;
     item = ListMemGetFirst(mem, item);
   }
 
@@ -402,7 +401,6 @@ void TestArrayWithStringItems()
   for (int i = 0; i < 5; ++ i)
   {
     VItem* item = array[i];
-    //printf("Item first: %lu\n", ItemGetFirst(item));
     VItem* buffer = ListMemGetFirst(mem, item);
     char* str2 = (char*) ItemGetPtr(buffer);
     ShouldHold("TestArrayWithStringItems: StrEquals(str1, str2)", StrEquals(str1, str2));

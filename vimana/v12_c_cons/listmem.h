@@ -53,20 +53,13 @@ VListMemory;
 #define ListMemGet(mem, addr) VItemPtr(AddrToPtr(addr, ListMemStart(mem)))
 #define ListMemGetAddr(mem, ptr) PtrToAddr(ptr, ListMemStart(mem))
 
-#define ListMemGetFirst(mem, item) ListMemGet(mem, ItemGetFirst(item))
-//#define ListMemGetNext(mem, item)  ListMemGet(mem, ItemGetNext(item))
-
-// Slower
-//#define ListMemGetFirst(mem, item) \
-//  (ItemGetFirst(item) ? ListMemGet(mem, ItemGetFirst(item)) : NULL)
-
-// Faster
+#define ListMemGetFirst(mem, item) ItemGetFirst(item)
 #define ListMemGetNext(mem, item) \
   (ItemGetNext(item) ? ListMemGet(mem, ItemGetNext(item)) : NULL)
 
 void ListMemSetFirst(VListMemory* mem, VItem* item, VItem* first)
 {
-  ItemSetFirst(item, ListMemGetAddr(mem, first));
+  ItemSetFirst(item, first);
 }
 
 void ListMemSetNext(VListMemory* mem, VItem* item, VItem* next)
