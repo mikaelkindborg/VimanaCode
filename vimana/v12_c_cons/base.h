@@ -28,8 +28,8 @@ typedef          double  VDecNum;
 // Byte pointers
 // -------------------------------------------------------------
 
-#define BytePtr(ptr) ((VByte*)(ptr))
-#define PtrOffset(ptr, offset) ((void*)(BytePtr(ptr) + (offset)))
+#define VBytePtr(ptr) ((VByte*)(ptr))
+#define PtrOffset(ptr, offset) ((void*)(VBytePtr(ptr) + (offset)))
 
 // -------------------------------------------------------------
 // Forward declarations

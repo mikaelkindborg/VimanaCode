@@ -39,7 +39,7 @@ VListMemory;
 // and a 27 bit index can address 1GB of memorty (130M 8 byte items)
 
 //#define AddrToPtr(addr, start) ((start) + ((addr) << OFFSET))
-//#define PtrToAddr(ptr, start)  ((BytePtr(ptr) - (start)) >> OFFSET)
+//#define PtrToAddr(ptr, start)  ((VBytePtr(ptr) - (start)) >> OFFSET)
 
 // In 64 bit pointer space we use address offsets (should be faster)
 // addr is a 32 bit value that can address 4 GB of memory (268M 16 byte items)
@@ -48,7 +48,7 @@ VListMemory;
 // and get a huge address space
 
 #define AddrToPtr(addr, start) ((start) + (addr))
-#define PtrToAddr(ptr, start)  (BytePtr(ptr) - (start))
+#define PtrToAddr(ptr, start)  (VBytePtr(ptr) - (start))
 
 #define ListMemGet(mem, addr) VItemPtr(AddrToPtr(addr, ListMemStart(mem)))
 #define ListMemGetAddr(mem, ptr) PtrToAddr(ptr, ListMemStart(mem))
@@ -89,7 +89,7 @@ void ListMemInit(VListMemory* mem, int numItems)
 {
   VAddr memByteSize = ListMemByteSize(numItems);
 
-  mem->start = BytePtr(mem) + sizeof(VListMemory);
+  mem->start = VBytePtr(mem) + sizeof(VListMemory);
   mem->start -= ItemSize();
 
   mem->addrNextFree = ItemSize();       // Next free item
