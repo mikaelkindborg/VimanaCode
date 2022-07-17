@@ -11,15 +11,12 @@ See item.h for an explanation of memory layout.
 // VListMemory struct
 // -------------------------------------------------------------
 
-// Addresses in list memory are array indexes (VAddr)
-// First item in the array reprecents the nil value
+// Addresses in list memory are pointer offsets (VAddr)
 
 typedef struct __VListMemory
 {
-  //VByte* start;     // Start of memory block
-  //VByte* nextFree;  // First free item in memory block
   VByte* start;         // Start of memory block
-  VAddr  addrNextFree;  // First free item in memory block
+  VAddr  addrNextFree;  // Next free item in memory block
   VAddr  addrFirstFree; // First item in freelist
   VAddr  addrEnd;       // End of memory
   #ifdef TRACK_MEMORY_USAGE
@@ -34,9 +31,21 @@ VListMemory;
 
 #define ListMemStart(mem) ((mem)->start)
 
-// Address is an index
-//#define AddrToPtr(addr, start) ((start) + ((addr) << 4)) //* sizeof(VItem)))
-//#define PtrToAddr(ptr, start) ((BytePtr(ptr) - (start)) >> 4) // sizeof(VItem))
+// TODO: Address is an index (1, 2, 3, 4, 5, ...)
+// Use this for 16 bit and 32 bit pointers where address space is limited
+// addr is an 11 bit or 27 bit value that gets multiplied by ItemSize
+// (or shifted by an OFFSET)
+// With this scheme, an 11 bit index can address 4 KB of memory (1K 4 byte items)
+// and a 27 bit index can address 1GB of memorty (130M 8 byte items)
+
+//#define AddrToPtr(addr, start) ((start) + ((addr) << OFFSET))
+//#define PtrToAddr(ptr, start)  ((BytePtr(ptr) - (start)) >> OFFSET)
+
+// In 64 bit pointer space we use address offsets (should be faster)
+// addr is a 32 bit value that can address 4 GB of memory (268M 16 byte items)
+// Alternatively, we could use 48 bit pointers with type into in the free bits 
+// of a 64 bit value (this is less portable), or we could use the index scheme
+// and get a huge address space
 
 #define AddrToPtr(addr, start) ((start) + (addr))
 #define PtrToAddr(ptr, start)  (BytePtr(ptr) - (start))
@@ -44,13 +53,16 @@ VListMemory;
 #define ListMemGet(mem, addr) VItemPtr(AddrToPtr(addr, ListMemStart(mem)))
 #define ListMemGetAddr(mem, ptr) PtrToAddr(ptr, ListMemStart(mem))
 
+#define ListMemGetFirst(mem, item) ListMemGet(mem, ItemGetFirst(item))
+//#define ListMemGetNext(mem, item)  ListMemGet(mem, ItemGetNext(item))
+
+// Slower
 //#define ListMemGetFirst(mem, item) \
 //  (ItemGetFirst(item) ? ListMemGet(mem, ItemGetFirst(item)) : NULL)
-//#define ListMemGetNext(mem, item) \
-//  (ItemGetNext(item) ? ListMemGet(mem, ItemGetNext(item)) : NULL)
 
-#define ListMemGetFirst(mem, item) ListMemGet(mem, ItemGetFirst(item))
-#define ListMemGetNext(mem, item)  ListMemGet(mem, ItemGetNext(item))
+// Faster
+#define ListMemGetNext(mem, item) \
+  (ItemGetNext(item) ? ListMemGet(mem, ItemGetNext(item)) : NULL)
 
 void ListMemSetFirst(VListMemory* mem, VItem* item, VItem* first)
 {

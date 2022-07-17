@@ -423,10 +423,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
     if (instruction)
     {
       // Advance instruction for the NEXT loop
-      if (ItemGetNext(instruction)) 
-        current->instruction = GetNext(instruction, interp);
-      else
-        current->instruction = NULL;
+      current->instruction = GetNext(instruction, interp);
 
       if (IsTypePrimFun(instruction))
       {
