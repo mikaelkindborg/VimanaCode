@@ -276,9 +276,9 @@ void InterpPushFirstStackFrame(VInterp* interp, VItem* list)
   current->context = current;
 
   // Set list (TODO: for error messages)
-  //current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
+  //current->list = list;
+
   // Set first instruction in the frame
-  //current->instructionAddr = ItemGetFirst(list);
   current->instruction = GetFirst(list, interp);
 }
 
@@ -291,7 +291,6 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
   VStackFrame* current = parent;
 
   // Check tailcall (are there any instructions left?)
-  //if (parent->instructionAddr)
   if (parent->instruction)
   {
     // NON-TAILCALL - PUSH NEW STACK FRAME
@@ -305,12 +304,13 @@ void InterpPushStackFrame(VInterp* interp, VItem* list)
 
     current = InterpGetStackFrame(interp);
 
+    // Set list (TODO: for error messages)
+    //current->list = list;
+
     // Access the local vars of the parent context until new scope is introduced
     current->context = parent->context;
   }
 
-  //current->listAddr = ListMemGetAddr(InterpListMem(interp), list);
-  //current->instructionAddr = ItemGetFirst(list);
   current->instruction = GetFirst(list, interp);
 }
 
@@ -415,24 +415,16 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         goto Exit; // Exit loop
     }
 
-    // Get instruction
+    // Get current instruction
     current = InterpGetStackFrame(interp);
-    //instructionAddr = current->instructionAddr;
     instruction = current->instruction;
 
     // Evaluate current instruction.
     if (instruction)
     {
-      // Get instruction pointer
-      //instruction = ListMemGet(InterpListMem(interp), instructionAddr);
-
       // Advance instruction for the NEXT loop
-      //current->instruction = ListMemGetNext(InterpListMem(interp), instruction);
-      //current->instruction = //(ItemGetNext(instruction) ? ListMemGet(InterpListMem(interp), ItemGetNext(instruction)) : NULL);
-      //  (ItemGetNext(instruction) ? VItemPtr(AddrToPtr(ItemGetNext(instruction), InterpListMem(interp)->start)) : NULL);
-
       if (ItemGetNext(instruction)) 
-        current->instruction = GetNext(instruction, interp); //VItemPtr(AddrToPtr(ItemGetNext(instruction), InterpListMem(interp)->start));
+        current->instruction = GetNext(instruction, interp);
       else
         current->instruction = NULL;
 
@@ -463,7 +455,7 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         }
       }
     }
-    else // (0 == instructionAddr)
+    else // (NULL == instruction)
     {
       InterpPopStackFrame(interp);
 
@@ -475,7 +467,6 @@ int InterpEvalSlice(VInterp* interp, int sliceSize)
         interp->run = FALSE;
         goto Exit; // Exit loop
       }
-
     }
   }
   // while
