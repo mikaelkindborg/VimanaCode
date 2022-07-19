@@ -47,6 +47,7 @@ VListMemory;
 // of a 64 bit value (might be less portable), or we could use offsets with
 // 59 bits and get a huge address space
 
+/*
 #define AddrToPtr(addr, start) ((start) + (addr))
 #define PtrToAddr(ptr, start)  (VBytePtr(ptr) - (start))
 
@@ -56,6 +57,13 @@ VListMemory;
 #define ListMemGetFirst(mem, item) ItemGetFirst(item)
 #define ListMemGetNext(mem, item) \
   (ItemGetNext(item) ? ListMemGet(mem, ItemGetNext(item)) : NULL)
+*/
+
+#define ListMemGet(mem, addr)      VItemPtr(addr)
+#define ListMemGetAddr(mem, ptr)   ((VAddr)(ptr))
+
+#define ListMemGetFirst(mem, item) ItemGetFirst(item)
+#define ListMemGetNext(mem, item)  VItemPtr(ItemGetNext(item))
 
 void ListMemSetFirst(VListMemory* mem, VItem* item, VItem* first)
 {
@@ -83,11 +91,11 @@ void ListMemInit(VListMemory* mem, int numItems)
   VAddr memByteSize = ListMemByteSize(numItems);
 
   mem->start = VBytePtr(mem) + sizeof(VListMemory);
-  mem->start -= ItemSize();
+  //mem->start -= ItemSize();
 
-  mem->addrNextFree = ItemSize();       // Next free item
+  mem->addrNextFree = ((VAddr) mem->start);       // Next free item
   mem->addrFirstFree = 0;               // Freelist is empty
-  mem->addrEnd = numItems * ItemSize(); // End of address space
+  mem->addrEnd = ((VAddr) mem->start) + (numItems * ItemSize()); // End of address space
 
   #ifdef TRACK_MEMORY_USAGE
   mem->allocCounter = 0;
@@ -257,7 +265,7 @@ void ListMemMark(VListMemory* mem, VItem* item)
 void ListMemSweep(VListMemory* mem)
 {
   // This is the address of the first item
-  VAddr itemAddr = ItemSize();
+  VAddr itemAddr = (VAddr) mem->start;
 
   while (itemAddr < mem->addrNextFree)
   {

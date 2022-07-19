@@ -12,10 +12,18 @@ Basic data types and functions.
 // Vimana types are prefixed with 'V'
 
 typedef unsigned char    VByte;
-typedef unsigned int     VType;
+typedef long             VIntNum;
+typedef double           VDecNum;
+
+#define VIMANA_64
+
+#ifdef VIMANA_64
+typedef uintptr_t        VAddr;
+typedef uintptr_t        VType;
+#else
 typedef unsigned int     VAddr;
-typedef          long    VIntNum;
-typedef          double  VDecNum;
+typedef unsigned int     VType;
+#endif
 
 // -------------------------------------------------------------
 // Boolean values
