@@ -60,6 +60,21 @@ void MachineDeallocate()
   SysFree(GlobalMemory);
 }
 
+void MachinePrintMemoryUse()
+{
+  int memoryUsed = GlobalMemoryEnd - GlobalMemory;
+
+  printf("Vimana Machine Memory Use\n");
+  printf("------------------------------------------------\n");
+  printf("Allocated:      %i\n", GlobalMemoryByteSize);
+  printf("Used:           %i\n", memoryUsed);
+  printf("Primfun table:  %i\n", PrimFunTableByteSize());
+  printf("Num primfuns:   %i\n", GlobalPrimFunTableSize);
+  printf("Symbol table:   %i\n", SymbolTableByteSize(SymbolTableMaxSize()));
+  printf("Symbol memory:  %i\n", SymbolMemByteSize(SymbolMemGlobal()->size));
+  printf("Interpreter:    %i\n", GlobalInterpByteSize);
+}
+
 // -------------------------------------------------------------
 // Interpreter instance
 // -------------------------------------------------------------
@@ -102,6 +117,8 @@ void MachineCreateInterp(int dataStackSize, int callStackSize, int listMemorySiz
   // Check that interpreter will fit in allocated memory
   if (GlobalMemoryEnd > GlobalMemory + GlobalMemoryByteSize)
   {
+    PrintLine("OUT OF MEMORY - ALLOCATE MORE MEMORY TO THE MACHINE");
+    MachinePrintMemoryUse();
     GURU_MEDITATION(MACHINE_OUT_OF_MEMORY);
   }
 
@@ -122,21 +139,6 @@ void MachineFree()
 {
   InterpFree(MachineInterp());
   MachineDeallocate();
-}
-
-void MachinePrintMemoryUse()
-{
-  int memoryUsed = GlobalMemoryEnd - GlobalMemory;
-
-  printf("Vimana Machine Memory Use\n");
-  printf("------------------------------------------------\n");
-  printf("Allocated:      %i\n", GlobalMemoryByteSize);
-  printf("Used:           %i\n", memoryUsed);
-  printf("Primfun table:  %i\n", PrimFunTableByteSize());
-  printf("Num primfuns:   %i\n", GlobalPrimFunTableSize);
-  printf("Symbol table:   %i\n", SymbolTableByteSize(SymbolTableMaxSize()));
-  printf("Symbol memory:  %i\n", SymbolMemByteSize(SymbolMemGlobal()->size));
-  printf("Interpreter:    %i\n", GlobalInterpByteSize);
 }
 
 VItem* MachineParse(char* code)

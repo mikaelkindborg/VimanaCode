@@ -106,7 +106,20 @@ void PrimFun_plus(VInterp* interp) // +
 {
   VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
-  a->intNum += b->intNum;
+
+  if (IsTypeIntNum(a) && IsTypeIntNum(b))
+    a->intNum += b->intNum;
+  else
+  if (IsTypeDecNum(a) && IsTypeDecNum(b))
+    a->decNum += b->decNum;
+  else
+  if (IsTypeIntNum(a) && IsTypeDecNum(b))
+    a->intNum += b->decNum;
+  else
+  if (IsTypeDecNum(a) && IsTypeIntNum(b))
+    a->decNum += b->intNum;
+  else
+    GURU_MEDITATION(PLUS_NOT_A_NUMBER);
 }
 
 void PrimFun_minus(VInterp* interp) // -
@@ -139,7 +152,14 @@ void PrimFun_1plus(VInterp* interp) // 1+
 void PrimFun_1minus(VInterp* interp) // 1-
 {
   VItem* a = InterpStackTop(interp);
-  a->intNum -= 1;
+
+  if (IsTypeIntNum(a))
+    a->intNum -= 1;
+  else
+  if (IsTypeDecNum(a))
+    a->decNum -= 1;
+  else
+    GURU_MEDITATION(MINUS_1_NOT_A_NUMBER);
 }
 
 void PrimFun_2plus(VInterp* interp) // 2+
@@ -151,7 +171,14 @@ void PrimFun_2plus(VInterp* interp) // 2+
 void PrimFun_2minus(VInterp* interp) // 2-
 {
   VItem* a = InterpStackTop(interp);
-  a->intNum -= 2;
+
+  if (IsTypeIntNum(a))
+    a->intNum -= 2;
+  else
+  if (IsTypeDecNum(a))
+    a->decNum -= 2;
+  else
+    GURU_MEDITATION(MINUS_2_NOT_A_NUMBER);
 }
 
 void PrimFun_lessthan(VInterp* interp) // <
@@ -165,7 +192,21 @@ void PrimFun_greaterthan(VInterp* interp) // >
 {
   VItem* b = InterpStackPop(interp);
   VItem* a = InterpStackTop(interp);
-  a->intNum = a->intNum > b->intNum;
+
+  if (IsTypeIntNum(a) && IsTypeIntNum(b))
+    a->intNum = a->intNum > b->intNum;
+  else
+  if (IsTypeDecNum(a) && IsTypeDecNum(b))
+    a->intNum = a->decNum > b->decNum;
+  else
+  if (IsTypeIntNum(a) && IsTypeDecNum(b))
+    a->intNum = a->intNum > b->decNum;
+  else
+  if (IsTypeDecNum(a) && IsTypeIntNum(b))
+    a->intNum = a->decNum > b->intNum;
+  else
+    GURU_MEDITATION(GREATER_THAN_NOT_A_NUMBER);
+  
 }
 
 void PrimFun_eq(VInterp* interp)

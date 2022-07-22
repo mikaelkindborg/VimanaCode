@@ -28,9 +28,9 @@ void PrintTestResult()
 
 void LogTest(char* testName)
 {
-  PrintLine("================================================");
+  PrintNewLine();
   PrintLine(testName);
-  PrintLine("================================================");
+  PrintLine("------------------------------------------------");
 }
 
 // -------------------------------------------------------------
@@ -39,6 +39,8 @@ void LogTest(char* testName)
 
 void TestPointerArithmetic()
 {
+  LogTest("TestPointerArithmetic");
+
   long buf[10];
   char* c = (char*) buf;
   long* p = buf;
@@ -668,8 +670,8 @@ void TestMachineX()
 
 int main()
 {
-  LogTest("Welcome to VimanaCode tests");
-
+  PrintLine("WELCOME TO VIMANACODE TESTS");
+/*
   TestPointerArithmetic();
   TestPrintBinary();
   TestItemAttributes();
@@ -681,14 +683,17 @@ int main()
   TestStringItem();
   TestArrayWithStringItems();
   TestSymbolTable();
-  TestSymbolMemory();
+  TestSymbolMemory();*/
   TestMachineCreate();
   TestParse();
   TestInterp();
   TestMachine();
   TestMachineX();
 
+  PrintNewLine();
   SysPrintMemStat();
+
+  PrintNewLine();
   PrintTestResult();
 
   return 0;

@@ -172,6 +172,9 @@ void InterpFree(VInterp* interp)
 // Item access
 // -------------------------------------------------------------
 
+// These are high-level macros to access item pointers
+// Note that the interpreter instance is the last parameter
+
 #define GetFirst(item, interp) ListMemGetFirst(InterpListMem(interp), item)
 #define GetNext(item, interp) ListMemGetNext(InterpListMem(interp), item)
 

@@ -1,5 +1,5 @@
 /*
-File: symbolmemory.h
+File: symbolmem.h
 Author: Mikael Kindborg (mikael@kindborg.com)
 
 Compact way to allocate immutable symbols within a block 
@@ -10,7 +10,8 @@ Memory layout:
 Symbols are allocated in sequence.
 0 char is the string terminator.
 
-Example with three symbol entries (0 is char zero '\0'):
+Example of memory layout with three symbol entries 
+(0 is char zero '\0'):
 
   One0Two0Tree0
 */
