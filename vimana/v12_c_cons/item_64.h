@@ -158,6 +158,8 @@ is a very important part of the system.
 // Item struct
 // -------------------------------------------------------------
 
+#define VIMANA_64
+
 typedef struct __VItem
 {
   // Value of the item

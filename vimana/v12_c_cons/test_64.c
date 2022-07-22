@@ -671,7 +671,7 @@ void TestMachineX()
 int main()
 {
   PrintLine("WELCOME TO VIMANACODE TESTS");
-/*
+
   TestPointerArithmetic();
   TestPrintBinary();
   TestItemAttributes();
@@ -683,7 +683,7 @@ int main()
   TestStringItem();
   TestArrayWithStringItems();
   TestSymbolTable();
-  TestSymbolMemory();*/
+  TestSymbolMemory();
   TestMachineCreate();
   TestParse();
   TestInterp();

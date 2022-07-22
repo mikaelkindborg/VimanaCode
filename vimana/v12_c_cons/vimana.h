@@ -25,16 +25,8 @@
 #include "primfuntable.h"
 #include "symboltable.h"
 #include "symbolmem.h"
-#ifdef VIMANA_64
 #include "item_64.h"
-#else
-#include "item.h"
-#endif
-#ifdef VIMANA_64
 #include "listmem_64.h"
-#else
-#include "listmem.h"
-#endif
 #include "interp.h"
 #include "parser.h"
 #include "printlist.h"

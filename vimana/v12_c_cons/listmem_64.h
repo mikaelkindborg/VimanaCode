@@ -112,7 +112,7 @@ int ListMemByteSize(int numItems)
 
 void ListMemInit(VListMemory* mem, int numItems)
 {
-  VAddr memByteSize = ListMemByteSize(numItems);
+  //VAddr memByteSize = ListMemByteSize(numItems);
 
   #ifdef VIMANA_64
     // Addresses are pointers
