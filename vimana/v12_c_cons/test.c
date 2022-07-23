@@ -28,17 +28,21 @@ void PrintTestResult()
 
 void LogTest(char* testName)
 {
-  PrintLine("================================================");
+  PrintNewLine();
   PrintLine(testName);
-  PrintLine("================================================");
+  PrintLine("------------------------------------------------");
 }
 
 // -------------------------------------------------------------
 // Tests
 // -------------------------------------------------------------
 
+#if 0
+
 void TestPointerArithmetic()
 {
+  LogTest("TestPointerArithmetic");
+
   long buf[10];
   char* c = (char*) buf;
   long* p = buf;
@@ -70,33 +74,6 @@ void TestPrintBinary()
   PrintBinaryULong(0x80000000);
   PrintBinaryULong(0x1 << 1);
   PrintBinaryULong(0x2 >> 1);
-}
-
-void TestItemAttributes()
-{
-  LogTest("TestItemAttributes");
-
-  VItem theItem;
-  VItem* item = &theItem;
-
-  ItemInit(item);
-  ItemGCMarkSet(item);
-  ItemSetType(item, 1);
-  ItemSetNext(item, 3);
-  ItemSetIntNum(item, 3);
-
-  PrintBinaryULong(item->next);
-  PrintBinaryULong((unsigned long)(item->ptr));
-
-  printf("Type:  %i\n",  ItemGetType(item));
-  printf("Mark:  %i\n",  ItemGetGCMark(item));
-  printf("Next:  %lu\n", (unsigned long) ItemGetNext(item));
-  printf("First: %lu\n", (unsigned long) ItemGetFirst(item));
-
-  ShouldHold("TestItemAttributes: Item type should equal", 1 == ItemGetType(item));
-  ShouldHold("TestItemAttributes: Item gc mark should be set", 128 == ItemGetGCMark(item));
-  ShouldHold("TestItemAttributes: Item next should equal", 3 == ItemGetNext(item));
-  ShouldHold("TestItemAttributes: Item first should equal", 3 == ItemGetIntNum(item));
 }
 
 void TestMemoryLayout()
@@ -134,28 +111,55 @@ void TestMemoryLayout()
   PrintBinaryUShort(8);
   PrintBinaryUShort(12);
   PrintBinaryUShort(16);
-  PrintBinaryUShort(1024);
-  PrintBinaryUShort(1024*2);
-  PrintBinaryUShort(1024*4);
-  PrintBinaryUShort(1024*8);
   PrintBinaryUShort(0xFFFF);
 
   PrintLine("32 bit memory layout");
-  PrintBinaryUInt(1024*32);
-  PrintBinaryUInt(1024*256);
+  PrintBinaryUInt(0xFFFF);
+  PrintBinaryUInt(0xFFFFFFFF);
 }
 
-// Helper function
-void PrintItems(VItem* first, VListMemory* mem)
+#endif
+
+void TestItemAttributes()
 {
-  VAddr addr = ListMemGetAddr(mem, first);
-  while (addr)
-  {
-    VItem* item = ListMemGet(mem, addr);
-    printf("%li ", ItemGetIntNum(item));
-    addr = ItemGetNext(item);
-  }
-  PrintNewLine();
+  LogTest("TestItemAttributes");
+
+  VItem theItem;
+  VItem* item = &theItem;
+
+  ItemInit(item);
+  PrintBinaryULong(item->next);
+
+  ItemGCMarkSet(item);
+  PrintBinaryULong(item->next);
+
+  ItemSetType(item, TypeList);
+  PrintBinaryULong(item->next);
+
+  ShouldHold("TestItemAttributes: Item type should equal TypeList", TypeList == ItemGetType(item));
+
+  ItemSetNext(item, 3);
+  PrintBinaryULong(item->next);
+
+  ShouldHold("TestItemAttributes: Item next should equal", 3 == ItemGetNext(item));
+  
+  ShouldHold("TestItemAttributes: Mark bit should be set", 0 != ItemGetGCMark(item));
+
+  ItemSetIntNum(item, 15);
+
+  ItemGCMarkUnset(item);
+  PrintBinaryULong(item->next);
+
+  ShouldHold("TestItemAttributes: Mark bit should be unset", 0 == ItemGetGCMark(item));
+
+  ShouldHold("TestItemAttributes: Item type should equal TypeIntNum", TypeIntNum == ItemGetType(item));
+
+  ShouldHold("TestItemAttributes: Item value should equal 15", 15 == ItemGetIntNum(item));
+
+  printf("Type:  %lu\n", ItemGetType(item));
+  printf("Mark:  %lu\n", ItemGetGCMark(item));
+  printf("Next:  %lu\n", (unsigned long) ItemGetNext(item));
+  printf("First: %lu\n", (unsigned long) ItemGetFirst(item));
 }
 
 void TestMemAlloc()
@@ -169,19 +173,20 @@ void TestMemAlloc()
 
   item = ListMemAlloc(mem);
   ItemGCMarkSet(item);
-  ItemSetType(item, 1);
-  ItemSetNext(item, 4);
+  ItemSetType(item, TypeIntNum);
+  ItemSetNext(item, 0);
 
   item = ListMemAlloc(mem);
   ItemGCMarkSet(item);
-  ItemSetType(item, 1);
-  ItemSetNext(item, 4);
+  ItemSetType(item, TypeIntNum);
+  ItemSetNext(item, 0);
 
-  //PrintBinaryUInt(ItemGetNext(item));
-  ShouldHold("TestMemAlloc: Next should equal 4", 4 == ItemGetNext(item));
+  ListMemPrintAllocCounter(mem);
 
   ListMemSweep(mem);
+
   ListMemPrintAllocCounter(mem);
+
   ShouldHold("TestMemAlloc: allocCounter should equal 2", 2 == mem->allocCounter);
 
   ListMemSweep(mem);
@@ -189,6 +194,19 @@ void TestMemAlloc()
   ShouldHold("TestMemAlloc: allocCounter should equal 0", 0 == mem->allocCounter);
 
   SysFree(mem);
+}
+
+// Helper function
+void PrintItems(VItem* first, VListMemory* mem)
+{
+  VAddr addr = ListMemGetAddr(mem, first);
+  while (addr)
+  {
+    VItem* item = ListMemGet(mem, addr);
+    printf("%li ", ItemGetIntNum(item));
+    addr = ItemGetNext(item);
+  }
+  PrintNewLine();
 }
 
 // Helper function
@@ -659,12 +677,14 @@ void TestMachineX()
 
 int main()
 {
-  LogTest("Welcome to VimanaCode tests");
+  PrintLine("WELCOME TO VIMANACODE TESTS");
 
-  TestPointerArithmetic();
-  TestPrintBinary();
+  // These are not tests really
+  //TestPointerArithmetic();
+  //TestPrintBinary();
+  //TestMemoryLayout();
+
   TestItemAttributes();
-  TestMemoryLayout();
   TestMemAlloc();
   TestAllocDealloc();
   TestSetFirst();
@@ -679,7 +699,10 @@ int main()
   TestMachine();
   TestMachineX();
 
+  PrintNewLine();
   SysPrintMemStat();
+
+  PrintNewLine();
   PrintTestResult();
 
   return 0;
