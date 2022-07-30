@@ -1,0 +1,5 @@
+% time gs -q -dBATCH fib3.ps
+
+/fib { dup 1 gt { dup 1 sub fib exch 2 sub fib add } if } bind def
+
+37 fib =

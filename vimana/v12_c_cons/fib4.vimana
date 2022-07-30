@@ -1,0 +1,32 @@
+/--
+(fib)
+  ([x] x 1 > (x 1- fib x 2- fib +) (x) ifelse) def
+
+(fib)
+  ([x] x x 1 > (1- fib x 2- fib +) iftrue) def
+
+(fib)
+  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
+
+(fib)
+  (dup 1 > (x) (x 1- fib x 2- fib +) let iftrue) def
+
+Som ett fint instrument
+--/
+
+(fib)
+  (dup 1 > ([x] x 1- fib x 2- fib +) iftrue) def
+
+37 fib print
+
+/--
+(foo) 
+  ([x] 
+    x 1 > (x 1 - foo x 1 - foo +) (x) ifelse) def
+
+(foo) 
+  ([x] 
+    x x 1 > (1 - foo x 1 - foo +) iftrue) def
+
+25 foo print
+--/

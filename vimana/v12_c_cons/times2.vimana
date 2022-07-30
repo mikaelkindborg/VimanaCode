@@ -1,12 +1,26 @@
-(funify swap setglobal) funify 
-  (def) setglobal
+/--
+(funify swap setglobal) funify (def) setglobal
+--/
 
+(defvar) (swap setglobal) def
+(defvar) (swap setglobal) (def) first call
+(defvar) (swap setglobal) (def) call
+
+/--
 (times) 
   ([AB] B iszero (
     A eval 
     A B 1- times) iffalse) def
+--/
+
+(times) 
+  ([ab] b iszero not (
+    a eval 
+    a b 1- times) iftrue) def
 
 1 (num) setglobal
+
+(num) 1 defvar
 
 (num 1+ (num) setglobal) 20000000 times
 

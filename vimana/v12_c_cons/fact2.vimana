@@ -1,11 +1,11 @@
 
 (fact) 
-  ([A] A iszero (1) (A 1- fact A *) ifelse) def
+  ([x] x iszero (1) (x 1- fact x *) ifelse) def
 
 (times) 
   (dup iszero 
     (drop drop) 
-     (over eval 1- times) 
+    (over eval 1- times) 
   ifelse) def
 
 20 fact print

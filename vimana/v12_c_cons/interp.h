@@ -38,7 +38,6 @@ typedef struct __VStackFrame VStackFrame;
 struct __VStackFrame
 {
   VItem*       instruction;
-  //VItem*       list;
   VStackFrame* context;          // Stack frame that holds local vars
   VItem        localVars[4];     // Space for 4 local vars
 };
@@ -343,7 +342,7 @@ void InterpSetLocalVar(VInterp* interp, int index, VItem* item)
 
   // Set context to this stackframe when a local variable is introduced.
   // This creates a new "scope".
-  // Note: Functions cannot access variables in the parent scope, 
+  // Note: Functions cannot set variables in the parent scope, 
   // only read them. This is by design.
   frame->context = frame;
 

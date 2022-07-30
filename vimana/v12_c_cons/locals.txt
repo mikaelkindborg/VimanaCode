@@ -1,0 +1,222 @@
+
+
+
+/fact { dup 1 gt { dup 1 sub fact mul } if } def
+
+/fib { dup 1 gt { dup 1 sub fib exch 2 sub fib add } if } def
+
+(fib)
+  (dup 1 > (dup 1- fib swap 2- fib +) iftrue) def
+
+https://thesecmaster.com/three-different-ways-to-boot-a-raspberry-pi-from-a-usb-drive/
+https://thepi.io/how-to-boot-your-raspberry-pi-from-a-usb-mass-storage-device/
+https://linuxhint.com/install-raspberry-pi-desktop-external-hard-drive/
+https://www.pragmaticlinux.com/2021/12/directly-boot-your-raspberry-pi-4-from-a-usb-drive/
+https://thepi.io/how-to-run-raspberry-pi-desktop-on-windows-or-macos/
+
+http://www.tailrecursive.org/postscript/postscript.html
+https://riptutorial.com/postscript
+http://paulbourke.net/dataformats/postscript/
+http://canonical.org/~kragen/forthlocals
+
+https://github.com/darius/tinyhiss/blob/master/ansi.py
+
+(top) (first) def
+
+(>=) (< not) def
+
+(unwindLocalVarStack) onExitCallStackFrame
+
+(GLocalVarStack) () defval
+
+(unwindLocalVarStack) (
+  GLocalVarStack isempty not
+    (GLocalVarStack top first callStackIndex >=
+      (GLocalVarStack rest (GLocalVarStack) setglobal
+      unwindLocalVarStack)
+      iftrue)
+    iftrue
+) def
+
+([x]) (
+  callStackIndex unwindLocalVarStack
+  () cons callStackIndex swap cons GLocalVarStack cons
+) def
+
+([xy]) (
+  unwindLocalVarStack
+  () cons cons callStackIndex swap cons GLocalVarStack cons
+) def
+
+(x) (
+  GLocalVarStack top first first
+) def
+
+(y) (
+  GLocalVarStack top first first first
+) def
+
+(times) (
+  [xy] y 0 > 
+      (x eval x y 1 - times)
+    iftrue
+) def
+
+[abc]
+[ba]
+[bab]
+[aa]
+[bca]
+
+--------
+
+(fact) (
+  [x] x 1 < 
+      (0)
+      (x 1 - fact x *)
+    ifelse 
+  []
+) def
+
+(fact) (
+  (x) (x 1 < 
+      (0)
+      (x 1 - fact x *)
+    ifelse) let
+) def
+
+(let) (
+  swap count dup pushlocals
+  swap eval
+  poplocals
+) def
+
+(fact) (
+  (x) (x 1 < 
+        (0)
+        (x 1 - fact x *)
+      ifelse) let
+) def
+
+(times) 
+  (list n)
+    (n 0 > 
+      (list eval list n 1 - times)
+    iftrue)
+  let 
+def
+
+(times) 
+  (list n)
+    (n 0 > 
+      (list eval list n 1 - times)
+    iftrue) defl
+
+(times) 
+  (2 pushlocal 
+    0@ 0 > 
+      (1@ eval 1@ 0@ 1 - times)
+    iftrue)
+def
+
+(times) 
+  (2 pushlocal 
+    a 0 > 
+      (b eval b a 1 - times)
+    iftrue) def
+
+(times) (
+  [xy] y 0 > 
+      (x x eval y 1 - times)
+    iftrue
+) def
+
+(times) (
+  dup 0 > 
+    ((x y) (x eval x y 1 -) let times)
+  iftrue)
+) def
+
+(times) (
+  (l n) let
+    n 0 > 
+      (l eval l n 1 - unlet times)
+      (unlet)
+    ifelse
+) def
+
+(times) (
+  (list n) let
+    (n)@ 0 > 
+      ((list)@ eval o_o (list)@ (n)@ 1 - times)
+    ifelse
+) def
+
+(times) (
+  (list n) let
+    n 0 > 
+      (list eval o_o list n 1 - times)
+    iftrue
+) def
+
+(times) (
+  (list n)
+    (n 0 > 
+      (list eval o_o list n 1 - times)
+    iftrue)
+  let
+) def
+
+(times) (
+  enterlocal v1! v2!
+    (v1@ 0 > 
+      (v2@ eval o_o v2@ v1@ 1 - times)
+    iftrue)
+) def
+
+(times) (
+  [xy] y 0 > 
+      (x eval o_o x y 1 - times)
+    iftrue
+) def
+
+(times) (
+  [xy] y 0 > 
+      (x eval x y 1 - [] times)
+      ([])
+    ifelse
+) def
+
+(times) (
+  [aa] 0 > 
+      ([aba] eval 1 - times)
+      ([][])
+    ifelse
+) def
+
+(times) (
+  [xx] 0 > 
+      ([xyx] eval 1 - times)
+      ([__])
+    ifelse
+) def
+
+(times) (
+    dup 0 > 
+      (over eval 1 - times)
+      (drop drop)
+    ifelse
+) def
+
+(times) (
+  [xy] y 0 > 
+      (x x eval y 1 - [] times)
+      ([])
+    ifelse
+) def
+
+(def timesdo (x y)
+  (if (> y 0)
+    (progn (eval x) (timesdo x (- y 1)))))
+
+stackframe exit hook
